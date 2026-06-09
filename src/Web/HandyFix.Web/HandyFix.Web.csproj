@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>aspnet-HandyFix-BBB373B5-EF3F-4DBB-B8AA-7152CEC275BF</UserSecretsId>
+    <WebOptimizerEnableTagHelperBundling>true</WebOptimizerEnableTagHelperBundling>
+  </PropertyGroup>
+
+   <ItemGroup>
+     <InternalsVisibleTo Include="HandyFix.Web.Tests" />
+   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" />
+    <PackageReference Include="LigerShark.WebOptimizer.Core" />
+    <PackageReference Include="Microsoft.Web.LibraryManager.Build" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
+    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\HandyFix.Common\HandyFix.Common.csproj" />
+    <ProjectReference Include="..\..\Data\HandyFix.Data.Models\HandyFix.Data.Models.csproj" />
+    <ProjectReference Include="..\..\Data\HandyFix.Data\HandyFix.Data.csproj" />
+    <ProjectReference Include="..\..\Services\HandyFix.Services.Data\HandyFix.Services.Data.csproj" />
+    <ProjectReference Include="..\..\Services\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
+    <ProjectReference Include="..\..\Services\HandyFix.Services.Messaging\HandyFix.Services.Messaging.csproj" />
+    <ProjectReference Include="..\..\Services\HandyFix.Services\HandyFix.Services.csproj" />
+    <ProjectReference Include="..\HandyFix.Web.Infrastructure\HandyFix.Web.Infrastructure.csproj" />
+    <ProjectReference Include="..\HandyFix.Web.ViewModels\HandyFix.Web.ViewModels.csproj" />
+  </ItemGroup>
+</Project>

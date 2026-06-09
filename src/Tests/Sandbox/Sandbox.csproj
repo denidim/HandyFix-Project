@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
+    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\HandyFix.Common\HandyFix.Common.csproj" />
+    <ProjectReference Include="..\..\Data\HandyFix.Data.Common\HandyFix.Data.Common.csproj" />
+    <ProjectReference Include="..\..\Data\HandyFix.Data.Models\HandyFix.Data.Models.csproj" />
+    <ProjectReference Include="..\..\Data\HandyFix.Data\HandyFix.Data.csproj" />
+    <ProjectReference Include="..\..\Services\HandyFix.Services.Data\HandyFix.Services.Data.csproj" />
+    <ProjectReference Include="..\..\Services\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
+    <ProjectReference Include="..\..\Services\HandyFix.Services.Messaging\HandyFix.Services.Messaging.csproj" />
+    <ProjectReference Include="..\..\Services\HandyFix.Services\HandyFix.Services.csproj" />
+  </ItemGroup>
+
+</Project>
