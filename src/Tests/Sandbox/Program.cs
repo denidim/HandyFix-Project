@@ -5,6 +5,7 @@
     using System.IO;
     using System.Threading.Tasks;
 
+    using CommandLine;
     using HandyFix.Data;
     using HandyFix.Data.Common;
     using HandyFix.Data.Common.Repositories;
@@ -13,9 +14,6 @@
     using HandyFix.Data.Seeding;
     using HandyFix.Services.Data;
     using HandyFix.Services.Messaging;
-
-    using CommandLine;
-
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
