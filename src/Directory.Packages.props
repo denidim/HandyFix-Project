@@ -1,6 +1,8 @@
 <Project>
 	<PropertyGroup>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<!-- Enable transitive pinning for Central Package Management -->
+    	<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 	</PropertyGroup>
 	<ItemGroup>
 		<!-- ASP.NET Core packages -->
