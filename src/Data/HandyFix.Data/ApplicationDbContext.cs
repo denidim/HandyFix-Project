@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Data
+namespace HandyFix.Data
 {
     using System;
     using System.Linq;
@@ -25,6 +25,34 @@
         }
 
         public DbSet<Setting> Settings { get; set; }
+
+        public DbSet<AvailabilitySlot> AvailabilitySlots { get; set; }
+
+        public DbSet<Booking> Bookings { get; set; }
+
+        public DbSet<BookingImage> BookingImages { get; set; }
+
+        public DbSet<BookingService> BookingServices { get; set; }
+
+        public DbSet<BookingStatus> BookingStatuses { get; set; }
+
+        public DbSet<Inquiry> Inquiries { get; set; }
+
+        public DbSet<InquiryImage> InquiryImages { get; set; }
+
+        public DbSet<Payment> Payments { get; set; }
+
+        public DbSet<PaymentStatus> PaymentStatuses { get; set; }
+
+        public DbSet<Review> Reviews { get; set; }
+
+        public DbSet<Service> Services { get; set; }
+
+        public DbSet<ServiceCategory> ServiceCategories { get; set; }
+
+        public DbSet<ServiceImage> ServiceImages { get; set; }
+
+        public DbSet<Technician> Technicians { get; set; }
 
         public override int SaveChanges() => this.SaveChanges(true);
 
