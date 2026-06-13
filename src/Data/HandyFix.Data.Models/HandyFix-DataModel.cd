@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Class Name="HandyFix.Data.Models.ApplicationRole" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="4.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAABAAAAAAAAAAAAAAAAAAAACAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>ApplicationRole.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="HandyFix.Data.Models.ApplicationUser" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="6" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAIEBAAAAgAAAAAAAAAAAAAgACAAAAAAAQAQAAAAg=</HashCode>
+      <FileName>ApplicationUser.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="HandyFix.Data.Models.AvailabilitySlot" Collapsed="true">
+    <Position X="7.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAIAAAAAAAAAAIABgAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>AvailabilitySlot.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.Booking" Collapsed="true">
+    <Position X="9.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAANACDAAAAAAACAQRgAAAAAADACAAAAAAACAAQ=</HashCode>
+      <FileName>Booking.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.BookingImage" Collapsed="true">
+    <Position X="11.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAIAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BookingImage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.BookingService" Collapsed="true">
+    <Position X="4.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgACAAAAAIAAAAAAAAAAAAAABAQAAAAIAAgAAAAAA=</HashCode>
+      <FileName>BookingService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.BookingStatus" Collapsed="true">
+    <Position X="6" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BookingStatus.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.Inquiry" Collapsed="true">
+    <Position X="7.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAQAQAAAAAABAAAAAAIAAAAAA=</HashCode>
+      <FileName>Inquiry.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.InquiryImage" Collapsed="true">
+    <Position X="9.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAAAIAAAAAAAAAAAAAAAEAAAAAAAAAAAAA=</HashCode>
+      <FileName>InquiryImage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.Payment" Collapsed="true">
+    <Position X="11.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAMAAAMAAAAACAAAACAAABAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>Payment.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.PaymentStatus" Collapsed="true">
+    <Position X="4.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PaymentStatus.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.Review" Collapsed="true">
+    <Position X="6" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAEAAAAAAAAAAAAAAgAQAAAAAECAAAAAAAAAAA=</HashCode>
+      <FileName>Review.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.Service" Collapsed="true">
+    <Position X="7.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAgAgAAEACAAAQAAAAAABAAAAAAAAAQCAA=</HashCode>
+      <FileName>Service.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.ServiceCategory" Collapsed="true">
+    <Position X="9.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ServiceCategory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.ServiceImage" Collapsed="true">
+    <Position X="11.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQCAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ServiceImage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.Setting" Collapsed="true">
+    <Position X="4.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Setting.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandyFix.Data.Models.Technician" Collapsed="true">
+    <Position X="6" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAgAAAAEAAAQAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
+      <FileName>Technician.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
