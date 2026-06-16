@@ -26,6 +26,12 @@
             var seeders = new List<ISeeder>
                           {
                               new RolesSeeder(),
+                              new AdminUserSeeder(),
+                              new BookingStatusesSeeder(),
+                              new PaymentStatusesSeeder(),
+                              new ServiceCategoriesSeeder(),
+                              new ServicesSeeder(),
+                              new TechniciansSeeder(),
                               new SettingsSeeder(),
                           };
 
