@@ -1,13 +1,13 @@
 ﻿namespace HandyFix.Data.Models
 {
     using System;
-
     using System.Collections.Generic;
-
     using System.ComponentModel.DataAnnotations;
 
     using HandyFix.Data.Common.Models;
+    using Microsoft.EntityFrameworkCore;
 
+    [Index(nameof(Slug), IsUnique = true)]
     public class Service : BaseDeletableModel<Guid>
     {
         public Service()
@@ -16,6 +16,11 @@
             this.Images = new HashSet<ServiceImage>();
             this.BookingServices = new HashSet<BookingService>();
         }
+
+        [Required(ErrorMessage = "The {0} field is required.")]
+        [MinLength(3, ErrorMessage = "The {0} field must be at least 3 characters long.")]
+        [MaxLength(100, ErrorMessage = "The {0} field cannot exceed 100 characters.")]
+        public string Slug { get; set; } = null!;
 
         [Required(ErrorMessage = "The {0} field is required.")]
         [MinLength(3, ErrorMessage = "The {0} field must be at least 3 characters long.")]

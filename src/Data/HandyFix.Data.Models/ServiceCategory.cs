@@ -6,7 +6,9 @@
     using System.ComponentModel.DataAnnotations;
 
     using HandyFix.Data.Common.Models;
+    using Microsoft.EntityFrameworkCore;
 
+    [Index(nameof(Slug), IsUnique = true)]
     public class ServiceCategory : BaseDeletableModel<Guid>
     {
         public ServiceCategory()
@@ -14,6 +16,11 @@
             this.Id = Guid.NewGuid();
             this.Services = new HashSet<Service>();
         }
+
+        [Required(ErrorMessage = "The {0} field is required.")]
+        [MinLength(3, ErrorMessage = "The {0} field must be at least 3 characters long.")]
+        [MaxLength(100, ErrorMessage = "The {0} field cannot exceed 100 characters.")]
+        public string Slug { get; set; } = null!;
 
         [Required(ErrorMessage = "The {0} field is required.")]
         [MinLength(3, ErrorMessage = "The {0} field must be at least 3 characters long.")]
