@@ -1,0 +1,54 @@
+@model IEnumerable<HandyFix.Web.ViewModels.Administration.Enquiries.EnquiryViewModel>
+@{
+    this.Layout = "_Layout";
+    this.ViewData["Title"] = "Client Enquiries - Admin";
+}
+
+<div class="py-4 text-slate">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <div>
+            <h1 class="font-weight-bold mb-0">Client Enquiries</h1>
+            <p class="text-muted small mb-0">Inquiries submitted via the public contact page.</p>
+        </div>
+        <a href="/Administration/Dashboard" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <div class="table-responsive bg-white border rounded shadow-sm">
+        <table class="table table-hover table-striped mb-0 text-slate small">
+            <thead>
+                <tr>
+                    <th>Client Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Message Snippet</th>
+                    <th>Submitted Date</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var inquiry in Model)
+                    {
+                        <tr>
+                            <td class="font-weight-bold">@inquiry.Name</td>
+                            <td class="select-all">@inquiry.Email</td>
+                            <td class="select-all">@inquiry.PhoneNumber</td>
+                            <td class="text-muted text-truncate" style="max-width: 250px;">@inquiry.Message</td>
+                            <td>@inquiry.CreatedOn.ToString("dd MMM yyyy")</td>
+                            <td class="text-right">
+                                <a href="/Administration/Enquiries/Details/@inquiry.Id" class="btn btn-sm btn-primary">Details</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center p-4 text-muted">No enquiries received yet.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

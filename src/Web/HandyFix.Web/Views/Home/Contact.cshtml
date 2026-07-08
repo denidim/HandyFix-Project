@@ -1,0 +1,60 @@
+@model HandyFix.Web.ViewModels.Home.ContactInputModel
+@{
+    this.Layout = "_Layout";
+}
+
+<div class="py-4 max-width-700 mx-auto text-slate">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent p-0 mb-3">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Contact Us</li>
+        </ol>
+    </nav>
+
+    <h1 class="font-weight-bold text-slate mb-3 text-center">Get a Free Custom Quote</h1>
+    <p class="text-muted text-center mb-5">Have a larger project or a custom task? Submit an inquiry and our office team will respond shortly.</p>
+
+    @if (this.TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success p-3 rounded-lg mb-4 text-center">
+            @this.TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm border rounded-lg p-4 bg-white">
+        <form asp-controller="Home" asp-action="Contact" method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6 form-group mb-3">
+                    <label asp-for="Name" class="form-label font-weight-bold">Your Name</label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. John Doe" required />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 form-group mb-3">
+                    <label asp-for="Email" class="form-label font-weight-bold">Email Address</label>
+                    <input asp-for="Email" class="form-control" type="email" placeholder="e.g. john@example.com" required />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="PhoneNumber" class="form-label font-weight-bold">Phone Number</label>
+                <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="e.g. 07123456789" required />
+                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Message" class="form-label font-weight-bold">Tell us about your requirements</label>
+                <textarea asp-for="Message" class="form-control" rows="5" placeholder="Describe the services you require. If you need mounting, specify wall material (drywall, brick, etc.)." required></textarea>
+                <span asp-validation-for="Message" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="Images" class="form-label font-weight-bold">Upload Photos of the Work Area (Optional)</label>
+                <input asp-for="Images" class="form-control border-dashed-upload" type="file" multiple accept="image/jpeg,image/png,image/webp" />
+                <small class="form-text text-muted">Supported formats: JPG, PNG, WEBP. Maximum 3 images, 5MB each.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block w-100 py-3 font-weight-bold">Submit Enquiry</button>
+        </form>
+    </div>
+</div>
