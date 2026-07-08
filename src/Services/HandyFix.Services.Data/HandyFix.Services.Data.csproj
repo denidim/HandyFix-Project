@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all">
@@ -10,6 +10,7 @@
     <ProjectReference Include="..\..\Data\HandyFix.Data.Common\HandyFix.Data.Common.csproj" />
     <ProjectReference Include="..\..\Data\HandyFix.Data.Models\HandyFix.Data.Models.csproj" />
     <ProjectReference Include="..\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
+    <ProjectReference Include="..\HandyFix.Services.Messaging\HandyFix.Services.Messaging.csproj" />
   </ItemGroup>
 
 </Project>
