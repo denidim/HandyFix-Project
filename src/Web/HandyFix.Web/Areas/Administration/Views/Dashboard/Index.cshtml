@@ -1,7 +1,73 @@
-﻿@model HandyFix.Web.ViewModels.Administration.Dashboard.IndexViewModel
+@model HandyFix.Web.ViewModels.Administration.Dashboard.IndexViewModel
 @{
-    this.ViewData["Title"] = "Admin dashboard";
+    this.Layout = "_Layout";
+    this.ViewData["Title"] = "Admin Command Center";
 }
 
-<h1>@this.ViewData["Title"]</h1>
-Settings: @this.Model.SettingsCount
+<div class="py-4 text-slate">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h1 class="font-weight-bold mb-0">Admin Dashboard</h1>
+        <span class="text-muted small">System Status: <span class="badge badge-success px-2 py-1">Active</span></span>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="row mb-5">
+        <!-- Revenue Card -->
+        <div class="col-md-3 mb-4">
+            <div class="card border shadow-sm rounded-lg p-3 bg-white h-100">
+                <div class="small text-muted font-weight-bold uppercase mb-2">Total Revenue</div>
+                <div class="h3 font-weight-bold text-success">£@Model.TotalRevenue.ToString("F2")</div>
+                <div class="small text-muted-light">Deposit payments processed</div>
+            </div>
+        </div>
+
+        <!-- Bookings Card -->
+        <div class="col-md-3 mb-4">
+            <div class="card border shadow-sm rounded-lg p-3 bg-white h-100">
+                <div class="small text-muted font-weight-bold uppercase mb-2">Bookings</div>
+                <div class="h3 font-weight-bold text-primary">@Model.TotalBookingsCount</div>
+                <div class="small text-warning font-weight-bold">@Model.PendingBookingsCount Pending Approval</div>
+            </div>
+        </div>
+
+        <!-- Enquiries Card -->
+        <div class="col-md-3 mb-4">
+            <div class="card border shadow-sm rounded-lg p-3 bg-white h-100">
+                <div class="small text-muted font-weight-bold uppercase mb-2">Inquiries</div>
+                <div class="h3 font-weight-bold text-info">@Model.TotalEnquiriesCount</div>
+                <div class="small text-muted-light">From contact forms</div>
+            </div>
+        </div>
+
+        <!-- Pending Reviews Card -->
+        <div class="col-md-3 mb-4">
+            <div class="card border shadow-sm rounded-lg p-3 bg-white h-100">
+                <div class="small text-muted font-weight-bold uppercase mb-2">Unapproved Reviews</div>
+                <div class="h3 font-weight-bold text-danger">@Model.PendingReviewsCount</div>
+                <div class="small text-muted-light">Awaiting moderation approval</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Links -->
+    <h3 class="font-weight-bold mb-3 h4">Management Operations</h3>
+    <div class="row">
+        <div class="col-sm-6 col-md-3 mb-3">
+            <a href="/Administration/Bookings" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">📅 Manage Bookings</a>
+        </div>
+        <div class="col-sm-6 col-md-3 mb-3">
+            <a href="/Administration/Services" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">🛠️ Manage Services</a>
+        </div>
+        <div class="col-sm-6 col-md-3 mb-3">
+            <a href="/Administration/Calendar" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">🗓️ Manage Availability</a>
+        </div>
+        <div class="col-sm-6 col-md-3 mb-3">
+            <a href="/Administration/Enquiries" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">📧 Client Enquiries</a>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-sm-6 col-md-3 mb-3">
+            <a href="/Administration/Reviews" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">★ Moderate Reviews</a>
+        </div>
+    </div>
+</div>
