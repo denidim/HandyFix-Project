@@ -1,9 +1,231 @@
-﻿@using HandyFix.Common
+@using HandyFix.Web.ViewModels.Services
+@using HandyFix.Web.ViewModels.Reviews
 @{
-    this.ViewData["Title"] = "Home Page";
+    var services = this.ViewData["Services"] as IEnumerable<ServiceViewModel> ?? new List<ServiceViewModel>();
+    var popularServices = this.ViewData["PopularServices"] as IEnumerable<ServiceViewModel> ?? new List<ServiceViewModel>();
+    var reviews = this.ViewData["SliderReviews"] as IEnumerable<ReviewViewModel> ?? new List<ReviewViewModel>();
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome to @GlobalConstants.SystemName!</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- Hero Section with Redirection booking widget -->
+<section class="hero-section py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <h1 class="display-4 font-weight-bold text-slate">Local Plumbing & Handyman Services in South London</h1>
+            <p class="lead text-muted my-3">Reliable, professional, and fully insured mobile service operating in Sutton, Croydon, Epsom, and beyond. Booking has never been easier.</p>
+            <div class="benefits-list my-4">
+                <div class="benefit-item"><span class="check-icon">✓</span> Fully Insured & Experienced Professionals</div>
+                <div class="benefit-item"><span class="check-icon">✓</span> Transparent, Up-front Hourly Pricing</div>
+                <div class="benefit-item"><span class="check-icon">✓</span> Fast Response & Local London Dispatch</div>
+                <div class="benefit-item"><span class="check-icon">✓</span> 100% Customer Satisfaction Guarantee</div>
+            </div>
+            <a href="#services-overview" class="btn btn-primary btn-lg shadow-sm">Explore Our Services</a>
+        </div>
+        <div class="col-lg-6">
+            <div class="booking-widget-card p-4 bg-white rounded shadow-lg">
+                <h3 class="mb-3 text-slate">Check Availability</h3>
+                <form id="hero-booking-form" method="get" action="/Booking">
+                    <div class="form-group mb-3">
+                        <label for="widget-service" class="form-label font-weight-bold">Select Service</label>
+                        <select id="widget-service" name="serviceId" class="form-control" required>
+                            <option value="">-- Choose a service --</option>
+                            @foreach (var svc in services)
+                            {
+                                <option value="@svc.Id">@svc.Name (from £@svc.BasePrice)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="widget-date" class="form-label font-weight-bold">Choose Date</label>
+                        <input type="date" id="widget-date" name="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="form-group mb-3" id="slots-container-group" style="display: none;">
+                        <label class="form-label font-weight-bold">Available Time Slots</label>
+                        <div id="widget-slots" class="slots-grid">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                    <input type="hidden" id="widget-slot-id" name="slotId" required />
+                    <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block w-100 py-3 font-weight-bold mt-3" disabled>Book Appointment Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section id="services-overview" class="py-5 bg-light rounded px-3 my-5">
+    <div class="text-center mb-5">
+        <h2 class="text-slate font-weight-bold">Our Professional Service Divisions</h2>
+        <p class="text-muted">We focus exclusively on providing premier plumbing and handyman work across South London.</p>
+    </div>
+    <div class="row">
+        <!-- Plumbing Card -->
+        <div class="col-md-6 mb-4">
+            <div class="category-card p-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="category-icon plumbing-icon mb-3">💧</div>
+                    <h3 class="font-weight-bold text-slate">Plumbing Services</h3>
+                    <p class="text-muted text-justify px-3">From emergency leak repairs and pipe maintenance to toilet fixes, bathroom plumbing, blocked drains, and kitchen plumbing integrations. Our local gas-safe and certified plumbers are always ready.</p>
+                </div>
+                <a href="/Services/plumbing" class="btn btn-outline-primary mt-3 font-weight-bold">Browse Plumbing Services</a>
+            </div>
+        </div>
+        <!-- Handyman Card -->
+        <div class="col-md-6 mb-4">
+            <div class="category-card p-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="category-icon handyman-icon mb-3">🔨</div>
+                    <h3 class="font-weight-bold text-slate">Handyman Services</h3>
+                    <p class="text-muted text-justify px-3">Flat-pack furniture assembly, TV wall mounting, shelf fitting, curtain hanging, blind installations, squeaky door repairs, and minor electrical or home touch-ups. Fast, clean, and reliable maintenance.</p>
+                </div>
+                <a href="/Services/handyman" class="btn btn-outline-primary mt-3 font-weight-bold">Browse Handyman Services</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Services Carousel -->
+<section class="py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-slate font-weight-bold mb-0">Popular Services</h2>
+        <a href="/Services" class="text-primary font-weight-bold">View All Services →</a>
+    </div>
+    <div class="row">
+        @foreach (var svc in popularServices)
+        {
+            <div class="col-sm-6 col-md-3 mb-4">
+                <div class="service-card-popular p-3 bg-white border rounded h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="font-weight-bold text-slate text-truncate">@svc.Name</h5>
+                        <p class="text-muted small">@svc.Description.Substring(0, Math.Min(60, svc.Description.Length))...</p>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="font-weight-bold text-primary">From £@svc.BasePrice</span>
+                            <span class="small text-muted"><span class="clock-icon">🕒</span> @svc.EstimatedDurationMinutes min</span>
+                        </div>
+                        <a href="/Services/@(svc.BasePrice > 58 ? "plumbing" : "handyman")/@svc.Slug" class="btn btn-sm btn-outline-secondary w-100 mt-3">View Details</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-5 text-center my-5 bg-slate text-white rounded p-4">
+    <h2 class="font-weight-bold text-white mb-4">Why Choose Handy Fix?</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="p-3">
+                <div class="why-icon mb-3">🛡️</div>
+                <h4 class="font-weight-bold text-cyan">Fully Insured</h4>
+                <p class="text-slate-light small">Rest easy knowing all works are backed by comprehensive public liability insurance coverage.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="p-3">
+                <div class="why-icon mb-3">👨‍🔧</div>
+                <h4 class="font-weight-bold text-cyan">Experienced Specialists</h4>
+                <p class="text-slate-light small">Our plumbers and handymen undergo rigorous vetting and background checks to guarantee professional skill.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="p-3">
+                <div class="why-icon mb-3">💎</div>
+                <h4 class="font-weight-bold text-cyan">Transparent Rates</h4>
+                <p class="text-slate-light small">No hidden fees, callout charges, or unexpected costs. You pay what we quote based on the service selected.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5">
+    <div class="text-center mb-5">
+        <h2 class="text-slate font-weight-bold">What Our Customers Say</h2>
+        <p class="text-muted">Over 1,000 satisfied homes in South London, Surrey, and Kent.</p>
+    </div>
+    <div class="row testimonial-slider">
+        @if (reviews.Any())
+        {
+            @foreach (var review in reviews)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="testimonial-card p-4 bg-white rounded border h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="stars-rating text-warning mb-2">
+                                @for (int i = 0; i < review.Rating; i++)
+                                {
+                                    <span>★</span>
+                                }
+                            </div>
+                            <p class="text-muted font-italic">@review.Comment</p>
+                        </div>
+                        <div class="mt-3">
+                            <h6 class="font-weight-bold text-slate mb-0">@review.CustomerName</h6>
+                            <small class="text-muted">Verified Client - London</small>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center text-muted">
+                No reviews yet. Be the first to leave a review!
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 text-center my-5 bg-gradient-cyan text-white rounded p-5">
+    <h2 class="font-weight-bold text-white mb-3">Ready to get your home fixed?</h2>
+    <p class="lead text-white-50">Select your preferred date and time, fill in details, and secure your booking with Stripe. It takes less than 2 minutes.</p>
+    <a href="/Booking" class="btn btn-light btn-lg text-primary font-weight-bold px-5 py-3 shadow-md mt-3">Book An Appointment Now</a>
+</section>
+
+<!-- Schema.org Local Business structured data -->
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "LocalBusiness",
+  "name": "Handy Fix",
+  "image": "https://handyfix.co.uk/images/logo.png",
+  "@@id": "https://handyfix.co.uk",
+  "url": "https://handyfix.co.uk",
+  "telephone": "07123456789",
+  "priceRange": "$$",
+  "address": {
+    "@@type": "PostalAddress",
+    "streetAddress": "South London Dispatch Office",
+    "addressLocality": "Croydon",
+    "addressRegion": "London",
+    "postalCode": "CR0 1XX",
+    "addressCountry": "GB"
+  },
+  "geo": {
+    "@@type": "GeoCoordinates",
+    "latitude": 51.3762,
+    "longitude": -0.0982
+  },
+  "openingHoursSpecification": {
+    "@@type": "OpeningHoursSpecification",
+    "dayOfWeek": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "opens": "09:00",
+    "closes": "17:00"
+  },
+  "sameAs": [
+    "https://facebook.com/handyfixlondon",
+    "https://twitter.com/handyfixlondon"
+  ]
+}
+</script>
