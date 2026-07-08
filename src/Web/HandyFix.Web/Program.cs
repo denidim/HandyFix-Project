@@ -10,6 +10,7 @@ namespace HandyFix.Web
     using HandyFix.Data.Seeding;
     using HandyFix.Services.Data;
     using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
@@ -80,6 +81,7 @@ namespace HandyFix.Web
             services.AddTransient<ISettingsService, SettingsService>();
             services.AddTransient<ICategoriesService, CategoriesService>();
             services.AddTransient<IServicesService, ServicesService>();
+            services.AddTransient<IReviewsService, ReviewsService>();
         }
 
         private static void Configure(WebApplication app)
