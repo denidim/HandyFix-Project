@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web
+namespace HandyFix.Web
 {
     using System.Reflection;
 
@@ -9,6 +9,8 @@
     using HandyFix.Data.Repositories;
     using HandyFix.Data.Seeding;
     using HandyFix.Services.Data;
+    using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.Services;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels;
@@ -76,6 +78,8 @@
             // Application services
             services.AddTransient<IEmailSender, NullMessageSender>();
             services.AddTransient<ISettingsService, SettingsService>();
+            services.AddTransient<ICategoriesService, CategoriesService>();
+            services.AddTransient<IServicesService, ServicesService>();
         }
 
         private static void Configure(WebApplication app)
