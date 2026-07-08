@@ -1,0 +1,61 @@
+@{
+    this.Layout = "_Layout";
+}
+
+<div class="py-4 max-width-700 mx-auto text-slate">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent p-0 mb-3">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">FAQ</li>
+        </ol>
+    </nav>
+
+    <h1 class="font-weight-bold text-slate mb-4 text-center">Frequently Asked Questions</h1>
+    <p class="text-muted text-center mb-5">Find answers to the most common queries about our South London booking process and repair services.</p>
+
+    <div class="accordion" id="generalFaq">
+        <div class="card border mb-3 rounded shadow-sm">
+            <div class="card-header bg-white py-3" id="faqOne" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" style="cursor: pointer;">
+                <h5 class="mb-0 font-weight-bold text-slate small">How do I book a service appointment online?</h5>
+            </div>
+            <div id="collapseOne" class="collapse show" data-parent="#generalFaq">
+                <div class="card-body text-muted small leading-relaxed">
+                    Simply choose your category (Plumbing or Handyman) and service details on our homepage booking widget or Services pages, select your preferred date, pick from the available hourly slots, enter your address, upload any optional photos of the problem, and complete checkout.
+                </div>
+            </div>
+        </div>
+
+        <div class="card border mb-3 rounded shadow-sm">
+            <div class="card-header bg-white py-3 collapsed" id="faqTwo" data-toggle="collapse" data-target="#collapseTwo" style="cursor: pointer;">
+                <h5 class="mb-0 font-weight-bold text-slate small">What is the £50.00 deposit payment for?</h5>
+            </div>
+            <div id="collapseTwo" class="collapse" data-parent="#generalFaq">
+                <div class="card-body text-muted small leading-relaxed">
+                    The £50.00 deposit secures your selected calendar time slot and assigns our local technician to your address. This deposit is fully integrated with Stripe and is deducted from the final service invoice upon job completion.
+                </div>
+            </div>
+        </div>
+
+        <div class="card border mb-3 rounded shadow-sm">
+            <div class="card-header bg-white py-3 collapsed" id="faqThree" data-toggle="collapse" data-target="#collapseThree" style="cursor: pointer;">
+                <h5 class="mb-0 font-weight-bold text-slate small">Can I reschedule or cancel my booking?</h5>
+            </div>
+            <div id="collapseThree" class="collapse" data-parent="#generalFaq">
+                <div class="card-body text-muted small leading-relaxed">
+                    Yes. You can reschedule or cancel your booking up to 24 hours before the appointment time by calling our support line or emailing bookings@handyfix.co.uk. Cancellations within 24 hours of scheduled attendance may forfeit the deposit.
+                </div>
+            </div>
+        </div>
+
+        <div class="card border mb-3 rounded shadow-sm">
+            <div class="card-header bg-white py-3 collapsed" id="faqFour" data-toggle="collapse" data-target="#collapseFour" style="cursor: pointer;">
+                <h5 class="mb-0 font-weight-bold text-slate small">Do you provide emergency out-of-hours callouts?</h5>
+            </div>
+            <div id="collapseFour" class="collapse" data-parent="#generalFaq">
+                <div class="card-body text-muted small leading-relaxed">
+                    Yes, we offer 24/7 Emergency Plumbing response for burst pipes, flooding, or critical failures. For urgent assistance, please choose the Emergency Plumbing option or call us directly on 07123 456 789.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
