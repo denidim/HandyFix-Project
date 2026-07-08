@@ -1,0 +1,159 @@
+@model HandyFix.Web.ViewModels.Services.ServiceDetailsViewModel
+@{
+    this.Layout = "_Layout";
+}
+
+<div class="py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent p-0 mb-3">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/Services">Services</a></li>
+            <li class="breadcrumb-item"><a href="/Services/@Model.CategorySlug">@Model.CategoryName</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Service Details Content -->
+        <div class="col-lg-8">
+            <h1 class="display-5 font-weight-bold text-slate mb-3">@Model.Name in South London</h1>
+            <div class="d-flex align-items-center mb-4">
+                <span class="badge badge-primary mr-3 px-3 py-2">Division: @Model.CategoryName</span>
+                <span class="badge badge-light text-muted mr-3">🕒 Estimated Duration: @Model.EstimatedDurationMinutes mins</span>
+                <span class="h4 text-success mb-0 font-weight-bold">from £@Model.BasePrice.ToString("F2")</span>
+            </div>
+
+            <div class="service-description leading-relaxed text-slate mb-5" style="font-size: 1.1rem;">
+                <p>@Model.Description</p>
+                <p>At <strong>HandyFix</strong>, our mobile crews are specialized in @Model.Name operations. We come equipped with professional-grade tools, quality replacement components, and follow strict building codes to ensure a lasting repair or installation. All our work is fully insured for your peace of mind.</p>
+            </div>
+
+            <hr class="my-5" />
+
+            <!-- FAQ Section -->
+            <div class="faq-section mb-5">
+                <h3 class="font-weight-bold text-slate mb-4">Frequently Asked Questions</h3>
+                <div class="accordion" id="detailsFaq">
+                    <div class="card border mb-2 rounded">
+                        <div class="card-header bg-white py-3" id="faqOne" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" style="cursor: pointer;">
+                            <h5 class="mb-0 font-weight-bold text-slate small">How much does @Model.Name cost?</h5>
+                        </div>
+                        <div id="collapseOne" class="collapse show" data-parent="#detailsFaq">
+                            <div class="card-body text-muted small">
+                                Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2"). The final cost depends on the complexity of the task and any additional materials or parts required. We always present transparent quotes before starting.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card border mb-2 rounded">
+                        <div class="card-header bg-white py-3 collapsed" id="faqTwo" data-toggle="collapse" data-target="#collapseTwo" style="cursor: pointer;">
+                            <h5 class="mb-0 font-weight-bold text-slate small">Do you cover my location?</h5>
+                        </div>
+                        <div id="collapseTwo" class="collapse" data-parent="#detailsFaq">
+                            <div class="card-body text-muted small">
+                                We operate throughout Sutton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, Dartford, Maidstone, and the surrounding areas in South London, Surrey, and Kent.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card border mb-2 rounded">
+                        <div class="card-header bg-white py-3 collapsed" id="faqThree" data-toggle="collapse" data-target="#collapseThree" style="cursor: pointer;">
+                            <h5 class="mb-0 font-weight-bold text-slate small">Is your @Model.Name service insured?</h5>
+                        </div>
+                        <div id="collapseThree" class="collapse" data-parent="#detailsFaq">
+                            <div class="card-body text-muted small">
+                                Yes, absolutely. All HandyFix services, including @Model.Name, are fully backed by our £5M public liability insurance and satisfaction guarantee.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Area Details -->
+            <div class="seo-local-block bg-light p-4 rounded-lg mt-5">
+                <h4 class="font-weight-bold text-slate mb-3">Local @Model.Name Specialists Near You</h4>
+                <p class="text-muted leading-relaxed text-justify mb-0">
+                    We offer rapid local response for @Model.Name across all major South London boroughs and towns. Our technicians live and work in the community, allowing us to arrive quickly in Sutton, Croydon, Epsom, Kingston, Bromley, Orpington, and Maidstone. When booking, select your preferred time slot and write your details to get a vetted plumber or handyman dispatched.
+                </p>
+            </div>
+        </div>
+
+        <!-- Sidebar Book CTA -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="sticky-top" style="top: 2rem;">
+                <div class="booking-cta-box p-4 bg-slate text-white rounded-lg shadow text-center">
+                    <h4 class="font-weight-bold text-cyan mb-2">Book @Model.Name</h4>
+                    <p class="small text-white-50">Select your date and secure your booking in minutes.</p>
+                    <div class="display-4 font-weight-bold text-white my-3">£@Model.BasePrice.ToString("F2")</div>
+                    <p class="small text-white-50">Requires a £50.00 deposit to secure slot</p>
+                    <a href="/Booking?serviceId=@Model.Id" class="btn btn-success btn-block py-3 font-weight-bold shadow-md mt-4">Book This Service Now</a>
+                </div>
+
+                <div class="contact-card-box p-4 border rounded-lg bg-white shadow-sm mt-4 text-center">
+                    <h5 class="font-weight-bold text-slate mb-2">Custom Requirements?</h5>
+                    <p class="text-muted small">Need multiple things fixed or have a large project?</p>
+                    <a href="/Contact" class="btn btn-outline-primary btn-block font-weight-bold">Enquire via Form</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JSON-LD Service schema structured data -->
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "Service",
+  "serviceType": "@Model.Name",
+  "provider": {
+    "@@type": "LocalBusiness",
+    "name": "HandyFix",
+    "telephone": "07123456789",
+    "priceRange": "$$",
+    "address": {
+      "@@type": "PostalAddress",
+      "addressLocality": "Croydon",
+      "addressRegion": "London",
+      "addressCountry": "GB"
+    }
+  },
+  "areaServed": [
+    { "@@type": "AdministrativeArea", "name": "South London" },
+    { "@@type": "AdministrativeArea", "name": "Sutton" },
+    { "@@type": "AdministrativeArea", "name": "Croydon" },
+    { "@@type": "AdministrativeArea", "name": "Epsom" },
+    { "@@type": "AdministrativeArea", "name": "Kingston" },
+    { "@@type": "AdministrativeArea", "name": "Bromley" }
+  ],
+  "offers": {
+    "@@type": "Offer",
+    "price": "@Model.BasePrice.ToString("F2")",
+    "priceCurrency": "GBP"
+  }
+}
+</script>
+
+<!-- FAQ Schema -->
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@@type": "Question",
+      "name": "How much does @Model.Name cost?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2")."
+      }
+    },
+    {
+      "@@type": "Question",
+      "name": "Do you cover my location?",
+      "acceptedAnswer": {
+        "@@type": "Answer",
+        "text": "We operate throughout Sutton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, and surrounding areas in South London."
+      }
+    }
+  ]
+}
+</script>

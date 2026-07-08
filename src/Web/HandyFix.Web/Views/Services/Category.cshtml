@@ -1,0 +1,93 @@
+@model HandyFix.Web.ViewModels.Services.CategoryViewModel
+@{
+    this.Layout = "_Layout";
+}
+
+<div class="py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent p-0 mb-3">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/Services">Services</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-5 text-center text-md-left">
+        <h1 class="font-weight-bold text-slate">Professional @Model.Name Services in South London</h1>
+        <p class="lead text-muted">Reliable, vetted local technicians, transparent pricing, and guaranteed customer satisfaction.</p>
+    </div>
+
+    <div class="row">
+        <!-- Services List -->
+        <div class="col-lg-8">
+            <div class="services-list-grid">
+                @foreach (var svc in Model.Services)
+                {
+                    <div class="card border mb-4 shadow-sm hover-grow rounded-lg p-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-9 mb-3 mb-md-0">
+                                <h3 class="font-weight-bold text-slate h5 mb-2">@svc.Name</h3>
+                                <p class="text-muted small mb-0">@svc.Description</p>
+                                <div class="mt-2 d-flex align-items-center">
+                                    <span class="badge badge-light text-muted mr-3">🕒 Estimated: @svc.EstimatedDurationMinutes mins</span>
+                                    <span class="font-weight-bold text-success">Price: from £@svc.BasePrice</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-md-right">
+                                <a asp-controller="Services"
+                                   asp-action="Details"
+                                   asp-route-categorySlug="@Model.Slug"
+                                   asp-route-serviceSlug="@svc.Slug"
+                                   class="btn btn-primary btn-block mb-2">Details</a>
+
+                                <a asp-controller="Booking"
+                                   asp-action="Index"
+                                   asp-route-serviceId="@svc.Id"
+                                   class="btn btn-success btn-block">Book Slot</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Local SEO Area Section -->
+            <div class="seo-local-block bg-light p-4 rounded-lg mt-5 border border-light">
+                <h4 class="font-weight-bold text-slate mb-3">Service Areas for @Model.Name in South London &amp; Surrey</h4>
+                <p class="text-muted leading-relaxed text-justify">
+                    Our professional mobile teams cover Sutton, Croydon, Epsom, Kingston, Bromley, Orpington, and nearby areas. We have locally based specialists in Sutton, Carshalton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, Orpington, Sevenoaks, Dartford, Maidstone, and throughout Kent. Whether you have a burst pipe in Croydon, need a toilet repair in Sutton, furniture assembly in Wimbledon, or minor electrical fittings in Kingston, our certified professionals can be dispatched quickly to your location.
+                </p>
+                <div class="d-flex flex-wrap mt-3">
+                    @foreach (var area in new[] { "Sutton", "Croydon", "Wimbledon", "Mitcham", "Epsom", "Kingston", "Bromley", "Sevenoaks", "Dartford", "Maidstone" })
+                    {
+                        <span class="badge badge-secondary m-1 px-3 py-2">@area</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Widget -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="sticky-top" style="top: 2rem;">
+                <div class="booking-cta-box p-4 bg-slate text-white rounded-lg shadow">
+                    <h4 class="font-weight-bold text-cyan mb-3">Need Service Today?</h4>
+                    <p class="small text-white-50">Book an hourly slot directly on our calendar. Secure payments powered by Stripe.</p>
+                    <hr class="border-secondary my-3" />
+                    <ul class="list-unstyled mb-4 small">
+                        <li class="mb-2">✓ Select date &amp; time</li>
+                        <li class="mb-2">✓ Upload problem photos</li>
+                        <li class="mb-2">✓ Guaranteed attendance</li>
+                    </ul>
+                    <a href="/Booking" class="btn btn-success btn-block py-3 font-weight-bold shadow-sm">Instant Booking Wizard</a>
+                </div>
+
+                <div class="contact-card-box p-4 border rounded-lg bg-white shadow-sm mt-4 text-center">
+                    <h5 class="font-weight-bold text-slate mb-2">Speak to Our Office</h5>
+                    <p class="text-muted small">Have a custom query or large project request?</p>
+                    <a href="tel:07123456789" class="btn btn-outline-primary btn-block py-2 font-weight-bold">📞 Call 07123 456 789</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

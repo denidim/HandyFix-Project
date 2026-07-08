@@ -1,0 +1,52 @@
+@model HandyFix.Web.ViewModels.Administration.Services.ServiceAdminInputModel
+@{
+    this.Layout = "_Layout";
+    this.ViewData["Title"] = "Create Service - Admin";
+    var categories = this.ViewData["Categories"] as SelectList;
+}
+
+<div class="py-4 max-width-600 mx-auto text-slate">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h1 class="font-weight-bold mb-0">Add New Service</h1>
+        <a href="/Administration/Services" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+
+    <div class="card p-4 rounded border bg-white shadow-sm">
+        <form asp-area="Administration" asp-controller="Services" asp-action="Create" method="post">
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="form-label font-weight-bold small">Service Name</label>
+                <input asp-for="Name" class="form-control" placeholder="e.g. Toilet Repair" required />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="CategoryId" class="form-label font-weight-bold small">Category Division</label>
+                <select asp-for="CategoryId" asp-items="categories" class="form-control" required>
+                    <option value="">-- Choose Category --</option>
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Description" class="form-label font-weight-bold small">Detailed Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe the service in detail (minimum 20 characters)..." required></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 form-group mb-3">
+                    <label asp-for="BasePrice" class="form-label font-weight-bold small">Base Price (£)</label>
+                    <input asp-for="BasePrice" class="form-control" type="number" step="0.01" required />
+                    <span asp-validation-for="BasePrice" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 form-group mb-3">
+                    <label asp-for="EstimatedDurationMinutes" class="form-label font-weight-bold small">Duration (Minutes)</label>
+                    <input asp-for="EstimatedDurationMinutes" class="form-control" type="number" step="1" required />
+                    <span asp-validation-for="EstimatedDurationMinutes" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-block w-100 font-weight-bold py-2 mt-3">Save Service</button>
+        </form>
+    </div>
+</div>
