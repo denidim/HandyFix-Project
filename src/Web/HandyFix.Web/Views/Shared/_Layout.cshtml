@@ -1,4 +1,4 @@
-﻿@using HandyFix.Common
+@using HandyFix.Common
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,7 +23,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Settings" asp-action="Index">Settings</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -41,10 +41,16 @@
             @this.RenderBody()
         </main>
     </div>
+
+    <!-- Sticky Mobile CTA Navigation Bar -->
+    <div class="mobile-sticky-cta-footer">
+        <a href="tel:07123456789" class="btn btn-primary font-weight-bold flex-fill py-3" style="border-radius: 8px;">📞 Call Us</a>
+        <a href="/Booking" class="btn btn-success font-weight-bold flex-fill py-3" style="border-radius: 8px;">📅 Book Now</a>
+    </div>
     
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; @DateTime.Now.Year - @GlobalConstants.SystemName - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; @DateTime.Now.Year - Handy Fix - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
 
