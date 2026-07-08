@@ -4,13 +4,17 @@ namespace HandyFix.Web.Controllers
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
+    using HandyFix.Services.Data.Services;
     using HandyFix.Web.ViewModels;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Reviews;
+    using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
@@ -19,20 +23,44 @@ namespace HandyFix.Web.Controllers
     {
         private readonly IReviewsService reviewsService;
         private readonly IInquiriesService inquiriesService;
+        private readonly IServicesService servicesService;
+        private readonly IAvailabilityService availabilityService;
         private readonly IWebHostEnvironment environment;
 
         public HomeController(
             IReviewsService reviewsService,
             IInquiriesService inquiriesService,
+            IServicesService servicesService,
+            IAvailabilityService availabilityService,
             IWebHostEnvironment environment)
         {
             this.reviewsService = reviewsService;
             this.inquiriesService = inquiriesService;
+            this.servicesService = servicesService;
+            this.availabilityService = availabilityService;
             this.environment = environment;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            // For Hero widget
+            var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+            var dates = await this.availabilityService.GetAvailableDatesAsync();
+
+            this.ViewData["Services"] = services;
+            this.ViewData["AvailableDates"] = dates;
+
+            // Approved Reviews for slider
+            var sliderReviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6);
+            this.ViewData["SliderReviews"] = sliderReviews;
+
+            // Popular Services
+            var popularServices = services.Take(4).ToList();
+            this.ViewData["PopularServices"] = popularServices;
+
+            this.ViewData["Title"] = "Handy Fix - Plumbers & Handymen in South London";
+            this.ViewData["MetaDescription"] = "Handy Fix provides reliable local plumbing and handyman services in Sutton, Croydon, Epsom, Bromley, Kingston, Kent, and South London. Book hourly slots online.";
+
             return this.View();
         }
 
