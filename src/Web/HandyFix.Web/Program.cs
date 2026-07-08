@@ -13,6 +13,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Inquiries;
+    using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
     using HandyFix.Services.Mapping;
@@ -88,6 +89,7 @@ namespace HandyFix.Web
             services.AddTransient<IInquiriesService, InquiriesService>();
             services.AddTransient<IAvailabilityService, AvailabilityService>();
             services.AddTransient<IBookingsService, BookingsService>();
+            services.AddTransient<IPaymentsService, PaymentsService>();
         }
 
         private static void Configure(WebApplication app)
