@@ -1,0 +1,221 @@
+@model HandyFix.Web.ViewModels.Booking.BookingInputModel
+@using HandyFix.Web.ViewModels.Services
+@{
+    this.Layout = "_Layout";
+    this.ViewData["Title"] = "Book Plumbing or Handyman Appointment - HandyFix London";
+    var services = this.ViewData["Services"] as IEnumerable<ServiceViewModel> ?? new List<ServiceViewModel>();
+    var dates = this.ViewData["AvailableDates"] as IEnumerable<DateTime> ?? new List<DateTime>();
+    var selectedServiceId = this.ViewData["SelectedServiceId"] as Guid?;
+}
+
+<div class="py-4 max-width-700 mx-auto">
+    <div class="text-center mb-4">
+        <h1 class="font-weight-bold text-slate">Secure Your Appointment</h1>
+        <p class="text-muted">Enter details below to schedule your HandyFix certified professional.</p>
+    </div>
+
+    <div class="card shadow border-0 rounded-lg p-4 bg-white">
+        <form asp-controller="Booking" asp-action="Index" method="post" enctype="multipart/form-data" id="booking-wizard-form">
+            <!-- Step 1: Service & Scheduling -->
+            <div class="form-section mb-4">
+                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">1. Choose Service & Slot</h4>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="ServiceId" class="form-label font-weight-bold">Select Service</label>
+                    <select asp-for="ServiceId" class="form-control" id="wizard-service" required>
+                        <option value="">-- Select a Service --</option>
+                        @foreach (var svc in services)
+                        {
+                            if (selectedServiceId.HasValue && selectedServiceId.Value == svc.Id)
+                            {
+                                <option value="@svc.Id" selected>@svc.Name (from £@svc.BasePrice)</option>
+                            }
+                            else
+                            {
+                                <option value="@svc.Id">@svc.Name (from £@svc.BasePrice)</option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="ServiceId" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label font-weight-bold">Choose Date</label>
+                    <input type="date" id="wizard-date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                </div>
+
+                <div class="form-group mb-3" id="wizard-slots-group" style="display:none;">
+                    <label class="form-label font-weight-bold">Available Time Slots</label>
+                    <div id="wizard-slots" class="slots-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                    <span asp-validation-for="SlotId" class="text-danger small d-block mt-2"></span>
+                </div>
+                
+                <input type="hidden" asp-for="SlotId" id="wizard-slot-id" required />
+            </div>
+
+            <!-- Step 2: Customer Details -->
+            <div class="form-section mb-4">
+                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">2. Your Contact Information</h4>
+                
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="CustomerFirstName" class="form-label font-weight-bold">First Name</label>
+                        <input asp-for="CustomerFirstName" class="form-control" placeholder="e.g. John" required />
+                        <span asp-validation-for="CustomerFirstName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="CustomerLastName" class="form-label font-weight-bold">Last Name</label>
+                        <input asp-for="CustomerLastName" class="form-control" placeholder="e.g. Doe" required />
+                        <span asp-validation-for="CustomerLastName" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="Email" class="form-label font-weight-bold">Email Address</label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="e.g. john@example.com" required />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="PhoneNumber" class="form-label font-weight-bold">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="e.g. 07123456789" required />
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Address" class="form-label font-weight-bold">Service Address (London, Surrey, or Kent)</label>
+                    <input asp-for="Address" class="form-control" placeholder="e.g. 12 High Street, Croydon, CR0 1XX" required />
+                    <span asp-validation-for="Address" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- Step 3: Issue Description & Uploads -->
+            <div class="form-section mb-4">
+                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">3. Problem Details</h4>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="ProblemDescription" class="form-label font-weight-bold">Describe the issue</label>
+                    <textarea asp-for="ProblemDescription" class="form-control" rows="4" placeholder="Please provide details about the job, what needs fixing, and any access constraints." required></textarea>
+                    <span asp-validation-for="ProblemDescription" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label asp-for="Images" class="form-label font-weight-bold">Attach Photos (Optional)</label>
+                    <div class="custom-file">
+                        <input asp-for="Images" class="form-control border-dashed-upload" type="file" multiple accept="image/jpeg,image/png,image/webp" />
+                    </div>
+                    <small class="form-text text-muted">Supported formats: JPG, PNG, WEBP. Maximum 3 images, 5MB each.</small>
+                </div>
+            </div>
+
+            <!-- Booking Summary Box -->
+            <div class="p-3 bg-light rounded-lg mb-4 text-slate">
+                <h5 class="font-weight-bold mb-2">Booking Summary</h5>
+                <div class="d-flex justify-content-between mb-1 small">
+                    <span>Deposit Payable Now (Stripe):</span>
+                    <span class="font-weight-bold text-success">£50.00</span>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span>Total Amount (payable on completion):</span>
+                    <span class="font-weight-bold" id="summary-total-price">£0.00</span>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-booking-btn" class="btn btn-success btn-lg btn-block w-100 py-3 font-weight-bold" disabled>Proceed to Payment</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const dateInput = document.getElementById("wizard-date");
+            const serviceSelect = document.getElementById("wizard-service");
+            const slotsGroup = document.getElementById("wizard-slots-group");
+            const slotsContainer = document.getElementById("wizard-slots");
+            const hiddenSlotInput = document.getElementById("wizard-slot-id");
+            const submitBtn = document.getElementById("submit-booking-btn");
+            const summaryTotal = document.getElementById("summary-total-price");
+
+            // Update Total price in summary based on selection
+            function updateSummaryPrice() {
+                const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+                if (selectedOption && selectedOption.value !== "") {
+                    const text = selectedOption.text;
+                    const match = text.match(/£([0-9.]+)/);
+                    if (match && match[1]) {
+                        summaryTotal.textContent = "£" + parseFloat(match[1]).toFixed(2);
+                        return;
+                    }
+                }
+                summaryTotal.textContent = "£0.00";
+            }
+
+            serviceSelect.addEventListener("change", updateSummaryPrice);
+            updateSummaryPrice();
+
+            // Fetch available time slots when date changes
+            dateInput.addEventListener("change", function () {
+                const selectedDate = dateInput.value;
+                if (!selectedDate) {
+                    slotsGroup.style.display = "none";
+                    return;
+                }
+
+                slotsContainer.innerHTML = "<div class='text-center p-3 text-muted w-100'>Loading slots...</div>";
+                slotsGroup.style.display = "block";
+
+                fetch(`/Booking/GetSlots?date=${selectedDate}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error("Failed to load slots");
+                        return res.json();
+                    })
+                    .then(slots => {
+                        slotsContainer.innerHTML = "";
+                        if (slots.length === 0) {
+                            slotsContainer.innerHTML = "<div class='text-danger p-2 text-center w-100'>No slots available for this date. Please select another.</div>";
+                            return;
+                        }
+
+                        slots.forEach(slot => {
+                            const button = document.createElement("button");
+                            button.type = "button";
+                            button.className = "btn btn-outline-secondary slot-selection-btn m-1";
+                            button.textContent = slot.formattedTime;
+                            button.dataset.id = slot.id;
+
+                            button.addEventListener("click", function () {
+                                // Clear selection from others
+                                document.querySelectorAll(".slot-selection-btn").forEach(b => {
+                                    b.className = "btn btn-outline-secondary slot-selection-btn m-1";
+                                });
+                                // Highlight selected
+                                button.className = "btn btn-primary slot-selection-btn m-1";
+                                hiddenSlotInput.value = slot.id;
+                                checkFormValidity();
+                            });
+
+                            slotsContainer.appendChild(button);
+                        });
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        slotsContainer.innerHTML = "<div class='text-danger p-2 text-center w-100'>Error loading slots. Please try again.</div>";
+                    });
+            });
+
+            function checkFormValidity() {
+                if (hiddenSlotInput.value && serviceSelect.value) {
+                    submitBtn.disabled = false;
+                } else {
+                    submitBtn.disabled = true;
+                }
+            }
+
+            serviceSelect.addEventListener("change", checkFormValidity);
+        });
+    </script>
+}

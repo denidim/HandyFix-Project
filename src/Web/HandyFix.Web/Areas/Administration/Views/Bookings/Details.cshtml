@@ -1,0 +1,140 @@
+@model HandyFix.Web.ViewModels.Booking.BookingDetailsViewModel
+@using HandyFix.Data.Models
+@{
+    this.Layout = "_Layout";
+    this.ViewData["Title"] = $"Booking Details - {Model.Id}";
+    var technicians = this.ViewData["Technicians"] as IEnumerable<Technician> ?? new List<Technician>();
+}
+
+<div class="py-4 text-slate">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <div>
+            <h1 class="font-weight-bold mb-0">Booking Ref: @Model.Id.ToString().Substring(0, 8)...</h1>
+            <span class="text-muted small">Submitted on scheduled time @Model.ScheduledTime.ToString("dd MMM yyyy")</span>
+        </div>
+        <a href="/Administration/Bookings" class="btn btn-outline-secondary btn-sm">← Back to List</a>
+    </div>
+
+    <div class="row">
+        <!-- Main Details -->
+        <div class="col-lg-8 mb-4">
+            <div class="card p-4 rounded border mb-4 bg-white">
+                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Customer &amp; Service Details</h4>
+                <div class="row mb-3 small">
+                    <div class="col-sm-3 font-weight-bold">Name:</div>
+                    <div class="col-sm-9">@Model.CustomerFirstName @Model.CustomerLastName</div>
+                </div>
+                <div class="row mb-3 small">
+                    <div class="col-sm-3 font-weight-bold">Email:</div>
+                    <div class="col-sm-9 select-all">@Model.Email</div>
+                </div>
+                <div class="row mb-3 small">
+                    <div class="col-sm-3 font-weight-bold">Phone:</div>
+                    <div class="col-sm-9 select-all">@Model.PhoneNumber</div>
+                </div>
+                <div class="row mb-3 small">
+                    <div class="col-sm-3 font-weight-bold">Service Address:</div>
+                    <div class="col-sm-9">@Model.Address</div>
+                </div>
+                <div class="row mb-3 small">
+                    <div class="col-sm-3 font-weight-bold">Selected Services:</div>
+                    <div class="col-sm-9 font-weight-bold">@string.Join(", ", Model.Services)</div>
+                </div>
+                <div class="row mb-3 small">
+                    <div class="col-sm-3 font-weight-bold">Problem Description:</div>
+                    <div class="col-sm-9 text-muted text-justify">@Model.ProblemDescription</div>
+                </div>
+            </div>
+
+            <!-- Problem Photos Attachments -->
+            @if (Model.ImageUrls != null && Model.ImageUrls.Any())
+            {
+                <div class="card p-4 rounded border bg-white mb-4">
+                    <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Problem Images Attached</h4>
+                    <div class="row">
+                        @foreach (var url in Model.ImageUrls)
+                        {
+                            <div class="col-sm-4 mb-3">
+                                <a href="@url" target="_blank">
+                                    <img src="@url" class="img-thumbnail img-fluid rounded hover-grow" alt="Attachment" style="max-height: 200px; object-fit: cover; width: 100%;" />
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar Administration Controls -->
+        <div class="col-lg-4">
+            <div class="card p-4 rounded border mb-4 bg-light shadow-sm">
+                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Status &amp; Assignment</h4>
+
+                <div class="mb-3 small">
+                    <span class="font-weight-bold">Booking Status:</span>
+                    <span class="badge @(Model.StatusName == "Pending" ? "badge-warning" : Model.StatusName == "Approved" ? "badge-info" : Model.StatusName == "Completed" ? "badge-success" : "badge-secondary") py-2 px-3 block mt-1">
+                        @Model.StatusName
+                    </span>
+                </div>
+
+                <div class="mb-4 small">
+                    <span class="font-weight-bold">Stripe Payment Status:</span>
+                    <span class="badge @(Model.PaymentStatus == "DepositPaid" ? "badge-success" : "badge-secondary") py-2 px-3 block mt-1">
+                        @Model.PaymentStatus
+                    </span>
+                </div>
+
+                <!-- Technician Assignment Form -->
+                <form asp-area="Administration" asp-controller="Bookings" asp-action="AssignTechnician" method="post" class="mb-4">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="form-group small mb-2">
+                        <label for="technicianId" class="font-weight-bold">Assign Technician</label>
+                        <select name="technicianId" id="technicianId" class="form-control mt-1">
+                            <option value="">-- Choose Technician --</option>
+                            @foreach (var tech in technicians)
+                            {
+                                if (Model.TechnicianName != null && Model.TechnicianName.Contains(tech.FirstName))
+                                {
+                                    <option value="@tech.Id" selected>@tech.FirstName @tech.LastName</option>
+                                }
+                                else
+                                {
+                                    <option value="@tech.Id">@tech.FirstName @tech.LastName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary btn-block w-100">Update Assignment</button>
+                </form>
+
+                <!-- Status Modification CTAs -->
+                <h5 class="font-weight-bold small mb-2">Change Booking Status</h5>
+                <div class="d-flex flex-column gap-2">
+                    @if (Model.StatusName == "Pending")
+                    {
+                        <form asp-area="Administration" asp-controller="Bookings" asp-action="Approve" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-success w-100 mb-2 font-weight-bold">Approve Booking</button>
+                        </form>
+                    }
+
+                    @if (Model.StatusName == "Approved" || Model.StatusName == "Pending")
+                    {
+                        <form asp-area="Administration" asp-controller="Bookings" asp-action="Complete" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-info w-100 mb-2 font-weight-bold">Mark Job Completed</button>
+                        </form>
+                    }
+
+                    @if (Model.StatusName != "Cancelled")
+                    {
+                        <form asp-area="Administration" asp-controller="Bookings" asp-action="Cancel" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100 font-weight-bold">Cancel Appointment</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

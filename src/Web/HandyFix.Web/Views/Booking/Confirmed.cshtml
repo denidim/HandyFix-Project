@@ -1,0 +1,75 @@
+@model HandyFix.Web.ViewModels.Booking.BookingDetailsViewModel
+@{
+    this.Layout = "_Layout";
+    this.ViewData["Title"] = "Booking Confirmed - HandyFix";
+}
+
+<div class="py-5 max-width-600 mx-auto text-center">
+    <div class="success-checkmark-wrapper mb-4">
+        <span class="display-3 text-success">🎉</span>
+    </div>
+    
+    <h1 class="font-weight-bold text-slate">Booking Confirmed!</h1>
+    <p class="lead text-muted">Your booking request has been successfully recorded and deposit processed.</p>
+
+    <div class="card shadow-sm border rounded-lg p-4 my-4 text-left bg-white text-slate">
+        <h5 class="font-weight-bold border-bottom pb-2 mb-3">Booking Details</h5>
+        <div class="row mb-2">
+            <div class="col-sm-5 font-weight-bold">Reference Number:</div>
+            <div class="col-sm-7 text-muted select-all">@Model.Id</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-5 font-weight-bold">Scheduled Time:</div>
+            <div class="col-sm-7 text-muted font-weight-bold">@Model.ScheduledTime.ToString("dd MMM yyyy 'at' HH:mm")</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-5 font-weight-bold">Address:</div>
+            <div class="col-sm-7 text-muted">@Model.Address</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-5 font-weight-bold">Customer Name:</div>
+            <div class="col-sm-7 text-muted">@Model.CustomerFirstName @Model.CustomerLastName</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-5 font-weight-bold">Services:</div>
+            <div class="col-sm-7 text-muted">@string.Join(", ", Model.Services)</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-5 font-weight-bold">Status:</div>
+            <div class="col-sm-7">
+                <span class="badge badge-success px-3 py-2">@Model.StatusName</span>
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-5 font-weight-bold">Stripe Payment Status:</div>
+            <div class="col-sm-7">
+                <span class="badge badge-primary px-3 py-2">@Model.PaymentStatus</span>
+            </div>
+        </div>
+
+        <hr class="my-3" />
+        
+        <div class="d-flex justify-content-between font-weight-bold mb-1">
+            <span>Deposit Paid (via Stripe):</span>
+            <span class="text-success">£@Model.DepositAmount.ToString("F2")</span>
+        </div>
+        <div class="d-flex justify-content-between font-weight-bold text-muted small">
+            <span>Remaining Balance (on completion):</span>
+            <span>£@((Model.TotalAmount - Model.DepositAmount).ToString("F2"))</span>
+        </div>
+    </div>
+
+    <div class="alert alert-info py-3 px-4 rounded-lg my-4 text-left small leading-relaxed">
+        <strong>What happens next?</strong>
+        <ul class="mb-0 mt-2 pl-3">
+            <li>You will receive an email confirmation containing these details.</li>
+            <li>Our dispatch office will assign your professional technician.</li>
+            <li>We will send a reminder email the day before your appointment.</li>
+        </ul>
+    </div>
+
+    <div class="d-flex justify-content-center gap-3 mt-4">
+        <a href="/" class="btn btn-primary px-4 py-2 font-weight-bold mr-2">Return Home</a>
+        <a href="/Services" class="btn btn-outline-secondary px-4 py-2 font-weight-bold">Browse Services</a>
+    </div>
+</div>
