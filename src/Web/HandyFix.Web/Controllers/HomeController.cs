@@ -128,8 +128,45 @@ namespace HandyFix.Web.Controllers
             return this.View(model);
         }
 
+        [Route("About")]
+        public IActionResult About()
+        {
+            this.ViewData["Title"] = "About Handy Fix - Professional Handyman Services";
+            return this.View();
+        }
+
+        [Route("FAQ")]
+        public IActionResult FAQ()
+        {
+            this.ViewData["Title"] = "Frequently Asked Questions - Handy Fix";
+            return this.View();
+        }
+
+        [Route("ServiceAreas")]
+        public IActionResult ServiceAreas()
+        {
+            this.ViewData["Title"] = "Service Coverage Areas - South London, Surrey & Kent";
+            return this.View();
+        }
+
+        [Route("PrivacyPolicy")]
         public IActionResult Privacy()
         {
+            this.ViewData["Title"] = "Privacy Policy - Handy Fix";
+            return this.View();
+        }
+
+        [Route("TermsAndConditions")]
+        public IActionResult Terms()
+        {
+            this.ViewData["Title"] = "Terms & Conditions - Handy Fix";
+            return this.View();
+        }
+
+        [Route("CookiePolicy")]
+        public IActionResult CookiePolicy()
+        {
+            this.ViewData["Title"] = "Cookie Policy - Handy Fix";
             return this.View();
         }
 
