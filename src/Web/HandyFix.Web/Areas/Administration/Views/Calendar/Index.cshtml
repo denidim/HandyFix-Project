@@ -1,0 +1,110 @@
+@model IEnumerable<HandyFix.Data.Models.AvailabilitySlot>
+@{
+    this.Layout = "_Layout";
+    this.ViewData["Title"] = "Manage Calendar Slots - Admin";
+    var targetDate = (DateTime)this.ViewData["TargetDate"];
+}
+
+<div class="py-4 text-slate">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <div>
+            <h1 class="font-weight-bold mb-0">Availability Slots</h1>
+            <p class="text-muted small mb-0">Manage scheduling blocks and technicians for date: <strong>@targetDate.ToString("dd MMM yyyy")</strong></p>
+        </div>
+        <a href="/Administration/Dashboard" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <div class="row">
+        <!-- Daily Slots List -->
+        <div class="col-lg-7 mb-4">
+            <div class="card p-3 rounded border mb-4 bg-white shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="font-weight-bold text-slate mb-0 h5">Slots for @targetDate.ToString("dd MMM yyyy")</h4>
+                    <form method="get" action="/Administration/Calendar" class="form-inline">
+                        <input type="date" name="date" class="form-control form-control-sm" value="@targetDate.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+                    </form>
+                </div>
+
+                <div class="slots-list">
+                    @if (Model.Any())
+                    {
+                        @foreach (var slot in Model)
+                        {
+                            <div class="p-3 border rounded mb-2 d-flex justify-content-between align-items-center bg-light">
+                                <div>
+                                    <span class="font-weight-bold">🕒 @slot.StartTime.ToString("HH:mm") - @slot.EndTime.ToString("HH:mm")</span>
+                                    <div class="small text-muted">Tech: @(slot.Technician != null ? $"{slot.Technician.FirstName} {slot.Technician.LastName}" : "None")</div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    @if (slot.IsBooked)
+                                    {
+                                        <span class="badge badge-success mr-2">Booked (Ref: @slot.BookingId.ToString().Substring(0,8)...)</span>
+                                        <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post">
+                                            <input type="hidden" name="id" value="@slot.Id" />
+                                            <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
+                                            <button type="submit" class="btn btn-sm btn-outline-warning small">Release</button>
+                                        </form>
+                                    }
+                                    else if (slot.IsBlocked)
+                                    {
+                                        <span class="badge badge-danger mr-2">Blocked</span>
+                                        <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post">
+                                            <input type="hidden" name="id" value="@slot.Id" />
+                                            <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success small">Unblock</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary mr-2">Available</span>
+                                        <form asp-area="Administration" asp-controller="Calendar" asp-action="BlockSlot" method="post">
+                                            <input type="hidden" name="id" value="@slot.Id" />
+                                            <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger small">Block</button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center p-3 text-muted">No slots generated for this date. Use the generator on the right.</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Slot Generator Panel -->
+        <div class="col-lg-5">
+            <div class="card p-4 rounded border bg-light shadow-sm mb-4">
+                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Generate Slots Range</h4>
+                <form asp-area="Administration" asp-controller="Calendar" asp-action="GenerateSlots" method="post">
+                    <div class="form-group mb-3 small">
+                        <label for="startDate" class="font-weight-bold">Start Date</label>
+                        <input type="date" name="startDate" id="startDate" class="form-control mt-1" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="form-group mb-4 small">
+                        <label for="endDate" class="font-weight-bold">End Date</label>
+                        <input type="date" name="endDate" id="endDate" class="form-control mt-1" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block w-100 font-weight-bold">Generate Hourly Slots (9am-5pm)</button>
+                </form>
+                <small class="form-text text-muted mt-2">Creates slots for standard business days. Skips Sundays. Ignores already-generated dates to avoid overlaps.</small>
+            </div>
+
+            <!-- Block Date Card -->
+            <div class="card p-4 rounded border bg-light shadow-sm">
+                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Block Date / Holiday</h4>
+                <form asp-area="Administration" asp-controller="Calendar" asp-action="BlockDate" method="post">
+                    <div class="form-group mb-3 small">
+                        <label for="blockDate" class="font-weight-bold">Select Date to Block</label>
+                        <input type="date" name="date" id="blockDate" class="form-control mt-1" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <button type="submit" class="btn btn-outline-danger btn-block w-100 font-weight-bold">Block Entire Day</button>
+                </form>
+                <small class="form-text text-muted mt-2">Forces all hourly slots on chosen date to change status to Blocked.</small>
+            </div>
+        </div>
+    </div>
+</div>
