@@ -16,11 +16,11 @@
 - [x] Entity Framework Core + SQL Server
 - [x] Identity + Role-based authorization
 - [x] Central Package Management
-- [ ] Booking calendar with real-time availability
-- [ ] Online payment + deposit (Stripe)
-- [ ] Local SEO optimization (Google Business, schema markup)
-- [ ] Admin dashboard for managing bookings
-- [ ] Responsive design + mobile-first
+- [x] Booking calendar with real-time availability
+- [x] Online payment + deposit (Stripe)
+- [x] Local SEO optimization (Google Business, schema markup)
+- [x] Admin dashboard for managing bookings
+- [x] Responsive design + mobile-first
 
 ---
 
@@ -84,6 +84,17 @@ dotnet ef database update --project Web/HandyFix.Web
 # Run the application
 dotnet run --project Web/HandyFix.Web
 ```
+
+### Stripe Configuration
+To enable live payments processing, configure these settings in `appsettings.json` or as environment variables:
+```json
+"Stripe": {
+  "SecretKey": "sk_test_...",
+  "PublishableKey": "pk_test_...",
+  "WebhookSecret": "whsec_..."
+}
+```
+If not specified, the system automatically falls back to Mock/Sandbox transaction processing mode.
 
 ---
 
