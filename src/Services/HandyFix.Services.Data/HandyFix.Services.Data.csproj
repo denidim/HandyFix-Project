@@ -1,12 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Data\HandyFix.Data.Common\HandyFix.Data.Common.csproj" />
     <ProjectReference Include="..\..\Data\HandyFix.Data.Models\HandyFix.Data.Models.csproj" />
     <ProjectReference Include="..\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
