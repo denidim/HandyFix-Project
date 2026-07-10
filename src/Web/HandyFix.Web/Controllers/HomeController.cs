@@ -7,6 +7,7 @@ namespace HandyFix.Web.Controllers
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Services;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
@@ -26,19 +27,22 @@ namespace HandyFix.Web.Controllers
         private readonly IServicesService servicesService;
         private readonly IAvailabilityService availabilityService;
         private readonly IWebHostEnvironment environment;
+        private readonly ICloudflareR2Service r2Service;
 
         public HomeController(
             IReviewsService reviewsService,
             IInquiriesService inquiriesService,
             IServicesService servicesService,
             IAvailabilityService availabilityService,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            ICloudflareR2Service r2Service)
         {
             this.reviewsService = reviewsService;
             this.inquiriesService = inquiriesService;
             this.servicesService = servicesService;
             this.availabilityService = availabilityService;
             this.environment = environment;
+            this.r2Service = r2Service;
         }
 
         public async Task<IActionResult> Index()
@@ -85,25 +89,15 @@ namespace HandyFix.Web.Controllers
             var imageUrls = new List<string>();
             if (model.Images != null && model.Images.Count > 0)
             {
-                var uploadsFolder = Path.Combine(this.environment.WebRootPath, "uploads", "inquiries");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
                 foreach (var image in model.Images)
                 {
                     if (image.Length > 0)
                     {
-                        var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(image.FileName)}";
-                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        using (var stream = image.OpenReadStream())
                         {
-                            await image.CopyToAsync(fileStream);
+                            var url = await this.r2Service.UploadFileAsync(stream, image.FileName, image.ContentType);
+                            imageUrls.Add(url);
                         }
-
-                        imageUrls.Add($"/uploads/inquiries/{uniqueFileName}");
                     }
                 }
             }

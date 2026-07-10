@@ -8,6 +8,7 @@ namespace HandyFix.Web
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
     using HandyFix.Data.Seeding;
+    using HandyFix.Services;
     using HandyFix.Services.Data;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
@@ -90,6 +91,7 @@ namespace HandyFix.Web
             services.AddTransient<IAvailabilityService, AvailabilityService>();
             services.AddTransient<IBookingsService, BookingsService>();
             services.AddTransient<IPaymentsService, PaymentsService>();
+            services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();
         }
 
         private static void Configure(WebApplication app)
