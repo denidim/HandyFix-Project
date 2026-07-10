@@ -430,3 +430,7 @@ FodyWeavers.xsd
 
 # Development settings with secrets
 src/Web/HandyFix.Web/appsettings.Development.json
+
+# Ignore wwwroot photos
+**/wwwroot/photos/
+**/wwwroot/uploads/

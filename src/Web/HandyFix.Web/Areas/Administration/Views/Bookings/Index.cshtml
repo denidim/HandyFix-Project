@@ -34,12 +34,12 @@
                             <td>@booking.ScheduledTime.ToString("dd MMM yyyy 'at' HH:mm")</td>
                             <td>£@booking.TotalAmount.ToString("F2")</td>
                             <td>
-                                <span class="badge @(booking.StatusName == "Pending" ? "badge-warning" : booking.StatusName == "Approved" ? "badge-info" : booking.StatusName == "Completed" ? "badge-success" : "badge-secondary")">
+                                <span class="badge @(booking.StatusName == "Pending" ? "bg-warning" : booking.StatusName == "Approved" ? "bg-info" : booking.StatusName == "Completed" ? "bg-success" : "bg-secondary")">
                                     @booking.StatusName
                                 </span>
                             </td>
                             <td>
-                                <span class="badge @(booking.PaymentStatus == "DepositPaid" ? "badge-success" : "badge-secondary")">
+                                <span class="badge @(booking.PaymentStatus == "DepositPaid" ? "bg-success" : "bg-secondary")">
                                     @booking.PaymentStatus
                                 </span>
                             </td>

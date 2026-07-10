@@ -72,14 +72,14 @@
 
                 <div class="mb-3 small">
                     <span class="font-weight-bold">Booking Status:</span>
-                    <span class="badge @(Model.StatusName == "Pending" ? "badge-warning" : Model.StatusName == "Approved" ? "badge-info" : Model.StatusName == "Completed" ? "badge-success" : "badge-secondary") py-2 px-3 block mt-1">
+                    <span class="badge @(Model.StatusName == "Pending" ? "bg-warning" : Model.StatusName == "Approved" ? "bg-info" : Model.StatusName == "Completed" ? "badge-success" : "badge-secondary") py-2 px-3 block mt-1">
                         @Model.StatusName
                     </span>
                 </div>
 
                 <div class="mb-4 small">
                     <span class="font-weight-bold">Stripe Payment Status:</span>
-                    <span class="badge @(Model.PaymentStatus == "DepositPaid" ? "badge-success" : "badge-secondary") py-2 px-3 block mt-1">
+                    <span class="badge @(Model.PaymentStatus == "DepositPaid" ? "bg-success" : "bg-secondary") py-2 px-3 block mt-1">
                         @Model.PaymentStatus
                     </span>
                 </div>
