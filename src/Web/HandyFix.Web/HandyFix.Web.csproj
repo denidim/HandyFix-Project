@@ -30,4 +30,8 @@
     <ProjectReference Include="..\HandyFix.Web.Infrastructure\HandyFix.Web.Infrastructure.csproj" />
     <ProjectReference Include="..\HandyFix.Web.ViewModels\HandyFix.Web.ViewModels.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
 </Project>

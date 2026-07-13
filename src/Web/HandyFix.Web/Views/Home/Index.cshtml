@@ -6,22 +6,34 @@
     var reviews = this.ViewData["SliderReviews"] as IEnumerable<ReviewViewModel> ?? new List<ReviewViewModel>();
 }
 
-<!-- Hero Section with Redirection booking widget -->
-<section class="hero-section py-5">
-    <div class="row align-items-center">
+<!-- Custom Styles for the Hero Background Layer -->
+<style>
+    .hero-section {
+        position: relative;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.40), rgba(255, 255, 255, 0.60)), url('/images/hero.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 0.5rem;
+    }
+</style>
+
+<!-- Hero Section with Background Layout and Redirection booking widget -->
+<section class="hero-section py-5 px-4 my-3 position-relative">
+    <div class="row align-items-center position-relative" style="z-index: 2;">
         <div class="col-lg-6 mb-4 mb-lg-0">
             <h1 class="display-4 font-weight-bold text-slate">Local Plumbing & Handyman Services in South London</h1>
             <p class="lead text-muted my-3">Reliable, professional, and fully insured mobile service operating in Sutton, Croydon, Epsom, and beyond. Booking has never been easier.</p>
             <div class="benefits-list my-4">
-                <div class="benefit-item"><span class="check-icon">✓</span> Fully Insured & Experienced Professionals</div>
-                <div class="benefit-item"><span class="check-icon">✓</span> Transparent, Up-front Hourly Pricing</div>
-                <div class="benefit-item"><span class="check-icon">✓</span> Fast Response & Local London Dispatch</div>
-                <div class="benefit-item"><span class="check-icon">✓</span> 100% Customer Satisfaction Guarantee</div>
+                <div class="benefit-item"><span class="check-icon text-success">✓</span> Fully Insured & Experienced Professionals</div>
+                <div class="benefit-item"><span class="check-icon text-success">✓</span> Transparent, Up-front Hourly Pricing</div>
+                <div class="benefit-item"><span class="check-icon text-success">✓</span> Fast Response & Local London Dispatch</div>
+                <div class="benefit-item"><span class="check-icon text-success">✓</span> 100% Customer Satisfaction Guarantee</div>
             </div>
             <a href="#services-overview" class="btn btn-primary btn-lg shadow-sm">Explore Our Services</a>
         </div>
         <div class="col-lg-6">
-            <div class="booking-widget-card p-4 bg-white rounded shadow-lg">
+            <div class="booking-widget-card p-4 rounded shadow-lg">
                 <h3 class="mb-3 text-slate">Check Availability</h3>
                 <form id="hero-booking-form" method="get" action="/Booking">
                     <div class="form-group mb-3">
@@ -58,9 +70,54 @@
         <h2 class="text-slate font-weight-bold">Our Professional Service Divisions</h2>
         <p class="text-muted">We focus exclusively on providing premier plumbing and handyman work across South London.</p>
     </div>
+
+    <!-- Use g-2 or g-3 for small gaps on mobile so the 2-in-a-row cards have space -->
+    <div class="row g-2 g-md-4">
+
+        <!-- Plumbing Card -->
+        <div class="col-6 col-md-6 mb-4">
+            <div class="category-card p-3 p-md-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="category-icon plumbing-icon mb-2 mb-md-3">💧</div>
+                    <h3 class="font-weight-bold text-slate h5 h3-md">Plumbing</h3>
+                    <p class="text-muted text-justify px-1 px-md-3 small d-none d-sm-block">From emergency leak repairs and pipe maintenance to toilet fixes, bathroom plumbing, blocked drains, and kitchen plumbing integrations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Handyman Card -->
+        <div class="col-6 col-md-6 mb-4">
+            <div class="category-card p-3 p-md-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="category-icon handyman-icon mb-2 mb-md-3">🔨</div>
+                    <h3 class="font-weight-bold text-slate h5 h3-md">Handyman</h3>
+                    <p class="text-muted text-justify px-1 px-md-3 small d-none d-sm-block">Flat-pack furniture assembly, TV wall mounting, shelf fitting, curtain hanging, blind installations, squeaky door repairs, and minor electrical touch-ups.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic CTA Block -->
+        <!-- col-12 handles the full row if cards are even. col-md-12 ensures desktop layout remains broad. -->
+        <!-- flex-grow-1 manages odd-item layout distribution automatically -->
+        <div class="col-12 col-md-12 mb-4 flex-grow-1">
+            <div class="p-3 bg-white rounded shadow-sm d-flex flex-column flex-md-row justify-content-center align-items-center gap-2 w-100 h-100 border">
+                <a href="/Services/plumbing" class="btn btn-outline-primary font-weight-bold w-100">Browse Plumbing</a>
+                <a href="/Services/handyman" class="btn btn-outline-primary font-weight-bold w-100">Browse Handyman</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@* <!-- Categories Section -->
+<section id="services-overview" class="py-5 bg-light rounded px-3 my-5">
+    <div class="text-center mb-5">
+        <h2 class="text-slate font-weight-bold">Our Professional Service Divisions</h2>
+        <p class="text-muted">We focus exclusively on providing premier plumbing and handyman work across South London.</p>
+    </div>
     <div class="row">
         <!-- Plumbing Card -->
-        <div class="col-md-6 mb-4">
+        <div class="col-6 mb-4">
             <div class="category-card p-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
                 <div>
                     <div class="category-icon plumbing-icon mb-3">💧</div>
@@ -71,7 +128,7 @@
             </div>
         </div>
         <!-- Handyman Card -->
-        <div class="col-md-6 mb-4">
+        <div class="col-6 mb-4">
             <div class="category-card p-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
                 <div>
                     <div class="category-icon handyman-icon mb-3">🔨</div>
@@ -82,7 +139,7 @@
             </div>
         </div>
     </div>
-</section>
+</section> *@
 
 <!-- Popular Services Carousel -->
 <section class="py-5">
@@ -188,44 +245,44 @@
 
 <!-- Schema.org Local Business structured data -->
 <script type="application/ld+json">
-{
-  "@@context": "https://schema.org",
-  "@@type": "LocalBusiness",
-  "name": "Handy Fix",
-  "image": "https://handyfix.co.uk/images/logo.png",
-  "@@id": "https://handyfix.co.uk",
-  "url": "https://handyfix.co.uk",
-  "telephone": "07123456789",
-  "priceRange": "$$",
-  "address": {
-    "@@type": "PostalAddress",
-    "streetAddress": "South London Dispatch Office",
-    "addressLocality": "Croydon",
-    "addressRegion": "London",
-    "postalCode": "CR0 1XX",
-    "addressCountry": "GB"
-  },
-  "geo": {
-    "@@type": "GeoCoordinates",
-    "latitude": 51.3762,
-    "longitude": -0.0982
-  },
-  "openingHoursSpecification": {
-    "@@type": "OpeningHoursSpecification",
-    "dayOfWeek": [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday"
-    ],
-    "opens": "09:00",
-    "closes": "17:00"
-  },
-  "sameAs": [
-    "https://facebook.com/handyfixlondon",
-    "https://twitter.com/handyfixlondon"
-  ]
-}
+    {
+      "@@context": "https://schema.org",
+      "@@type": "LocalBusiness",
+      "name": "Handy Fix",
+      "image": "https://handyfix.co.uk/images/logo.png",
+      "@@id": "https://handyfix.co.uk",
+      "url": "https://handyfix.co.uk",
+      "telephone": "07123456789",
+      "priceRange": "$$",
+      "address": {
+        "@@type": "PostalAddress",
+        "streetAddress": "South London Dispatch Office",
+        "addressLocality": "Croydon",
+        "addressRegion": "London",
+        "postalCode": "CR0 1XX",
+        "addressCountry": "GB"
+      },
+      "geo": {
+        "@@type": "GeoCoordinates",
+        "latitude": 51.3762,
+        "longitude": -0.0982
+      },
+      "openingHoursSpecification": {
+        "@@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ],
+        "opens": "09:00",
+        "closes": "17:00"
+      },
+      "sameAs": [
+        "https://facebook.com/handyfixlondon",
+        "https://twitter.com/handyfixlondon"
+      ]
+    }
 </script>

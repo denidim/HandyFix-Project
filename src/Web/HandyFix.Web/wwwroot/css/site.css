@@ -99,6 +99,12 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     backdrop-filter: blur(5px);
 }
 
+.booking-widget-card {
+    background-color: rgba(255, 255, 255, 0.65); /* Adjust 0.65 for more or less opacity */
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px); /* Increased blur for a better premium look */
+}
+
 /* Category & Service Cards */
 .category-card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
