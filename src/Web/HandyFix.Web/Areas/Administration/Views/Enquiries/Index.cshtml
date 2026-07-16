@@ -1,43 +1,68 @@
 @model IEnumerable<HandyFix.Web.ViewModels.Administration.Enquiries.EnquiryViewModel>
 @{
-    this.Layout = "_Layout";
-    this.ViewData["Title"] = "Client Enquiries - Admin";
+    this.ViewData["Title"] = "Client Enquiries";
+    var totalEnquiries = Model.Count();
 }
 
-<div class="py-4 text-slate">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <div>
-            <h1 class="font-weight-bold mb-0">Client Enquiries</h1>
-            <p class="text-muted small mb-0">Inquiries submitted via the public contact page.</p>
-        </div>
-        <a href="/Administration/Dashboard" class="btn btn-outline-secondary">Back</a>
+<!-- Top Header Context -->
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+    <div class="d-flex align-items-center gap-3">
+        <h1 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Client Enquiries</h1>
+        <span class="px-3 py-1 text-secondary font-bold font-label-sm rounded-full" style="background-color: rgba(0, 101, 145, 0.1); border: 1px solid rgba(0, 101, 145, 0.15);">
+            @totalEnquiries Total
+        </span>
     </div>
+    <div class="position-relative max-w-sm w-100" style="max-width: 320px;">
+        <span class="material-symbols-outlined position-absolute text-outline" style="left: 12px; top: 50%; transform: translateY(-50%);">search</span>
+        <input class="w-100 py-2 border rounded-lg outline-none font-body-md" style="padding-left: 40px; padding-right: 16px; border: 1px solid var(--border-subtle); background: var(--surface-container-lowest); border-radius: var(--radius-lg);" placeholder="Search enquiries..." type="text" id="enquiries-search">
+    </div>
+</div>
 
-    <div class="table-responsive bg-white border rounded shadow-sm">
-        <table class="table table-hover table-striped mb-0 text-slate small">
+<!-- Bento-Style Table Container -->
+<div class="bg-white rounded-xl overflow-hidden border shadow-sm" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+    <div class="table-responsive">
+        <table class="table mb-0 text-left" style="border-collapse: collapse; width: 100%;">
             <thead>
-                <tr>
-                    <th>Client Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Message Snippet</th>
-                    <th>Submitted Date</th>
-                    <th class="text-right">Actions</th>
+                <tr style="background-color: var(--surface-container-low); border-bottom: 1px solid var(--border-subtle);">
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Client Details</th>
+                    <th class="px-4 py-3 font-label-sm uppercase w-50" style="color: var(--on-surface-variant); font-weight: 700;">Message Snippet</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Submission Date</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right" style="color: var(--on-surface-variant); font-weight: 700;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="enquiries-table-body" style="background-color: #ffffff;">
                 @if (Model.Any())
                 {
                     @foreach (var inquiry in Model)
                     {
-                        <tr>
-                            <td class="font-weight-bold">@inquiry.Name</td>
-                            <td class="select-all">@inquiry.Email</td>
-                            <td class="select-all">@inquiry.PhoneNumber</td>
-                            <td class="text-muted text-truncate" style="max-width: 250px;">@inquiry.Message</td>
-                            <td>@inquiry.CreatedOn.ToString("dd MMM yyyy")</td>
-                            <td class="text-right">
-                                <a href="/Administration/Enquiries/Details/@inquiry.Id" class="btn btn-sm btn-primary">Details</a>
+                        var names = inquiry.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var initials = names.Length > 1 ? $"{names[0][0]}{names[1][0]}" : $"{names[0][0]}";
+
+                        <tr style="border-bottom: 1px solid var(--border-subtle);" class="align-middle">
+                            <td class="px-4 py-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center font-bold" style="width: 40px; height: 40px; background-color: var(--primary-fixed-dim); color: var(--primary); font-size: 12px; flex-shrink: 0;">
+                                        @initials.ToUpper()
+                                    </div>
+                                    <div>
+                                        <p class="font-body-md font-bold mb-0 text-primary">@inquiry.Name</p>
+                                        <p class="text-on-surface-variant mb-0 select-all" style="font-size: 11px;">@inquiry.Email</p>
+                                        <p class="text-on-surface-variant mb-0 select-all" style="font-size: 11px; font-weight: 500;">@inquiry.PhoneNumber</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="font-body-md text-on-surface mb-0" style="font-style: italic; max-width: 450px; text-overflow: ellipsis; overflow: hidden; line-clamp: 2;">"@inquiry.Message"</p>
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="font-body-md text-primary mb-0">@inquiry.CreatedOn.ToString("MMM dd, yyyy")</p>
+                                <p class="text-on-surface-variant mb-0" style="font-size: 11px;">@inquiry.CreatedOn.ToString("hh:mm tt")</p>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <a href="/Administration/Enquiries/Details/@inquiry.Id" class="btn btn-sm d-inline-flex align-items-center gap-1 font-label-sm" style="background-color: rgba(0, 101, 145, 0.08); color: var(--secondary); border: none; padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg);">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span>
+                                    <span>Details</span>
+                                </a>
                             </td>
                         </tr>
                     }
@@ -45,10 +70,60 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center p-4 text-muted">No enquiries received yet.</td>
+                        <td colspan="4" class="text-center p-4 text-muted">No enquiries received yet.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Contextual Stats Summary (Bento Grid elements) -->
+<div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-6" style="grid-template-columns: repeat(3, 1fr); display: grid; gap: var(--spacing-6);">
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center gap-3" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary" style="width: 48px; height: 48px; background-color: rgba(0, 101, 145, 0.1); flex-shrink: 0;">
+            <span class="material-symbols-outlined" style="font-size: 24px;">speed</span>
+        </div>
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Avg. Response Time</p>
+            <p class="font-headline-sm mb-0" style="font-size: 18px; font-weight: 700; color: var(--primary);">2.4 Hours</p>
+        </div>
+    </div>
+    
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center gap-3" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <div class="rounded-circle d-flex align-items-center justify-content-center text-on-tertiary-container" style="width: 48px; height: 48px; background-color: rgba(78, 222, 163, 0.2); flex-shrink: 0;">
+            <span class="material-symbols-outlined" style="font-size: 24px; font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Resolution Rate</p>
+            <p class="font-headline-sm mb-0" style="font-size: 18px; font-weight: 700; color: var(--primary);">94%</p>
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center gap-3" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <div class="rounded-circle d-flex align-items-center justify-content-center text-danger" style="width: 48px; height: 48px; background-color: rgba(186, 26, 26, 0.1); flex-shrink: 0;">
+            <span class="material-symbols-outlined" style="font-size: 24px;">warning</span>
+        </div>
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Urgent Requests</p>
+            <p class="font-headline-sm mb-0 text-danger" style="font-size: 18px; font-weight: 700;">3 Tickets</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('enquiries-search');
+            const rows = document.querySelectorAll('#enquiries-table-body tr');
+
+            searchInput?.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+}

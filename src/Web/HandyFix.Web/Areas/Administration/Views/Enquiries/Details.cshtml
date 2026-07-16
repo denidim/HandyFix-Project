@@ -1,71 +1,123 @@
 @model HandyFix.Web.ViewModels.Administration.Enquiries.EnquiryViewModel
 @{
-    this.Layout = "_Layout";
     this.ViewData["Title"] = $"Enquiry Details - {Model.Name}";
 }
 
-<div class="py-4 text-slate">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <div>
-            <h1 class="font-weight-bold mb-0">Enquiry Details</h1>
-            <p class="text-muted small mb-0">Submitted on @Model.CreatedOn.ToString("dd MMM yyyy 'at' HH:mm")</p>
-        </div>
-        <a href="/Administration/Enquiries" class="btn btn-outline-secondary btn-sm">← Back to List</a>
+<!-- Breadcrumbs & Header Actions -->
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+    <nav class="breadcrumb-nav mb-0" aria-label="breadcrumb">
+        <a href="/Administration/Dashboard">Admin</a>
+        <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+        <a href="/Administration/Enquiries">Enquiries</a>
+        <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+        <span class="breadcrumb-current">Enquiry Details</span>
+    </nav>
+    <a href="/Administration/Enquiries" class="btn btn-outline d-flex align-items-center gap-2" style="border: 1px solid var(--border-subtle); padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: var(--fs-label-sm); background: #ffffff; color: var(--text-main);">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span>Back to List</span>
+    </a>
+</div>
+
+<div class="mb-5">
+    <div class="d-flex align-items-center gap-3">
+        <h2 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Enquiry #@Model.Id</h2>
+        <span class="px-3 py-1 font-bold font-label-sm rounded-full" style="background-color: rgba(57, 184, 253, 0.2); color: var(--on-secondary-container); border: 1px solid rgba(57, 184, 253, 0.3); font-size: 11px; text-transform: uppercase;">New Enquiry</span>
     </div>
+    <p class="font-body-md text-on-surface-variant mt-1" style="margin: 0;">Received on @Model.CreatedOn.ToString("MMMM dd, yyyy 'at' hh:mm tt")</p>
+</div>
 
-    <div class="row">
-        <!-- Message Details -->
-        <div class="col-lg-8 mb-4">
-            <div class="card p-4 rounded border mb-4 bg-white shadow-sm">
-                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Client Message</h4>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Client Name:</div>
-                    <div class="col-sm-9">@Model.Name</div>
-                </div>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Email:</div>
-                    <div class="col-sm-9 select-all">@Model.Email</div>
-                </div>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Phone Number:</div>
-                    <div class="col-sm-9 select-all">@Model.PhoneNumber</div>
-                </div>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Inquiry Message:</div>
-                    <div class="col-sm-9 text-muted text-justify" style="white-space: pre-wrap;">@Model.Message</div>
-                </div>
-            </div>
+<!-- Bento Layout -->
+<div class="row">
+    <!-- Main Content Column -->
+    <div class="col-lg-8 mb-4">
+        <!-- Enquiry Message -->
+        <section class="glass-card p-4 p-md-5 rounded-xl mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
+            <h3 class="font-headline-sm text-primary mb-4 pb-3" style="font-size: var(--fs-headline-sm); border-bottom: 1px solid var(--border-subtle);">Service Request Message</h3>
+            <p class="font-body-lg leading-relaxed text-text-main" style="white-space: pre-wrap; font-style: italic;">
+                "@Model.Message"
+            </p>
+        </section>
 
-            <!-- Uploaded Images -->
-            @if (Model.ImageUrls != null && Model.ImageUrls.Any())
-            {
-                <div class="card p-4 rounded border bg-white mb-4 shadow-sm">
-                    <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Photos Attached by Client</h4>
-                    <div class="row">
-                        @foreach (var url in Model.ImageUrls)
-                        {
-                            <div class="col-sm-4 mb-3">
-                                <a href="@url" target="_blank">
-                                    <img src="@url" class="img-thumbnail img-fluid rounded hover-grow" alt="Attachment" style="max-height: 200px; object-fit: cover; width: 100%;" />
+        <!-- Attachment Gallery -->
+        @if (Model.ImageUrls != null && Model.ImageUrls.Any())
+        {
+            <section class="glass-card p-4 p-md-5 rounded-xl" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
+                <h3 class="font-headline-sm text-primary mb-4">Attached Visuals (@Model.ImageUrls.Count())</h3>
+                <div class="row">
+                    @foreach (var url in Model.ImageUrls)
+                    {
+                        <div class="col-sm-4 mb-3">
+                            <div class="group relative overflow-hidden border" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); aspect-ratio: 1/1;">
+                                <a href="@url" target="_blank" class="d-block h-100 w-100">
+                                    <img src="@url" class="w-100 h-100" alt="Attachment" style="object-fit: cover; transition: transform var(--transition-normal);" />
                                 </a>
                             </div>
-                        }
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+
+    <!-- Sidebar Actions Column -->
+    <div class="col-lg-4">
+        <!-- Client Info Card -->
+        <section class="glass-card p-4 rounded-xl mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
+            <h3 class="font-headline-sm text-primary mb-4" style="font-size: var(--fs-headline-sm);">Client Information</h3>
+            <div class="d-flex align-items-center gap-3 mb-4">
+                @{
+                    var names = Model.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var initials = names.Length > 1 ? $"{names[0][0]}{names[1][0]}" : $"{names[0][0]}";
+                }
+                <div class="rounded-circle d-flex align-items-center justify-content-center font-bold" style="width: 56px; height: 56px; background-color: var(--primary-fixed-dim); color: var(--primary); font-size: 20px;">
+                    @initials.ToUpper()
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-primary mb-1" style="font-size: 16px;">@Model.Name</h4>
+                    <p class="font-label-sm text-on-surface-variant mb-0" style="font-size: 12px;">Registered Customer</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-3);">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="material-symbols-outlined text-on-surface-variant" style="font-size: 20px;">mail</span>
+                    <div>
+                        <p class="text-on-surface-variant mb-0" style="font-size: 11px;">Email Address</p>
+                        <p class="font-body-md mb-0 select-all" style="font-size: 13px;">@Model.Email</p>
                     </div>
                 </div>
-            }
-        </div>
-
-        <!-- Controls Sidebar -->
-        <div class="col-lg-4">
-            <div class="card p-4 rounded border bg-light shadow-sm text-center">
-                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Enquiry Actions</h4>
-                <a href="mailto:@Model.Email?subject=Re:%20HandyFix%20Enquiry" class="btn btn-primary btn-block w-100 mb-3 py-2 font-weight-bold">📧 Reply via Email</a>
-                <a href="tel:@Model.PhoneNumber" class="btn btn-outline-primary btn-block w-100 mb-4 py-2 font-weight-bold">📞 Call Customer</a>
-                
-                <form asp-area="Administration" asp-controller="Enquiries" asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Are you sure you want to delete this enquiry?');">
-                    <button type="submit" class="btn btn-outline-danger btn-block w-100">Delete Enquiry</button>
-                </form>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="material-symbols-outlined text-on-surface-variant" style="font-size: 20px;">call</span>
+                    <div>
+                        <p class="text-on-surface-variant mb-0" style="font-size: 11px;">Phone Number</p>
+                        <p class="font-body-md mb-0 select-all" style="font-size: 13px;">@Model.PhoneNumber</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="glass-card p-4 rounded-xl mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); display: flex; flex-direction: column; gap: var(--spacing-3);">
+            <h3 class="font-headline-sm text-primary mb-2" style="font-size: var(--fs-headline-sm);">Quick Actions</h3>
+            <a href="mailto:@Model.Email?subject=Re:%20HandyFix%20Enquiry" class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); text-decoration: none;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">reply</span>
+                <span>Reply via Email</span>
+            </a>
+            <a href="tel:@Model.PhoneNumber" class="btn btn-outline font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); border: 2px solid var(--border-subtle); text-decoration: none; color: var(--text-main); background: transparent;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">call</span>
+                <span>Call Customer</span>
+            </a>
+        </section>
+
+        <!-- Management Status & Controls -->
+        <section class="glass-card p-4 rounded-xl border-t-danger" style="background: #ffffff; border: 1px solid var(--border-subtle); border-top: 4px solid var(--error) !important; border-radius: var(--radius-xl); display: flex; flex-direction: column; gap: var(--spacing-3);">
+            <h3 class="font-headline-sm text-primary mb-2" style="font-size: var(--fs-headline-sm);">Manage Enquiry</h3>
+            <form asp-area="Administration" asp-controller="Enquiries" asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Are you sure you want to permanently delete this enquiry?');">
+                <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); border: 1px solid rgba(186, 26, 26, 0.2); background: rgba(186, 26, 26, 0.05); color: var(--error);">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                    <span>Delete Permanent</span>
+                </button>
+            </form>
+        </section>
     </div>
 </div>
