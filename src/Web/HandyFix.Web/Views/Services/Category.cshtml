@@ -1,93 +1,160 @@
 @model HandyFix.Web.ViewModels.Services.CategoryViewModel
 @{
     this.Layout = "_Layout";
+    this.ViewData["Title"] = $"{Model.Name} Services - HandyFix South London";
+
+    var isPlumbing = Model.Name == "Plumbing";
+    var durationText = isPlumbing ? "Approx. 1-2 Hours" : "Approx. 45-90 Mins";
+    var specBadgeText = isPlumbing ? "Licensed & Insured" : "Multi-Skill Pros";
+    var specBadgeClass = isPlumbing ? "category-hero-badge-primary" : "category-hero-badge-tertiary";
+    var specBadgeIcon = isPlumbing ? "verified" : "handyman";
 }
 
-<div class="py-4">
-    <!-- Breadcrumbs -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb bg-transparent p-0 mb-3">
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item"><a href="/Services">Services</a></li>
-            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
-        </ol>
-    </nav>
+<div class="page-container services-page">
+    <!-- Hero & Breadcrumbs Section -->
+    <section class="category-hero-section">
+        <nav class="breadcrumb-nav mb-6" aria-label="breadcrumb">
+            <a href="/">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <a href="/Services">Services</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">@Model.Name</span>
+        </nav>
+        <div class="services-header-content">
+            <h1 class="category-hero-title">Expert @Model.Name Services.</h1>
+            <p class="category-hero-desc">
+                @Model.Description
+            </p>
+            <div class="category-hero-badges">
+                <div class="category-hero-badge @specBadgeClass">
+                    <span class="material-symbols-outlined">@specBadgeIcon</span>
+                    <span>@specBadgeText</span>
+                </div>
+                <div class="category-hero-badge category-hero-badge-primary">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <span>24/7 Availability</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <!-- Header -->
-    <div class="mb-5 text-center text-md-left">
-        <h1 class="font-weight-bold text-slate">Professional @Model.Name Services in South London</h1>
-        <p class="lead text-muted">Reliable, vetted local technicians, transparent pricing, and guaranteed customer satisfaction.</p>
-    </div>
-
-    <div class="row">
+    <!-- Category Main Layout -->
+    <div class="category-main-layout">
         <!-- Services List -->
-        <div class="col-lg-8">
-            <div class="services-list-grid">
-                @foreach (var svc in Model.Services)
-                {
-                    <div class="card border mb-4 shadow-sm hover-grow rounded-lg p-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-9 mb-3 mb-md-0">
-                                <h3 class="font-weight-bold text-slate h5 mb-2">@svc.Name</h3>
-                                <p class="text-muted small mb-0">@svc.Description</p>
-                                <div class="mt-2 d-flex align-items-center">
-                                    <span class="badge badge-light text-muted mr-3">🕒 Estimated: @svc.EstimatedDurationMinutes mins</span>
-                                    <span class="font-weight-bold text-success">Price: from £@svc.BasePrice</span>
-                                </div>
-                            </div>
-                            <div class="col-md-3 text-md-right">
-                                <a asp-controller="Services"
-                                   asp-action="Details"
-                                   asp-route-categorySlug="@Model.Slug"
-                                   asp-route-serviceSlug="@svc.Slug"
-                                   class="btn btn-primary btn-block mb-2">Details</a>
+        <div class="services-list-container">
+            @foreach (var svc in Model.Services)
+            {
+                var duration = svc.EstimatedDurationMinutes >= 60 
+                    ? $"{(svc.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
+                    : $"{svc.EstimatedDurationMinutes} Mins";
 
-                                <a asp-controller="Booking"
-                                   asp-action="Index"
-                                   asp-route-serviceId="@svc.Id"
-                                   class="btn btn-success btn-block">Book Slot</a>
+                var serviceImgSlug = svc.Name.Replace(" ", "-").ToLower();
+                var serviceImage = $"/images/services/{serviceImgSlug}-hero.jpg";
+                var fallbackImage = isPlumbing ? "/images/services/plumbing-hero.jpg" : "/images/services/handyman-hero.jpg";
+
+                <article class="service-horizontal-card group">
+                    <div class="service-card-thumbnail-wrapper">
+                        <img class="service-card-thumbnail" alt="@svc.Name" src="@serviceImage" onerror="this.src='@fallbackImage'; this.onerror=null;">
+                    </div>
+                    <div class="service-card-content">
+                        <div class="service-card-main-header">
+                            <h3 class="service-card-title">@svc.Name</h3>
+                            <div class="service-card-price-box">
+                                <span class="service-card-price">From £@svc.BasePrice.ToString("F0")</span>
+                                <span class="service-card-price-label">Fixed Rate</span>
                             </div>
                         </div>
+                        <p class="service-card-description">@svc.Description</p>
+                        
+                        <div class="service-card-metadata">
+                            <div class="service-metadata-item">
+                                <span class="material-symbols-outlined service-metadata-icon">timer</span>
+                                <span>Approx. @duration</span>
+                            </div>
+                            <div class="service-metadata-item">
+                                <span class="material-symbols-outlined service-metadata-icon">construction</span>
+                                <span>Tools Included</span>
+                            </div>
+                        </div>
+
+                        <div class="service-card-actions">
+                            <a asp-controller="Booking"
+                               asp-action="Index"
+                               asp-route-serviceId="@svc.Id"
+                               class="btn btn-primary service-card-btn">Book Slot</a>
+
+                            <a asp-controller="Services"
+                               asp-action="Details"
+                               asp-route-categorySlug="@Model.Slug"
+                               asp-route-serviceSlug="@svc.Slug"
+                               class="btn btn-outline service-card-btn"
+                               style="border: 1px solid var(--border); background: #ffffff; color: var(--text-main);">Details</a>
+                        </div>
                     </div>
-                }
-            </div>
-
-            <!-- Local SEO Area Section -->
-            <div class="seo-local-block bg-light p-4 rounded-lg mt-5 border border-light">
-                <h4 class="font-weight-bold text-slate mb-3">Service Areas for @Model.Name in South London &amp; Surrey</h4>
-                <p class="text-muted leading-relaxed text-justify">
-                    Our professional mobile teams cover Sutton, Croydon, Epsom, Kingston, Bromley, Orpington, and nearby areas. We have locally based specialists in Sutton, Carshalton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, Orpington, Sevenoaks, Dartford, Maidstone, and throughout Kent. Whether you have a burst pipe in Croydon, need a toilet repair in Sutton, furniture assembly in Wimbledon, or minor electrical fittings in Kingston, our certified professionals can be dispatched quickly to your location.
-                </p>
-                <div class="d-flex flex-wrap mt-3">
-                    @foreach (var area in new[] { "Sutton", "Croydon", "Wimbledon", "Mitcham", "Epsom", "Kingston", "Bromley", "Sevenoaks", "Dartford", "Maidstone" })
-                    {
-                        <span class="badge badge-secondary m-1 px-3 py-2">@area</span>
-                    }
-                </div>
-            </div>
+                </article>
+            }
         </div>
 
-        <!-- Sidebar / Widget -->
-        <div class="col-lg-4 mt-4 mt-lg-0">
-            <div class="sticky-top" style="top: 2rem;">
-                <div class="booking-cta-box p-4 bg-slate text-white rounded-lg shadow">
-                    <h4 class="font-weight-bold text-cyan mb-3">Need Service Today?</h4>
-                    <p class="small text-white-50">Book an hourly slot directly on our calendar. Secure payments powered by Stripe.</p>
-                    <hr class="border-secondary my-3" />
-                    <ul class="list-unstyled mb-4 small">
-                        <li class="mb-2">✓ Select date &amp; time</li>
-                        <li class="mb-2">✓ Upload problem photos</li>
-                        <li class="mb-2">✓ Guaranteed attendance</li>
+        <!-- Sidebar Book CTA -->
+        <aside>
+            <div class="sidebar-sticky-wrapper">
+                <div class="sidebar-cta-card">
+                    <h4 class="sidebar-cta-title">Need Service Today?</h4>
+                    <p class="sidebar-cta-desc">Book an hourly slot directly on our calendar. Secure payments powered by Stripe.</p>
+                    <hr class="sidebar-cta-divider" />
+                    <ul class="sidebar-cta-list">
+                        <li class="sidebar-cta-list-item">✓ Select date &amp; time</li>
+                        <li class="sidebar-cta-list-item">✓ Upload problem photos</li>
+                        <li class="sidebar-cta-list-item">✓ Guaranteed attendance</li>
                     </ul>
-                    <a href="/Booking" class="btn btn-success btn-block py-3 font-weight-bold shadow-sm">Instant Booking Wizard</a>
+                    <a href="/Booking" class="btn btn-success sidebar-cta-btn">Instant Booking Wizard</a>
                 </div>
 
-                <div class="contact-card-box p-4 border rounded-lg bg-white shadow-sm mt-4 text-center">
+                <div class="contact-card-box p-4 border rounded-lg bg-white shadow-sm text-center">
                     <h5 class="font-weight-bold text-slate mb-2">Speak to Our Office</h5>
-                    <p class="text-muted small">Have a custom query or large project request?</p>
-                    <a href="tel:07123456789" class="btn btn-outline-primary btn-block py-2 font-weight-bold">📞 Call 07123 456 789</a>
+                    <p class="text-muted small mb-3">Have a custom query or large project request?</p>
+                    <a href="tel:07123456789" class="btn btn-outline-primary btn-block py-2 font-weight-bold" style="border-radius: var(--radius-lg);">Call 07123 456 789</a>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- SEO/Local Area Section -->
+    <section class="seo-local-section">
+        <div class="seo-local-grid">
+            <div>
+                <h2 class="seo-local-title">@Model.Name Experts in Your Local Area.</h2>
+                <p class="seo-local-desc">
+                    Handy Fix provides premium @Model.Name.ToLower() services across <strong>Sutton, Croydon, and Epsom</strong>. We are committed to local excellence, ensuring that our response times are the fastest in the region. Whether you're in the heart of the town or in a surrounding village, our local vans are equipped with the latest diagnostic tools to solve your issues on the first visit.
+                </p>
+                <div class="seo-local-areas">
+                    <div class="seo-area-badge">
+                        <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                        <span>Sutton</span>
+                    </div>
+                    <div class="seo-area-badge">
+                        <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                        <span>Croydon</span>
+                    </div>
+                    <div class="seo-area-badge">
+                        <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                        <span>Epsom</span>
+                    </div>
+                    <div class="seo-area-badge">
+                        <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                        <span>Cheam</span>
+                    </div>
+                </div>
+            </div>
+            <div class="seo-map-container">
+                <div class="seo-map-placeholder">
+                    <span class="material-symbols-outlined seo-map-icon">map</span>
+                    <div class="seo-map-indicator">
+                        <span class="seo-map-dot"></span>
+                        <span>3 Active Technicians Nearby</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 </div>
