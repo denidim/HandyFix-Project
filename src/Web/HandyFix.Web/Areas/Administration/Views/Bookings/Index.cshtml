@@ -1,50 +1,118 @@
 @model IEnumerable<HandyFix.Web.ViewModels.Booking.BookingDetailsViewModel>
 @{
-    this.Layout = "_Layout";
-    this.ViewData["Title"] = "Manage Bookings - Admin";
+    this.ViewData["Title"] = "Manage Bookings";
+
+    var todaysBookings = Model.Count(b => b.ScheduledTime.Date == DateTime.Today);
+    var pendingBookings = Model.Count(b => b.StatusName == "Pending");
+    var monthlyRevenue = Model.Any() ? Model.Where(b => b.ScheduledTime.Month == DateTime.Today.Month && b.ScheduledTime.Year == DateTime.Today.Year).Sum(b => b.TotalAmount) : 0;
 }
 
-<div class="py-4 text-slate">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <h1 class="font-weight-bold mb-0">Manage Bookings</h1>
-        <a href="/Administration/Dashboard" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+<!-- Sticky Header -->
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+    <div>
+        <h1 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Bookings Management</h1>
+        <p class="font-label-sm text-on-surface-variant mt-1" style="margin: 0;">Track and manage service appointments</p>
+    </div>
+    <div class="position-relative max-w-sm w-100" style="max-width: 320px;">
+        <span class="material-symbols-outlined position-absolute text-outline" style="left: 12px; top: 50%; transform: translateY(-50%);">search</span>
+        <input class="w-100 py-2 border rounded-lg outline-none font-body-md" style="padding-left: 40px; padding-right: 16px; border: 1px solid var(--border-subtle); background: var(--surface-container-lowest); border-radius: var(--radius-lg);" placeholder="Search Ref ID or Name..." type="text" id="bookings-search">
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="bento-grid mb-5" style="grid-template-columns: repeat(3, 1fr); display: grid; gap: var(--spacing-6);">
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1">Today's Appointments</p>
+            <h3 class="font-headline-md mb-0" style="font-size: var(--fs-headline-md); font-weight: 700; color: var(--primary);">@todaysBookings</h3>
+        </div>
+        <div class="w-12 h-12 bg-light rounded-circle d-flex align-items-center justify-content-center text-secondary" style="width: 48px; height: 48px; background-color: rgba(0, 101, 145, 0.1);">
+            <span class="material-symbols-outlined">calendar_today</span>
+        </div>
+    </div>
+    
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1">Pending Approval</p>
+            <h3 class="font-headline-md mb-0 text-secondary" style="font-size: var(--fs-headline-md); font-weight: 700;">@pendingBookings</h3>
+        </div>
+        <div class="w-12 h-12 bg-light rounded-circle d-flex align-items-center justify-content-center text-secondary" style="width: 48px; height: 48px; background-color: rgba(0, 101, 145, 0.1);">
+            <span class="material-symbols-outlined">pending_actions</span>
+        </div>
     </div>
 
-    <div class="table-responsive bg-white border rounded shadow-sm">
-        <table class="table table-hover table-striped mb-0 text-slate small">
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1">Monthly Revenue</p>
+            <h3 class="font-headline-md mb-0" style="font-size: var(--fs-headline-md); font-weight: 700; color: var(--primary);">£@monthlyRevenue.ToString("N2")</h3>
+        </div>
+        <div class="w-12 h-12 bg-light rounded-circle d-flex align-items-center justify-content-center text-on-tertiary-container" style="width: 48px; height: 48px; background-color: rgba(78, 222, 163, 0.2);">
+            <span class="material-symbols-outlined">payments</span>
+        </div>
+    </div>
+</div>
+
+<!-- Bookings List Table -->
+<div class="bg-white rounded-xl overflow-hidden border shadow-sm" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+    <div class="px-4 py-3 border-b d-flex align-items-center justify-content-between" style="border-bottom: 1px solid var(--border-subtle);">
+        <h3 class="font-headline-sm text-primary mb-0" style="font-size: var(--fs-headline-sm);">All Bookings</h3>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="w-full text-left table mb-0" style="border-collapse: collapse; width: 100%;">
             <thead>
-                <tr>
-                    <th>Ref ID</th>
-                    <th>Customer Name</th>
-                    <th>Scheduled Date</th>
-                    <th>Total Amount</th>
-                    <th>Booking Status</th>
-                    <th>Payment Status</th>
-                    <th class="text-right">Actions</th>
+                <tr style="background-color: var(--surface-container-low); border-bottom: 1px solid var(--border-subtle);">
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Ref ID</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Customer</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Date</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Amount</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Booking Status</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Payment</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right" style="color: var(--on-surface-variant); font-weight: 700;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="bookings-table-body" style="background-color: #ffffff;">
                 @if (Model.Any())
                 {
                     @foreach (var booking in Model)
                     {
-                        <tr>
-                            <td class="font-weight-bold text-truncate select-all" style="max-width: 100px;">@booking.Id</td>
-                            <td>@booking.CustomerFirstName @booking.CustomerLastName</td>
-                            <td>@booking.ScheduledTime.ToString("dd MMM yyyy 'at' HH:mm")</td>
-                            <td>£@booking.TotalAmount.ToString("F2")</td>
-                            <td>
-                                <span class="badge @(booking.StatusName == "Pending" ? "bg-warning" : booking.StatusName == "Approved" ? "bg-info" : booking.StatusName == "Completed" ? "bg-success" : "bg-secondary")">
-                                    @booking.StatusName
+                        var initials = $"{booking.CustomerFirstName[0]}{booking.CustomerLastName[0]}";
+                        
+                        var statusClass = booking.StatusName == "Pending" ? "background-color: var(--surface-container-highest); color: var(--on-surface-variant);" :
+                                           booking.StatusName == "Cancelled" ? "background-color: var(--error-container); color: var(--error);" :
+                                           booking.StatusName == "Completed" ? "background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container);" :
+                                           "background-color: rgba(0, 101, 145, 0.1); color: var(--secondary);";
+
+                        var paymentText = booking.PaymentStatus == "DepositPaid" ? "Paid" : "Unpaid";
+                        var paymentDotColor = booking.PaymentStatus == "DepositPaid" ? "var(--on-tertiary-container)" : "var(--outline)";
+                        var paymentTextColor = booking.PaymentStatus == "DepositPaid" ? "var(--on-tertiary-container)" : "var(--outline)";
+
+                        <tr style="border-bottom: 1px solid var(--border-subtle);" class="align-middle">
+                            <td class="px-4 py-3 font-body-md font-bold text-secondary select-all">#@booking.Id.ToString().Substring(0, 8).ToUpper()</td>
+                            <td class="px-4 py-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-on-secondary-container font-bold text-xs" style="width: 32px; height: 32px; background-color: var(--secondary-fixed); font-size: 11px;">
+                                        @initials.ToUpper()
+                                    </div>
+                                    <div>
+                                        <p class="font-body-md font-bold mb-0 text-primary">@booking.CustomerFirstName @booking.CustomerLastName</p>
+                                        <p class="text-on-surface-variant mb-0" style="font-size: 11px;">@booking.Address</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 font-body-md text-primary">@booking.ScheduledTime.ToString("MMM dd, yyyy")</td>
+                            <td class="px-4 py-3 font-body-md font-bold text-primary">£@booking.TotalAmount.ToString("F2")</td>
+                            <td class="px-4 py-3">
+                                <span class="px-3 py-1 rounded-full font-label-sm font-bold" style="@statusClass border-radius: var(--radius-full);">@booking.StatusName</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="d-flex align-items-center gap-1.5 font-label-sm font-bold" style="color: @paymentTextColor;">
+                                    <span class="rounded-circle" style="width: 6px; height: 6px; background-color: @paymentDotColor; display: inline-block;"></span>
+                                    <span>@paymentText</span>
                                 </span>
                             </td>
-                            <td>
-                                <span class="badge @(booking.PaymentStatus == "DepositPaid" ? "bg-success" : "bg-secondary")">
-                                    @booking.PaymentStatus
-                                </span>
-                            </td>
-                            <td class="text-right">
-                                <a href="/Administration/Bookings/Details/@booking.Id" class="btn btn-sm btn-primary">Details / Manage</a>
+                            <td class="px-4 py-3 text-right">
+                                <a href="/Administration/Bookings/Details/@booking.Id" class="btn btn-secondary font-button-text" style="padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: var(--fs-label-sm);">Details</a>
                             </td>
                         </tr>
                     }
@@ -59,3 +127,20 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('bookings-search');
+            const rows = document.querySelectorAll('#bookings-table-body tr');
+
+            searchInput?.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+}
