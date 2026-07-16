@@ -1,57 +1,113 @@
 @model HandyFix.Web.ViewModels.Administration.Services.ServiceAdminInputModel
 @{
-    this.Layout = "_Layout";
-    this.ViewData["Title"] = "Edit Service - Admin";
+    this.ViewData["Title"] = $"Edit Service: {Model.Name}";
     var categories = this.ViewData["Categories"] as SelectList;
 }
 
-<div class="py-4 max-width-600 mx-auto text-slate">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <h1 class="font-weight-bold mb-0">Edit Service: @Model.Name</h1>
-        <a href="/Administration/Services" class="btn btn-outline-secondary btn-sm">Cancel</a>
-    </div>
+<!-- Breadcrumbs -->
+<nav class="breadcrumb-nav mb-4" aria-label="breadcrumb" style="margin-top: var(--spacing-2);">
+    <a href="/Administration/Dashboard">Admin</a>
+    <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+    <a href="/Administration/Services">Services</a>
+    <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+    <span class="breadcrumb-current">Edit Service</span>
+</nav>
 
-    <div class="card p-4 rounded border bg-white shadow-sm">
-        <form asp-area="Administration" asp-controller="Services" asp-action="Edit" method="post">
+<!-- Page Header -->
+<div class="mb-5">
+    <h2 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Edit Service: @Model.Name</h2>
+    <p class="font-body-md text-on-surface-variant mt-1" style="margin: 0;">Update details and status configuration for this service offering.</p>
+</div>
+
+<!-- Form Content -->
+<div class="max-w-4xl mx-auto space-y-8" style="max-width: 800px; margin-bottom: var(--spacing-12);">
+    <div class="bg-white rounded-xl border shadow-sm p-5 p-md-5" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+        <form asp-area="Administration" asp-controller="Services" asp-action="Edit" method="post" id="serviceForm" class="space-y-6" style="display: flex; flex-direction: column; gap: var(--spacing-5);">
             <input type="hidden" asp-for="Id" />
 
-            <div class="form-group mb-3">
-                <label asp-for="Name" class="form-label font-weight-bold small">Service Name</label>
-                <input asp-for="Name" class="form-control" required />
-                <span asp-validation-for="Name" class="text-danger small"></span>
+            <div class="row">
+                <!-- Service Name -->
+                <div class="col-md-6 form-group">
+                    <label asp-for="Name" class="form-label font-label-sm text-on-surface-variant mb-2">Service Name</label>
+                    <input asp-for="Name" class="form-control py-3" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 12px 16px; background-color: var(--surface-container-lowest);" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <!-- Category -->
+                <div class="col-md-6 form-group">
+                    <label asp-for="CategoryId" class="form-label font-label-sm text-on-surface-variant mb-2">Category Division</label>
+                    <select asp-for="CategoryId" asp-items="categories" class="form-control py-3" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 12px 16px; background-color: var(--surface-container-lowest);"></select>
+                    <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                </div>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="CategoryId" class="form-label font-weight-bold small">Category Division</label>
-                <select asp-for="CategoryId" asp-items="categories" class="form-control" required></select>
-                <span asp-validation-for="CategoryId" class="text-danger small"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="Description" class="form-label font-weight-bold small">Detailed Description</label>
-                <textarea asp-for="Description" class="form-control" rows="4" required></textarea>
+            <!-- Detailed Description -->
+            <div class="form-group">
+                <label asp-for="Description" class="form-label font-label-sm text-on-surface-variant mb-2">Detailed Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 12px 16px; background-color: var(--surface-container-lowest); resize: none;"></textarea>
                 <span asp-validation-for="Description" class="text-danger small"></span>
             </div>
 
             <div class="row">
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="BasePrice" class="form-label font-weight-bold small">Base Price (£)</label>
-                    <input asp-for="BasePrice" class="form-control" type="number" step="0.01" required />
+                <!-- Base Price -->
+                <div class="col-md-6 form-group">
+                    <label asp-for="BasePrice" class="form-label font-label-sm text-on-surface-variant mb-2">Base Price (£)</label>
+                    <div class="position-relative">
+                        <span class="position-absolute font-bold text-on-surface-variant" style="left: 16px; top: 50%; transform: translateY(-50%);">£</span>
+                        <input asp-for="BasePrice" class="form-control py-3" type="number" step="0.01" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 12px 16px 12px 32px; background-color: var(--surface-container-lowest);" />
+                    </div>
                     <span asp-validation-for="BasePrice" class="text-danger small"></span>
                 </div>
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="EstimatedDurationMinutes" class="form-label font-weight-bold small">Duration (Minutes)</label>
-                    <input asp-for="EstimatedDurationMinutes" class="form-control" type="number" step="1" required />
+                <!-- Duration -->
+                <div class="col-md-6 form-group">
+                    <label asp-for="EstimatedDurationMinutes" class="form-label font-label-sm text-on-surface-variant mb-2">Duration (Minutes)</label>
+                    <div class="position-relative">
+                        <input asp-for="EstimatedDurationMinutes" class="form-control py-3" type="number" step="1" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 12px 48px 12px 16px; background-color: var(--surface-container-lowest);" />
+                        <span class="position-absolute font-label-sm text-on-surface-variant" style="right: 16px; top: 50%; transform: translateY(-50%);">min</span>
+                    </div>
                     <span asp-validation-for="EstimatedDurationMinutes" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div class="form-group form-check mb-4">
-                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                <label asp-for="IsActive" class="form-check-label font-weight-bold small">Is Active Service</label>
+            <!-- Active Status checkbox -->
+            <div class="form-group form-check d-flex align-items-center gap-2" style="margin: 0; padding-left: 0;">
+                <input asp-for="IsActive" class="form-check-input" type="checkbox" style="width: 18px; height: 18px; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); cursor: pointer; position: relative; margin: 0;" />
+                <label asp-for="IsActive" class="form-check-label font-label-sm text-on-surface font-bold" style="cursor: pointer; user-select: none;">Is Active Service (Visible to Public)</label>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block w-100 font-weight-bold py-2">Update Service</button>
+            <!-- Action Buttons -->
+            <div class="pt-4 d-flex flex-column flex-md-row align-items-center justify-content-end gap-3" style="border-top: 1px solid var(--border-subtle); margin-top: var(--spacing-4);">
+                <a href="/Administration/Services" class="btn btn-outline font-button-text" style="padding: var(--spacing-3) var(--spacing-8); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); background: transparent; color: var(--text-main);">Cancel</a>
+                <button class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2" type="submit" style="padding: var(--spacing-3) var(--spacing-8); border-radius: var(--radius-lg);">
+                    <span class="material-symbols-outlined">save</span>
+                    <span>Update Service</span>
+                </button>
+            </div>
         </form>
+    </div>
+
+    <!-- Contextual Help -->
+    <div class="row pt-2">
+        <div class="col-md-6 mb-3">
+            <div class="bg-white p-4 rounded-xl border d-flex align-items-start gap-3 h-100" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary" style="width: 40px; height: 40px; background-color: rgba(0, 101, 145, 0.1); flex-shrink: 0;">
+                    <span class="material-symbols-outlined">info</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-primary mb-1" style="font-size: 15px;">Pricing Strategy</h4>
+                    <p class="font-label-sm text-on-surface-variant mb-0" style="font-size: 13px; line-height: 1.4;">Base prices should include initial consultation and travel within a standard service radius.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="bg-white p-4 rounded-xl border d-flex align-items-start gap-3 h-100" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-on-tertiary-container" style="width: 40px; height: 40px; background-color: rgba(78, 222, 163, 0.2); flex-shrink: 0;">
+                    <span class="material-symbols-outlined">schedule</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-primary mb-1" style="font-size: 15px;">Time Buffer</h4>
+                    <p class="font-label-sm text-on-surface-variant mb-0" style="font-size: 13px; line-height: 1.4;">We automatically add a 15-minute buffer between bookings for travel and equipment setup.</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
