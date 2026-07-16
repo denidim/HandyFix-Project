@@ -1,0 +1,72 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-base);
+  font-size: var(--fs-button-text);
+  line-height: var(--lh-button-text);
+  font-weight: var(--fw-button-text);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  border: none;
+  padding: var(--spacing-2) var(--spacing-6);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-light);
+  transform: translateY(-1px);
+  color: var(--on-primary);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--on-secondary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--accent-hover);
+  color: var(--on-secondary);
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: var(--on-primary);
+}
+
+.btn-success:hover {
+  filter: brightness(0.9);
+  color: var(--on-primary);
+}
+
+.btn-outline-primary {
+  background-color: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--surface-container-low);
+  color: var(--primary);
+}
+
+.btn-lg {
+  padding: var(--spacing-4) var(--spacing-8);
+  font-size: var(--fs-button-text);
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}

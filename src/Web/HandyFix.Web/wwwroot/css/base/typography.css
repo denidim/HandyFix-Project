@@ -1,0 +1,78 @@
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-display);
+  color: var(--primary);
+  margin-top: 0;
+}
+
+.text-primary { color: var(--primary) !important; }
+.text-secondary { color: var(--secondary) !important; }
+.text-text-main { color: var(--text-main) !important; }
+.text-on-surface-variant { color: var(--on-surface-variant) !important; }
+.text-white { color: var(--on-primary) !important; }
+.text-white-80 { color: rgba(255, 255, 255, 0.8) !important; }
+.text-white-90 { color: rgba(255, 255, 255, 0.9) !important; }
+.text-on-primary-container { color: var(--on-primary-container) !important; }
+
+/* Font size utilities based on variables */
+.font-display-brand {
+  font-size: var(--fs-display-brand);
+  line-height: var(--lh-display-brand);
+  font-weight: var(--fw-display-brand);
+  letter-spacing: var(--ls-display-brand);
+}
+
+.font-headline-xl {
+  font-size: var(--fs-headline-xl);
+  line-height: var(--lh-headline-xl);
+  font-weight: var(--fw-headline-xl);
+}
+
+.font-headline-lg {
+  font-size: var(--fs-headline-lg);
+  line-height: var(--lh-headline-lg);
+  font-weight: var(--fw-headline-lg);
+}
+
+.font-headline-md {
+  font-size: var(--fs-headline-md);
+  line-height: var(--lh-headline-md);
+  font-weight: var(--fw-headline-md);
+}
+
+.font-headline-sm {
+  font-size: var(--fs-headline-sm);
+  line-height: var(--lh-headline-sm);
+  font-weight: var(--fw-headline-sm);
+}
+
+.font-body-lg {
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  font-weight: var(--fw-body-lg);
+}
+
+.font-body-md {
+  font-size: var(--fs-body-md);
+  line-height: var(--lh-body-md);
+  font-weight: var(--fw-body-md);
+}
+
+.font-nav-link {
+  font-size: var(--fs-nav-link);
+  line-height: var(--lh-nav-link);
+  font-weight: var(--fw-nav-link);
+}
+
+.font-button-text {
+  font-size: var(--fs-button-text);
+  line-height: var(--lh-button-text);
+  font-weight: var(--fw-button-text);
+}
+
+.font-label-sm {
+  font-size: var(--fs-label-sm);
+  line-height: var(--lh-label-sm);
+  font-weight: var(--fw-label-sm);
+}
+
+

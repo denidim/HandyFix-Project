@@ -1,0 +1,35 @@
+.form-label {
+  font-size: var(--fs-label-sm);
+  line-height: var(--lh-label-sm);
+  font-weight: var(--fw-label-sm);
+  color: var(--on-surface-variant);
+  display: block;
+  margin-bottom: var(--spacing-2);
+}
+
+.form-control {
+  width: 100%;
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-3);
+  color: var(--on-surface);
+  font-family: var(--font-family-base);
+  font-size: var(--fs-body-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-control:focus {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 2px var(--secondary-fixed);
+}
+
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2345464d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-3) center;
+  background-size: 16px 12px;
+  cursor: pointer;
+}

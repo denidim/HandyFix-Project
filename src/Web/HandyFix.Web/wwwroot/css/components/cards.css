@@ -1,0 +1,115 @@
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+}
+
+.division-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background-color: var(--surface-container-lowest);
+  box-shadow: var(--shadow-xl);
+  transition: all var(--transition-slow);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.division-card:hover {
+  box-shadow: var(--shadow-2xl);
+}
+
+.division-card .img-container {
+  height: 16rem;
+  overflow: hidden;
+}
+
+.division-card .img-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-hero);
+}
+
+.division-card:hover .img-container img {
+  transform: scale(1.1);
+}
+
+.division-card-content {
+  padding: var(--spacing-8);
+  flex-grow: 1;
+}
+
+.bento-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+
+.bento-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-hero);
+}
+
+.bento-card:hover img {
+  transform: scale(1.05);
+}
+
+.bento-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  z-index: var(--z-index-base);
+  pointer-events: none;
+}
+
+.bento-card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: var(--spacing-4);
+  z-index: 2;
+  width: 100%;
+}
+
+.bento-card-large .bento-card-content {
+  padding: var(--spacing-8);
+}
+
+.testimonial-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--spacing-8);
+  border-radius: var(--radius-xl);
+  transition: background-color var(--transition-fast);
+}
+
+.testimonial-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.trust-card {
+  display: flex;
+  gap: var(--spacing-5);
+  padding: var(--spacing-6);
+  border-radius: var(--radius-xl);
+  background-color: var(--surface-container-lowest);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-subtle);
+  transition: border-color var(--transition-fast);
+}
+
+.trust-card:hover {
+  border-color: var(--secondary);
+}

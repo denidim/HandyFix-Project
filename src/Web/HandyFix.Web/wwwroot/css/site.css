@@ -1,232 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
-:root {
-    --primary: #0f172a;       /* Dark slate primary */
-    --primary-light: #1e293b; /* Medium slate */
-    --accent: #0ea5e9;        /* Cyan accent */
-    --accent-hover: #0284c7;  /* Cyan hover */
-    --success: #10b981;       /* Emerald success */
-    --background: #f8fafc;    /* Soft slate background */
-    --text-main: #334155;     /* Slate body text */
-    --text-dark: #0f172a;     /* Bold text dark */
-    --border: #e2e8f0;        /* Cool border */
-}
+@import 'base/variables.css';
+@import 'base/reset.css';
+@import 'base/typography.css';
+@import 'base/layout.css';
 
-body {
-    font-family: 'Outfit', sans-serif;
-    background-color: var(--background);
-    color: var(--text-main);
-    margin-bottom: 70px; /* Leave space for mobile sticky bar */
-}
+@import 'components/navbar.css';
+@import 'components/footer.css';
+@import 'components/buttons.css';
+@import 'components/cards.css';
+@import 'components/forms.css';
 
-/* Typography */
-h1, h2, h3, h4, h5, h6, .navbar-brand {
-    color: var(--text-dark);
-    font-weight: 700;
+@import 'pages/home.css';
+
+/* Utility classes */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-/* Premium Header and Navbar */
-.navbar {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-    transition: all 0.3s ease;
+.material-symbols-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-family: 'Material Symbols Outlined';
 }
 
-.navbar-brand {
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    font-size: 1.5rem;
-    color: var(--primary) !important;
-}
 
-.navbar-brand:after {
-    content: " .";
-    color: var(--accent);
-}
 
-.nav-link {
-    font-weight: 500;
-    color: var(--text-main) !important;
-    transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-    color: var(--accent) !important;
-}
-
-/* Buttons */
-.btn-primary {
-    background-color: var(--primary);
-    border-color: var(--primary);
-    font-weight: 600;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-}
-
-.btn-primary:hover, .btn-primary:focus {
-    background-color: var(--primary-light);
-    border-color: var(--primary-light);
-    transform: translateY(-1px);
-}
-
-.btn-success {
-    background-color: var(--success);
-    border-color: var(--success);
-    font-weight: 600;
-    border-radius: 8px;
-}
-
-/* Hero & Redirection Widget */
-.hero-section {
-    padding: 4rem 0;
-}
-
-.benefit-item {
-    font-weight: 500;
-    margin-bottom: 0.8rem;
-    color: var(--text-dark);
-}
-
-.check-icon {
-    color: var(--success);
-    margin-right: 0.5rem;
-    font-weight: bold;
-}
-
-.booking-widget-card {
-    border: 1px solid var(--border);
-    backdrop-filter: blur(5px);
-}
-
-.booking-widget-card {
-    background-color: rgba(255, 255, 255, 0.65); /* Adjust 0.65 for more or less opacity */
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px); /* Increased blur for a better premium look */
-}
-
-/* Category & Service Cards */
-.category-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid var(--border);
-}
-
-.category-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08) !important;
-    border-color: var(--accent);
-}
-
-.category-icon {
-    font-size: 2.5rem;
-}
-
-.service-card-popular {
-    transition: all 0.2s ease;
-}
-
-.service-card-popular:hover {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
-    border-color: var(--border) !important;
-}
-
-.hover-grow {
-    transition: transform 0.2s ease;
-}
-.hover-grow:hover {
-    transform: scale(1.02);
-}
-
-/* Slots Grid Picker */
-.slots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.slot-selection-btn {
-    padding: 10px 5px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border-radius: 6px;
-    transition: all 0.15s ease;
-}
-
-/* Custom Upload Styling */
-.border-dashed-upload {
-    border: 2px dashed #cbd5e1 !important;
-    padding: 10px;
-    background: #f8fafc;
-    border-radius: 6px;
-}
-
-/* Why Choose Us & Callouts */
-.bg-slate {
-    background-color: var(--primary) !important;
-}
-
-.text-cyan {
-    color: var(--accent) !important;
-}
-
-.text-slate-light {
-    color: #94a3b8 !important;
-}
-
-.bg-gradient-cyan {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-}
-
-.booking-cta-box {
-    border: 1px solid var(--primary-light);
-}
-
-/* Testimonial Cards */
-.testimonial-card {
-    border-color: var(--border);
-}
-
-.stars-rating {
-    font-size: 1.25rem;
-}
-
-/* Helper Widths */
-.max-width-700 {
-    max-width: 700px;
-}
-
-.max-width-600 {
-    max-width: 600px;
-}
-
-.max-width-800 {
-    max-width: 800px;
-}
-
-/* Mobile Sticky CTAs Footer - DIRECT MOBILE-FIRST UX REQUIREMENT */
-.mobile-sticky-cta-footer {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid var(--border);
-    padding: 10px 16px;
-    z-index: 1030;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
-}
-
-@media (max-width: 767.98px) {
-    .mobile-sticky-cta-footer {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-    }
-    
-    body {
-        margin-bottom: 80px; /* Prevent content clipping */
-    }
-}

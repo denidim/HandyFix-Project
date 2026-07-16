@@ -1,0 +1,175 @@
+:root {
+  /* Colors - Core */
+  --primary: #0f172a;
+  --primary-light: #1e293b;
+  --accent: #0ea5e9;
+  --accent-hover: #0284c7;
+  --success: #10b981;
+  --background: #f8fafc;
+  --text-main: #334155;
+  --text-dark: #0f172a;
+  --border-subtle: #e2e8f0;
+
+  /* Colors - Surface & Containers */
+  --surface: #f7f9fb;
+  --surface-container: #eceef0;
+  --surface-container-low: #f2f4f6;
+  --surface-container-high: #e6e8ea;
+  --surface-container-highest: #e0e3e5;
+  --surface-container-lowest: #ffffff;
+  --surface-bright: #f7f9fb;
+  --surface-dim: #d8dadc;
+  --surface-tint: #565e74;
+  --surface-variant: #e0e3e5;
+
+  /* Colors - On Elements */
+  --on-surface: #191c1e;
+  --on-surface-variant: #45464d;
+  --on-background: #191c1e;
+  --on-primary: #ffffff;
+  --on-primary-container: #7c839b;
+  --on-secondary: #ffffff;
+  --on-secondary-container: #004666;
+  --on-tertiary: #ffffff;
+  --on-tertiary-container: #009668;
+  --on-error: #ffffff;
+  --on-error-container: #93000a;
+
+  /* Colors - Inverse */
+  --inverse-surface: #2d3133;
+  --inverse-on-surface: #eff1f3;
+  --inverse-primary: #bec6e0;
+
+  /* Colors - Outline */
+  --outline: #76777d;
+  --outline-variant: #c6c6cd;
+
+  /* Colors - Extended Palette */
+  --primary-container: #131b2e;
+  --primary-fixed: #dae2fd;
+  --primary-fixed-dim: #bec6e0;
+  --on-primary-fixed: #131b2e;
+  --on-primary-fixed-variant: #3f465c;
+
+  --secondary: #006591;
+  --secondary-container: #39b8fd;
+  --secondary-fixed: #c9e6ff;
+  --secondary-fixed-dim: #89ceff;
+  --on-secondary-fixed: #001e2f;
+  --on-secondary-fixed-variant: #004c6e;
+
+  --tertiary: #000000;
+  --tertiary-container: #002113;
+  --tertiary-fixed: #6ffbbe;
+  --tertiary-fixed-dim: #4edea3;
+  --on-tertiary-fixed: #002113;
+  --on-tertiary-fixed-variant: #005236;
+
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.4);
+
+  /* Typography - Font Families */
+  --font-family-base: 'Outfit', sans-serif;
+  --font-family-display: 'Outfit', sans-serif;
+
+  /* Typography - Font Sizes & Line Heights */
+  --fs-label-sm: 14px;
+  --lh-label-sm: 20px;
+  --fw-label-sm: 500;
+
+  --fs-body-md: 16px;
+  --lh-body-md: 24px;
+  --fw-body-md: 400;
+
+  --fs-body-lg: 18px;
+  --lh-body-lg: 28px;
+  --fw-body-lg: 400;
+
+  --fs-nav-link: 16px;
+  --lh-nav-link: 24px;
+  --fw-nav-link: 500;
+
+  --fs-button-text: 16px;
+  --lh-button-text: 24px;
+  --fw-button-text: 600;
+
+  --fs-headline-sm: 20px;
+  --lh-headline-sm: 28px;
+  --fw-headline-sm: 600;
+
+  --fs-headline-md: 24px;
+  --lh-headline-md: 32px;
+  --fw-headline-md: 700;
+
+  --fs-headline-lg: 32px;
+  --lh-headline-lg: 40px;
+  --fw-headline-lg: 700;
+
+  --fs-headline-xl: 48px;
+  --lh-headline-xl: 56px;
+  --fw-headline-xl: 700;
+
+  --fs-headline-xl-mobile: 32px;
+  --lh-headline-xl-mobile: 40px;
+  --fw-headline-xl-mobile: 700;
+
+  --fs-display-brand: 24px;
+  --lh-display-brand: 32px;
+  --fw-display-brand: 800;
+  --ls-display-brand: -0.5px;
+
+  /* Radii */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+  --spacing-32: 8rem;
+
+  --gap-mobile: var(--spacing-2);
+  --gap-desktop: var(--spacing-6);
+  --padding-section: var(--spacing-16);
+  --height-footer-mobile: 80px;
+  --height-footer-desktop: 70px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-ambient: 0 10px 20px rgba(15, 23, 42, 0.08);
+
+  /* Z-Index */
+  --z-index-base: 1;
+  --z-index-dropdown: 40;
+  --z-index-sticky: 50;
+  --z-index-overlay: 90;
+  --z-index-modal: 100;
+  --z-index-mobile-cta: 1030;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s ease;
+  --transition-hero: 0.7s ease;
+}
