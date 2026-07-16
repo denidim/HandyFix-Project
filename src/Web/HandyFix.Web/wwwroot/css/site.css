@@ -18,6 +18,7 @@
 @import 'pages/service-details.css';
 @import 'pages/booking.css';
 @import 'pages/service-category.css';
+@import 'pages/payment.css';
 
 /* Utility classes */
 .material-symbols-outlined {
