@@ -1,45 +1,121 @@
 @model IEnumerable<HandyFix.Web.ViewModels.Services.ServiceViewModel>
 @{
-    this.Layout = "_Layout";
-    this.ViewData["Title"] = "Manage Services - Admin";
+    this.ViewData["Title"] = "Manage Services";
+
+    var totalServices = Model.Count();
+    var averagePrice = Model.Any() ? Model.Average(s => s.BasePrice) : 0;
+    var totalCategories = Model.Any() ? Model.Select(s => s.CategorySlug).Distinct().Count() : 0;
 }
 
-<div class="py-4 text-slate">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+<!-- Sticky Topbar Header -->
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+    <div>
+        <h1 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Manage Services</h1>
+        <p class="font-label-sm text-on-surface-variant mt-1" style="margin: 0;">Update, add, or remove items from your service catalog.</p>
+    </div>
+    <a href="/Administration/Services/Create" class="btn btn-primary font-button-text d-flex align-items-center gap-2" style="padding: var(--spacing-3) var(--spacing-6); border-radius: var(--radius-lg);">
+        <span class="material-symbols-outlined">add</span>
+        <span>Add Service</span>
+    </a>
+</div>
+
+<!-- Quick Stats Bento-lite -->
+<div class="bento-grid bento-grid-4 mb-5" style="grid-template-columns: repeat(3, 1fr); display: grid; gap: var(--spacing-6);">
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between" style="background: #ffffff; border: 1px solid var(--border-subtle);">
         <div>
-            <h1 class="font-weight-bold mb-0">Manage Services</h1>
-            <p class="text-muted small mb-0">Add, edit, or delete HandyFix service offerings.</p>
+            <p class="font-label-sm text-on-surface-variant mb-1">Total Services</p>
+            <h3 class="font-headline-md mb-0" style="font-size: var(--fs-headline-md); font-weight: 700; color: var(--primary);">@totalServices</h3>
         </div>
+        <div class="w-12 h-12 bg-light rounded-circle d-flex align-items-center justify-content-center text-secondary" style="width: 48px; height: 48px; background-color: rgba(0, 101, 145, 0.1);">
+            <span class="material-symbols-outlined">list_alt</span>
+        </div>
+    </div>
+    
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between" style="background: #ffffff; border: 1px solid var(--border-subtle);">
         <div>
-            <a href="/Administration/Services/Create" class="btn btn-success font-weight-bold">+ Add Service</a>
-            <a href="/Administration/Dashboard" class="btn btn-outline-secondary ml-2">Back</a>
+            <p class="font-label-sm text-on-surface-variant mb-1">Average Price</p>
+            <h3 class="font-headline-md mb-0" style="font-size: var(--fs-headline-md); font-weight: 700; color: var(--primary);">£@averagePrice.ToString("F2")</h3>
+        </div>
+        <div class="w-12 h-12 bg-light rounded-circle d-flex align-items-center justify-content-center text-on-tertiary-container" style="width: 48px; height: 48px; background-color: rgba(78, 222, 163, 0.2);">
+            <span class="material-symbols-outlined">payments</span>
         </div>
     </div>
 
-    <div class="table-responsive bg-white border rounded shadow-sm">
-        <table class="table table-hover table-striped mb-0 text-slate small">
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1">Categories</p>
+            <h3 class="font-headline-md mb-0" style="font-size: var(--fs-headline-md); font-weight: 700; color: var(--primary);">@totalCategories</h3>
+        </div>
+        <div class="w-12 h-12 bg-light rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 48px; height: 48px; background-color: var(--surface-container-high);">
+            <span class="material-symbols-outlined">category</span>
+        </div>
+    </div>
+</div>
+
+<!-- Services Table Container -->
+<div class="bg-white rounded-xl overflow-hidden border shadow-sm" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+    <div class="px-4 py-3 border-b d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4" style="border-bottom: 1px solid var(--border-subtle);">
+        <div class="position-relative max-w-sm w-100" style="max-width: 320px;">
+            <span class="material-symbols-outlined position-absolute text-outline" style="left: 12px; top: 50%; transform: translateY(-50%);">search</span>
+            <input class="w-100 py-2 border rounded-lg outline-none font-body-md" style="padding-left: 40px; padding-right: 16px; border: 1px solid var(--border-subtle); background: var(--surface-container-lowest); border-radius: var(--radius-lg);" placeholder="Search services..." type="text" id="services-search">
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-outline d-flex align-items-center gap-2" style="border: 1px solid var(--border-subtle); padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: var(--fs-label-sm);">
+                <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
+                <span>Filter</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Table Content -->
+    <div class="table-responsive">
+        <table class="table mb-0 text-left" style="border-collapse: collapse; width: 100%;">
             <thead>
-                <tr>
-                    <th>Service Name</th>
-                    <th>Price</th>
-                    <th>Estimated Duration</th>
-                    <th class="text-right">Actions</th>
+                <tr style="background-color: var(--surface-container-low); border-bottom: 1px solid var(--border-subtle);">
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Service Name</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Category</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Estimated Duration</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Price</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right" style="color: var(--on-surface-variant); font-weight: 700;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="services-table-body" style="background-color: #ffffff;">
                 @if (Model.Any())
                 {
                     @foreach (var svc in Model)
                     {
-                        <tr>
-                            <td class="font-weight-bold">@svc.Name</td>
-                            <td class="text-success font-weight-bold">£@svc.BasePrice.ToString("F2")</td>
-                            <td>@svc.EstimatedDurationMinutes minutes</td>
-                            <td class="text-right">
-                                <a href="/Administration/Services/Edit/@svc.Id" class="btn btn-sm btn-outline-primary mr-1">Edit</a>
-                                <form asp-area="Administration" asp-controller="Services" asp-action="Delete" asp-route-id="@svc.Id" method="post" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this service?');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                </form>
+                        var categorySlug = svc.CategorySlug ?? "plumbing";
+                        var icon = categorySlug == "plumbing" ? "plumbing" : "home_repair_service";
+                        var badgeClass = categorySlug == "plumbing" ? "background-color: rgba(0, 101, 145, 0.1); color: var(--secondary);" : "background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container);";
+
+                        <tr style="border-bottom: 1px solid var(--border-subtle);" class="align-middle">
+                            <td class="px-4 py-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-lg d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: var(--surface-container-high); border-radius: var(--radius-lg);">
+                                        <span class="material-symbols-outlined text-secondary">@icon</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-body-md font-bold mb-0 text-primary">@svc.Name</p>
+                                        <p class="text-on-surface-variant mb-0" style="font-size: 12px; max-width: 320px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">@svc.Description</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-3 py-1 rounded-full font-label-sm" style="@badgeClass border-radius: var(--radius-full);">@categorySlug</span>
+                            </td>
+                            <td class="px-4 py-3 font-body-md text-primary">@svc.EstimatedDurationMinutes mins</td>
+                            <td class="px-4 py-3 font-body-md font-bold text-secondary">£@svc.BasePrice.ToString("F2")</td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="/Administration/Services/Edit/@svc.Id" class="p-2 text-on-surface-variant rounded-lg d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border: 1px solid var(--border-subtle); background: #ffffff;" title="Edit">
+                                        <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+                                    </a>
+                                    <form asp-area="Administration" asp-controller="Services" asp-action="Delete" asp-route-id="@svc.Id" method="post" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this service?');">
+                                        <button type="submit" class="p-2 text-danger rounded-lg d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border: 1px solid rgba(186, 26, 26, 0.2); background: rgba(186, 26, 26, 0.05);" title="Delete">
+                                            <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -47,10 +123,27 @@
                 else
                 {
                     <tr>
-                        <td colspan="4" class="text-center p-4 text-muted">No services found in database.</td>
+                        <td colspan="5" class="text-center p-4 text-muted">No services found in database.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('services-search');
+            const rows = document.querySelectorAll('#services-table-body tr');
+
+            searchInput?.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+}
