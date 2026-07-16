@@ -1,140 +1,228 @@
 @model HandyFix.Web.ViewModels.Booking.BookingDetailsViewModel
 @using HandyFix.Data.Models
 @{
-    this.Layout = "_Layout";
-    this.ViewData["Title"] = $"Booking Details - {Model.Id}";
+    this.ViewData["Title"] = $"Booking Details - {Model.Id.ToString().Substring(0, 8).ToUpper()}";
     var technicians = this.ViewData["Technicians"] as IEnumerable<Technician> ?? new List<Technician>();
+    var balanceDue = Model.TotalAmount - Model.DepositAmount;
 }
 
-<div class="py-4 text-slate">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <div>
-            <h1 class="font-weight-bold mb-0">Booking Ref: @Model.Id.ToString().Substring(0, 8)...</h1>
-            <span class="text-muted small">Submitted on scheduled time @Model.ScheduledTime.ToString("dd MMM yyyy")</span>
-        </div>
-        <a href="/Administration/Bookings" class="btn btn-outline-secondary btn-sm">← Back to List</a>
-    </div>
+<!-- Breadcrumbs & Header Actions -->
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+    <nav class="breadcrumb-nav mb-0" aria-label="breadcrumb">
+        <a href="/Administration/Dashboard">Admin</a>
+        <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+        <a href="/Administration/Bookings">Bookings</a>
+        <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+        <span class="breadcrumb-current">Booking Details</span>
+    </nav>
+    <a href="/Administration/Bookings" class="btn btn-outline d-flex align-items-center gap-2" style="border: 1px solid var(--border-subtle); padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: var(--fs-label-sm); background: #ffffff; color: var(--text-main);">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span>Back to List</span>
+    </a>
+</div>
 
-    <div class="row">
-        <!-- Main Details -->
-        <div class="col-lg-8 mb-4">
-            <div class="card p-4 rounded border mb-4 bg-white">
-                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Customer &amp; Service Details</h4>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Name:</div>
-                    <div class="col-sm-9">@Model.CustomerFirstName @Model.CustomerLastName</div>
+<div class="mb-5">
+    <div class="d-flex align-items-center gap-3">
+        <h2 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Booking #@Model.Id.ToString().Substring(0, 8).ToUpper()</h2>
+        <div class="d-flex gap-2">
+            @{
+                var statusClass = Model.StatusName == "Pending" ? "background-color: var(--surface-container-highest); color: var(--on-surface-variant);" :
+                                   Model.StatusName == "Cancelled" ? "background-color: var(--error-container); color: var(--error);" :
+                                   Model.StatusName == "Completed" ? "background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container);" :
+                                   "background-color: rgba(0, 101, 145, 0.1); color: var(--secondary);";
+            }
+            <span class="px-3 py-1 font-bold font-label-sm rounded-full" style="@statusClass font-size: 11px; text-transform: uppercase;">@Model.StatusName</span>
+            <span class="px-3 py-1 font-bold font-label-sm rounded-full" style="background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container); font-size: 11px; text-transform: uppercase;">@Model.PaymentStatus</span>
+        </div>
+    </div>
+    <p class="font-body-md text-on-surface-variant mt-1" style="margin: 0;">Scheduled appointment for client @Model.CustomerFirstName @Model.CustomerLastName</p>
+</div>
+
+<!-- Two Column Layout -->
+<div class="row">
+    <!-- Left Column: Details & Images -->
+    <div class="col-lg-8 mb-4">
+        <!-- Customer & Service Details -->
+        <section class="bg-white rounded-xl p-4 p-md-5 border border-border-subtle shadow-sm mb-4" style="border-radius: var(--radius-xl);">
+            <h2 class="font-headline-sm text-primary mb-4 pb-3" style="font-size: var(--fs-headline-sm); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: var(--spacing-2);">
+                <span class="material-symbols-outlined text-secondary">person_pin_circle</span>
+                <span>Customer &amp; Service Details</span>
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Customer Name</label>
+                    <p class="font-body-lg text-primary font-bold mb-0">@Model.CustomerFirstName @Model.CustomerLastName</p>
                 </div>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Email:</div>
-                    <div class="col-sm-9 select-all">@Model.Email</div>
-                </div>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Phone:</div>
-                    <div class="col-sm-9 select-all">@Model.PhoneNumber</div>
-                </div>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Service Address:</div>
-                    <div class="col-sm-9">@Model.Address</div>
-                </div>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Selected Services:</div>
-                    <div class="col-sm-9 font-weight-bold">@string.Join(", ", Model.Services)</div>
-                </div>
-                <div class="row mb-3 small">
-                    <div class="col-sm-3 font-weight-bold">Problem Description:</div>
-                    <div class="col-sm-9 text-muted text-justify">@Model.ProblemDescription</div>
+                <div class="col-md-6 mb-4">
+                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Service Address</label>
+                    <p class="font-body-md text-primary mb-0" style="line-height: 1.5;">@Model.Address</p>
                 </div>
             </div>
 
-            <!-- Problem Photos Attachments -->
-            @if (Model.ImageUrls != null && Model.ImageUrls.Any())
-            {
-                <div class="card p-4 rounded border bg-white mb-4">
-                    <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Problem Images Attached</h4>
-                    <div class="row">
-                        @foreach (var url in Model.ImageUrls)
-                        {
-                            <div class="col-sm-4 mb-3">
-                                <a href="@url" target="_blank">
-                                    <img src="@url" class="img-thumbnail img-fluid rounded hover-grow" alt="Attachment" style="max-height: 200px; object-fit: cover; width: 100%;" />
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Contact Details</label>
+                    <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2 select-all">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">call</span>
+                        <span>@Model.PhoneNumber</span>
+                    </p>
+                    <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2 select-all">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">mail</span>
+                        <span>@Model.Email</span>
+                    </p>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Service Requested</label>
+                    <p class="font-body-lg text-secondary font-bold mb-0">@string.Join(", ", Model.Services)</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Scheduled Time</label>
+                    <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">calendar_today</span>
+                        <span>@Model.ScheduledTime.ToString("MMMM dd, yyyy")</span>
+                    </p>
+                    <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">schedule</span>
+                        <span>@Model.ScheduledTime.ToString("hh:mm tt") - @Model.ScheduledEndTime.ToString("hh:mm tt")</span>
+                    </p>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.ProblemDescription))
+                {
+                    <div class="col-md-6 mb-4">
+                        <div class="p-3 bg-light rounded-lg border-start border-secondary" style="border-left: 4px solid var(--secondary) !important; background-color: var(--surface-container-low) !important;">
+                            <label class="text-secondary font-bold uppercase block mb-1" style="font-size: 10px;">Customer Note</label>
+                            <p class="italic text-on-surface-variant mb-0" style="font-size: 13px; line-height: 1.4;">"@Model.ProblemDescription"</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- Problem Images -->
+        @if (Model.ImageUrls != null && Model.ImageUrls.Any())
+        {
+            <section class="bg-white rounded-xl p-4 p-md-5 border border-border-subtle shadow-sm" style="border-radius: var(--radius-xl);">
+                <h2 class="font-headline-sm text-primary mb-4 flex items-center gap-2" style="font-size: var(--fs-headline-sm);">
+                    <span class="material-symbols-outlined text-secondary">image</span>
+                    <span>Problem Visuals Attached</span>
+                </h2>
+                <div class="row">
+                    @foreach (var url in Model.ImageUrls)
+                    {
+                        <div class="col-sm-4 mb-3">
+                            <div class="group relative overflow-hidden border" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); aspect-ratio: 1/1;">
+                                <a href="@url" target="_blank" class="d-block h-100 w-100">
+                                    <img src="@url" class="w-100 h-100" alt="Attachment" style="object-fit: cover; transition: transform var(--transition-normal);" />
                                 </a>
                             </div>
-                        }
-                    </div>
+                        </div>
+                    }
                 </div>
-            }
-        </div>
+            </section>
+        }
+    </div>
 
-        <!-- Sidebar Administration Controls -->
-        <div class="col-lg-4">
-            <div class="card p-4 rounded border mb-4 bg-light shadow-sm">
-                <h4 class="font-weight-bold text-slate mb-3 border-bottom pb-2">Status &amp; Assignment</h4>
-
-                <div class="mb-3 small">
-                    <span class="font-weight-bold">Booking Status:</span>
-                    <span class="badge @(Model.StatusName == "Pending" ? "bg-warning" : Model.StatusName == "Approved" ? "bg-info" : Model.StatusName == "Completed" ? "badge-success" : "badge-secondary") py-2 px-3 block mt-1">
-                        @Model.StatusName
-                    </span>
-                </div>
-
-                <div class="mb-4 small">
-                    <span class="font-weight-bold">Stripe Payment Status:</span>
-                    <span class="badge @(Model.PaymentStatus == "DepositPaid" ? "bg-success" : "bg-secondary") py-2 px-3 block mt-1">
-                        @Model.PaymentStatus
-                    </span>
-                </div>
-
-                <!-- Technician Assignment Form -->
-                <form asp-area="Administration" asp-controller="Bookings" asp-action="AssignTechnician" method="post" class="mb-4">
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    <div class="form-group small mb-2">
-                        <label for="technicianId" class="font-weight-bold">Assign Technician</label>
-                        <select name="technicianId" id="technicianId" class="form-control mt-1">
-                            <option value="">-- Choose Technician --</option>
-                            @foreach (var tech in technicians)
+    <!-- Right Column: Sidebar Controls -->
+    <div class="col-lg-4">
+        <!-- Status & Assignment Card -->
+        <section class="glass-card rounded-xl p-4 shadow-sm border mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
+            <h2 class="font-headline-sm text-primary mb-4" style="font-size: var(--fs-headline-sm);">Status &amp; Assignment</h2>
+            
+            <!-- Technician Assignment Form -->
+            <form asp-area="Administration" asp-controller="Bookings" asp-action="AssignTechnician" method="post" class="mb-4">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="form-group mb-3">
+                    <label for="technicianId" class="form-label font-label-sm text-on-surface-variant mb-2">Assign Technician</label>
+                    <select name="technicianId" id="technicianId" class="form-control py-3" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); background-color: var(--surface-container-lowest);">
+                        <option value="">-- Choose Technician --</option>
+                        @foreach (var tech in technicians)
+                        {
+                            if (Model.TechnicianName != null && Model.TechnicianName.Contains(tech.FirstName))
                             {
-                                if (Model.TechnicianName != null && Model.TechnicianName.Contains(tech.FirstName))
-                                {
-                                    <option value="@tech.Id" selected>@tech.FirstName @tech.LastName</option>
-                                }
-                                else
-                                {
-                                    <option value="@tech.Id">@tech.FirstName @tech.LastName</option>
-                                }
+                                <option value="@tech.Id" selected>@tech.FirstName @tech.LastName</option>
                             }
-                        </select>
+                            else
+                            {
+                                <option value="@tech.Id">@tech.FirstName @tech.LastName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-2) 0; border-radius: var(--radius-lg);">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
+                    <span>Update Assignment</span>
+                </button>
+            </form>
+
+            <hr style="border-top: 1px solid var(--border-subtle); margin: var(--spacing-4) 0;">
+
+            <!-- Status Actions -->
+            <div class="d-flex flex-column gap-2">
+                <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px;">Manage Booking Status</label>
+                
+                @if (Model.StatusName == "Pending")
+                {
+                    <form asp-area="Administration" asp-controller="Bookings" asp-action="Approve" method="post" class="w-100">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-outline font-button-text w-100 d-flex align-items-center justify-content-center gap-2" style="border: 1px solid var(--secondary); background: transparent; color: var(--secondary); padding: var(--spacing-3) 0; border-radius: var(--radius-lg);">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            <span>Approve Booking</span>
+                        </button>
+                    </form>
+                }
+
+                @if (Model.StatusName == "Approved" || Model.StatusName == "Pending")
+                {
+                    <form asp-area="Administration" asp-controller="Bookings" asp-action="Complete" method="post" class="w-100">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); background-color: var(--on-tertiary-container); border: none;">
+                            <span class="material-symbols-outlined">done_all</span>
+                            <span>Complete Service</span>
+                        </button>
+                    </form>
+                }
+
+                @if (Model.StatusName != "Cancelled")
+                {
+                    <form asp-area="Administration" asp-controller="Bookings" asp-action="Cancel" method="post" class="w-100">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); border: 1px solid rgba(186, 26, 26, 0.2); background: rgba(186, 26, 26, 0.05); color: var(--error);">
+                            <span class="material-symbols-outlined">cancel</span>
+                            <span>Cancel Booking</span>
+                        </button>
+                    </form>
+                }
+            </div>
+        </section>
+
+        <!-- Financial Summary -->
+        <section class="glass-card rounded-xl p-4 shadow-sm border mb-4" style="background: var(--primary-container); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-xl); color: var(--on-primary-fixed);">
+            <h2 class="font-headline-sm text-white mb-4" style="font-size: var(--fs-headline-sm);">Financial Summary</h2>
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-2);">
+                <div class="d-flex justify-content-between" style="color: var(--on-primary-container);">
+                    <span class="font-body-md">Base Service Estimate</span>
+                    <span class="font-bold">£@Model.TotalAmount.ToString("F2")</span>
+                </div>
+                <hr style="border-top: 1px solid rgba(255,255,255,0.1); margin: var(--spacing-2) 0;">
+                <div class="d-flex justify-content-between align-items-end">
+                    <span class="font-body-md text-white">Total Estimated</span>
+                    <span class="font-bold text-white" style="font-size: 20px;">£@Model.TotalAmount.ToString("F2")</span>
+                </div>
+                <div class="mt-3 p-3 rounded-lg" style="background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="font-bold text-secondary-container" style="font-size: 11px; text-transform: uppercase;">Deposit Paid</span>
+                        <span class="font-bold text-secondary-container">£@Model.DepositAmount.ToString("F2")</span>
                     </div>
-                    <button type="submit" class="btn btn-sm btn-primary btn-block w-100">Update Assignment</button>
-                </form>
-
-                <!-- Status Modification CTAs -->
-                <h5 class="font-weight-bold small mb-2">Change Booking Status</h5>
-                <div class="d-flex flex-column gap-2">
-                    @if (Model.StatusName == "Pending")
-                    {
-                        <form asp-area="Administration" asp-controller="Bookings" asp-action="Approve" method="post">
-                            <input type="hidden" name="id" value="@Model.Id" />
-                            <button type="submit" class="btn btn-sm btn-success w-100 mb-2 font-weight-bold">Approve Booking</button>
-                        </form>
-                    }
-
-                    @if (Model.StatusName == "Approved" || Model.StatusName == "Pending")
-                    {
-                        <form asp-area="Administration" asp-controller="Bookings" asp-action="Complete" method="post">
-                            <input type="hidden" name="id" value="@Model.Id" />
-                            <button type="submit" class="btn btn-sm btn-info w-100 mb-2 font-weight-bold">Mark Job Completed</button>
-                        </form>
-                    }
-
-                    @if (Model.StatusName != "Cancelled")
-                    {
-                        <form asp-area="Administration" asp-controller="Bookings" asp-action="Cancel" method="post">
-                            <input type="hidden" name="id" value="@Model.Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-danger w-100 font-weight-bold">Cancel Appointment</button>
-                        </form>
-                    }
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="font-bold text-white" style="font-size: 13px;">Balance Due</span>
+                        <span class="font-bold text-white" style="font-size: 15px;">£@balanceDue.ToString("F2")</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 </div>
