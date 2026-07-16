@@ -15,6 +15,7 @@
 /* Pages */
 @import 'pages/home.css';
 @import 'pages/services.css';
+@import 'pages/service-details.css';
 
 /* Utility classes */
 .material-symbols-outlined {

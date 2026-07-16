@@ -1,100 +1,224 @@
 @model HandyFix.Web.ViewModels.Services.ServiceDetailsViewModel
 @{
     this.Layout = "_Layout";
+    this.ViewData["Title"] = $"{Model.Name} - HandyFix South London";
+
+    var isPlumbing = Model.CategoryName == "Plumbing";
+    var durationHours = Model.EstimatedDurationMinutes >= 60 
+        ? $"{(Model.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
+        : $"{Model.EstimatedDurationMinutes} Mins";
+
+    // Dynamic Image path
+    var serviceImgSlug = Model.Name.Replace(" ", "-").ToLower();
+    var serviceImage = $"/images/services/{serviceImgSlug}-hero.jpg";
+    var fallbackImage = isPlumbing ? "/images/services/plumbing-hero.jpg" : "/images/services/handyman-hero.jpg";
+
+    // Feature dynamic data
+    var feat1Icon = isPlumbing ? "faucet" : "shelves";
+    var feat1Title = isPlumbing ? "Fixture Installations" : "Furniture Assembly";
+    var feat1Desc = isPlumbing 
+        ? "Expert installation of faucets, showerheads, and designer mixer taps with seamless finishing."
+        : "Flat-pack furniture assembly, shelf mounting, and cabinets put together securely and efficiently.";
+
+    var feat2Icon = isPlumbing ? "plumbing" : "build";
+    var feat2Title = isPlumbing ? "Leak Detection" : "Home Repairs";
+    var feat2Desc = isPlumbing 
+        ? "Non-invasive thermal imaging and pressure testing to find and fix hidden leaks instantly."
+        : "TV wall mounting, mirror hanging, door trimming, and general odd jobs handled by experts.";
+
+    // Local Specialist dynamic data
+    var expertName = isPlumbing ? "David" : "Mark";
+    var expertRole = isPlumbing ? "Senior Plumber" : "Master Handyman";
+    var expertBorough = isPlumbing ? "Sutton" : "Croydon";
+    var expertBio = isPlumbing
+        ? "I've spent 15 years servicing homes across Sutton, Croydon, and Epsom. I specialize in high-end bathroom remodels and precision leak detection."
+        : "I've spent over 12 years helping homeowners with carpentry, mounting, and general property maintenance in Croydon and South London.";
 }
 
-<div class="py-4">
-    <!-- Breadcrumbs -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb bg-transparent p-0 mb-3">
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item"><a href="/Services">Services</a></li>
-            <li class="breadcrumb-item"><a href="/Services/@Model.CategorySlug">@Model.CategoryName</a></li>
-            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
-        </ol>
-    </nav>
+<div class="page-container services-page">
+    <!-- Hero Section -->
+    <section class="service-hero-section">
+        <div class="service-hero-image" style="background-image: url('@serviceImage')" onerror="this.style.backgroundImage='url(@fallbackImage)'; this.onerror=null;"></div>
+        <div class="service-hero-overlay"></div>
+        <div class="service-hero-content">
+            <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
+                <a href="/Services">Services</a>
+                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                <a href="/Services/@Model.CategorySlug">@Model.CategoryName</a>
+                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                <span class="text-white">@Model.Name</span>
+            </nav>
+            <h1 class="service-hero-title">@Model.Name Specialists</h1>
+            <div class="service-hero-badges">
+                <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined">verified</span> Professional Service
+                </span>
+                <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined">schedule</span> 24/7 Available
+                </span>
+            </div>
+        </div>
+    </section>
 
-    <div class="row">
-        <!-- Service Details Content -->
-        <div class="col-lg-8">
-            <h1 class="display-5 font-weight-bold text-slate mb-3">@Model.Name in South London</h1>
-            <div class="d-flex align-items-center mb-4">
-                <span class="badge bg-primary mr-3 px-3 py-2">Division: @Model.CategoryName</span>
-                <span class="badge bg-light text-muted mr-3">🕒 Estimated Duration: @Model.EstimatedDurationMinutes mins</span>
-                <span class="h4 text-success mb-0 font-weight-bold">from £@Model.BasePrice.ToString("F2")</span>
+    <!-- Main Layout Container -->
+    <div class="service-details-layout">
+        <!-- Main Content Area -->
+        <main>
+            <!-- Quick Specs Bento -->
+            <div class="specs-bento-grid">
+                <div class="spec-bento-card">
+                    <span class="material-symbols-outlined spec-bento-icon">history</span>
+                    <span class="spec-bento-label">Typical Duration</span>
+                    <span class="spec-bento-value">@durationHours</span>
+                </div>
+                <div class="spec-bento-card">
+                    <span class="material-symbols-outlined spec-bento-icon">category</span>
+                    <span class="spec-bento-label">Service Category</span>
+                    <span class="spec-bento-value">@Model.CategoryName</span>
+                </div>
+                <div class="spec-bento-card col-span-2">
+                    <span class="material-symbols-outlined spec-bento-icon">payments</span>
+                    <span class="spec-bento-label">Starting Price</span>
+                    <span class="spec-bento-value">From £@Model.BasePrice.ToString("F0")</span>
+                </div>
             </div>
 
-            <div class="service-description leading-relaxed text-slate mb-5" style="font-size: 1.1rem;">
+            <!-- Detailed Description -->
+            <section class="details-prose">
+                <h2 class="details-section-title">Service Overview</h2>
                 <p>@Model.Description</p>
                 <p>At <strong>HandyFix</strong>, our mobile crews are specialized in @Model.Name operations. We come equipped with professional-grade tools, quality replacement components, and follow strict building codes to ensure a lasting repair or installation. All our work is fully insured for your peace of mind.</p>
-            </div>
 
-            <hr class="my-5" />
-
-            <!-- FAQ Section -->
-            <div class="faq-section mb-5">
-                <h3 class="font-weight-bold text-slate mb-4">Frequently Asked Questions</h3>
-                <div class="accordion" id="detailsFaq">
-                    <div class="card border mb-2 rounded">
-                        <div class="card-header bg-white py-3" id="faqOne" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" style="cursor: pointer;">
-                            <h5 class="mb-0 font-weight-bold text-slate small">How much does @Model.Name cost?</h5>
+                <div class="details-features-grid">
+                    <div class="details-feature-item">
+                        <div class="feature-item-icon-box">
+                            <span class="material-symbols-outlined">@feat1Icon</span>
                         </div>
-                        <div id="collapseOne" class="collapse show" data-parent="#detailsFaq">
-                            <div class="card-body text-muted small">
-                                Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2"). The final cost depends on the complexity of the task and any additional materials or parts required. We always present transparent quotes before starting.
-                            </div>
+                        <div>
+                            <h3 class="feature-item-title">@feat1Title</h3>
+                            <p class="feature-item-desc">@feat1Desc</p>
                         </div>
                     </div>
-                    <div class="card border mb-2 rounded">
-                        <div class="card-header bg-white py-3 collapsed" id="faqTwo" data-toggle="collapse" data-target="#collapseTwo" style="cursor: pointer;">
-                            <h5 class="mb-0 font-weight-bold text-slate small">Do you cover my location?</h5>
+                    <div class="details-feature-item">
+                        <div class="feature-item-icon-box">
+                            <span class="material-symbols-outlined">@feat2Icon</span>
                         </div>
-                        <div id="collapseTwo" class="collapse" data-parent="#detailsFaq">
-                            <div class="card-body text-muted small">
-                                We operate throughout Sutton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, Dartford, Maidstone, and the surrounding areas in South London, Surrey, and Kent.
-                            </div>
+                        <div>
+                            <h3 class="feature-item-title">@feat2Title</h3>
+                            <p class="feature-item-desc">@feat2Desc</p>
                         </div>
                     </div>
-                    <div class="card border mb-2 rounded">
-                        <div class="card-header bg-white py-3 collapsed" id="faqThree" data-toggle="collapse" data-target="#collapseThree" style="cursor: pointer;">
-                            <h5 class="mb-0 font-weight-bold text-slate small">Is your @Model.Name service insured?</h5>
+                </div>
+            </section>
+
+            <!-- FAQ Accordion -->
+            <section class="faq-accordion-group">
+                <h2 class="details-section-title">Frequently Asked Questions</h2>
+                
+                <details class="faq-accordion" open>
+                    <summary class="faq-accordion-summary">
+                        <span class="faq-accordion-title">How much does @Model.Name cost?</span>
+                        <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
+                    </summary>
+                    <div class="faq-accordion-content">
+                        Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2"). The final cost depends on the complexity of the task and any additional materials or parts required. We always present transparent quotes before starting.
+                    </div>
+                </details>
+
+                <details class="faq-accordion">
+                    <summary class="faq-accordion-summary">
+                        <span class="faq-accordion-title">Do you cover my location?</span>
+                        <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
+                    </summary>
+                    <div class="faq-accordion-content">
+                        We operate throughout Sutton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, and surrounding areas in South London, Surrey, and Kent.
+                    </div>
+                </details>
+
+                <details class="faq-accordion">
+                    <summary class="faq-accordion-summary">
+                        <span class="faq-accordion-title">Is your @Model.Name service insured?</span>
+                        <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
+                    </summary>
+                    <div class="faq-accordion-content">
+                        Yes, absolutely. All HandyFix services, including @Model.Name, are fully backed by our £5M public liability insurance and 100% satisfaction guarantee.
+                    </div>
+                </details>
+            </section>
+
+            <!-- Local Expert Block -->
+            <section class="local-expert-block">
+                <div class="local-expert-avatar-wrapper">
+                    <img class="local-expert-avatar" alt="@expertName - @expertRole" src="https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg">
+                </div>
+                <div>
+                    <span class="local-expert-meta">Your Local Expert</span>
+                    <h3 class="local-expert-name">Hi, I'm @expertName – @expertRole in @expertBorough</h3>
+                    <p class="local-expert-bio">@expertBio I'm personally committed to making sure your property maintenance is completed to the highest standards.</p>
+                    <div class="local-expert-stats">
+                        <div class="local-expert-rating">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+                            <span>4.9/5 Rating</span>
                         </div>
-                        <div id="collapseThree" class="collapse" data-parent="#detailsFaq">
-                            <div class="card-body text-muted small">
-                                Yes, absolutely. All HandyFix services, including @Model.Name, are fully backed by our £5M public liability insurance and satisfaction guarantee.
+                        <span class="local-expert-divider">|</span>
+                        <span class="local-expert-completed">Over 1,200 services completed</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Sidebar Area -->
+        <aside>
+            <div class="sidebar-sticky-wrapper">
+                <!-- CTA Booking Card -->
+                <div class="sidebar-booking-card">
+                    <h3 class="sidebar-booking-title">Book This Service Now</h3>
+                    <p class="sidebar-booking-desc">Expert technicians available in Sutton and surrounding areas. Fast, clean, and guaranteed.</p>
+                    
+                    <div class="sidebar-booking-features">
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>Transparent fixed pricing</span>
+                        </div>
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>Certified master technicians</span>
+                        </div>
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>Same-day service possible</span>
+                        </div>
+                    </div>
+
+                    <a href="/Booking?serviceId=@Model.Id" class="sidebar-booking-btn">
+                        <span>Request Your Booking</span>
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                    <p class="sidebar-booking-note">No upfront payment required</p>
+                </div>
+
+                <!-- Trust Card -->
+                <div class="sidebar-trust-box">
+                    <h4 class="sidebar-trust-title">Why Handy Fix?</h4>
+                    <div class="sidebar-trust-list">
+                        <div class="sidebar-trust-item">
+                            <span class="material-symbols-outlined sidebar-trust-icon">workspace_premium</span>
+                            <div>
+                                <p class="sidebar-trust-item-title">Fully Insured</p>
+                                <p class="sidebar-trust-item-desc">Up to £5M public liability insurance.</p>
+                            </div>
+                        </div>
+                        <div class="sidebar-trust-item">
+                            <span class="material-symbols-outlined sidebar-trust-icon">health_and_safety</span>
+                            <div>
+                                <p class="sidebar-trust-item-title">Clean &amp; Tidy</p>
+                                <p class="sidebar-trust-item-desc">We always wear shoe covers and clean up.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Service Area Details -->
-            <div class="seo-local-block bg-light p-4 rounded-lg mt-5">
-                <h4 class="font-weight-bold text-slate mb-3">Local @Model.Name Specialists Near You</h4>
-                <p class="text-muted leading-relaxed text-justify mb-0">
-                    We offer rapid local response for @Model.Name across all major South London boroughs and towns. Our technicians live and work in the community, allowing us to arrive quickly in Sutton, Croydon, Epsom, Kingston, Bromley, Orpington, and Maidstone. When booking, select your preferred time slot and write your details to get a vetted plumber or handyman dispatched.
-                </p>
-            </div>
-        </div>
-
-        <!-- Sidebar Book CTA -->
-        <div class="col-lg-4 mt-4 mt-lg-0">
-            <div class="sticky-top" style="top: 2rem;">
-                <div class="booking-cta-box p-4 bg-slate text-white rounded-lg shadow text-center">
-                    <h4 class="font-weight-bold text-cyan mb-2">Book @Model.Name</h4>
-                    <p class="small text-white-50">Select your date and secure your booking in minutes.</p>
-                    <div class="display-4 font-weight-bold text-white my-3">£@Model.BasePrice.ToString("F2")</div>
-                    <p class="small text-white-50">Requires a £50.00 deposit to secure slot</p>
-                    <a href="/Booking?serviceId=@Model.Id" class="btn btn-success btn-block py-3 font-weight-bold shadow-md mt-4">Book This Service Now</a>
-                </div>
-
-                <div class="contact-card-box p-4 border rounded-lg bg-white shadow-sm mt-4 text-center">
-                    <h5 class="font-weight-bold text-slate mb-2">Custom Requirements?</h5>
-                    <p class="text-muted small">Need multiple things fixed or have a large project?</p>
-                    <a href="/Contact" class="btn btn-outline-primary btn-block font-weight-bold">Enquire via Form</a>
-                </div>
-            </div>
-        </div>
+        </aside>
     </div>
 </div>
 
