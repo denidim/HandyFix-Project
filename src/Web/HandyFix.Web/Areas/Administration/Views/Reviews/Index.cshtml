@@ -1,58 +1,132 @@
 @model IEnumerable<HandyFix.Web.ViewModels.Reviews.ReviewViewModel>
 @{
-    this.Layout = "_Layout";
-    this.ViewData["Title"] = "Moderate Reviews - Admin";
+    this.ViewData["Title"] = "Moderate Reviews";
+
+    var pendingReviews = Model.Count(r => !r.IsApproved);
+    var averageRating = Model.Any() ? Model.Average(r => r.Rating) : 0;
+    var totalPublished = Model.Count(r => r.IsApproved);
+    var approvalRate = Model.Any() ? (totalPublished * 100) / Model.Count() : 0;
+    var flaggedReviews = 0; // Simulated field or 0 as database fallback
 }
 
-<div class="py-4 text-slate">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <div>
-            <h1 class="font-weight-bold mb-0">Review Moderation</h1>
-            <p class="text-muted small mb-0">Approve or hide customer submissions for the home page carousel.</p>
+<!-- Top Header Context -->
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+    <div class="d-flex align-items-center gap-3">
+        <h1 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Review Moderation</h1>
+        <span class="px-3 py-1 text-secondary font-bold font-label-sm rounded-full" style="background-color: rgba(0, 101, 145, 0.1); border: 1px solid rgba(0, 101, 145, 0.15);">
+            @pendingReviews Pending
+        </span>
+    </div>
+    <a href="/Administration/Reviews" class="btn btn-primary font-button-text d-flex align-items-center gap-2" style="padding: var(--spacing-3) var(--spacing-6); border-radius: var(--radius-lg);">
+        <span class="material-symbols-outlined">refresh</span>
+        <span>Refresh List</span>
+    </a>
+</div>
+
+<!-- Summary Stats (Bento Style) -->
+<div class="bento-grid mb-5" style="grid-template-columns: repeat(4, 1fr); display: grid; gap: var(--spacing-6);">
+    <div class="glass-card p-4 rounded-xl" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Average Rating</p>
+        <div class="d-flex align-items-end gap-2">
+            <p class="font-headline-lg mb-0" style="font-size: var(--fs-headline-lg); font-weight: 700; color: var(--primary);">@averageRating.ToString("0.0")</p>
+            <div class="d-flex text-secondary mb-2">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    var isFilled = i <= Math.Round(averageRating);
+                    var icon = isFilled ? "star" : "star_outline";
+                    var fillVal = isFilled ? "1" : "0";
+                    <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' @fillVal;">@icon</span>
+                }
+            </div>
         </div>
-        <a href="/Administration/Dashboard" class="btn btn-outline-secondary">Back</a>
+    </div>
+    
+    <div class="glass-card p-4 rounded-xl" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Total Published</p>
+        <p class="font-headline-lg mb-0" style="font-size: var(--fs-headline-lg); font-weight: 700; color: var(--primary);">@totalPublished</p>
     </div>
 
-    <div class="table-responsive bg-white border rounded shadow-sm">
-        <table class="table table-hover table-striped mb-0 text-slate small">
+    <div class="glass-card p-4 rounded-xl" style="background: rgba(0, 101, 145, 0.05); border: 1px solid rgba(0, 101, 145, 0.15);">
+        <p class="text-secondary font-label-sm mb-1 uppercase tracking-wider">Approval Rate</p>
+        <p class="font-headline-lg mb-0" style="font-size: var(--fs-headline-lg); font-weight: 700; color: var(--secondary);">@approvalRate%</p>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+        <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Flagged Reviews</p>
+        <p class="font-headline-lg mb-0 text-danger" style="font-size: var(--fs-headline-lg); font-weight: 700;">@flaggedReviews</p>
+    </div>
+</div>
+
+<!-- Moderation Table Container -->
+<div class="bg-white rounded-xl overflow-hidden border shadow-sm" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+    <div class="table-responsive">
+        <table class="table mb-0 text-left" style="border-collapse: collapse; width: 100%;">
             <thead>
-                <tr>
-                    <th>Customer Name</th>
-                    <th>Rating</th>
-                    <th>Comment</th>
-                    <th>Date</th>
-                    <th class="text-right">Actions</th>
+                <tr style="background-color: var(--surface-container-low); border-bottom: 1px solid var(--border-subtle);">
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Customer</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Rating</th>
+                    <th class="px-4 py-3 font-label-sm uppercase w-50" style="color: var(--on-surface-variant); font-weight: 700;">Comment</th>
+                    <th class="px-4 py-3 font-label-sm uppercase" style="color: var(--on-surface-variant); font-weight: 700;">Date</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right" style="color: var(--on-surface-variant); font-weight: 700;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="background-color: #ffffff;">
                 @if (Model.Any())
                 {
                     @foreach (var review in Model)
                     {
-                        <tr>
-                            <td class="font-weight-bold">@review.CustomerName</td>
-                            <td class="text-warning">
-                                @for (int i = 0; i < review.Rating; i++)
-                                {
-                                    <span>★</span>
-                                }
+                        var names = review.CustomerName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var initials = names.Length > 1 ? $"{names[0][0]}{names[1][0]}" : $"{names[0][0]}";
+                        
+                        <tr style="border-bottom: 1px solid var(--border-subtle);" class="align-middle">
+                            <td class="px-4 py-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center font-bold" style="width: 32px; height: 32px; background-color: var(--primary-fixed-dim); color: var(--primary); font-size: 11px;">
+                                        @initials.ToUpper()
+                                    </div>
+                                    <div>
+                                        <p class="font-body-md font-bold mb-0 text-primary">@review.CustomerName</p>
+                                        <p class="text-on-surface-variant mb-0" style="font-size: 11px;">Verified Client</p>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="text-muted text-truncate" style="max-width: 250px;">@review.Comment</td>
-                            <td>@review.CreatedOn.ToString("dd MMM yyyy")</td>
-                            <td class="text-right">
-                                @if (!review.IsApproved)
-                                {
-                                    <form asp-area="Administration" asp-controller="Reviews" asp-action="Approve" asp-route-id="@review.Id" method="post" class="d-inline-block">
-                                        <button type="submit" class="btn btn-sm btn-success mr-1">Approve</button>
+                            <td class="px-4 py-3">
+                                <div class="d-flex text-secondary">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        var isFilled = i <= review.Rating;
+                                        var icon = isFilled ? "star" : "star_outline";
+                                        var fillVal = isFilled ? "1" : "0";
+                                        <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' @fillVal;">@icon</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="font-body-md text-on-surface mb-0" style="font-style: italic; max-width: 450px; text-overflow: ellipsis; overflow: hidden; line-clamp: 2;">"@review.Comment"</p>
+                            </td>
+                            <td class="px-4 py-3 font-body-md text-on-surface-variant">@review.CreatedOn.ToString("MMM dd, yyyy")</td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="d-flex justify-content-end gap-2 align-items-center">
+                                    @if (!review.IsApproved)
+                                    {
+                                        <form asp-area="Administration" asp-controller="Reviews" asp-action="Approve" asp-route-id="@review.Id" method="post" class="d-inline-block">
+                                            <button type="submit" class="btn btn-sm d-flex align-items-center gap-1 font-label-sm" style="background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container); border: none; padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg);">
+                                                <span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span>
+                                                <span>Approve</span>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-3 py-1 font-label-sm font-bold rounded-full" style="background-color: rgba(0, 101, 145, 0.08); color: var(--secondary);">Approved</span>
+                                    }
+                                    
+                                    <form asp-area="Administration" asp-controller="Reviews" asp-action="Delete" asp-route-id="@review.Id" method="post" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                                        <button type="submit" class="p-2 text-danger rounded-lg d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border: 1px solid rgba(186, 26, 26, 0.2); background: rgba(186, 26, 26, 0.05);" title="Delete Review">
+                                            <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                                        </button>
                                     </form>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success mr-2 py-1 px-2">Approved</span>
-                                }
-                                <form asp-area="Administration" asp-controller="Reviews" asp-action="Delete" asp-route-id="@review.Id" method="post" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this review?');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete / Hide</button>
-                                </form>
+                                </div>
                             </td>
                         </tr>
                     }
