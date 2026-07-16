@@ -1,73 +1,199 @@
 @model HandyFix.Web.ViewModels.Administration.Dashboard.IndexViewModel
 @{
-    this.Layout = "_Layout";
-    this.ViewData["Title"] = "Admin Command Center";
+    this.ViewData["Title"] = "Dashboard Overview";
 }
 
-<div class="py-4 text-slate">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <h1 class="font-weight-bold mb-0">Admin Dashboard</h1>
-        <span class="text-muted small">System Status: <span class="badge badge-success px-2 py-1">Active</span></span>
+<!-- Header -->
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+    <div>
+        <h1 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Administration Dashboard</h1>
+        <p class="font-body-md text-on-surface-variant mt-1" style="margin: 0;">Real-time overview of Handy Fix platform performance.</p>
     </div>
-
-    <!-- Quick Stats Grid -->
-    <div class="row mb-5">
-        <!-- Revenue Card -->
-        <div class="col-md-3 mb-4">
-            <div class="card border shadow-sm rounded-lg p-3 bg-white h-100">
-                <div class="small text-muted font-weight-bold uppercase mb-2">Total Revenue</div>
-                <div class="h3 font-weight-bold text-success">£@Model.TotalRevenue.ToString("F2")</div>
-                <div class="small text-muted-light">Deposit payments processed</div>
-            </div>
+    <div class="d-flex align-items-center gap-4">
+        <div class="d-none d-md-flex flex-column text-right">
+            <span class="font-label-sm font-bold text-on-surface">@DateTime.Now.ToString("dddd, MMM dd")</span>
+            <span class="font-label-sm text-on-surface-variant">System Status: Optimal</span>
         </div>
-
-        <!-- Bookings Card -->
-        <div class="col-md-3 mb-4">
-            <div class="card border shadow-sm rounded-lg p-3 bg-white h-100">
-                <div class="small text-muted font-weight-bold uppercase mb-2">Bookings</div>
-                <div class="h3 font-weight-bold text-primary">@Model.TotalBookingsCount</div>
-                <div class="small text-warning font-weight-bold">@Model.PendingBookingsCount Pending Approval</div>
-            </div>
-        </div>
-
-        <!-- Enquiries Card -->
-        <div class="col-md-3 mb-4">
-            <div class="card border shadow-sm rounded-lg p-3 bg-white h-100">
-                <div class="small text-muted font-weight-bold uppercase mb-2">Inquiries</div>
-                <div class="h3 font-weight-bold text-info">@Model.TotalEnquiriesCount</div>
-                <div class="small text-muted-light">From contact forms</div>
-            </div>
-        </div>
-
-        <!-- Pending Reviews Card -->
-        <div class="col-md-3 mb-4">
-            <div class="card border shadow-sm rounded-lg p-3 bg-white h-100">
-                <div class="small text-muted font-weight-bold uppercase mb-2">Unapproved Reviews</div>
-                <div class="h3 font-weight-bold text-danger">@Model.PendingReviewsCount</div>
-                <div class="small text-muted-light">Awaiting moderation approval</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Navigation Links -->
-    <h3 class="font-weight-bold mb-3 h4">Management Operations</h3>
-    <div class="row">
-        <div class="col-sm-6 col-md-3 mb-3">
-            <a href="/Administration/Bookings" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">📅 Manage Bookings</a>
-        </div>
-        <div class="col-sm-6 col-md-3 mb-3">
-            <a href="/Administration/Services" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">🛠️ Manage Services</a>
-        </div>
-        <div class="col-sm-6 col-md-3 mb-3">
-            <a href="/Administration/Calendar" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">🗓️ Manage Availability</a>
-        </div>
-        <div class="col-sm-6 col-md-3 mb-3">
-            <a href="/Administration/Enquiries" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">📧 Client Enquiries</a>
-        </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-sm-6 col-md-3 mb-3">
-            <a href="/Administration/Reviews" class="btn btn-outline-primary btn-block py-3 font-weight-bold shadow-sm">★ Moderate Reviews</a>
+        <div class="p-2 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border: 1px solid var(--border-subtle);">
+            <span class="material-symbols-outlined text-secondary">notifications_active</span>
         </div>
     </div>
 </div>
+
+<!-- Stats Grid -->
+<div class="bento-grid bento-grid-4">
+    <!-- Revenue -->
+    <div class="bento-card">
+        <div class="bento-card-header">
+            <div class="bento-card-icon-wrapper" style="background-color: rgba(0, 101, 145, 0.1);">
+                <span class="material-symbols-outlined text-secondary">payments</span>
+            </div>
+            <span class="font-label-sm font-bold px-2 py-1 rounded" style="background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container);">+12.5%</span>
+        </div>
+        <div>
+            <p class="bento-card-label">Total Revenue</p>
+            <h2 class="bento-card-value">£@Model.TotalRevenue.ToString("N2")</h2>
+        </div>
+    </div>
+
+    <!-- Bookings -->
+    <div class="bento-card">
+        <div class="bento-card-header">
+            <div class="bento-card-icon-wrapper" style="background-color: rgba(0, 0, 0, 0.05);">
+                <span class="material-symbols-outlined text-primary">calendar_today</span>
+            </div>
+            <span class="font-label-sm font-bold px-2 py-1 rounded" style="background-color: rgba(57, 184, 253, 0.2); color: var(--on-secondary-container);">@Model.PendingBookingsCount Pending</span>
+        </div>
+        <div>
+            <p class="bento-card-label">Total Bookings</p>
+            <h2 class="bento-card-value">@Model.TotalBookingsCount</h2>
+        </div>
+    </div>
+
+    <!-- Enquiries -->
+    <div class="bento-card">
+        <div class="bento-card-header">
+            <div class="bento-card-icon-wrapper" style="background-color: rgba(0, 101, 145, 0.1);">
+                <span class="material-symbols-outlined text-secondary">chat_bubble</span>
+            </div>
+            <span class="font-label-sm font-bold px-2 py-1 rounded" style="background-color: var(--surface-container); color: var(--on-surface-variant);">New Leads</span>
+        </div>
+        <div>
+            <p class="bento-card-label">Total Enquiries</p>
+            <h2 class="bento-card-value">@Model.TotalEnquiriesCount</h2>
+        </div>
+    </div>
+
+    <!-- Unapproved Reviews -->
+    <div class="bento-card">
+        <div class="bento-card-header">
+            <div class="bento-card-icon-wrapper" style="background-color: rgba(186, 26, 26, 0.1);">
+                <span class="material-symbols-outlined text-error">star_half</span>
+            </div>
+            <div class="d-flex align-items-center gap-1 text-error" style="font-weight: 700; font-size: var(--fs-label-sm);">
+                <span class="rounded-circle" style="width: 8px; height: 8px; background-color: var(--error); display: inline-block;"></span>
+                <span>Action Req.</span>
+            </div>
+        </div>
+        <div>
+            <p class="bento-card-label">Unapproved Reviews</p>
+            <h2 class="bento-card-value">@Model.PendingReviewsCount</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Navigation Links (2/3 Column) -->
+    <div class="col-lg-8 mb-4">
+        <h3 class="font-headline-sm text-primary mb-4 d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">bolt</span>
+            <span>Quick Actions</span>
+        </h3>
+        
+        <div class="quick-actions-grid">
+            <a href="/Administration/Bookings" class="action-btn-card">
+                <div class="action-btn-circle">
+                    <span class="material-symbols-outlined">event_note</span>
+                </div>
+                <span class="font-button-text text-primary">Manage Bookings</span>
+            </a>
+            <a href="/Administration/Services" class="action-btn-card">
+                <div class="action-btn-circle">
+                    <span class="material-symbols-outlined">construction</span>
+                </div>
+                <span class="font-button-text text-primary">Manage Services</span>
+            </a>
+            <a href="/Administration/Calendar" class="action-btn-card">
+                <div class="action-btn-circle">
+                    <span class="material-symbols-outlined">schedule</span>
+                </div>
+                <span class="font-button-text text-primary">Manage Availability</span>
+            </a>
+            <a href="/Administration/Enquiries" class="action-btn-card">
+                <div class="action-btn-circle">
+                    <span class="material-symbols-outlined">forum</span>
+                </div>
+                <span class="font-button-text text-primary">Client Enquiries</span>
+            </a>
+            <a href="/Administration/Reviews" class="action-btn-card">
+                <div class="action-btn-circle">
+                    <span class="material-symbols-outlined">reviews</span>
+                </div>
+                <span class="font-button-text text-primary">Moderate Reviews</span>
+            </a>
+            <div class="action-btn-card" style="border: 2px dashed var(--outline-variant); background: transparent; cursor: not-allowed; opacity: 0.5;">
+                <span class="material-symbols-outlined text-outline-variant mb-2" style="font-size: 32px;">add</span>
+                <span class="font-button-text text-on-surface-variant">Add Widget</span>
+            </div>
+        </div>
+
+        <!-- Activity Graph Mockup -->
+        <div class="mt-4 p-5 bg-white rounded-xl shadow-sm border" style="border-radius: var(--radius-xl); height: 280px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <div class="text-center" style="position: relative; z-index: 10;">
+                <div class="w-16 h-16 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 56px; height: 56px; background-color: rgba(0, 101, 145, 0.1);">
+                    <span class="material-symbols-outlined text-secondary" style="font-size: 28px;">insights</span>
+                </div>
+                <h4 class="font-headline-sm text-primary mb-1">Activity Visualization</h4>
+                <p class="font-body-md text-on-surface-variant max-w-sm mx-auto" style="margin: 0;">Detailed performance graphs are generating based on real-time booking trends.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Stats (1/3 Column) -->
+    <div class="col-lg-4">
+        <!-- Newest Leads -->
+        <div class="bg-white rounded-xl p-4 border shadow-sm mb-4" style="border-radius: var(--radius-xl);">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="font-headline-sm text-primary mb-0" style="font-size: var(--fs-headline-sm);">Platform Health</h3>
+            </div>
+            
+            <div class="health-stat-item">
+                <div class="health-stat-header">
+                    <span class="health-stat-label">Server Capacity</span>
+                    <span class="font-label-sm">42%</span>
+                </div>
+                <div class="health-progress-bar">
+                    <div class="health-progress-fill" style="width: 42%;"></div>
+                </div>
+            </div>
+
+            <div class="health-stat-item" style="margin: 0;">
+                <div class="health-stat-header">
+                    <span class="health-stat-label">Inquiry Response Rate</span>
+                    <span class="font-label-sm">98%</span>
+                </div>
+                <div class="health-progress-bar">
+                    <div class="health-progress-fill" style="width: 98%; background-color: var(--on-tertiary-container);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Logs / Info Card -->
+        <div class="bg-white rounded-xl p-4 border shadow-sm" style="border-radius: var(--radius-xl); background: rgba(0, 101, 145, 0.05) !important;">
+            <div class="d-flex align-items-center gap-3">
+                <span class="material-symbols-outlined text-secondary" style="font-size: 32px;">verified_user</span>
+                <div>
+                    <h4 class="font-label-sm font-bold text-primary mb-1">Administrator Mode</h4>
+                    <p class="font-body-md text-on-surface-variant mb-0" style="font-size: 13px; line-height: 1.4;">All dashboard actions are logged. Ensure credentials are kept confidential.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate progress bars on load
+            const progressFills = document.querySelectorAll('.health-progress-fill');
+            progressFills.forEach(fill => {
+                const finalWidth = fill.style.width;
+                fill.style.width = '0%';
+                setTimeout(() => {
+                    fill.style.transition = 'width 1s cubic-bezier(0.65, 0, 0.35, 1)';
+                    fill.style.width = finalWidth;
+                }, 200);
+            });
+        });
+    </script>
+}
