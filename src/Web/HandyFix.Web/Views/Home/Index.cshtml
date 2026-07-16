@@ -4,243 +4,316 @@
     var services = this.ViewData["Services"] as IEnumerable<ServiceViewModel> ?? new List<ServiceViewModel>();
     var popularServices = this.ViewData["PopularServices"] as IEnumerable<ServiceViewModel> ?? new List<ServiceViewModel>();
     var reviews = this.ViewData["SliderReviews"] as IEnumerable<ReviewViewModel> ?? new List<ReviewViewModel>();
+    this.ViewData["Title"] = "Home Page";
 }
 
-<!-- Custom Styles for the Hero Background Layer -->
-<style>
-    .hero-section {
-        position: relative;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.40), rgba(255, 255, 255, 0.60)), url('/images/hero.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        border-radius: 0.5rem;
-    }
-</style>
+<!-- HERO SECTION -->
+<section class="hero-section">
+  <div class="hero-bg">
+    <img src="~/images/hero.png" alt="Handy Fix Hero">
+    <div class="hero-bg-overlay"></div>
+  </div>
 
-<!-- Hero Section with Background Layout and Redirection booking widget -->
-<section class="hero-section py-5 px-4 my-3 position-relative">
-    <div class="row align-items-center position-relative" style="z-index: 2;">
-        <div class="col-lg-6 mb-4 mb-lg-0">
-            <h1 class="display-4 font-weight-bold text-slate">Local Plumbing & Handyman Services in South London</h1>
-            <p class="lead text-muted my-3">Reliable, professional, and fully insured mobile service operating in Sutton, Croydon, Epsom, and beyond. Booking has never been easier.</p>
-            <div class="benefits-list my-4">
-                <div class="benefit-item"><span class="check-icon text-success">✓</span> Fully Insured & Experienced Professionals</div>
-                <div class="benefit-item"><span class="check-icon text-success">✓</span> Transparent, Up-front Hourly Pricing</div>
-                <div class="benefit-item"><span class="check-icon text-success">✓</span> Fast Response & Local London Dispatch</div>
-                <div class="benefit-item"><span class="check-icon text-success">✓</span> 100% Customer Satisfaction Guarantee</div>
-            </div>
-            <a href="#services-overview" class="btn btn-primary btn-lg shadow-sm">Explore Our Services</a>
+  <div class="page-container hero-content">
+    <div class="hero-grid">
+      <div class="hero-text-content">
+        <h1 class="font-headline-xl text-primary" style="line-height: 1.25; margin-bottom: var(--spacing-6);">Local Plumbing & Handyman Services in South London</h1>
+        <p class="font-body-lg text-text-main" style="line-height: 1.625; margin-bottom: var(--spacing-8);">Reliable, professional, and fully insured mobile service operating in Sutton, Croydon, Epsom, and beyond. Booking has never been easier.</p>
+        <div class="hero-value-props">
+          <div class="value-prop-item">
+            <span class="material-symbols-filled text-success font-bold">check_circle</span>
+            <span class="font-button-text text-text-main">Fully Insured & Experienced Professionals</span>
+          </div>
+          <div class="value-prop-item">
+            <span class="material-symbols-filled text-success font-bold">check_circle</span>
+            <span class="font-button-text text-text-main">Transparent, Up-front Hourly Pricing</span>
+          </div>
+          <div class="value-prop-item">
+            <span class="material-symbols-filled text-success font-bold">check_circle</span>
+            <span class="font-button-text text-text-main">Fast Response & Local London Dispatch</span>
+          </div>
+          <div class="value-prop-item">
+            <span class="material-symbols-filled text-success font-bold">check_circle</span>
+            <span class="font-button-text text-text-main">100% Customer Satisfaction Guarantee</span>
+          </div>
         </div>
-        <div class="col-lg-6">
-            <div class="booking-widget-card p-4 rounded shadow-lg">
-                <h3 class="mb-3 text-slate">Check Availability</h3>
-                <form id="hero-booking-form" method="get" action="/Booking">
-                    <div class="form-group mb-3">
-                        <label for="widget-service" class="form-label font-weight-bold">Select Service</label>
-                        <select id="widget-service" name="serviceId" class="form-control" required>
-                            <option value="">-- Choose a service --</option>
-                            @foreach (var svc in services)
-                            {
-                                <option value="@svc.Id">@svc.Name (from £@svc.BasePrice)</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="widget-date" class="form-label font-weight-bold">Choose Date</label>
-                        <input type="date" id="widget-date" name="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
-                    </div>
-                    <div class="form-group mb-3" id="slots-container-group" style="display: none;">
-                        <label class="form-label font-weight-bold">Available Time Slots</label>
-                        <div id="widget-slots" class="slots-grid">
-                            <!-- Populated dynamically by JS -->
-                        </div>
-                    </div>
-                    <input type="hidden" id="widget-slot-id" name="slotId" required />
-                    <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block w-100 py-3 font-weight-bold mt-3" disabled>Book Appointment Now</button>
-                </form>
+        <a href="#services-overview" class="btn btn-primary btn-lg" style="box-shadow: var(--shadow-lg);">Explore Our Services</a>
+      </div>
+
+      <div class="hero-booking-wrapper">
+        <div class="glass-card hero-booking-card">
+          <h3 class="font-headline-md text-primary" style="margin-bottom: var(--spacing-6);">Check Availability</h3>
+          <form id="hero-booking-form" method="get" action="/Booking">
+            <div style="margin-bottom: var(--spacing-6);">
+              <label for="widget-service" class="form-label">Select Service</label>
+              <select id="widget-service" name="serviceId" class="form-control" required>
+                <option value="">-- Choose a service --</option>
+                @foreach (var svc in services)
+                {
+                    <option value="@svc.Id">@svc.Name (from £@svc.BasePrice)</option>
+                }
+              </select>
             </div>
+            <div style="margin-bottom: var(--spacing-6);">
+              <label for="widget-date" class="form-label">Choose Date</label>
+              <input type="date" id="widget-date" name="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+            </div>
+            <div id="slots-container-group" style="margin-bottom: var(--spacing-6); display: none;">
+              <label class="form-label">Available Time Slots</label>
+              <div id="widget-slots" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-2);">
+                <!-- Populated dynamically by JS -->
+              </div>
+            </div>
+            <input type="hidden" id="widget-slot-id" name="slotId" required />
+            <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block" style="margin-top: var(--spacing-4); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3);" disabled>Book Appointment Now</button>
+          </form>
         </div>
+      </div>
     </div>
+  </div>
 </section>
 
-<!-- Categories Section -->
-<section id="services-overview" class="py-5 bg-light rounded px-3 my-5">
-    <div class="text-center mb-5">
-        <h2 class="text-slate font-weight-bold">Our Professional Service Divisions</h2>
-        <p class="text-muted">We focus exclusively on providing premier plumbing and handyman work across South London.</p>
+<!-- Specialized Divisions -->
+<section id="services-overview" class="section">
+  <div class="page-container">
+    <div class="section-header">
+      <h2 class="font-headline-lg" style="margin-bottom: var(--spacing-4);">Specialized Divisions</h2>
+      <div style="width: 5rem; height: 0.375rem; background-color: var(--secondary); border-radius: 9999px;"></div>
     </div>
+    
+    <div class="divisions-grid">
+      <!-- Plumbing Division -->
+      <div class="division-card">
+        <div class="img-container">
+          <img src="~/images/services/plumbing-category-hero.jpg" alt="Plumbing">
+        </div>
+        <div class="division-card-content">
+          <div class="division-header-title">
+            <span class="material-symbols-outlined text-secondary" style="font-size: 2.25rem;">water_drop</span>
+            <h3 class="font-headline-md" style="margin: 0;">Plumbing & Heating</h3>
+          </div>
+          <p class="text-text-main font-body-md" style="margin-bottom: var(--spacing-6); line-height: 1.625;">
+            From emergency burst pipes to full boiler installations, our certified plumbers handle every drop with expert care and precision.
+          </p>
+          <ul class="division-services-list">
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Leak Detection</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Boiler Service</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Drainage Solutions</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Tap Replacement</li>
+          </ul>
+          <a class="division-link" href="/Services/plumbing">
+            View Plumbing Rates
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+      <!-- Handyman Division -->
+      <div class="division-card">
+        <div class="img-container">
+          <img src="~/images/services/handyman-category-hero.jpg" alt="Handyman">
+        </div>
+        <div class="division-card-content">
+          <div class="division-header-title">
+            <span class="material-symbols-outlined text-secondary" style="font-size: 2.25rem;">handyman</span>
+            <h3 class="font-headline-md" style="margin: 0;">General Handyman</h3>
+          </div>
+          <p class="text-text-main font-body-md" style="margin-bottom: var(--spacing-6); line-height: 1.625;">
+            Tackle your "to-do" list with professionals who specialize in efficiency. No job is too small for our expert property team.
+          </p>
+          <ul class="division-services-list">
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Furniture Assembly</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>TV Mounting</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Door Repairs</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Shelf Installation</li>
+          </ul>
+          <a class="division-link" href="/Services/handyman">
+            View Handyman Rates
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <!-- Use g-2 or g-3 for small gaps on mobile so the 2-in-a-row cards have space -->
-    <div class="row g-2 g-md-4">
+<!-- Popular Services Bento Grid -->
+<section class="section bg-surface">
+  <div class="page-container">
+    <div class="bento-header">
+      <div class="section-header-left">
+        <h2 class="font-headline-lg" style="margin-bottom: var(--spacing-2);">Popular Services</h2>
+        <p class="text-text-main font-body-md" style="margin: 0;">Most requested repairs and installations in South London</p>
+      </div>
+      <a href="/Services" class="bento-see-all">See all services</a>
+    </div>
+    
+    <div class="bento-grid-container">
+      @{
+          var topPopular = popularServices.Take(4).ToList();
+          for(int i = 0; i < topPopular.Count; i++)
+          {
+              var svc = topPopular[i];
+              var cardClass = i == 0 ? "bento-large" : (i == 3 ? "bento-medium" : "bento-small");
+              string imageSrc = i switch {
+                  0 => "/images/services/minor-electrical-tasks-hero.jpg",
+                  1 => "/images/services/bathroom-plumbing-hero.jpg",
+                  2 => "/images/services/tv-mounting-hero.jpg",
+                  3 => "/images/services/emergency-plumbing-hero.jpg",
+                  _ => "/images/hero.png"
+              };
+              
+              <div class="bento-card @cardClass" onclick="window.location='/Services/@(svc.BasePrice > 58 ? "plumbing" : "handyman")/@svc.Slug'">
+                <img src="@imageSrc" alt="@svc.Name">
+                <div class="bento-card-overlay"></div>
+                <div class="bento-card-content">
+                  @if(i == 0) {
+                      <span class="bento-badge">Best Seller</span>
+                  }
+                  <h4 class="font-headline-md text-white" style="margin-bottom: var(--spacing-2); @(i!=0 && i!=3 ? "font-size:20px;text-align:center;" : "")">@svc.Name</h4>
+                  @if(i == 0 || i == 3) {
+                      <p class="text-white-80 font-body-md" style="margin: 0; max-width: 300px;">From £@svc.BasePrice - @svc.EstimatedDurationMinutes min</p>
+                  }
+                </div>
+              </div>
+          }
+      }
+    </div>
+  </div>
+</section>
 
-        <!-- Plumbing Card -->
-        <div class="col-6 col-md-6 mb-4">
-            <div class="category-card p-3 p-md-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
+<!-- Trust & Reliability -->
+<section class="section">
+  <div class="page-container">
+    <div class="trust-grid">
+      <div>
+        <h2 class="font-headline-lg" style="line-height: 1.25; margin-bottom: var(--spacing-6);">Trust Your Home to Qualified Experts</h2>
+        <p class="font-body-lg text-text-main" style="line-height: 1.625; margin-bottom: var(--spacing-8);">
+          We don't just fix things; we provide peace of mind. Every member of the Handy Fix team undergoes rigorous background checks and technical vetting to ensure your property is in safe, capable hands.
+        </p>
+        <div class="trust-cards-list">
+          <div class="trust-card">
+            <div class="trust-card-icon">
+              <span class="material-symbols-outlined" style="color:var(--on-secondary-fixed);">verified</span>
+            </div>
+            <div>
+              <h4 class="font-headline-sm" style="margin: 0 0 var(--spacing-1) 0;">Vetted Professionals</h4>
+              <p class="text-on-surface-variant" style="margin: 0;">Thorough background checks and 5+ years experience required for all staff.</p>
+            </div>
+          </div>
+          <div class="trust-card">
+            <div class="trust-card-icon">
+              <span class="material-symbols-outlined" style="color:var(--on-secondary-fixed);">payments</span>
+            </div>
+            <div>
+              <h4 class="font-headline-sm" style="margin: 0 0 var(--spacing-1) 0;">Transparent Flat Rates</h4>
+              <p class="text-on-surface-variant" style="margin: 0;">No hidden fees, call-out charges, or surprise costs at the end of the job.</p>
+            </div>
+          </div>
+          <div class="trust-card">
+            <div class="trust-card-icon">
+              <span class="material-symbols-outlined" style="color:var(--on-secondary-fixed);">shield_with_heart</span>
+            </div>
+            <div>
+              <h4 class="font-headline-sm" style="margin: 0 0 var(--spacing-1) 0;">Fully Insured</h4>
+              <p class="text-on-surface-variant" style="margin: 0;">Up to £5M Public Liability insurance covering every single visit.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="trust-image-wrapper">
+        <div class="blur-circle top-right"></div>
+        <div class="blur-circle bottom-left"></div>
+        <div class="glass-card" style="padding: var(--spacing-4); position: relative; z-index: 10;">
+          <img src="~/images/hero.png" alt="Trust" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: var(--radius-xl);">
+          <div class="trust-stats-card">
+            <div class="trust-stats-col">
+              <span class="font-bold text-primary">12k+ Jobs Completed</span>
+              <div class="trust-stats-stars">
+                <span class="material-symbols-filled">star</span>
+                <span class="material-symbols-filled">star</span>
+                <span class="material-symbols-filled">star</span>
+                <span class="material-symbols-filled">star</span>
+                <span class="material-symbols-filled">star</span>
+              </div>
+            </div>
+            <div class="trust-stats-divider"></div>
+            <div class="trust-stats-col">
+              <span class="font-bold text-on-tertiary-container" style="font-size: 14px;">4.9/5 Rating</span>
+              <span class="text-on-surface-variant" style="font-size: 12px;">Based on 2,500 reviews</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="section testimonials-section">
+  <div class="testimonials-section-bg"></div>
+  <div class="page-container" style="position: relative; z-index: 10;">
+    <div class="section-header">
+      <h2 class="font-headline-lg text-white" style="margin-bottom: var(--spacing-4);">What Our Customers Say</h2>
+      <p class="text-on-primary-container" style="max-width: 42rem; margin: 0 auto;">Real experiences from homeowners across Sutton, Croydon, and Epsom.</p>
+    </div>
+    
+    <div class="testimonials-grid">
+      @if (reviews.Any())
+      {
+          @foreach (var review in reviews)
+          {
+              <div class="testimonial-card" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
-                    <div class="category-icon plumbing-icon mb-2 mb-md-3">💧</div>
-                    <h3 class="font-weight-bold text-slate h5 h3-md">Plumbing</h3>
-                    <p class="text-muted text-justify px-1 px-md-3 small d-none d-sm-block">From emergency leak repairs and pipe maintenance to toilet fixes, bathroom plumbing, blocked drains, and kitchen plumbing integrations.</p>
+                  <div class="testimonial-stars">
+                    @for (int i = 0; i < review.Rating; i++)
+                    {
+                        <span class="material-symbols-filled">star</span>
+                    }
+                  </div>
+                  <p class="font-body-md text-white-90 italic" style="margin-bottom: var(--spacing-6); line-height: 1.625;">"@review.Comment"</p>
                 </div>
-            </div>
-        </div>
-
-        <!-- Handyman Card -->
-        <div class="col-6 col-md-6 mb-4">
-            <div class="category-card p-3 p-md-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <div class="category-icon handyman-icon mb-2 mb-md-3">🔨</div>
-                    <h3 class="font-weight-bold text-slate h5 h3-md">Handyman</h3>
-                    <p class="text-muted text-justify px-1 px-md-3 small d-none d-sm-block">Flat-pack furniture assembly, TV wall mounting, shelf fitting, curtain hanging, blind installations, squeaky door repairs, and minor electrical touch-ups.</p>
+                <div class="testimonial-author">
+                  <div class="testimonial-avatar"></div>
+                  <div>
+                    <p class="font-bold text-white" style="margin: 0;">@review.CustomerName</p>
+                    <p class="text-on-primary-container" style="margin: 0; font-size: 12px;">Verified Client</p>
+                  </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Dynamic CTA Block -->
-        <!-- col-12 handles the full row if cards are even. col-md-12 ensures desktop layout remains broad. -->
-        <!-- flex-grow-1 manages odd-item layout distribution automatically -->
-        <div class="col-12 col-md-12 mb-4 flex-grow-1">
-            <div class="p-3 bg-white rounded shadow-sm d-flex flex-column flex-md-row justify-content-center align-items-center gap-2 w-100 h-100 border">
-                <a href="/Services/plumbing" class="btn btn-outline-primary font-weight-bold w-100">Browse Plumbing</a>
-                <a href="/Services/handyman" class="btn btn-outline-primary font-weight-bold w-100">Browse Handyman</a>
-            </div>
-        </div>
-
+              </div>
+          }
+      }
+      else
+      {
+          <div style="grid-column: 1 / -1; text-align: center; color: rgba(255, 255, 255, 0.8);">
+              No reviews yet. Be the first to leave a review!
+          </div>
+      }
     </div>
+  </div>
 </section>
 
-@* <!-- Categories Section -->
-<section id="services-overview" class="py-5 bg-light rounded px-3 my-5">
-    <div class="text-center mb-5">
-        <h2 class="text-slate font-weight-bold">Our Professional Service Divisions</h2>
-        <p class="text-muted">We focus exclusively on providing premier plumbing and handyman work across South London.</p>
-    </div>
-    <div class="row">
-        <!-- Plumbing Card -->
-        <div class="col-6 mb-4">
-            <div class="category-card p-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <div class="category-icon plumbing-icon mb-3">💧</div>
-                    <h3 class="font-weight-bold text-slate">Plumbing Services</h3>
-                    <p class="text-muted text-justify px-3">From emergency leak repairs and pipe maintenance to toilet fixes, bathroom plumbing, blocked drains, and kitchen plumbing integrations. Our local gas-safe and certified plumbers are always ready.</p>
-                </div>
-                <a href="/Services/plumbing" class="btn btn-outline-primary mt-3 font-weight-bold">Browse Plumbing Services</a>
-            </div>
+<!-- Final CTA Section -->
+<section class="section">
+  <div class="page-container">
+    <div class="cta-card">
+      <div class="cta-card-bg"></div>
+      <div class="cta-card-content">
+        <h2 class="font-headline-xl" style="margin-bottom: var(--spacing-6);">Ready to cross those repairs off your list?</h2>
+        <p class="font-body-lg text-text-main cta-card-text">
+          Join thousands of satisfied South London residents. Book your professional service in under 60 seconds.
+        </p>
+        <div class="cta-actions">
+          <a href="/Booking" class="btn btn-primary btn-lg" style="box-shadow: var(--shadow-xl); border-radius: var(--radius-xl);">Book Appointment Now</a>
+          <a href="/Services" class="btn btn-outline-primary btn-lg" style="background-color: #fff; border-radius: var(--radius-xl);">View All Services</a>
         </div>
-        <!-- Handyman Card -->
-        <div class="col-6 mb-4">
-            <div class="category-card p-4 bg-white rounded shadow-sm hover-grow text-center h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <div class="category-icon handyman-icon mb-3">🔨</div>
-                    <h3 class="font-weight-bold text-slate">Handyman Services</h3>
-                    <p class="text-muted text-justify px-3">Flat-pack furniture assembly, TV wall mounting, shelf fitting, curtain hanging, blind installations, squeaky door repairs, and minor electrical or home touch-ups. Fast, clean, and reliable maintenance.</p>
-                </div>
-                <a href="/Services/handyman" class="btn btn-outline-primary mt-3 font-weight-bold">Browse Handyman Services</a>
-            </div>
+        <div class="cta-benefits">
+          <div class="cta-benefit-item"><span class="material-symbols-filled text-success">bolt</span>Same Day Available</div>
+          <div class="cta-benefit-item"><span class="material-symbols-filled text-success">verified</span>Satisfaction Guaranteed</div>
         </div>
+      </div>
     </div>
-</section> *@
-
-<!-- Popular Services Carousel -->
-<section class="py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-slate font-weight-bold mb-0">Popular Services</h2>
-        <a href="/Services" class="text-primary font-weight-bold">View All Services →</a>
-    </div>
-    <div class="row">
-        @foreach (var svc in popularServices)
-        {
-            <div class="col-sm-6 col-md-3 mb-4">
-                <div class="service-card-popular p-3 bg-white border rounded h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <h5 class="font-weight-bold text-slate text-truncate">@svc.Name</h5>
-                        <p class="text-muted small">@svc.Description.Substring(0, Math.Min(60, svc.Description.Length))...</p>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="font-weight-bold text-primary">From £@svc.BasePrice</span>
-                            <span class="small text-muted"><span class="clock-icon">🕒</span> @svc.EstimatedDurationMinutes min</span>
-                        </div>
-                        <a href="/Services/@(svc.BasePrice > 58 ? "plumbing" : "handyman")/@svc.Slug" class="btn btn-sm btn-outline-secondary w-100 mt-3">View Details</a>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-</section>
-
-<!-- Why Choose Us -->
-<section class="py-5 text-center my-5 bg-slate text-white rounded p-4">
-    <h2 class="font-weight-bold text-white mb-4">Why Choose Handy Fix?</h2>
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="p-3">
-                <div class="why-icon mb-3">🛡️</div>
-                <h4 class="font-weight-bold text-cyan">Fully Insured</h4>
-                <p class="text-slate-light small">Rest easy knowing all works are backed by comprehensive public liability insurance coverage.</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="p-3">
-                <div class="why-icon mb-3">👨‍🔧</div>
-                <h4 class="font-weight-bold text-cyan">Experienced Specialists</h4>
-                <p class="text-slate-light small">Our plumbers and handymen undergo rigorous vetting and background checks to guarantee professional skill.</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="p-3">
-                <div class="why-icon mb-3">💎</div>
-                <h4 class="font-weight-bold text-cyan">Transparent Rates</h4>
-                <p class="text-slate-light small">No hidden fees, callout charges, or unexpected costs. You pay what we quote based on the service selected.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Testimonials Section -->
-<section class="py-5">
-    <div class="text-center mb-5">
-        <h2 class="text-slate font-weight-bold">What Our Customers Say</h2>
-        <p class="text-muted">Over 1,000 satisfied homes in South London, Surrey, and Kent.</p>
-    </div>
-    <div class="row testimonial-slider">
-        @if (reviews.Any())
-        {
-            @foreach (var review in reviews)
-            {
-                <div class="col-md-4 mb-4">
-                    <div class="testimonial-card p-4 bg-white rounded border h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="stars-rating text-warning mb-2">
-                                @for (int i = 0; i < review.Rating; i++)
-                                {
-                                    <span>★</span>
-                                }
-                            </div>
-                            <p class="text-muted font-italic">@review.Comment</p>
-                        </div>
-                        <div class="mt-3">
-                            <h6 class="font-weight-bold text-slate mb-0">@review.CustomerName</h6>
-                            <small class="text-muted">Verified Client - London</small>
-                        </div>
-                    </div>
-                </div>
-            }
-        }
-        else
-        {
-            <div class="col-12 text-center text-muted">
-                No reviews yet. Be the first to leave a review!
-            </div>
-        }
-    </div>
-</section>
-
-<!-- Call to Action -->
-<section class="py-5 text-center my-5 bg-gradient-cyan text-white rounded p-5">
-    <h2 class="font-weight-bold text-white mb-3">Ready to get your home fixed?</h2>
-    <p class="lead text-white-50">Select your preferred date and time, fill in details, and secure your booking with Stripe. It takes less than 2 minutes.</p>
-    <a href="/Booking" class="btn btn-light btn-lg text-primary font-weight-bold px-5 py-3 shadow-md mt-3">Book An Appointment Now</a>
+  </div>
 </section>
 
 <!-- Schema.org Local Business structured data -->
@@ -285,4 +358,28 @@
         "https://twitter.com/handyfixlondon"
       ]
     }
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const observerOptions = {
+          threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.style.opacity = '1';
+              entry.target.style.transform = 'translateY(0)';
+            }
+          });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+          section.style.transition = 'all 0.7s ease';
+          section.style.opacity = '0';
+          section.style.transform = 'translateY(2.5rem)';
+          observer.observe(section);
+        });
+    });
 </script>
