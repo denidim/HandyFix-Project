@@ -3,48 +3,108 @@
     this.ViewData["Title"] = "All Services - HandyFix South London";
 }
 
-<div class="py-4">
-    <div class="text-center mb-5">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb justify-content-center bg-transparent p-0 mb-2">
-                <li class="breadcrumb-item"><a href="/">Home</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Services</li>
-            </ol>
-        </nav>
-        <h1 class="font-weight-bold text-slate">Our Professional Services</h1>
-        <p class="lead text-muted">We provide professional, fully insured plumbing and handyman work across South London, Surrey, and Kent.</p>
-    </div>
+@functions {
+    public string GetServiceIcon(string name)
+    {
+        return name switch
+        {
+            "Leak Detection & Repair" => "water_damage",
+            "Tap & Shower Installation" => "bathroom",
+            "Radiator Maintenance" => "propane_tank",
+            "Furniture Assembly" => "shelves",
+            "TV Mounting & AV Setup" => "tv",
+            "Carpentry & Door Trimming" => "carpenter",
+            _ => "build"
+        };
+    }
+}
 
-    <div class="row">
+<div class="page-container services-page">
+    <!-- Header & Breadcrumbs -->
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a href="/">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">Services</span>
+        </nav>
+        <div class="services-header-content">
+            <h1 class="services-hero-title">
+                Professional Property Maintenance in <span>South London.</span>
+            </h1>
+            <p class="services-subtitle">
+                Reliable plumbing and expert handyman services across Sutton, Croydon, and Epsom. We combine technical competence with a high-end service approach to keep your home or property in perfect condition.
+            </p>
+        </div>
+    </section>
+
+    <!-- Division Bento Grid -->
+    <section class="services-grid">
         @foreach (var category in this.Model)
         {
-            <div class="col-lg-6 mb-4">
-                <div class="card border-0 shadow-sm rounded-lg p-4 h-100 d-flex flex-column justify-content-between hover-grow">
-                    <div>
-                        <div class="d-flex align-items-center mb-3">
-                            <span class="display-4 mr-3">@(category.Name == "Plumbing" ? "💧" : "🔨")</span>
-                            <h2 class="font-weight-bold text-slate mb-0">@category.Name</h2>
-                        </div>
-                        <p class="text-muted leading-relaxed">@category.Description</p>
+            var isPlumbing = category.Name == "Plumbing";
+            var categoryBadge = isPlumbing ? "Emergency Available" : "Multi-Skill Pros";
+            var categoryIcon = isPlumbing ? "plumbing" : "home_repair_service";
+            var divisionAttr = isPlumbing ? "plumbing" : "handyman";
+
+            <article class="service-category-card" data-division="@divisionAttr">
+                <div class="service-card-meta">
+                    <div class="service-card-icon-wrapper">
+                        <span class="material-symbols-outlined">@categoryIcon</span>
                     </div>
-                    <div>
-                        <hr class="my-4" />
-                        <h5 class="font-weight-bold text-slate mb-3">Popular @category.Name Services:</h5>
-                        <ul class="list-unstyled mb-4">
-                            @foreach (var svc in category.Services.Take(5))
-                            {
-                                <li class="mb-2">
-                                    <a href="/Services/@category.Slug/@svc.Slug" class="text-slate hover-primary d-flex justify-content-between align-items-center">
-                                        <span>• @svc.Name</span>
-                                        <span class="text-muted font-weight-bold">from £@svc.BasePrice.ToString("F2")</span>
-                                    </a>
-                                </li>
-                            }
-                        </ul>
-                        <a href="/Services/@category.Slug" class="btn btn-primary btn-block w-100 font-weight-bold py-2">View All @category.Name Services</a>
+                    <span class="service-badge">@categoryBadge</span>
+                </div>
+                <h2 class="service-card-title">@category.Name Services</h2>
+                <p class="service-card-desc">@category.Description</p>
+                
+                <div class="service-popular-list">
+                    @foreach (var svc in category.Services.Take(3))
+                    {
+                        <div class="service-subitem">
+                            <div class="service-subitem-left">
+                                <span class="material-symbols-outlined service-subitem-icon">@GetServiceIcon(svc.Name)</span>
+                                <span class="service-subitem-title">@svc.Name</span>
+                            </div>
+                            <span class="service-subitem-price">from £@svc.BasePrice.ToString("F2")</span>
+                        </div>
+                    }
+                </div>
+
+                <a href="/Services/@category.Slug" class="btn btn-primary service-category-btn">
+                    <span>View All @category.Name</span>
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+            </article>
+        }
+    </section>
+
+    <!-- Local Quality Proof -->
+    <section class="quality-proof-section">
+        <div class="page-container quality-proof-container">
+            <div class="quality-proof-content">
+                <h2 class="quality-proof-title">Why choose Handy Fix for your property?</h2>
+                <p class="quality-proof-desc">
+                    We pride ourselves on technical mastery and absolute reliability. Our team serves the South London area with a focus on high-fidelity results and transparent communication.
+                </p>
+                <div class="quality-proof-badges">
+                    <div class="proof-badge">
+                        <span class="material-symbols-outlined proof-badge-icon">verified</span>
+                        <span>Fully Insured</span>
+                    </div>
+                    <div class="proof-badge">
+                        <span class="material-symbols-outlined proof-badge-icon">star</span>
+                        <span>4.9/5 Average Rating</span>
+                    </div>
+                    <div class="proof-badge">
+                        <span class="material-symbols-outlined proof-badge-icon">schedule</span>
+                        <span>Same-Day Visits</span>
                     </div>
                 </div>
             </div>
-        }
-    </div>
+            <div class="quality-proof-image-wrapper">
+                <div class="quality-proof-image-container">
+                    <img class="quality-proof-image" alt="A professional handyman in South London" src="/images/handyfix-proof.jpg" onerror="this.src='https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg'">
+                </div>
+            </div>
+        </div>
+    </section>
 </div>

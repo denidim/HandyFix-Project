@@ -12,7 +12,9 @@
 @import 'components/cards.css';
 @import 'components/forms.css';
 
+/* Pages */
 @import 'pages/home.css';
+@import 'pages/services.css';
 
 /* Utility classes */
 .material-symbols-outlined {

@@ -1,0 +1,302 @@
+/* Services Listing - Stitch Translation */
+
+.services-page {
+  padding: var(--spacing-8) 0;
+}
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--on-primary-container);
+  font-size: var(--fs-label-sm);
+  margin-bottom: var(--spacing-4);
+}
+
+.breadcrumb-nav a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.breadcrumb-nav a:hover {
+  color: var(--secondary);
+}
+
+.breadcrumb-separator {
+  font-size: 16px;
+}
+
+.breadcrumb-current {
+  color: var(--secondary);
+  font-weight: 600;
+}
+
+.services-header-content {
+  max-width: 800px;
+}
+
+.services-hero-title {
+  font-size: var(--fs-headline-xl);
+  line-height: 1.15;
+  margin-bottom: var(--spacing-6);
+  letter-spacing: -0.5px;
+  color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .services-hero-title {
+    font-size: var(--fs-headline-xl-mobile);
+  }
+}
+
+.services-hero-title span {
+  color: var(--secondary);
+}
+
+.services-subtitle {
+  font-size: var(--fs-body-lg);
+  color: var(--text-main);
+  line-height: 1.625;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-8);
+  margin-top: var(--spacing-12);
+}
+
+@media (min-width: 992px) {
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Glassmorphism Bento Card */
+.service-category-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid transparent;
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.service-category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+  border-color: var(--secondary-container);
+}
+
+.service-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: var(--spacing-8);
+}
+
+.service-card-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Dynamic color skins for division icon boxes */
+.service-category-card[data-division="plumbing"] .service-card-icon-wrapper {
+  background-color: var(--secondary-fixed);
+  color: var(--on-secondary-fixed);
+}
+
+.service-category-card[data-division="handyman"] .service-card-icon-wrapper {
+  background-color: rgba(57, 184, 253, 0.2);
+  color: var(--on-secondary-container);
+}
+
+.service-card-icon-wrapper .material-symbols-outlined {
+  font-size: 40px;
+}
+
+.service-badge {
+  padding: var(--spacing-1) var(--spacing-4);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-label-sm);
+  font-weight: 500;
+}
+
+.service-category-card[data-division="plumbing"] .service-badge {
+  background-color: rgba(0, 150, 104, 0.1);
+  color: var(--on-tertiary-container);
+}
+
+.service-category-card[data-division="handyman"] .service-badge {
+  background-color: var(--secondary-fixed);
+  color: var(--on-secondary-fixed);
+}
+
+.service-card-title {
+  font-size: var(--fs-headline-lg);
+  color: var(--text-dark);
+  margin: 0 0 var(--spacing-4) 0;
+}
+
+.service-card-desc {
+  font-size: var(--fs-body-md);
+  color: var(--text-main);
+  margin: 0 0 var(--spacing-8) 0;
+  line-height: 1.5;
+}
+
+.service-popular-heading {
+  font-size: var(--fs-headline-sm);
+  color: var(--text-dark);
+  margin-bottom: var(--spacing-4);
+}
+
+.service-popular-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-10);
+  flex-grow: 1;
+}
+
+.service-subitem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  transition: border-color var(--transition-fast) ease;
+}
+
+.service-category-card:hover .service-subitem {
+  border-color: rgba(0, 101, 145, 0.15);
+}
+
+.service-subitem-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.service-subitem-icon {
+  color: var(--secondary);
+}
+
+.service-subitem-title {
+  font-size: var(--fs-body-md);
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+.service-subitem-price {
+  font-size: var(--fs-label-sm);
+  font-weight: 700;
+  color: var(--secondary-container);
+}
+
+.service-category-btn {
+  width: 100%;
+  padding: var(--spacing-4) 0;
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-button-text);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+}
+
+/* Local Quality Proof Section */
+.quality-proof-section {
+  background-color: var(--primary-container);
+  color: var(--on-primary);
+  padding: var(--spacing-16) 0;
+  margin-top: var(--spacing-12);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  position: relative;
+}
+
+.quality-proof-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-12);
+}
+
+@media (min-width: 768px) {
+  .quality-proof-container {
+    flex-direction: row;
+  }
+}
+
+.quality-proof-content {
+  max-width: 576px;
+}
+
+.quality-proof-title {
+  font-size: var(--fs-headline-lg);
+  margin-bottom: var(--spacing-4);
+  color: #ffffff;
+}
+
+.quality-proof-desc {
+  font-size: var(--fs-body-md);
+  opacity: 0.8;
+  margin-bottom: var(--spacing-6);
+  line-height: 1.5;
+}
+
+.quality-proof-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+}
+
+.proof-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  background: rgba(255, 255, 255, 0.1);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: var(--fs-label-sm);
+}
+
+.proof-badge-icon {
+  color: var(--tertiary-fixed);
+  font-size: 18px;
+}
+
+.quality-proof-image-wrapper {
+  flex-shrink: 0;
+}
+
+.quality-proof-image-container {
+  width: 256px;
+  height: 256px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transform: rotate(3deg);
+}
+
+.quality-proof-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
