@@ -6,53 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@this.ViewData["Title"] - @GlobalConstants.SystemName</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">@GlobalConstants.SystemName</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
-            </div>
-        </nav>
-    </header>
+    <partial name="_Navbar" />
     
-    <div class="container">
-        <partial name="_CookieConsentPartial" />
-        <main role="main" class="pb-3">
-            @this.RenderBody()
-        </main>
-    </div>
+    <partial name="_CookieConsentPartial" />
+    <main role="main">
+        @this.RenderBody()
+    </main>
 
     <!-- Sticky Mobile CTA Navigation Bar -->
-    <div class="mobile-sticky-cta-footer">
-        <a href="tel:07123456789" class="btn btn-primary font-weight-bold flex-fill py-3" style="border-radius: 8px;">📞 Call Us</a>
-        <a href="/Booking" class="btn btn-success font-weight-bold flex-fill py-3" style="border-radius: 8px;">📅 Book Now</a>
-    </div>
+    <partial name="_MobileStickyCta" />
     
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.Now.Year - Handy Fix - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    <partial name="_Footer" />
 
     <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js" asp-append-version="true"></script>

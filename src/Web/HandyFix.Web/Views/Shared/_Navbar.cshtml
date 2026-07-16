@@ -1,0 +1,30 @@
+@using HandyFix.Common
+<header class="header-docked">
+    <div class="page-container navbar-container">
+        <a class="font-display-brand text-primary" asp-area="" asp-controller="Home" asp-action="Index">@GlobalConstants.SystemName</a>
+        
+        <nav class="nav-links">
+            <a class="nav-link font-bold text-secondary" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+            <a class="nav-link" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
+            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <partial name="_LoginPartial" />
+        </nav>
+        
+        <div class="navbar-actions">
+            <a href="tel:07123456789" class="btn btn-primary navbar-call-btn">Call Now</a>
+            <button class="navbar-mobile-toggle" id="mobile-menu-btn" aria-label="Toggle mobile menu">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="mobile-nav-dropdown" id="mobile-nav-menu">
+        <nav class="mobile-nav-links">
+            <a class="nav-link font-bold text-secondary" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+            <a class="nav-link" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
+            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="mobile-nav-divider"></div>
+            <partial name="_LoginPartial" />
+        </nav>
+    </div>
+</header>

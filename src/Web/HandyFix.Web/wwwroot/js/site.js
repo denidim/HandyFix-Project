@@ -1,5 +1,23 @@
 // Handy Fix Booking Widget Client Logic
 document.addEventListener("DOMContentLoaded", function () {
+    // Mobile Nav Toggle (Public)
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-nav-menu');
+    if (mobileBtn && mobileMenu) {
+        mobileBtn.addEventListener('click', function () {
+            mobileMenu.classList.toggle('is-open');
+        });
+    }
+
+    // Admin Sidebar Toggle
+    const adminToggleBtn = document.getElementById('admin-sidebar-btn');
+    const adminSidebar = document.querySelector('.admin-sidebar');
+    if (adminToggleBtn && adminSidebar) {
+        adminToggleBtn.addEventListener('click', function () {
+            adminSidebar.classList.toggle('open');
+        });
+    }
+
     const heroForm = document.getElementById("hero-booking-form");
     if (!heroForm) return;
 
