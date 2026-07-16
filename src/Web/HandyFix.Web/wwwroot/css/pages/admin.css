@@ -1,0 +1,122 @@
+/* Admin Layout Architecture */
+.admin-body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--surface-container-low);
+}
+
+.admin-layout-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background-color: var(--primary);
+    color: var(--on-primary);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: transform var(--transition-normal);
+}
+
+.admin-sidebar-header {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding-left: var(--spacing-6);
+    padding-right: var(--spacing-6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--spacing-4);
+    gap: var(--spacing-2);
+}
+
+.admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-6);
+    color: var(--on-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color var(--transition-fast);
+}
+
+.admin-nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--on-primary);
+}
+
+.admin-main-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+.admin-topbar {
+    height: 70px;
+    background-color: var(--surface-container-lowest);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: var(--spacing-6);
+    padding-right: var(--spacing-6);
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+}
+
+.admin-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+}
+
+.admin-topbar-right {
+    display: flex;
+    align-items: center;
+}
+
+.admin-sidebar-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--spacing-2);
+}
+
+.admin-page-title {
+    margin: 0;
+    color: var(--text-main);
+}
+
+.admin-main-content {
+    flex-grow: 1;
+    padding: var(--spacing-6);
+    background-color: var(--surface-container-low);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+    }
+    
+    .admin-sidebar.open {
+        transform: translateX(0);
+    }
+}
