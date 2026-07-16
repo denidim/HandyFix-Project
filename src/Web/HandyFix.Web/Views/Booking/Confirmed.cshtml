@@ -4,72 +4,177 @@
     this.ViewData["Title"] = "Booking Confirmed - HandyFix";
 }
 
-<div class="py-5 max-width-600 mx-auto text-center">
-    <div class="success-checkmark-wrapper mb-4">
-        <span class="display-3 text-success">🎉</span>
-    </div>
-    
-    <h1 class="font-weight-bold text-slate">Booking Confirmed!</h1>
-    <p class="lead text-muted">Your booking request has been successfully recorded and deposit processed.</p>
+<!-- Confetti Overlay -->
+<canvas class="confetti-canvas" id="confetti"></canvas>
 
-    <div class="card shadow-sm border rounded-lg p-4 my-4 text-left bg-white text-slate">
-        <h5 class="font-weight-bold border-bottom pb-2 mb-3">Booking Details</h5>
-        <div class="row mb-2">
-            <div class="col-sm-5 font-weight-bold">Reference Number:</div>
-            <div class="col-sm-7 text-muted select-all">@Model.Id</div>
+<div class="page-container" style="padding: var(--spacing-12) 0;">
+    <div class="success-container text-center">
+        <!-- Hero Success Section -->
+        <div class="success-icon-bubble animate-float">
+            <span class="material-symbols-outlined text-secondary" style="font-size: 48px; font-variation-settings: 'FILL' 1;">task_alt</span>
         </div>
-        <div class="row mb-2">
-            <div class="col-sm-5 font-weight-bold">Scheduled Time:</div>
-            <div class="col-sm-7 text-muted font-weight-bold">@Model.ScheduledTime.ToString("dd MMM yyyy 'at' HH:mm")</div>
-        </div>
-        <div class="row mb-2">
-            <div class="col-sm-5 font-weight-bold">Address:</div>
-            <div class="col-sm-7 text-muted">@Model.Address</div>
-        </div>
-        <div class="row mb-2">
-            <div class="col-sm-5 font-weight-bold">Customer Name:</div>
-            <div class="col-sm-7 text-muted">@Model.CustomerFirstName @Model.CustomerLastName</div>
-        </div>
-        <div class="row mb-2">
-            <div class="col-sm-5 font-weight-bold">Services:</div>
-            <div class="col-sm-7 text-muted">@string.Join(", ", Model.Services)</div>
-        </div>
-        <div class="row mb-2">
-            <div class="col-sm-5 font-weight-bold">Status:</div>
-            <div class="col-sm-7">
-                <span class="badge badge-success px-3 py-2">@Model.StatusName</span>
+        <h1 class="font-headline-xl text-primary mb-3">Booking Confirmed!</h1>
+        <p class="font-body-lg text-on-surface-variant max-w-md mx-auto mb-8">
+            Great news! Your service request has been received. Our professional team is already preparing for your visit.
+        </p>
+
+        <!-- Detailed Summary Card (Bento-style Glassmorphism) -->
+        <div class="glass-card success-details-card">
+            <div class="success-details-grid text-left">
+                <!-- Left Column: Details -->
+                <div class="space-y-6" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
+                    <div>
+                        <p class="font-label-sm text-on-surface-variant mb-1">Reference Number</p>
+                        <p class="font-headline-sm text-primary select-all">#@Model.Id</p>
+                    </div>
+                    <div>
+                        <p class="font-label-sm text-on-surface-variant mb-2">Scheduled Time</p>
+                        <div style="display: flex; flex-direction: column; gap: var(--spacing-2);">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-secondary">calendar_today</span>
+                                <p class="font-body-md font-bold">@Model.ScheduledTime.ToString("dddd, MMM dd, yyyy")</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-secondary">schedule</span>
+                                <p class="font-body-md">@Model.ScheduledTime.ToString("hh:mm tt") - @Model.ScheduledTime.AddHours(2).ToString("hh:mm tt")</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="font-label-sm text-on-surface-variant mb-1">Address</p>
+                        <p class="font-body-md text-primary">@Model.Address</p>
+                    </div>
+                </div>
+
+                <!-- Right Column: Balance & Summary -->
+                <div class="success-balance-box">
+                    <div>
+                        <p class="font-label-sm text-on-surface-variant mb-4">Payment Summary</p>
+                        <div style="display: flex; flex-direction: column; gap: var(--spacing-2);">
+                            <div class="success-balance-row">
+                                <span class="font-body-md text-on-surface-variant">Deposit Paid (Stripe)</span>
+                                <span class="font-body-md">£@Model.DepositAmount.ToString("F2")</span>
+                            </div>
+                            <div class="success-balance-row">
+                                <span class="font-body-md text-on-surface-variant">Remaining Balance</span>
+                                <span class="font-body-md">£@((Model.TotalAmount - Model.DepositAmount).ToString("F2"))</span>
+                            </div>
+                            <div class="pt-3" style="border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; margin-top: var(--spacing-2);">
+                                <span class="font-button-text text-primary">Total Estimated</span>
+                                <span class="success-balance-total">£@Model.TotalAmount.ToString("F2")</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: var(--spacing-4);">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" style="background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container);">
+                            Pay remaining on completion
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="row mb-2">
-            <div class="col-sm-5 font-weight-bold">Stripe Payment Status:</div>
-            <div class="col-sm-7">
-                <span class="badge badge-primary px-3 py-2">@Model.PaymentStatus</span>
+
+        <!-- Info Alert Box -->
+        <div class="success-info-box">
+            <span class="material-symbols-outlined success-info-icon" style="font-variation-settings: 'FILL' 1;">info</span>
+            <div class="success-info-content">
+                <h3 class="success-info-title">What happens next?</h3>
+                <ul class="success-info-list">
+                    <li class="success-info-item">
+                        <span class="success-info-step">1</span>
+                        <p class="success-info-text">A confirmation email has been sent to your inbox with full service details.</p>
+                    </li>
+                    <li class="success-info-item">
+                        <span class="success-info-step">2</span>
+                        <p class="success-info-text">Your assigned technician will call or text you 30 minutes before arrival.</p>
+                    </li>
+                    <li class="success-info-item">
+                        <span class="success-info-step">3</span>
+                        <p class="success-info-text">Please ensure an adult is present at the location to provide access.</p>
+                    </li>
+                </ul>
             </div>
         </div>
 
-        <hr class="my-3" />
-        
-        <div class="d-flex justify-content-between font-weight-bold mb-1">
-            <span>Deposit Paid (via Stripe):</span>
-            <span class="text-success">£@Model.DepositAmount.ToString("F2")</span>
+        <!-- Action CTAs -->
+        <div class="success-actions">
+            <a href="/" class="btn btn-primary" style="padding: var(--spacing-4) var(--spacing-10); border-radius: var(--radius-full); text-decoration: none;">
+                Return Home
+            </a>
+            <a href="/Services" class="btn btn-outline" style="padding: var(--spacing-4) var(--spacing-8); border-radius: var(--radius-full); text-decoration: none; border: 2px solid var(--border-subtle); background: #ffffff; color: var(--text-main);">
+                Browse Services
+            </a>
         </div>
-        <div class="d-flex justify-content-between font-weight-bold text-muted small">
-            <span>Remaining Balance (on completion):</span>
-            <span>£@((Model.TotalAmount - Model.DepositAmount).ToString("F2"))</span>
-        </div>
-    </div>
-
-    <div class="alert alert-info py-3 px-4 rounded-lg my-4 text-left small leading-relaxed">
-        <strong>What happens next?</strong>
-        <ul class="mb-0 mt-2 pl-3">
-            <li>You will receive an email confirmation containing these details.</li>
-            <li>Our dispatch office will assign your professional technician.</li>
-            <li>We will send a reminder email the day before your appointment.</li>
-        </ul>
-    </div>
-
-    <div class="d-flex justify-content-center gap-3 mt-4">
-        <a href="/" class="btn btn-primary px-4 py-2 font-weight-bold mr-2">Return Home</a>
-        <a href="/Services" class="btn btn-outline-secondary px-4 py-2 font-weight-bold">Browse Services</a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Simple Confetti Animation
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        let pieces = [];
+        const numberOfPieces = 75;
+        const colors = ['#006591', '#39b8fd', '#1e293b', '#4edea3'];
+
+        function updateCanvasSize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Piece {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height - canvas.height;
+                this.rotation = Math.random() * 360;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.diameter = Math.random() * 10 + 5;
+                this.speed = Math.random() * 3 + 2;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.rotation += this.speed;
+                if (this.y > canvas.height) {
+                    this.y = -20;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.diameter / 2, -this.diameter / 2, this.diameter, this.diameter);
+                ctx.restore();
+            }
+        }
+
+        function initConfetti() {
+            updateCanvasSize();
+            for (let i = 0; i < numberOfPieces; i++) {
+                pieces.push(new Piece());
+            }
+            animate();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', updateCanvasSize);
+        window.addEventListener('load', () => {
+            initConfetti();
+            // Stop confetti after 6 seconds
+            setTimeout(() => {
+                pieces = [];
+            }, 6000);
+        });
+    </script>
+}

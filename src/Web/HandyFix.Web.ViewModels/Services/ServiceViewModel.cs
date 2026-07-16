@@ -17,6 +17,8 @@ namespace HandyFix.Web.ViewModels.Services
 
         public int EstimatedDurationMinutes { get; set; }
 
+        public string CategorySlug { get; set; }
+
         public string Slug => this.Name
             .Replace(" ", "-")
             .Replace("/", "-")
