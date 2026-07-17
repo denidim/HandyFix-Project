@@ -439,5 +439,3 @@ src/Web/HandyFix.Web/appsettings.Development.json
 clean_base64.txt
 design_base64.txt
 src/TextUi/
-
-DESIGN.md
