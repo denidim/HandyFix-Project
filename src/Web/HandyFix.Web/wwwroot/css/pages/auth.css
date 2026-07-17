@@ -1,0 +1,76 @@
+/* Auth Pages Styling - Handy Fix */
+
+.auth-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 200px);
+  padding: var(--spacing-8) var(--spacing-4);
+  background-color: var(--background);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 450px;
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.auth-card.wide {
+  max-width: 550px;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: var(--spacing-6);
+}
+
+.auth-header .brand-logo {
+  font-family: var(--font-family-display);
+  font-size: var(--fs-display-brand);
+  font-weight: 800;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.auth-header .subtitle {
+  font-size: var(--fs-body-md);
+  color: var(--on-surface-variant);
+  margin-top: var(--spacing-2);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.auth-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: var(--spacing-2) 0;
+}
+
+.auth-footer {
+  margin-top: var(--spacing-6);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--border-subtle);
+  text-align: center;
+  font-size: var(--fs-body-md);
+  color: var(--on-surface-variant);
+}
+
+.auth-footer a {
+  font-weight: 700;
+  color: var(--secondary);
+  text-decoration: none;
+  margin-left: var(--spacing-1);
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}

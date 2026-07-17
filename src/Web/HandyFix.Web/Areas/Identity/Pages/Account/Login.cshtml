@@ -1,0 +1,67 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<div class="auth-page-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="brand-logo">Handy Fix</h1>
+            <p class="subtitle">Please enter your details to sign in.</p>
+        </div>
+
+        <form id="account" method="post" class="auth-form">
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
+            <!-- Email Field -->
+            <div class="form-field">
+                <label class="form-label" asp-for="Input.Email">Email Address</label>
+                <div class="input-with-icon">
+                    <span class="field-icon material-symbols-outlined">mail</span>
+                    <input asp-for="Input.Email" class="form-control" placeholder="name@example.com" />
+                </div>
+                <span asp-validation-for="Input.Email" class="validation-error"></span>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-field">
+                <label class="form-label" asp-for="Input.Password">Password</label>
+                <div class="input-with-icon">
+                    <span class="field-icon material-symbols-outlined">lock</span>
+                    <input asp-for="Input.Password" class="form-control" placeholder="••••••••" />
+                </div>
+                <span asp-validation-for="Input.Password" class="validation-error"></span>
+            </div>
+
+            <!-- Options Row -->
+            <div class="auth-options">
+                <div class="form-checkbox-field">
+                    <input asp-for="Input.RememberMe" class="cursor-pointer" />
+                    <label class="cursor-pointer select-none" asp-for="Input.RememberMe">Remember me</label>
+                </div>
+                <div>
+                    <a id="forgot-password" asp-page="./ForgotPassword" class="text-secondary font-medium">Forgot password?</a>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div>
+                <button id="login-submit" type="submit" class="btn btn-primary btn-block">
+                    <span>Login</span>
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Register Link -->
+        <div class="auth-footer">
+            <span>Don't have an account?</span>
+            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register now</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

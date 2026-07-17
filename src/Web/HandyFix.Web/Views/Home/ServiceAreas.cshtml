@@ -1,59 +1,114 @@
 @{
-    this.Layout = "_Layout";
+    this.ViewData["Title"] = "Service Coverage Areas - South London, Surrey & Kent";
 }
 
-<div class="py-4 max-width-800 mx-auto text-slate">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb bg-transparent p-0 mb-3">
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Service Areas</li>
-        </ol>
-    </nav>
+<div class="info-canvas wide">
+    <!-- Hero Section -->
+    <section class="text-center max-w-3xl mx-auto mb-5">
+        <h1 class="font-headline-xl text-primary mb-2">Professional Service Areas</h1>
+        <p class="font-body-lg text-on-surface-variant mb-0">Providing expert home repair and maintenance services across South London, Surrey, and West Kent. Reliable, rapid dispatch straight to your door.</p>
+    </section>
 
-    <h1 class="font-weight-bold text-slate mb-4 text-center">Our Service Areas</h1>
-    <p class="text-muted text-center mb-5">We cover boroughs across South London, Surrey borders, and West Kent.</p>
+    <!-- Search & Map Section -->
+    <section class="mb-5">
+        <div class="bg-white rounded-xl border p-4 p-md-5 relative shadow-sm" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+            <div class="row align-items-center">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <h2 class="font-headline-md text-primary mb-2" style="font-size: var(--fs-headline-md);">Find My Technician</h2>
+                    <p class="font-body-md text-on-surface-variant mb-4">Enter your postcode to see if we cover your area and to estimate dispatch times.</p>
+                    <div class="d-flex gap-2">
+                        <input class="form-control py-3" placeholder="e.g. CR0 1AA" type="text" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); background-color: var(--surface-container-lowest);" />
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center" style="padding: 12px 16px; border-radius: var(--radius-lg);">
+                            <span class="material-symbols-outlined">search</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="map-container">
+                        <!-- Stylized Map placeholder -->
+                        <img alt="London and surrounding service coverage map" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyOydxeU2cmRYLf0ZtN_jdBaltBktelPDnj93qe3-qf5O4QeZInPCcyasGneMhQdn9_i7rHh-u5yQ8gGIarsgvQTVt4eSvASpJauf70zM6ATf3XEAwE-xXDNWE3vV465z8bD6DySxgdlZtU9xb9cwGFqZ2FHfhPDyUwcVROEvNHr-XaIhXpBdqsm1iP95MxZSwa8VFyNGPa1KrpZz7CCz7ftN0RUa3xbaa2GqetZB7FaN59uMND1Q6p22Ot3QV2gWFTLvExXchZ1O9" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="p-3 border rounded h-100 bg-white shadow-sm">
-                <h5 class="font-weight-bold text-primary mb-3">📍 South London</h5>
-                <ul class="list-unstyled mb-0 text-muted small">
-                    <li class="mb-1">Croydon</li>
-                    <li class="mb-1">Wimbledon</li>
-                    <li class="mb-1">Mitcham</li>
-                    <li class="mb-1">Sutton</li>
-                    <li class="mb-1">Carshalton</li>
+    <!-- Trust Callouts -->
+    <section class="trust-callout-grid">
+        <div class="trust-card">
+            <div class="icon-wrapper">
+                <span class="material-symbols-outlined">engineering</span>
+            </div>
+            <h3>Local Experts</h3>
+            <p>Technicians native to your area, ensuring fast routing and community-focused service.</p>
+        </div>
+        <div class="trust-card">
+            <div class="icon-wrapper">
+                <span class="material-symbols-outlined">local_shipping</span>
+            </div>
+            <h3>Rapid Dispatch</h3>
+            <p>Optimized routing allows for same-day or next-day service in core coverage zones.</p>
+        </div>
+        <div class="trust-card">
+            <div class="icon-wrapper">
+                <span class="material-symbols-outlined">verified_user</span>
+            </div>
+            <h3>Fully Insured</h3>
+            <p>Comprehensive coverage for every job, giving you complete peace of mind.</p>
+        </div>
+    </section>
+
+    <!-- Region Grid -->
+    <section class="mb-5">
+        <h2 class="font-headline-lg text-primary text-center mb-4">Detailed Coverage Areas</h2>
+        <div class="coverage-grid">
+            <!-- South London -->
+            <div class="coverage-card">
+                <div class="card-header-row">
+                    <span class="material-symbols-outlined text-secondary">location_city</span>
+                    <h3>South London</h3>
+                </div>
+                <ul class="coverage-list">
+                    <li><span class="bullet"></span> Croydon</li>
+                    <li><span class="bullet"></span> Sutton</li>
+                    <li><span class="bullet"></span> Wimbledon</li>
+                    <li><span class="bullet"></span> Mitcham</li>
+                    <li><span class="bullet"></span> Bromley</li>
+                    <li><span class="bullet"></span> Orpington</li>
+                </ul>
+            </div>
+            <!-- Surrey Borders -->
+            <div class="coverage-card">
+                <div class="card-header-row">
+                    <span class="material-symbols-outlined text-secondary">nature_people</span>
+                    <h3>Surrey Borders</h3>
+                </div>
+                <ul class="coverage-list">
+                    <li><span class="bullet"></span> Epsom</li>
+                    <li><span class="bullet"></span> Kingston</li>
+                    <li><span class="bullet"></span> Banstead</li>
+                    <li><span class="bullet"></span> Richmond</li>
+                </ul>
+            </div>
+            <!-- West Kent -->
+            <div class="coverage-card">
+                <div class="card-header-row">
+                    <span class="material-symbols-outlined text-secondary">park</span>
+                    <h3>West Kent</h3>
+                </div>
+                <ul class="coverage-list">
+                    <li><span class="bullet"></span> Sevenoaks</li>
+                    <li><span class="bullet"></span> Dartford</li>
+                    <li><span class="bullet"></span> Maidstone</li>
                 </ul>
             </div>
         </div>
-        <div class="col-md-4 mb-4">
-            <div class="p-3 border rounded h-100 bg-white shadow-sm">
-                <h5 class="font-weight-bold text-primary mb-3">📍 Surrey (Borders)</h5>
-                <ul class="list-unstyled mb-0 text-muted small">
-                    <li class="mb-1">Epsom</li>
-                    <li class="mb-1">Kingston upon Thames</li>
-                    <li class="mb-1">Richmond (Part)</li>
-                    <li class="mb-1">Banstead</li>
-                </ul>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="p-3 border rounded h-100 bg-white shadow-sm">
-                <h5 class="font-weight-bold text-primary mb-3">📍 Kent &amp; Bromley</h5>
-                <ul class="list-unstyled mb-0 text-muted small">
-                    <li class="mb-1">Bromley</li>
-                    <li class="mb-1">Orpington</li>
-                    <li class="mb-1">Sevenoaks</li>
-                    <li class="mb-1">Dartford</li>
-                    <li class="mb-1">Maidstone</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+    </section>
 
-    <div class="bg-light p-4 rounded-lg border text-center mt-4">
-        <h5 class="font-weight-bold text-slate">Don't see your area listed?</h5>
-        <p class="text-muted small">If your postcode lies near the South London borders, our mobile teams can often still assist you. Send us an enquiry with your address.</p>
-        <a href="/Contact" class="btn btn-outline-primary px-4 py-2 font-weight-bold mt-2">Get custom area quote</a>
-    </div>
+    <!-- Final CTA -->
+    <section class="p-5 text-center border" style="background-color: var(--surface-container-low); border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+        <h2 class="font-headline-md text-primary mb-2">Ready to book in your area?</h2>
+        <p class="font-body-md text-on-surface-variant mb-4 max-w-xl mx-auto">Our local teams are on standby. Secure your preferred time slot today.</p>
+        <a href="/Booking" class="btn btn-primary font-button-text px-5 py-3" style="border-radius: var(--radius-lg);">Book Now</a>
+    </section>
 </div>

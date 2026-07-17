@@ -1,0 +1,105 @@
+@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="auth-page-container">
+    <div class="auth-card wide">
+        <div class="auth-header">
+            <a class="brand-logo" href="/">Handy Fix</a>
+            <p class="subtitle">Create your account to book services seamlessly.</p>
+        </div>
+
+        <form asp-route-returnUrl="@Model.ReturnUrl" method="post" class="auth-form">
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
+            <!-- Name Fields (Grid layout via columns classes) -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label" asp-for="Input.FirstName">First Name</label>
+                        <div class="input-with-icon">
+                            <span class="field-icon material-symbols-outlined">person</span>
+                            <input asp-for="Input.FirstName" class="form-control" placeholder="John" />
+                        </div>
+                        <span asp-validation-for="Input.FirstName" class="validation-error"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label" asp-for="Input.LastName">Last Name</label>
+                        <div class="input-with-icon">
+                            <span class="field-icon material-symbols-outlined">person</span>
+                            <input asp-for="Input.LastName" class="form-control" placeholder="Doe" />
+                        </div>
+                        <span asp-validation-for="Input.LastName" class="validation-error"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Fields -->
+            <div class="form-field">
+                <label class="form-label" asp-for="Input.Email">Email Address</label>
+                <div class="input-with-icon">
+                    <span class="field-icon material-symbols-outlined">mail</span>
+                    <input asp-for="Input.Email" class="form-control" placeholder="john.doe@example.com" />
+                </div>
+                <span asp-validation-for="Input.Email" class="validation-error"></span>
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" asp-for="Input.PhoneNumber">Phone Number</label>
+                <div class="input-with-icon">
+                    <span class="field-icon material-symbols-outlined">call</span>
+                    <input asp-for="Input.PhoneNumber" class="form-control" placeholder="(555) 123-4567" />
+                </div>
+                <span asp-validation-for="Input.PhoneNumber" class="validation-error"></span>
+            </div>
+
+            <!-- Password Fields -->
+            <div class="form-field">
+                <label class="form-label" asp-for="Input.Password">Password</label>
+                <div class="input-with-icon">
+                    <span class="field-icon material-symbols-outlined">lock</span>
+                    <input asp-for="Input.Password" class="form-control" placeholder="••••••••" />
+                </div>
+                <span asp-validation-for="Input.Password" class="validation-error"></span>
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" asp-for="Input.ConfirmPassword">Confirm Password</label>
+                <div class="input-with-icon">
+                    <span class="field-icon material-symbols-outlined">lock</span>
+                    <input asp-for="Input.ConfirmPassword" class="form-control" placeholder="••••••••" />
+                </div>
+                <span asp-validation-for="Input.ConfirmPassword" class="validation-error"></span>
+            </div>
+
+            <!-- Terms & Conditions Checkbox -->
+            <div class="form-checkbox-field">
+                <input class="cursor-pointer" id="terms" type="checkbox" required />
+                <label class="cursor-pointer select-none" for="terms">
+                    I agree to the <a href="/TermsAndConditions" class="text-secondary font-medium">Terms of Service</a> and <a href="/PrivacyPolicy" class="text-secondary font-medium">Privacy Policy</a>.
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Create Account</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Login Link -->
+        <div class="auth-footer">
+            <span>Already have an account?</span>
+            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Log in here</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
