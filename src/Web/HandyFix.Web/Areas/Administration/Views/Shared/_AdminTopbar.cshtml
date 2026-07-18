@@ -3,9 +3,8 @@
         <button class="admin-sidebar-toggle" id="admin-sidebar-btn" aria-label="Toggle admin sidebar">
             <span class="material-symbols-outlined">menu</span>
         </button>
-        @* <h1 class="admin-page-title font-headline-md">@this.ViewData["Title"]</h1> *@
     </div>
     <div class="admin-topbar-right">
-        <partial name="_LoginPartial" />
+        <a class="nav-link font-bold text-secondary" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
     </div>
 </header>
