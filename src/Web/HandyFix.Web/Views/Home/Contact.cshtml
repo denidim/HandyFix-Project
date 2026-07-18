@@ -1,60 +1,171 @@
 @model HandyFix.Web.ViewModels.Home.ContactInputModel
 @{
-    this.Layout = "_Layout";
+    this.ViewData["Title"] = "Get a Custom Quote - Handy Fix";
 }
 
-<div class="py-4 max-width-700 mx-auto text-slate">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb bg-transparent p-0 mb-3">
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Contact Us</li>
-        </ol>
-    </nav>
+<div class="info-canvas" style="margin-top: var(--spacing-12); margin-bottom: var(--spacing-12);">
+    <!-- Hero Section -->
+    <section class="text-center mb-5">
+        <h1 class="font-headline-xl text-primary mb-2">Get a Custom Quote</h1>
+        <p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto">
+            Have a large-scale project or specialized maintenance need? Tell us the details, and our experts will provide a tailored professional estimate.
+        </p>
+    </section>
 
-    <h1 class="font-weight-bold text-slate mb-3 text-center">Get a Free Custom Quote</h1>
-    <p class="text-muted text-center mb-5">Have a larger project or a custom task? Submit an inquiry and our office team will respond shortly.</p>
-
+    <!-- Success Alert -->
     @if (this.TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success p-3 rounded-lg mb-4 text-center">
-            @this.TempData["SuccessMessage"]
+        <div class="p-4 mb-4 text-white d-flex align-items-start gap-3" style="background-color: var(--secondary); border-radius: var(--radius-lg);">
+            <span class="material-symbols-outlined" style="font-size: 24px;">check_circle</span>
+            <div>
+                <h3 class="font-headline-sm mb-1 text-white" style="font-size: 16px; font-weight: 700;">Request Received!</h3>
+                <p class="mb-0 text-white" style="font-size: 14px; opacity: 0.9;">@this.TempData["SuccessMessage"]</p>
+            </div>
         </div>
     }
 
-    <div class="card shadow-sm border rounded-lg p-4 bg-white">
-        <form asp-controller="Home" asp-action="Contact" method="post" enctype="multipart/form-data">
+    <!-- Contact Form Container -->
+    <div class="glass-card rounded-xl p-4 p-md-5" style="border-radius: var(--radius-xl);">
+        <form id="contactForm" asp-controller="Home" asp-action="Contact" method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
             <div class="row">
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="Name" class="form-label font-weight-bold">Your Name</label>
-                    <input asp-for="Name" class="form-control" placeholder="e.g. John Doe" required />
-                    <span asp-validation-for="Name" class="text-danger small"></span>
+                <!-- Name -->
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="form-field">
+                        <label class="form-label" asp-for="Name" style="font-weight: 600;">Full Name</label>
+                        <input asp-for="Name" class="form-control" placeholder="John Doe" required />
+                        <span asp-validation-for="Name" class="validation-error"></span>
+                    </div>
                 </div>
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="Email" class="form-label font-weight-bold">Email Address</label>
-                    <input asp-for="Email" class="form-control" type="email" placeholder="e.g. john@example.com" required />
-                    <span asp-validation-for="Email" class="text-danger small"></span>
+                <!-- Email -->
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label" asp-for="Email" style="font-weight: 600;">Email Address</label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="john@example.com" required />
+                        <span asp-validation-for="Email" class="validation-error"></span>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="PhoneNumber" class="form-label font-weight-bold">Phone Number</label>
-                <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="e.g. 07123456789" required />
-                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+            <div class="row">
+                <!-- Phone -->
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="form-field">
+                        <label class="form-label" asp-for="PhoneNumber" style="font-weight: 600;">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="+44 7123 456789" required />
+                        <span asp-validation-for="PhoneNumber" class="validation-error"></span>
+                    </div>
+                </div>
+                <!-- Service Type (Client-only visual helper combined into message on submit) -->
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label" for="serviceCategory" style="font-weight: 600;">Service Category</label>
+                        <select class="form-control" id="serviceCategory">
+                            <option value="Plumbing">Plumbing</option>
+                            <option value="Electrical">Electrical</option>
+                            <option value="HVAC">HVAC</option>
+                            <option value="Handyman">Handyman / Assembly</option>
+                            <option value="Custom">Other / Custom Project</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Message" class="form-label font-weight-bold">Tell us about your requirements</label>
-                <textarea asp-for="Message" class="form-control" rows="5" placeholder="Describe the services you require, your post code and location. If you need mounting, specify wall material (drywall, brick, etc.)." required></textarea>
-                <span asp-validation-for="Message" class="text-danger small"></span>
+            <!-- Message -->
+            <div class="form-field">
+                <label class="form-label" asp-for="Message" style="font-weight: 600;">Project Details &amp; Message</label>
+                <textarea asp-for="Message" class="form-control" rows="5" placeholder="Describe the scope of your project, specific requirements, or any questions you have..." required style="resize: none;"></textarea>
+                <span asp-validation-for="Message" class="validation-error"></span>
             </div>
 
-            <div class="form-group mb-4">
-                <label asp-for="Images" class="form-label font-weight-bold">Upload Photos of the Work Area (Optional)</label>
-                <input asp-for="Images" class="form-control border-dashed-upload" type="file" multiple accept="image/jpeg,image/png,image/webp" />
-                <small class="form-text text-muted">Supported formats: JPG, PNG, WEBP. Maximum 3 images, 5MB each.</small>
+            <!-- Photo Upload -->
+            <div class="form-field">
+                <label class="form-label" style="font-weight: 600;">Project Photos (Optional)</label>
+                <div class="border-dashed-upload d-flex flex-column align-items-center justify-content-center" onclick="document.getElementById('imageUpload').click()">
+                    <input asp-for="Images" id="imageUpload" type="file" multiple accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="updateUploadLabel(this)" />
+                    <span class="material-symbols-outlined text-secondary" style="font-size: 36px; margin-bottom: var(--spacing-2);">add_a_photo</span>
+                    <p class="font-body-md text-on-surface-variant mb-0" id="uploadLabel">Click to upload or drag and drop</p>
+                    <p class="text-muted mb-0" style="font-size: 11px; margin-top: 4px;">PNG, JPG, WEBP up to 5MB each (Max 3 files)</p>
+                </div>
+                <span asp-validation-for="Images" class="validation-error"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg btn-block w-100 py-3 font-weight-bold">Submit Enquiry</button>
+            <!-- Submit Button -->
+            <div class="pt-2">
+                <button type="submit" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2" style="border-radius: var(--radius-lg); font-size: 16px; font-weight: 600;">
+                    <span>Send Custom Quote Request</span>
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </div>
         </form>
     </div>
+
+    <!-- Info Grid -->
+    <div class="row mt-5">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3" style="background-color: var(--surface-container-highest); border-radius: var(--radius-xl);">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background-color: var(--secondary);">
+                    <span class="material-symbols-outlined">support_agent</span>
+                </div>
+                <div>
+                    <h4 class="font-button-text mb-0" style="font-size: 14px;">Expert Support</h4>
+                    <p class="text-muted mb-0" style="font-size: 12px;">Real human assistance</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3" style="background-color: var(--surface-container-highest); border-radius: var(--radius-xl);">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background-color: var(--secondary);">
+                    <span class="material-symbols-outlined">timer</span>
+                </div>
+                <div>
+                    <h4 class="font-button-text mb-0" style="font-size: 14px;">Quick Response</h4>
+                    <p class="text-muted mb-0" style="font-size: 12px;">Replies in &lt; 24 hrs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3" style="background-color: var(--surface-container-highest); border-radius: var(--radius-xl);">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background-color: var(--secondary);">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                </div>
+                <div>
+                    <h4 class="font-button-text mb-0" style="font-size: 14px;">Local Dispatch</h4>
+                    <p class="text-muted mb-0" style="font-size: 12px;">London &amp; surrounds</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateUploadLabel(input) {
+            const label = document.getElementById('uploadLabel');
+            if (input.files && input.files.length > 0) {
+                label.innerText = `${input.files.length} file(s) selected`;
+            } else {
+                label.innerText = 'Click to upload or drag and drop';
+            }
+        }
+
+        // Combine category selection into message on submit
+        const form = document.getElementById('contactForm');
+        if (form) {
+            form.addEventListener('submit', () => {
+                const categorySelect = document.getElementById('serviceCategory');
+                const messageTextarea = document.getElementById('Message');
+                if (categorySelect && messageTextarea) {
+                    const category = categorySelect.value;
+                    const originalMessage = messageTextarea.value;
+                    // Prepend category if not already prepended
+                    if (!originalMessage.startsWith(`[Category: `)) {
+                        messageTextarea.value = `[Category: ${category}] ${originalMessage}`;
+                    }
+                }
+            });
+        }
+    </script>
+}
