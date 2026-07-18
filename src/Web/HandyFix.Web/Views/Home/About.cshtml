@@ -1,36 +1,123 @@
 @{
-    this.Layout = "_Layout";
+    this.ViewData["Title"] = "About Us - Handy Fix";
 }
 
-<div class="py-4 max-width-800 mx-auto text-slate">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb bg-transparent p-0 mb-3">
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">About Us</li>
-        </ol>
-    </nav>
-
-    <h1 class="font-weight-bold text-slate mb-4">About Handy Fix</h1>
-    
-    <div class="leading-relaxed text-muted mb-4" style="font-size: 1.1rem;">
-        <p>Handy Fix was founded on a simple premise: home repairs and maintenance should be reliable, professional, and transparent. Operating from our dispatch office in Croydon, we provide specialized mobile plumbing and handyman services to homeowners, tenants, and landlords throughout South London, Surrey, and Kent.</p>
-        
-        <p>Unlike generic platforms, we employ certified, vetted, and background-checked technicians. Every team member brings years of on-the-job experience and arrives equipped with high-quality components and tools to get the task done right the first time.</p>
+<!-- Hero Section -->
+<section class="about-hero" style="margin-top: var(--spacing-12);">
+    <span class="about-hero-tag">Crafting Quality Since 2018</span>
+    <h1 class="font-headline-xl text-primary mb-3">Precision Repairs, <br><span class="text-secondary">Reliable Solutions.</span></h1>
+    <p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto mb-4">
+        Handy Fix provides the technical expertise and transparent service Croydon homeowners trust for high-end plumbing and maintenance.
+    </p>
+    <div class="d-flex gap-3 justify-content-center">
+        <a href="#our-story" class="btn btn-primary px-4 py-3" style="border-radius: var(--radius-lg); font-weight: 600;">Our Story</a>
+        <a href="/Services" class="btn btn-outline px-4 py-3" style="background: #ffffff; color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); font-weight: 600;">View Services</a>
     </div>
+</section>
 
-    <h3 class="font-weight-bold text-slate mt-5 mb-3">Our Core Business Values</h3>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="p-3 border rounded h-100 bg-white">
-                <h5 class="font-weight-bold text-primary">✓ Transparent Pricing</h5>
-                <p class="text-muted small mb-0">We believe in complete pricing clarity. That's why we specify base rates and provide full quotes upfront before starting any physical work.</p>
+<!-- The Croydon Narrative Section -->
+<section id="our-story" class="info-canvas" style="margin-bottom: var(--spacing-16);">
+    <div class="narrative-grid">
+        <div class="position-relative">
+            <div class="narrative-image-wrapper">
+                <img src="https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg" alt="Handy Fix professional technician performing precision plumbing repairs" />
+            </div>
+            <div class="narrative-badge">
+                <p class="font-headline-sm text-secondary mb-1 italic" style="font-size: 16px; font-weight: 600;">"We fix it right, the first time."</p>
+                <p class="text-muted mb-0" style="font-size: 11px;">— Founder's Promise</p>
             </div>
         </div>
-        <div class="col-md-6 mb-3">
-            <div class="p-3 border rounded h-100 bg-white">
-                <h5 class="font-weight-bold text-primary">✓ Guaranteed Satisfaction</h5>
-                <p class="text-muted small mb-0">If you are not completely satisfied with our plumbing or handyman services, we will return to fix it, free of charge. Your peace of mind is our priority.</p>
+        <div>
+            <h2 class="font-headline-lg text-primary mb-3">Rooted in <span class="text-secondary">Croydon.</span></h2>
+            <p class="font-body-lg text-on-surface-variant mb-3" style="line-height: var(--lh-body-md);">
+                Handy Fix was born in the heart of Croydon from a simple observation: homeowners deserved more than just a quick fix. They deserved a partner who values their property as much as they do.
+            </p>
+            <p class="font-body-md text-on-surface-variant mb-4">
+                Starting with a single van and a set of precision tools, we've grown into South London's premier mobile maintenance service. Our focus has never wavered: delivering high-fidelity plumbing and handyman solutions with the technical competence of an engineer and the care of a local neighbor.
+            </p>
+            <div class="narrative-stats">
+                <div class="narrative-stat-pill">
+                    <span class="stat-num">5,000+</span>
+                    <span class="text-muted" style="font-size: 12px; font-weight: 600;">Successful Fixes</span>
+                </div>
+                <div class="narrative-stat-pill">
+                    <span class="stat-num">15+</span>
+                    <span class="text-muted" style="font-size: 12px; font-weight: 600;">Specialist Techs</span>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- Core Values Section -->
+<section class="guarantees-section">
+    <div class="max-w-7xl mx-auto text-center mb-5">
+        <h2 class="font-headline-lg text-primary mb-2">Our Core <span class="text-secondary">Guarantees</span></h2>
+        <p class="font-body-md text-on-surface-variant max-w-xl mx-auto mb-0">We've built our reputation on three unbreakable pillars that ensure every client feels assured and respected.</p>
+    </div>
+    <div class="guarantees-grid">
+        <!-- Guarantee 1 -->
+        <div class="guarantee-card">
+            <div class="guarantee-icon-box">
+                <span class="material-symbols-outlined">payments</span>
+            </div>
+            <h3 class="font-headline-sm text-primary mb-2" style="font-size: 18px; font-weight: 700;">Transparent Pricing</h3>
+            <p class="font-body-md text-on-surface-variant mb-0" style="font-size: 14px;">
+                No hidden fees, no surprise surcharges. We provide detailed digital quotes before any work begins, ensuring complete financial clarity for every project.
+            </p>
+        </div>
+        <!-- Guarantee 2 -->
+        <div class="guarantee-card">
+            <div class="guarantee-icon-box">
+                <span class="material-symbols-outlined">verified</span>
+            </div>
+            <h3 class="font-headline-sm text-primary mb-2" style="font-size: 18px; font-weight: 700;">Guaranteed Satisfaction</h3>
+            <p class="font-body-md text-on-surface-variant mb-0" style="font-size: 14px;">
+                Our work isn't done until you're satisfied. We stand by every repair with a comprehensive 12-month workmanship guarantee for your peace of mind.
+            </p>
+        </div>
+        <!-- Guarantee 3 -->
+        <div class="guarantee-card">
+            <div class="guarantee-icon-box">
+                <span class="material-symbols-outlined">sensors</span>
+            </div>
+            <h3 class="font-headline-sm text-primary mb-2" style="font-size: 18px; font-weight: 700;">Rapid Deployment</h3>
+            <p class="font-body-md text-on-surface-variant mb-0" style="font-size: 14px;">
+                Our mobile-first fleet is strategically stationed throughout Croydon and Greater London to ensure we reach your doorstep precisely when you need us.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section with Specialty Treatment -->
+<section class="info-canvas" style="margin-bottom: var(--spacing-16);">
+    <div class="about-cta-card">
+        <div class="about-cta-card-pattern"></div>
+        <div class="d-flex flex-column flex-md-row align-items-center gap-4 position-relative" style="z-index: 1;">
+            <div class="flex-grow-1">
+                <h2 class="font-headline-lg text-primary mb-3">Ready for a <span class="text-secondary">Seamless</span> Repair?</h2>
+                <p class="font-body-lg text-on-surface-variant mb-4">Book your specialist technician in under 2 minutes with our streamlined digital booking system.</p>
+                <div class="d-flex flex-wrap gap-4">
+                    <div class="d-flex align-items-center gap-2 text-on-surface-variant" style="font-size: 12px; font-weight: 600;">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">check_circle</span>
+                        <span>Instant Quotes</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-on-surface-variant" style="font-size: 12px; font-weight: 600;">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">check_circle</span>
+                        <span>Same-Day Service</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-on-surface-variant" style="font-size: 12px; font-weight: 600;">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">check_circle</span>
+                        <span>Fully Insured</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-shrink-0 mt-4 mt-md-0">
+                <a href="/" class="btn btn-secondary px-5 py-3 d-flex align-items-center gap-2 shadow-sm" style="border-radius: var(--radius-lg); font-size: 16px; font-weight: 600; color: #ffffff;">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                    <span>Book Now</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
