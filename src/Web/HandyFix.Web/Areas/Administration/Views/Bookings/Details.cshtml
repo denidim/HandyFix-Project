@@ -90,16 +90,30 @@
                         <span>@Model.ScheduledTime.ToString("hh:mm tt") - @Model.ScheduledEndTime.ToString("hh:mm tt")</span>
                     </p>
                 </div>
-                @if (!string.IsNullOrEmpty(Model.ProblemDescription))
-                {
-                    <div class="col-md-6 mb-4">
-                        <div class="p-3 bg-light rounded-lg border-start border-secondary" style="border-left: 4px solid var(--secondary) !important; background-color: var(--surface-container-low) !important;">
+                <div class="col-md-6 mb-4">
+                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Booking Received</label>
+                    <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">mail</span>
+                        <span>@Model.CreatedOn.ToString("MMMM dd, yyyy")</span>
+                    </p>
+                    <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">schedule</span>
+                        <span>@Model.CreatedOn.ToString("hh:mm tt")</span>
+                    </p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ProblemDescription))
+            {
+                <div class="row">
+                    <div class="col-12 mt-2">
+                        <div class="p-3 bg-light rounded-lg border-start border-secondary" style="border-left: 4px solid var(--secondary) !important; background-color: var(--surface-container-low) !important; word-wrap: break-word; word-break: break-word; overflow-wrap: anywhere;">
                             <label class="text-secondary font-bold uppercase block mb-1" style="font-size: 10px;">Customer Note</label>
-                            <p class="italic text-on-surface-variant mb-0" style="font-size: 13px; line-height: 1.4;">"@Model.ProblemDescription"</p>
+                            <p class="italic text-on-surface-variant mb-0" style="font-size: 13px; line-height: 1.4; word-wrap: break-word; word-break: break-word; overflow-wrap: anywhere;">"@Model.ProblemDescription"</p>
                         </div>
                     </div>
-                }
-            </div>
+                </div>
+            }
         </section>
 
         <!-- Problem Images -->

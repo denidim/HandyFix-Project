@@ -35,6 +35,8 @@ namespace HandyFix.Web.ViewModels.Booking
 
         public DateTime ScheduledEndTime { get; set; }
 
+        public DateTime CreatedOn { get; set; }
+
         public string TechnicianName { get; set; }
 
         public string PaymentStatus { get; set; }
@@ -49,6 +51,7 @@ namespace HandyFix.Web.ViewModels.Booking
                 .Map(dest => dest.StatusName, src => src.Status != null ? src.Status.Name : "Pending")
                 .Map(dest => dest.ScheduledTime, src => src.AvailabilitySlot != null ? src.AvailabilitySlot.StartTime : default)
                 .Map(dest => dest.ScheduledEndTime, src => src.AvailabilitySlot != null ? src.AvailabilitySlot.EndTime : default)
+                .Map(dest => dest.CreatedOn, src => src.CreatedOn)
                 .Map(dest => dest.TechnicianName, src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}" : "Not Assigned")
                 .Map(dest => dest.PaymentStatus, src => src.Payments != null && src.Payments.Any() ? src.Payments.OrderByDescending(p => p.CreatedOn).First().Status.Name : "Unpaid")
                 .Map(dest => dest.Services, src => src.BookingServices != null ? src.BookingServices.Select(x => x.Service.Name) : new List<string>())
