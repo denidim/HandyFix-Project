@@ -78,9 +78,18 @@
 
 .mobile-nav-dropdown {
   display: none;
-  background: var(--surface);
-  border-top: 1px solid var(--border-subtle);
-  padding: var(--spacing-4) var(--spacing-6);
+  position: absolute;
+  top: calc(100% + var(--spacing-2));
+  right: var(--spacing-4);
+  width: 280px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-6);
+  z-index: 100;
 }
 
 .mobile-nav-dropdown.is-open {
