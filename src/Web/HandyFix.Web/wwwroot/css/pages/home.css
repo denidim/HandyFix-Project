@@ -345,6 +345,30 @@
   background-color: var(--secondary-container);
 }
 
+.btn-testimonial-review {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2) var(--spacing-6);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: var(--fs-label-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-normal);
+}
+
+.btn-testimonial-review:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+  color: #ffffff;
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 /* Final CTA */
 .cta-card {
   background-color: var(--surface-container);
