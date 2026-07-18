@@ -3,9 +3,13 @@ namespace HandyFix.Web.ViewModels.Administration.Services
     using System;
     using System.ComponentModel.DataAnnotations;
 
+    using Microsoft.AspNetCore.Http;
+
     public class ServiceAdminInputModel
     {
         public Guid? Id { get; set; }
+
+        public string Slug { get; set; }
 
         [Required(ErrorMessage = "Service name is required.")]
         [MinLength(3, ErrorMessage = "Name must be at least 3 characters.")]
@@ -27,5 +31,9 @@ namespace HandyFix.Web.ViewModels.Administration.Services
 
         [Required(ErrorMessage = "Category is required.")]
         public Guid CategoryId { get; set; }
+
+        [Display(Name = "Service Image")]
+        [MaxFileSize(5 * 1024 * 1024)]
+        public IFormFile ImageFile { get; set; }
     }
 }

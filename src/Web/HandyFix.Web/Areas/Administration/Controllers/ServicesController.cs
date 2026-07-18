@@ -4,6 +4,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.ViewModels.Administration.Services;
@@ -16,11 +17,16 @@ namespace HandyFix.Web.Areas.Administration.Controllers
     {
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
+        private readonly IImageStorageService imageStorageService;
 
-        public ServicesController(IServicesService servicesService, ICategoriesService categoriesService)
+        public ServicesController(
+            IServicesService servicesService,
+            ICategoriesService categoriesService,
+            IImageStorageService imageStorageService)
         {
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
+            this.imageStorageService = imageStorageService;
         }
 
         public async Task<IActionResult> Index()
@@ -47,7 +53,30 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
-            await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId);
+            var serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId);
+
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                var service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(serviceId);
+                if (service != null)
+                {
+                    try
+                    {
+                        using (var stream = model.ImageFile.OpenReadStream())
+                        {
+                            await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, service.Slug);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.ModelState.AddModelError("ImageFile", ex.Message);
+                        var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+                        this.ViewData["Categories"] = new SelectList(categories, "Id", "Name");
+                        return this.View(model);
+                    }
+                }
+            }
+
             return this.RedirectToAction(nameof(this.Index));
         }
 
@@ -67,6 +96,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 Description = service.Description,
                 BasePrice = service.BasePrice,
                 EstimatedDurationMinutes = service.EstimatedDurationMinutes,
+                Slug = service.Slug,
             };
 
             var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
@@ -90,13 +120,59 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
+            var oldService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
+            var oldSlug = oldService?.Slug;
+
             await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId);
+
+            var newService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
+            var newSlug = newService?.Slug;
+
+            if (oldSlug != null && newSlug != null)
+            {
+                try
+                {
+                    if (model.ImageFile != null && model.ImageFile.Length > 0)
+                    {
+                        // Delete old file if it exists, then save the new one
+                        this.imageStorageService.DeleteServiceImage(oldSlug);
+                        if (oldSlug != newSlug)
+                        {
+                            this.imageStorageService.DeleteServiceImage(newSlug);
+                        }
+
+                        using (var stream = model.ImageFile.OpenReadStream())
+                        {
+                            await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, newSlug);
+                        }
+                    }
+                    else if (oldSlug != newSlug)
+                    {
+                        // Slug changed but no new file uploaded: rename the existing file
+                        this.imageStorageService.RenameServiceImage(oldSlug, newSlug);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.ModelState.AddModelError("ImageFile", ex.Message);
+                    var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+                    this.ViewData["Categories"] = new SelectList(categories, "Id", "Name", model.CategoryId);
+                    return this.View(model);
+                }
+            }
+
             return this.RedirectToAction(nameof(this.Index));
         }
 
         [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
+            var service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(id);
+            if (service != null)
+            {
+                this.imageStorageService.DeleteServiceImage(service.Slug);
+            }
+
             await this.servicesService.DeleteAsync(id);
             return this.RedirectToAction(nameof(this.Index));
         }

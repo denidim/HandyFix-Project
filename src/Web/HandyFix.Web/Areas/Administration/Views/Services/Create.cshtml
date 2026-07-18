@@ -22,7 +22,7 @@
 <!-- Form Content -->
 <div class="max-w-4xl mx-auto space-y-8" style="max-width: 800px; margin-bottom: var(--spacing-12);">
     <div class="bg-white rounded-xl border shadow-sm p-5 p-md-5" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
-        <form asp-area="Administration" asp-controller="Services" asp-action="Create" method="post" id="serviceForm" class="space-y-6" style="display: flex; flex-direction: column; gap: var(--spacing-5);">
+        <form asp-area="Administration" asp-controller="Services" asp-action="Create" method="post" enctype="multipart/form-data" id="serviceForm" class="space-y-6" style="display: flex; flex-direction: column; gap: var(--spacing-5);">
             <div class="row">
                 <!-- Service Name -->
                 <div class="col-md-6 form-group">
@@ -65,6 +65,16 @@
                         <span class="position-absolute font-label-sm text-on-surface-variant" style="right: 16px; top: 50%; transform: translateY(-50%);">min</span>
                     </div>
                     <span asp-validation-for="EstimatedDurationMinutes" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- Service Image Upload -->
+            <div class="form-group">
+                <label asp-for="ImageFile" class="form-label font-label-sm text-on-surface-variant mb-2">Service Image</label>
+                <div class="d-flex flex-column gap-2">
+                    <input asp-for="ImageFile" type="file" accept="image/*" class="form-control" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 8px 12px; background-color: var(--surface-container-lowest); width: 100%;" />
+                    <span class="font-label-sm text-on-surface-variant" style="font-size: 11px; margin: 0;">Supported formats: JPEG, PNG, WEBP. Maximum file size: 5MB.</span>
+                    <span asp-validation-for="ImageFile" class="text-danger small"></span>
                 </div>
             </div>
 
