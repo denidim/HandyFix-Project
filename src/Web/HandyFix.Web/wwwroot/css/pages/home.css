@@ -48,7 +48,7 @@
 
 @media (min-width: 1024px) {
   .hero-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 4fr 6fr;
   }
 }
 
@@ -69,13 +69,17 @@
 
 .hero-booking-wrapper {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   width: 100%;
+  gap: var(--spacing-4);
 }
 
 @media (min-width: 1024px) {
   .hero-booking-wrapper {
-    justify-content: flex-end;
+    align-items: flex-end;
+    justify-content: center;
   }
 }
 
@@ -88,6 +92,24 @@
 @media (min-width: 768px) {
   .hero-booking-card {
     padding: var(--spacing-8);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-booking-card {
+    max-width: 650px;
+  }
+}
+
+.slots-grid-widget {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-2);
+}
+
+@media (min-width: 1024px) {
+  .slots-grid-widget {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -181,17 +203,17 @@
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(2, minmax(280px, 1fr));
   }
-  
+
   .bento-large {
     grid-column: span 2;
     grid-row: span 2;
   }
-  
+
   .bento-medium {
     grid-column: span 2;
     grid-row: span 1;
   }
-  
+
   .bento-small {
     grid-column: span 1;
     grid-row: span 1;
@@ -384,7 +406,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(to bottom right, rgba(0,101,145,0.1), transparent);
+  background: linear-gradient(to bottom right, rgba(0, 101, 145, 0.1), transparent);
 }
 
 .cta-card-content {

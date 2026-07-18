@@ -60,13 +60,20 @@
             </div>
             <div id="slots-container-group" style="margin-bottom: var(--spacing-6); display: none;">
               <label class="form-label">Available Time Slots</label>
-              <div id="widget-slots" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-2);">
+              <div id="widget-slots" class="slots-grid-widget">
                 <!-- Populated dynamically by JS -->
               </div>
             </div>
             <input type="hidden" id="widget-slot-id" name="slotId" required />
             <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block" style="margin-top: var(--spacing-4); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3);" disabled>Book Appointment Now</button>
           </form>
+
+          <div style="margin-top: var(--spacing-6); border-top: 1px solid var(--glass-border); padding-top: var(--spacing-6); text-align: center;">
+            <a href="/Contact" class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center gap-2" style="background: rgba(0, 101, 145, 0.05); color: var(--primary); border: 2px solid var(--primary); font-weight: 600; border-radius: var(--radius-lg); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3); text-decoration: none; transition: all var(--transition-normal);">
+              <span class="material-symbols-outlined">request_quote</span>
+              <span>Get a Custom Quote</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
