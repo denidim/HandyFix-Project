@@ -1,11 +1,16 @@
 namespace HandyFix.Web.ViewModels.Services
 {
     using System;
+    using System.Linq;
 
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
 
-    public class ServiceDetailsViewModel : IMapFrom<Service>
+    using Mapster;
+
+    using IMapFromService = HandyFix.Services.Mapping.IMapFrom<HandyFix.Data.Models.Service>;
+
+    public class ServiceDetailsViewModel : IMapFromService, IHaveCustomMappings
     {
         public Guid Id { get; set; }
 
@@ -22,5 +27,16 @@ namespace HandyFix.Web.ViewModels.Services
         public string CategoryName { get; set; }
 
         public string CategorySlug { get; set; }
+
+        public string ImageUrl { get; set; }
+
+        public void CreateMappings(TypeAdapterConfig config)
+        {
+            config.NewConfig<Service, ServiceDetailsViewModel>()
+                .Map(dest => dest.ImageUrl, src =>
+                    src.Images != null && src.Images.Any(i => !string.IsNullOrWhiteSpace(i.ImageUrl))
+                        ? src.Images.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.ImageUrl)).ImageUrl
+                        : (!string.IsNullOrWhiteSpace(src.Slug) ? $"/images/services/{src.Slug}-hero.webp" : "/images/hero.png"));
+        }
     }
 }

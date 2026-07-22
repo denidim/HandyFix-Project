@@ -170,6 +170,7 @@
                      onclick="window.location = '/Services/@svc.CategorySlug/@svc.Slug'">
                     <img src="@svc.ImageUrl"
                          alt="@svc.Name"
+                         asp-append-version="true"
                          onerror="
                     this.onerror = null;
                     this.src = '/images/hero.png';

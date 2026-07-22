@@ -48,13 +48,9 @@
                     ? $"{(svc.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
                     : $"{svc.EstimatedDurationMinutes} Mins";
 
-                var serviceImgSlug = svc.Name.Replace(" ", "-").ToLower();
-                var serviceImage = $"/images/services/{serviceImgSlug}-hero.jpg";
-                var fallbackImage = isPlumbing ? "/images/services/plumbing-hero.jpg" : "/images/services/handyman-hero.jpg";
-
                 <article class="service-horizontal-card group">
                     <div class="service-card-thumbnail-wrapper">
-                        <img class="service-card-thumbnail" alt="@svc.Name" src="@serviceImage" onerror="this.src='@fallbackImage'; this.onerror=null;">
+                        <img class="service-card-thumbnail" alt="@svc.Name" src="@svc.ImageUrl" asp-append-version="true" onerror="this.onerror=null;this.src='/images/hero.png';">
                     </div>
                     <div class="service-card-content">
                         <div class="service-card-main-header">

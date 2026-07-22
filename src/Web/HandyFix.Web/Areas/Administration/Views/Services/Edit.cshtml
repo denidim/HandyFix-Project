@@ -75,9 +75,9 @@
                 <div class="d-flex flex-column flex-md-row gap-4 align-items-md-center">
                     @if (!string.IsNullOrEmpty(Model.Slug) && ImageStorageService.ServiceImageExists(Model.Slug))
                     {
-                        var imagePath = $"/images/services/{Model.Slug}-hero.jpg";
+                        var imagePath = $"/images/services/{Model.Slug}-hero.webp";
                         <div class="flex-shrink-0" style="width: 120px; height: 90px; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); overflow: hidden; background-color: var(--surface-container-low);">
-                            <img src="@imagePath" class="w-100 h-100" style="object-fit: cover;" alt="Current image" />
+                            <img src="@imagePath" asp-append-version="true" class="w-100 h-100" style="object-fit: cover;" alt="Current image" />
                         </div>
                     }
                     <div class="flex-grow-1 w-100">

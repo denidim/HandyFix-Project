@@ -9,9 +9,7 @@
         : $"{Model.EstimatedDurationMinutes} Mins";
 
     // Dynamic Image path
-    var serviceImgSlug = Model.Name.Replace(" ", "-").ToLower();
-    var serviceImage = $"/images/services/{serviceImgSlug}-hero.jpg";
-    var fallbackImage = isPlumbing ? "/images/services/plumbing-hero.jpg" : "/images/services/handyman-hero.jpg";
+    var serviceImage = Model.ImageUrl;
 
     // Feature dynamic data
     var feat1Icon = isPlumbing ? "faucet" : "shelves";
@@ -38,7 +36,7 @@
 <div class="page-container services-page">
     <!-- Hero Section -->
     <section class="service-hero-section">
-        <div class="service-hero-image" style="background-image: url('@serviceImage')" onerror="this.style.backgroundImage='url(@fallbackImage)'; this.onerror=null;"></div>
+        <div class="service-hero-image" style="background-image: url('@serviceImage')"></div>
         <div class="service-hero-overlay"></div>
         <div class="service-hero-content">
             <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
