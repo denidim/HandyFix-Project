@@ -42,11 +42,14 @@ namespace HandyFix.Web.Controllers
                 var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
                 var dates = await this.availabilityService.GetAvailableDatesAsync();
 
-                this.ViewData["Services"] = services;
-                this.ViewData["AvailableDates"] = dates;
-                this.ViewData["SelectedServiceId"] = serviceId;
+                var model = new BookingInputModel
+                {
+                    Services = services,
+                    AvailableDates = dates,
+                    SelectedServiceId = serviceId,
+                };
 
-                return this.View(new BookingInputModel());
+                return this.View(model);
             }
             catch (Exception)
             {
@@ -80,12 +83,9 @@ namespace HandyFix.Web.Controllers
         {
             if (!this.ModelState.IsValid)
             {
-                var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-                var dates = await this.availabilityService.GetAvailableDatesAsync();
-
-                this.ViewData["Services"] = services;
-                this.ViewData["AvailableDates"] = dates;
-                this.ViewData["SelectedServiceId"] = model.ServiceId;
+                model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+                model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
+                model.SelectedServiceId = model.ServiceId;
 
                 return this.View(model);
             }
@@ -140,12 +140,9 @@ namespace HandyFix.Web.Controllers
             {
                 this.ModelState.AddModelError(string.Empty, "An error occurred while saving your booking. Please try again.");
 
-                var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-                var dates = await this.availabilityService.GetAvailableDatesAsync();
-
-                this.ViewData["Services"] = services;
-                this.ViewData["AvailableDates"] = dates;
-                this.ViewData["SelectedServiceId"] = model.ServiceId;
+                model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+                model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
+                model.SelectedServiceId = model.ServiceId;
 
                 return this.View(model);
             }

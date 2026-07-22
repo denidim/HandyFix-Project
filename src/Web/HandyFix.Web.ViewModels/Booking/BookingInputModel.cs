@@ -4,6 +4,8 @@ namespace HandyFix.Web.ViewModels.Booking
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
+    using HandyFix.Web.ViewModels.Services;
+
     using Microsoft.AspNetCore.Http;
 
     public class BookingInputModel
@@ -47,5 +49,11 @@ namespace HandyFix.Web.ViewModels.Booking
         public List<Guid> SelectedServiceIds { get; set; } = new List<Guid>();
 
         public List<IFormFile> Images { get; set; } = new List<IFormFile>();
+
+        public IEnumerable<ServiceViewModel> Services { get; set; } = new List<ServiceViewModel>();
+
+        public IEnumerable<DateTime> AvailableDates { get; set; } = new List<DateTime>();
+
+        public Guid? SelectedServiceId { get; set; }
     }
 }

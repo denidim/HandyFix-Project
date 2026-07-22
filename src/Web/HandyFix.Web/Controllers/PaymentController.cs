@@ -9,6 +9,7 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Web.ViewModels.Booking;
+    using HandyFix.Web.ViewModels.Payment;
 
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
@@ -109,8 +110,8 @@ namespace HandyFix.Web.Controllers
         [Route("Payment/Cancel")]
         public IActionResult Cancel(Guid bookingId)
         {
-            this.ViewData["BookingId"] = bookingId;
-            return this.View();
+            var model = new PaymentCancelViewModel { BookingId = bookingId };
+            return this.View(model);
         }
 
         [HttpPost]

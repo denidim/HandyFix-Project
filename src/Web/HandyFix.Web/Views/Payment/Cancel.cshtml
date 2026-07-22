@@ -1,7 +1,8 @@
+@model HandyFix.Web.ViewModels.Payment.PaymentCancelViewModel
 @{
     this.Layout = "_Layout";
     this.ViewData["Title"] = "Payment Cancelled - HandyFix";
-    var bookingId = this.ViewData["BookingId"];
+    var bookingId = Model.BookingId;
 }
 
 <div class="page-container payment-page-container">

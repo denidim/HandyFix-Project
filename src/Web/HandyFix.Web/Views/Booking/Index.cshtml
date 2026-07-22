@@ -3,9 +3,9 @@
 @{
     this.Layout = "_Layout";
     this.ViewData["Title"] = "Book Plumbing or Handyman Appointment - HandyFix London";
-    var services = this.ViewData["Services"] as IEnumerable<ServiceViewModel> ?? new List<ServiceViewModel>();
-    var dates = this.ViewData["AvailableDates"] as IEnumerable<DateTime> ?? new List<DateTime>();
-    var selectedServiceId = this.ViewData["SelectedServiceId"] as Guid?;
+    var services = Model.Services;
+    var dates = Model.AvailableDates;
+    var selectedServiceId = Model.SelectedServiceId;
 }
 
 <div class="page-container booking-page">
