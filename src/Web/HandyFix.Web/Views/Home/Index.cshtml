@@ -1,9 +1,8 @@
-@using HandyFix.Web.ViewModels.Services
-@using HandyFix.Web.ViewModels.Reviews
+@model HandyFix.Web.ViewModels.Home.HomeIndexViewModel
 @{
-    var services = this.ViewData["Services"] as IEnumerable<ServiceViewModel> ?? new List<ServiceViewModel>();
-    var popularServices = this.ViewData["PopularServices"] as IEnumerable<ServiceViewModel> ?? new List<ServiceViewModel>();
-    var reviews = this.ViewData["SliderReviews"] as IEnumerable<ReviewViewModel> ?? new List<ReviewViewModel>();
+    var services = this.Model.Services;
+    var popularServices = this.Model.PopularServices;
+    var reviews = this.Model.SliderReviews;
     this.ViewData["Title"] = "Home Page";
 }
 
@@ -146,49 +145,52 @@
 </section>
 
 <!-- Popular Services Bento Grid -->
+
 <section class="section bg-surface">
-  <div class="page-container">
-    <div class="bento-header">
-      <div class="section-header-left">
-        <h2 class="font-headline-lg" style="margin-bottom: var(--spacing-2);">Popular Services</h2>
-        <p class="text-text-main font-body-md" style="margin: 0;">Most requested repairs and installations in South London</p>
-      </div>
-      <a href="/Services" class="bento-see-all">See all services</a>
-    </div>
-    
-    <div class="bento-grid-container">
-      @{
-          var topPopular = popularServices.Take(4).ToList();
-          for(int i = 0; i < topPopular.Count; i++)
-          {
-              var svc = topPopular[i];
-              var cardClass = i == 0 ? "bento-large" : (i == 3 ? "bento-medium" : "bento-small");
-              string imageSrc = i switch {
-                  0 => "/images/services/minor-electrical-tasks-hero.jpg",
-                  1 => "/images/services/bathroom-plumbing-hero.jpg",
-                  2 => "/images/services/tv-mounting-hero.jpg",
-                  3 => "/images/services/emergency-plumbing-hero.jpg",
-                  _ => "/images/hero.png"
-              };
-              
-              <div class="bento-card @cardClass" onclick="window.location='/Services/@(svc.BasePrice > 58 ? "plumbing" : "handyman")/@svc.Slug'">
-                <img src="@imageSrc" alt="@svc.Name">
-                <div class="bento-card-overlay"></div>
-                <div class="bento-card-content">
-                  @if(i == 0) {
-                      <span class="bento-badge">Best Seller</span>
-                  }
-                  <h4 class="font-headline-md text-white" style="margin-bottom: var(--spacing-2); @(i!=0 && i!=3 ? "font-size:20px;text-align:center;" : "")">@svc.Name</h4>
-                  @if(i == 0 || i == 3) {
-                      <p class="text-white-80 font-body-md" style="margin: 0; max-width: 300px;">From £@svc.BasePrice - @svc.EstimatedDurationMinutes min</p>
-                  }
+    <div class="page-container">
+        <div class="bento-header">
+            <div class="section-header-left">
+                <h2 class="font-headline-lg" style="margin-bottom: var(--spacing-2)">
+                    Popular Services
+                </h2>
+
+                <p class="text-text-main font-body-md" style="margin: 0">
+                    Most requested repairs and installations in South London
+                </p>
+            </div>
+
+            <a href="/Services" class="bento-see-all">See all services</a>
+        </div>
+
+        <div class="bento-grid-container">
+            @foreach (var svc in Model.PopularServices)
+            {
+
+                <div class="bento-card"
+                     onclick="window.location = '/Services/@svc.CategorySlug/@svc.Slug'">
+                    <img src="@svc.ImageUrl"
+                         alt="@svc.Name"
+                         onerror="
+                    this.onerror = null;
+                    this.src = '/images/hero.png';
+                    " />
+
+                    <div class="bento-card-overlay"></div>
+
+                    <div class="bento-card-content">
+                        <h4 class="font-headline-md text-white">@svc.Name</h4>
+
+                        <p class="text-white-80 font-body-md" style="margin: 0">
+                            From £@svc.BasePrice
+                        </p>
+                    </div>
                 </div>
-              </div>
-          }
-      }
+
+            }
+        </div>
     </div>
-  </div>
 </section>
+
 
 <!-- Trust & Reliability -->
 <section class="section">
