@@ -112,7 +112,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <a href="/Administration/Bookings/Details/@booking.Id" class="btn btn-secondary font-button-text" style="padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: var(--fs-label-sm);">Details</a>
+                                <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@booking.Id" class="btn btn-secondary font-button-text" style="padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: var(--fs-label-sm);">Details</a>
                             </td>
                         </tr>
                     }

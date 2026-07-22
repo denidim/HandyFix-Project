@@ -13,7 +13,7 @@
     
     <!-- Date Navigation picker -->
     <div class="flex items-center gap-3 bg-white p-2 rounded-xl border shadow-sm">
-        <form method="get" action="/Administration/Calendar" class="form-inline d-flex align-items-center gap-2 m-0">
+        <form method="get" asp-area="Administration" asp-controller="Calendar" asp-action="Index" class="form-inline d-flex align-items-center gap-2 m-0">
             <span class="font-button-text px-2" style="font-size: 13px; color: var(--on-surface-variant);">Select Date:</span>
             <input type="date" name="date" class="form-control form-control-sm" value="@targetDate.ToString("yyyy-MM-dd")" onchange="this.form.submit()" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 4px 8px; font-family: 'Outfit'; font-size: 13px;" />
         </form>

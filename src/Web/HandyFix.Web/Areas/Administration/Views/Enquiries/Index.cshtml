@@ -59,7 +59,7 @@
                                 <p class="text-on-surface-variant mb-0" style="font-size: 11px;">@inquiry.CreatedOn.ToString("hh:mm tt")</p>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <a href="/Administration/Enquiries/Details/@inquiry.Id" class="btn btn-sm d-inline-flex align-items-center gap-1 font-label-sm" style="background-color: rgba(0, 101, 145, 0.08); color: var(--secondary); border: none; padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg);">
+                                <a asp-area="Administration" asp-controller="Enquiries" asp-action="Details" asp-route-id="@inquiry.Id" class="btn btn-sm d-inline-flex align-items-center gap-1 font-label-sm" style="background-color: rgba(0, 101, 145, 0.08); color: var(--secondary); border: none; padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg);">
                                     <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span>
                                     <span>Details</span>
                                 </a>
