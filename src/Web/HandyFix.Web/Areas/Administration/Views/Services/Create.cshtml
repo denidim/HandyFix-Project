@@ -1,7 +1,6 @@
 @model HandyFix.Web.ViewModels.Administration.Services.ServiceAdminInputModel
 @{
     this.ViewData["Title"] = "Add New Service";
-    var categories = this.ViewData["Categories"] as SelectList;
 }
 
 <!-- Breadcrumbs -->
@@ -33,7 +32,7 @@
                 <!-- Category -->
                 <div class="col-md-6 form-group">
                     <label asp-for="CategoryId" class="form-label font-label-sm text-on-surface-variant mb-2">Category Division</label>
-                    <select asp-for="CategoryId" asp-items="categories" class="form-control py-3" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 12px 16px; background-color: var(--surface-container-lowest);">
+                    <select asp-for="CategoryId" asp-items="Model.Categories" class="form-control py-3" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 12px 16px; background-color: var(--surface-container-lowest);">
                         <option value="">-- Choose Category --</option>
                     </select>
                     <span asp-validation-for="CategoryId" class="text-danger small"></span>

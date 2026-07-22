@@ -7,6 +7,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Availability;
+    using HandyFix.Web.ViewModels.Administration.Calendar;
 
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,6 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         public async Task<IActionResult> Index(DateTime? date)
         {
             var targetDate = date ?? DateTime.Today;
-            this.ViewData["TargetDate"] = targetDate;
 
             // Generate slots for today if not present
             await this.availabilityService.GenerateSlotsForRangeAsync(targetDate, targetDate);
@@ -36,7 +36,13 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 .OrderBy(x => x.StartTime)
                 .ToListAsync();
 
-            return this.View(slots);
+            var model = new CalendarIndexViewModel
+            {
+                TargetDate = targetDate,
+                Slots = slots,
+            };
+
+            return this.View(model);
         }
 
         [HttpPost]

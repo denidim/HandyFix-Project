@@ -1,9 +1,11 @@
 namespace HandyFix.Web.ViewModels.Administration.Services
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc.Rendering;
 
     public class ServiceAdminInputModel
     {
@@ -35,5 +37,7 @@ namespace HandyFix.Web.ViewModels.Administration.Services
         [Display(Name = "Service Image")]
         [MaxFileSize(5 * 1024 * 1024)]
         public IFormFile ImageFile { get; set; }
+
+        public IEnumerable<SelectListItem> Categories { get; set; }
     }
 }

@@ -1,7 +1,7 @@
-@model IEnumerable<HandyFix.Data.Models.AvailabilitySlot>
+@model HandyFix.Web.ViewModels.Administration.Calendar.CalendarIndexViewModel
 @{
     this.ViewData["Title"] = "Manage Calendar Slots";
-    var targetDate = (DateTime)this.ViewData["TargetDate"];
+    var targetDate = Model.TargetDate;
 }
 
 <!-- Sticky Header -->
@@ -36,9 +36,9 @@
         </div>
 
         <div class="bg-white rounded-xl border shadow-sm p-4" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: var(--spacing-3);">
-            @if (Model.Any())
+            @if (Model.Slots.Any())
             {
-                @foreach (var slot in Model)
+                @foreach (var slot in Model.Slots)
                 {
                     var itemBg = slot.IsBooked ? "background-color: rgba(57, 184, 253, 0.05); border-color: rgba(57, 184, 253, 0.2);" :
                                  slot.IsBlocked ? "background-color: var(--surface-container-low); border-color: var(--border-subtle); opacity: 0.75;" :

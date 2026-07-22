@@ -2,7 +2,7 @@
 @using HandyFix.Data.Models
 @{
     this.ViewData["Title"] = $"Booking Details - {Model.Id.ToString().Substring(0, 8).ToUpper()}";
-    var technicians = this.ViewData["Technicians"] as IEnumerable<Technician> ?? new List<Technician>();
+    var technicians = Model.Technicians;
     var balanceDue = Model.TotalAmount - Model.DepositAmount;
 }
 

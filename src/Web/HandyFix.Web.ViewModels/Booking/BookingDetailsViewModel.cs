@@ -9,7 +9,9 @@ namespace HandyFix.Web.ViewModels.Booking
 
     using Mapster;
 
-    public class BookingDetailsViewModel : HandyFix.Services.Mapping.IMapFrom<Booking>, IHaveCustomMappings
+    using IMapFromBooking = HandyFix.Services.Mapping.IMapFrom<HandyFix.Data.Models.Booking>;
+
+    public class BookingDetailsViewModel : IMapFromBooking, IHaveCustomMappings
     {
         public Guid Id { get; set; }
 
@@ -44,6 +46,8 @@ namespace HandyFix.Web.ViewModels.Booking
         public IEnumerable<string> Services { get; set; }
 
         public IEnumerable<string> ImageUrls { get; set; }
+
+        public IEnumerable<Technician> Technicians { get; set; } = new List<Technician>();
 
         public void CreateMappings(TypeAdapterConfig config)
         {

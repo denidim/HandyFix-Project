@@ -39,8 +39,11 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         public async Task<IActionResult> Create()
         {
             var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-            this.ViewData["Categories"] = new SelectList(categories, "Id", "Name");
-            return this.View(new ServiceAdminInputModel());
+            var model = new ServiceAdminInputModel
+            {
+                Categories = new SelectList(categories, "Id", "Name"),
+            };
+            return this.View(model);
         }
 
         [HttpPost]
@@ -49,7 +52,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             if (!this.ModelState.IsValid)
             {
                 var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-                this.ViewData["Categories"] = new SelectList(categories, "Id", "Name");
+                model.Categories = new SelectList(categories, "Id", "Name");
                 return this.View(model);
             }
 
@@ -71,7 +74,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                     {
                         this.ModelState.AddModelError("ImageFile", ex.Message);
                         var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-                        this.ViewData["Categories"] = new SelectList(categories, "Id", "Name");
+                        model.Categories = new SelectList(categories, "Id", "Name");
                         return this.View(model);
                     }
                 }
@@ -106,7 +109,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 model.CategoryId = activeCategory.Id;
             }
 
-            this.ViewData["Categories"] = new SelectList(categories, "Id", "Name", model.CategoryId);
+            model.Categories = new SelectList(categories, "Id", "Name", model.CategoryId);
             return this.View(model);
         }
 
@@ -116,7 +119,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             if (!this.ModelState.IsValid)
             {
                 var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-                this.ViewData["Categories"] = new SelectList(categories, "Id", "Name", model.CategoryId);
+                model.Categories = new SelectList(categories, "Id", "Name", model.CategoryId);
                 return this.View(model);
             }
 
@@ -156,7 +159,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 {
                     this.ModelState.AddModelError("ImageFile", ex.Message);
                     var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-                    this.ViewData["Categories"] = new SelectList(categories, "Id", "Name", model.CategoryId);
+                    model.Categories = new SelectList(categories, "Id", "Name", model.CategoryId);
                     return this.View(model);
                 }
             }

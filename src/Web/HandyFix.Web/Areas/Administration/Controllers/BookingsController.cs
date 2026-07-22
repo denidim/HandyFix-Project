@@ -38,7 +38,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             }
 
             var technicians = await this.technicianRepository.All().ToListAsync();
-            this.ViewData["Technicians"] = technicians;
+            booking.Technicians = technicians;
 
             return this.View(booking);
         }
