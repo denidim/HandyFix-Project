@@ -109,6 +109,9 @@ namespace HandyFix.Web
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 dbContext.Database.Migrate();
                 new ApplicationDbContextSeeder().SeedAsync(dbContext, serviceScope.ServiceProvider).GetAwaiter().GetResult();
+
+                var imageStorageService = serviceScope.ServiceProvider.GetRequiredService<IImageStorageService>();
+                imageStorageService.ConvertExistingJpgServiceImages();
             }
 
             MappingConfig.RegisterMappings(typeof(ErrorViewModel).GetTypeInfo().Assembly);

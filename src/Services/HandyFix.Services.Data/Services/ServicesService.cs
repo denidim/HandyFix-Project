@@ -16,10 +16,14 @@ namespace HandyFix.Services.Data.Services
     public class ServicesService : IServicesService
     {
         private readonly IDeletableEntityRepository<Service> servicesRepository;
+        private readonly IDeletableEntityRepository<ServiceImage> serviceImageRepository;
 
-        public ServicesService(IDeletableEntityRepository<Service> servicesRepository)
+        public ServicesService(
+            IDeletableEntityRepository<Service> servicesRepository,
+            IDeletableEntityRepository<ServiceImage> serviceImageRepository)
         {
             this.servicesRepository = servicesRepository;
+            this.serviceImageRepository = serviceImageRepository;
         }
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(bool activeOnly = true)
@@ -118,6 +122,32 @@ namespace HandyFix.Services.Data.Services
                 this.servicesRepository.Delete(service);
                 await this.servicesRepository.SaveChangesAsync();
             }
+        }
+
+        public async Task AddOrUpdateServiceImageAsync(Guid serviceId, string imageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return;
+            }
+
+            var existingImage = await this.serviceImageRepository.All()
+                .FirstOrDefaultAsync(x => x.ServiceId == serviceId);
+
+            if (existingImage != null)
+            {
+                existingImage.ImageUrl = imageUrl;
+            }
+            else
+            {
+                await this.serviceImageRepository.AddAsync(new ServiceImage
+                {
+                    ServiceId = serviceId,
+                    ImageUrl = imageUrl,
+                });
+            }
+
+            await this.serviceImageRepository.SaveChangesAsync();
         }
 
         private static string Slugify(string name)

@@ -65,9 +65,15 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 {
                     try
                     {
+                        string imageUrl;
                         using (var stream = model.ImageFile.OpenReadStream())
                         {
-                            await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, service.Slug);
+                            imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, service.Slug);
+                        }
+
+                        if (!string.IsNullOrEmpty(imageUrl))
+                        {
+                            await this.servicesService.AddOrUpdateServiceImageAsync(serviceId, imageUrl);
                         }
                     }
                     catch (Exception ex)
@@ -144,15 +150,23 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                             this.imageStorageService.DeleteServiceImage(newSlug);
                         }
 
+                        string imageUrl;
                         using (var stream = model.ImageFile.OpenReadStream())
                         {
-                            await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, newSlug);
+                            imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, newSlug);
+                        }
+
+                        if (!string.IsNullOrEmpty(imageUrl))
+                        {
+                            await this.servicesService.AddOrUpdateServiceImageAsync(model.Id.Value, imageUrl);
                         }
                     }
                     else if (oldSlug != newSlug)
                     {
                         // Slug changed but no new file uploaded: rename the existing file
                         this.imageStorageService.RenameServiceImage(oldSlug, newSlug);
+                        var newImageUrl = $"/images/services/{newSlug}-hero.webp";
+                        await this.servicesService.AddOrUpdateServiceImageAsync(model.Id.Value, newImageUrl);
                     }
                 }
                 catch (Exception ex)

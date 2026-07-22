@@ -48,9 +48,10 @@ namespace HandyFix.Data.Seeding
 
             foreach (var item in services)
             {
-                if (!dbContext.Services.Any(x => x.Name == item.Name))
+                var service = dbContext.Services.FirstOrDefault(x => x.Name == item.Name);
+                if (service == null)
                 {
-                    await dbContext.Services.AddAsync(new Service
+                    service = new Service
                     {
                         Slug = item.Slug,
                         Name = item.Name,
@@ -59,6 +60,23 @@ namespace HandyFix.Data.Seeding
                         EstimatedDurationMinutes = item.Duration,
                         CategoryId = item.CategoryId,
                         IsActive = true,
+                    };
+
+                    await dbContext.Services.AddAsync(service);
+                    await dbContext.SaveChangesAsync();
+                }
+            }
+
+            // Sync ServiceImage entities for any service missing a ServiceImage record
+            var allServices = dbContext.Services.ToList();
+            foreach (var service in allServices)
+            {
+                if (!dbContext.ServiceImages.Any(x => x.ServiceId == service.Id))
+                {
+                    await dbContext.ServiceImages.AddAsync(new ServiceImage
+                    {
+                        ServiceId = service.Id,
+                        ImageUrl = $"/images/services/{service.Slug}-hero.webp",
                     });
                 }
             }
