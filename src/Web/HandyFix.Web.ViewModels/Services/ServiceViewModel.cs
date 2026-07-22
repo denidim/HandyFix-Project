@@ -17,14 +17,12 @@ namespace HandyFix.Web.ViewModels.Services
 
         public int EstimatedDurationMinutes { get; set; }
 
+        public string CategoryName { get; set; }
+
         public string CategorySlug { get; set; }
 
-        public string Slug => this.Name
-            .Replace(" ", "-")
-            .Replace("/", "-")
-            .Replace("&", "-")
-            .Replace("--", "-")
-            .Trim('-')
-            .ToLower();
+        public string Slug { get; set; }
+
+        public string ImageUrl => $"/images/services/{this.Slug}-hero.jpg";
     }
 }

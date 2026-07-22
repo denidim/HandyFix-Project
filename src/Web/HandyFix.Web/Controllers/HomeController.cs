@@ -51,21 +51,21 @@ namespace HandyFix.Web.Controllers
             var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
             var dates = await this.availabilityService.GetAvailableDatesAsync();
 
-            this.ViewData["Services"] = services;
-            this.ViewData["AvailableDates"] = dates;
-
             // Approved Reviews for slider
             var sliderReviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6);
-            this.ViewData["SliderReviews"] = sliderReviews;
 
-            // Popular Services
-            var popularServices = services.Take(4).ToList();
-            this.ViewData["PopularServices"] = popularServices;
+            var model = new HomeIndexViewModel
+            {
+                Services = services,
+                AvailableDates = dates,
+                SliderReviews = sliderReviews,
+                PopularServices = services.Take(4).ToList(),
+            };
 
             this.ViewData["Title"] = "Handy Fix - Plumbers & Handymen in South London";
             this.ViewData["MetaDescription"] = "Handy Fix provides reliable local plumbing and handyman services in Sutton, Croydon, Epsom, Bromley, Kingston, Kent, and South London. Book hourly slots online.";
 
-            return this.View();
+            return this.View(model);
         }
 
         [HttpGet]
