@@ -21,14 +21,14 @@ namespace HandyFix.Web.Controllers
             this.servicesService = servicesService;
         }
 
-        [Route("Services")]
+        [Route("Services", Name = "ServicesList")]
         public async Task<IActionResult> Index()
         {
             var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
             return this.View(categories);
         }
 
-        [Route("Services/{categorySlug}")]
+        [Route("Services/{categorySlug}", Name = "ServiceCategory")]
         public async Task<IActionResult> Category(string categorySlug)
         {
             var category = await this.categoriesService.GetBySlugAsync<CategoryViewModel>(categorySlug);
@@ -46,7 +46,7 @@ namespace HandyFix.Web.Controllers
             return this.View(category);
         }
 
-        [Route("Services/{categorySlug}/{serviceSlug}")]
+        [Route("Services/{categorySlug}/{serviceSlug}", Name = "ServiceDetails")]
         public async Task<IActionResult> Details(string categorySlug, string serviceSlug)
         {
             var service = await this.servicesService.GetBySlugAsync<ServiceDetailsViewModel>(serviceSlug);
