@@ -39,6 +39,8 @@
     <PackageVersion Include="Sendgrid" Version="9.29.3" />
     <PackageVersion Include="Stripe.net" Version="43.19.0" />
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
+    <PackageVersion Include="SkiaSharp" Version="2.88.9" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="2.88.9" />
     <!-- Code analyzers -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <!-- Overrides to patch the NuGet.Packaging vulnerability -->

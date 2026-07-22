@@ -7,12 +7,15 @@ namespace HandyFix.Services
 
     using Microsoft.Extensions.Logging;
 
+    using SkiaSharp;
+
     public class ImageStorageService : IImageStorageService
     {
         private readonly string targetDirectory;
         private readonly ILogger<ImageStorageService> logger;
         private readonly string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
         private readonly string[] allowedContentTypes = { "image/jpeg", "image/png", "image/webp" };
+        private readonly string[] legacyExtensions = { ".jpg", ".jpeg", ".png" };
 
         public ImageStorageService(string targetDirectory, ILogger<ImageStorageService> logger)
         {
@@ -20,42 +23,81 @@ namespace HandyFix.Services
             this.logger = logger;
         }
 
-        public async Task<bool> SaveServiceImageAsync(Stream stream, string fileName, string contentType, string slug)
+        public async Task<string> SaveServiceImageAsync(Stream stream, string fileName, string contentType, string slug)
         {
             if (stream == null || stream.Length == 0)
             {
-                return false;
+                return null;
             }
 
-            // MIME type & extension validation
             var extension = Path.GetExtension(fileName).ToLowerInvariant();
             if (!this.allowedExtensions.Contains(extension) || !this.allowedContentTypes.Contains(contentType.ToLowerInvariant()))
             {
                 throw new InvalidOperationException("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed.");
             }
 
-            var filePath = this.GetServiceImagePath(slug);
-            var directory = Path.GetDirectoryName(filePath);
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
             try
             {
-                // Save file
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                using (var memoryStream = new MemoryStream())
                 {
-                    await stream.CopyToAsync(fileStream);
+                    await stream.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0;
+
+                    using (var originalBitmap = SKBitmap.Decode(memoryStream))
+                    {
+                        if (originalBitmap == null)
+                        {
+                            throw new InvalidOperationException("Failed to decode uploaded image.");
+                        }
+
+                        SKBitmap targetBitmap = originalBitmap;
+                        var isResized = false;
+
+                        if (originalBitmap.Width > 1920)
+                        {
+                            var targetWidth = 1920;
+                            var targetHeight = (int)Math.Round((double)originalBitmap.Height * targetWidth / originalBitmap.Width);
+                            targetBitmap = originalBitmap.Resize(new SKImageInfo(targetWidth, targetHeight), SKFilterQuality.High);
+                            isResized = true;
+                        }
+
+                        try
+                        {
+                            using (var image = SKImage.FromBitmap(targetBitmap))
+                            using (var data = image.Encode(SKEncodedImageFormat.Webp, 80))
+                            {
+                                var filePath = this.GetServiceImagePath(slug);
+                                var directory = Path.GetDirectoryName(filePath);
+                                if (!Directory.Exists(directory))
+                                {
+                                    Directory.CreateDirectory(directory);
+                                }
+
+                                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                                {
+                                    data.SaveTo(fileStream);
+                                }
+                            }
+
+                            this.DeleteLegacyImages(slug);
+                        }
+                        finally
+                        {
+                            if (isResized && targetBitmap != null)
+                            {
+                                targetBitmap.Dispose();
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Failed to save service image for slug: {Slug}", slug);
+                this.logger.LogError(ex, "Failed to process and save service image using SkiaSharp for slug: {Slug}", slug);
                 throw;
             }
 
-            return true;
+            return $"/images/services/{slug}-hero.webp";
         }
 
         public void DeleteServiceImage(string slug)
@@ -67,6 +109,8 @@ namespace HandyFix.Services
                 {
                     File.Delete(filePath);
                 }
+
+                this.DeleteLegacyImages(slug);
             }
             catch (Exception ex)
             {
@@ -96,6 +140,9 @@ namespace HandyFix.Services
 
                     File.Move(oldPath, newPath);
                 }
+
+                this.DeleteLegacyImages(oldSlug);
+                this.DeleteLegacyImages(newSlug);
             }
             catch (Exception ex)
             {
@@ -108,7 +155,12 @@ namespace HandyFix.Services
             try
             {
                 var filePath = this.GetServiceImagePath(slug);
-                return File.Exists(filePath);
+                if (File.Exists(filePath))
+                {
+                    return true;
+                }
+
+                return this.legacyExtensions.Any(ext => File.Exists(Path.Combine(this.targetDirectory, $"{slug}-hero{ext}")));
             }
             catch (Exception ex)
             {
@@ -117,15 +169,105 @@ namespace HandyFix.Services
             }
         }
 
+        public void ConvertExistingJpgServiceImages()
+        {
+            if (!Directory.Exists(this.targetDirectory))
+            {
+                return;
+            }
+
+            var jpgFiles = Directory.GetFiles(this.targetDirectory, "*.jpg");
+            foreach (var jpgPath in jpgFiles)
+            {
+                try
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(jpgPath);
+                    var slug = fileName.EndsWith("-hero") ? fileName.Substring(0, fileName.Length - 5) : fileName;
+                    var webpPath = Path.Combine(this.targetDirectory, $"{slug}-hero.webp");
+
+                    if (!File.Exists(webpPath))
+                    {
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            using (var fileStream = File.OpenRead(jpgPath))
+                            {
+                                fileStream.CopyTo(memoryStream);
+                            }
+
+                            memoryStream.Position = 0;
+
+                            using (var originalBitmap = SKBitmap.Decode(memoryStream))
+                            {
+                                if (originalBitmap != null)
+                                {
+                                    SKBitmap targetBitmap = originalBitmap;
+                                    var isResized = false;
+
+                                    if (originalBitmap.Width > 1920)
+                                    {
+                                        var targetWidth = 1920;
+                                        var targetHeight = (int)Math.Round((double)originalBitmap.Height * targetWidth / originalBitmap.Width);
+                                        targetBitmap = originalBitmap.Resize(new SKImageInfo(targetWidth, targetHeight), SKFilterQuality.High);
+                                        isResized = true;
+                                    }
+
+                                    try
+                                    {
+                                        using (var image = SKImage.FromBitmap(targetBitmap))
+                                        using (var data = image.Encode(SKEncodedImageFormat.Webp, 80))
+                                        using (var outStream = new FileStream(webpPath, FileMode.Create, FileAccess.Write))
+                                        {
+                                            data.SaveTo(outStream);
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        if (isResized && targetBitmap != null)
+                                        {
+                                            targetBitmap.Dispose();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    File.Delete(jpgPath);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning(ex, "Failed to convert legacy image {JpgPath} to WebP", jpgPath);
+                }
+            }
+        }
+
         private string GetServiceImagePath(string slug)
         {
-            // Sanitize slug to prevent path traversal
             if (string.IsNullOrWhiteSpace(slug) || slug.Contains("..") || slug.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             {
                 throw new ArgumentException("Invalid or unsafe service slug.");
             }
 
-            return Path.Combine(this.targetDirectory, $"{slug}-hero.jpg");
+            return Path.Combine(this.targetDirectory, $"{slug}-hero.webp");
+        }
+
+        private void DeleteLegacyImages(string slug)
+        {
+            foreach (var ext in this.legacyExtensions)
+            {
+                var legacyPath = Path.Combine(this.targetDirectory, $"{slug}-hero{ext}");
+                if (File.Exists(legacyPath))
+                {
+                    try
+                    {
+                        File.Delete(legacyPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.LogWarning(ex, "Could not delete legacy file {LegacyPath}", legacyPath);
+                    }
+                }
+            }
         }
     }
 }
