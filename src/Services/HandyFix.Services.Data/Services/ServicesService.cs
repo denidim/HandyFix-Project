@@ -9,8 +9,6 @@ namespace HandyFix.Services.Data.Services
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
 
-    using Mapster;
-
     using Microsoft.EntityFrameworkCore;
 
     public class ServicesService : IServicesService
@@ -69,8 +67,7 @@ namespace HandyFix.Services.Data.Services
         {
             return await this.servicesRepository.All()
                 .Where(x => x.Slug == slug.ToLower())
-                .Include(x => x.Category)
-                .ProjectToType<T>()
+                .To<T>()
                 .FirstOrDefaultAsync();
         }
 
