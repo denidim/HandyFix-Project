@@ -42,7 +42,7 @@
       <div class="hero-booking-wrapper">
         <div class="glass-card hero-booking-card">
           <h3 class="font-headline-md text-primary" style="margin-bottom: var(--spacing-6);">Check Availability</h3>
-          <form id="hero-booking-form" method="get" action="/Booking">
+          <form id="hero-booking-form" method="get" asp-controller="Booking" asp-action="Index">
             <div style="margin-bottom: var(--spacing-6);">
               <label for="widget-service" class="form-label">Select Service</label>
               <select id="widget-service" name="serviceId" class="form-control" required>
@@ -68,7 +68,7 @@
           </form>
 
           <div style="margin-top: var(--spacing-6); border-top: 1px solid var(--glass-border); padding-top: var(--spacing-6); text-align: center;">
-            <a href="/Contact" class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center gap-2" style="background: rgba(0, 101, 145, 0.05); color: var(--primary); border: 2px solid var(--primary); font-weight: 600; border-radius: var(--radius-lg); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3); text-decoration: none; transition: all var(--transition-normal);">
+            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center gap-2" style="background: rgba(0, 101, 145, 0.05); color: var(--primary); border: 2px solid var(--primary); font-weight: 600; border-radius: var(--radius-lg); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3); text-decoration: none; transition: all var(--transition-normal);">
               <span class="material-symbols-outlined">request_quote</span>
               <span>Get a Custom Quote</span>
             </a>
@@ -84,7 +84,7 @@
   <div class="page-container">
     <div class="section-header">
       <h2 class="font-headline-lg" style="margin-bottom: var(--spacing-4);">
-        <a href="/Services" class="division-title-link">Specialized Divisions</a>
+        <a asp-controller="Services" asp-action="Index" class="division-title-link">Specialized Divisions</a>
       </h2>
       <div style="width: 5rem; height: 0.375rem; background-color: var(--secondary); border-radius: 9999px;"></div>
     </div>
@@ -109,7 +109,7 @@
             <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Drainage Solutions</li>
             <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Tap Replacement</li>
           </ul>
-          <a class="division-link" href="/Services/plumbing">
+          <a class="division-link" asp-route="ServiceCategory" asp-route-categorySlug="plumbing">
             View Plumbing Rates
             <span class="material-symbols-outlined">arrow_forward</span>
           </a>
@@ -134,7 +134,7 @@
             <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Door Repairs</li>
             <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Shelf Installation</li>
           </ul>
-          <a class="division-link" href="/Services/handyman">
+          <a class="division-link" asp-route="ServiceCategory" asp-route-categorySlug="handyman">
             View Handyman Rates
             <span class="material-symbols-outlined">arrow_forward</span>
           </a>
@@ -159,15 +159,18 @@
                 </p>
             </div>
 
-            <a href="/Services" class="bento-see-all">See all services</a>
+            <a asp-controller="Services" asp-action="Index" class="bento-see-all">See all services</a>
         </div>
 
         <div class="bento-grid-container">
             @foreach (var svc in Model.PopularServices)
             {
 
-                <div class="bento-card"
-                     onclick="window.location = '/Services/@svc.CategorySlug/@svc.Slug'">
+                <a class="bento-card"
+                     asp-route="ServiceDetails"
+                     asp-route-categorySlug="@svc.CategorySlug"
+                     asp-route-serviceSlug="@svc.Slug"
+                     style="text-decoration: none; color: inherit;">
                     <img src="@svc.ImageUrl"
                          alt="@svc.Name"
                          asp-append-version="true"
@@ -185,7 +188,7 @@
                             From £@svc.BasePrice
                         </p>
                     </div>
-                </div>
+                </a>
 
             }
         </div>
@@ -269,7 +272,7 @@
       <h2 class="font-headline-lg text-white" style="margin-bottom: var(--spacing-4);">What Our Customers Say</h2>
       <p class="text-on-primary-container" style="max-width: 42rem; margin: 0 auto;">Real experiences from homeowners across Sutton, Croydon, and Epsom.</p>
       <div class="mt-4">
-        <a href="/Reviews" class="btn-testimonial-review">
+        <a asp-controller="Home" asp-action="Reviews" class="btn-testimonial-review">
           <span class="material-symbols-outlined" style="font-size: 18px;">rate_review</span>
           <span>Leave a Review</span>
         </a>
@@ -322,8 +325,8 @@
           Join thousands of satisfied South London residents. Book your professional service in under 60 seconds.
         </p>
         <div class="cta-actions">
-          <a href="/Booking" class="btn btn-primary btn-lg" style="box-shadow: var(--shadow-xl); border-radius: var(--radius-xl);">Book Appointment Now</a>
-          <a href="/Services" class="btn btn-outline-primary btn-lg" style="background-color: #fff; border-radius: var(--radius-xl);">View All Services</a>
+          <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg" style="box-shadow: var(--shadow-xl); border-radius: var(--radius-xl);">Book Appointment Now</a>
+          <a asp-controller="Services" asp-action="Index" class="btn btn-outline-primary btn-lg" style="background-color: #fff; border-radius: var(--radius-xl);">View All Services</a>
         </div>
         <div class="cta-benefits">
           <div class="cta-benefit-item"><span class="material-symbols-filled text-success">bolt</span>Same Day Available</div>

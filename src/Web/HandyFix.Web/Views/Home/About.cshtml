@@ -11,7 +11,7 @@
     </p>
     <div class="d-flex gap-3 justify-content-center">
         <a href="#our-story" class="btn btn-primary px-4 py-3" style="border-radius: var(--radius-lg); font-weight: 600;">Our Story</a>
-        <a href="/Services" class="btn btn-outline px-4 py-3" style="background: #ffffff; color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); font-weight: 600;">View Services</a>
+        <a asp-controller="Services" asp-action="Index" class="btn btn-outline px-4 py-3" style="background: #ffffff; color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); font-weight: 600;">View Services</a>
     </div>
 </section>
 
@@ -113,7 +113,7 @@
                 </div>
             </div>
             <div class="flex-shrink-0 mt-4 mt-md-0">
-                <a href="/" class="btn btn-secondary px-5 py-3 d-flex align-items-center gap-2 shadow-sm" style="border-radius: var(--radius-lg); font-size: 16px; font-weight: 600; color: #ffffff;">
+                <a asp-controller="Booking" asp-action="Index" class="btn btn-secondary px-5 py-3 d-flex align-items-center gap-2 shadow-sm" style="border-radius: var(--radius-lg); font-size: 16px; font-weight: 600; color: #ffffff;">
                     <span class="material-symbols-outlined">calendar_month</span>
                     <span>Book Now</span>
                 </a>

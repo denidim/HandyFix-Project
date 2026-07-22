@@ -7,7 +7,7 @@
 <div class="auth-page-container">
     <div class="auth-card wide">
         <div class="auth-header">
-            <a class="brand-logo" href="/">Handy Fix</a>
+            <a class="brand-logo" asp-area="" asp-controller="Home" asp-action="Index">Handy Fix</a>
             <p class="subtitle">Create your account to book services seamlessly.</p>
         </div>
 
@@ -80,7 +80,7 @@
             <div class="form-checkbox-field">
                 <input class="cursor-pointer" id="terms" type="checkbox" required />
                 <label class="cursor-pointer select-none" for="terms">
-                    I agree to the <a href="/TermsAndConditions" class="text-secondary font-medium">Terms of Service</a> and <a href="/PrivacyPolicy" class="text-secondary font-medium">Privacy Policy</a>.
+                    I agree to the <a asp-area="" asp-controller="Home" asp-action="Terms" class="text-secondary font-medium">Terms of Service</a> and <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-secondary font-medium">Privacy Policy</a>.
                 </label>
             </div>
 

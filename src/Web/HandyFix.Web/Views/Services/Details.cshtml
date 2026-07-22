@@ -40,9 +40,9 @@
         <div class="service-hero-overlay"></div>
         <div class="service-hero-content">
             <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
-                <a href="/Services">Services</a>
+                <a asp-controller="Services" asp-action="Index">Services</a>
                 <span class="material-symbols-outlined text-xs">chevron_right</span>
-                <a href="/Services/@Model.CategorySlug">@Model.CategoryName</a>
+                <a asp-route="ServiceCategory" asp-route-categorySlug="@Model.CategorySlug">@Model.CategoryName</a>
                 <span class="material-symbols-outlined text-xs">chevron_right</span>
                 <span class="text-white">@Model.Name</span>
             </nav>
@@ -188,7 +188,7 @@
                         </div>
                     </div>
 
-                    <a href="/Booking?serviceId=@Model.Id" class="sidebar-booking-btn">
+                    <a asp-controller="Booking" asp-action="Index" asp-route-serviceId="@Model.Id" class="sidebar-booking-btn">
                         <span>Request Your Booking</span>
                         <span class="material-symbols-outlined">arrow_forward</span>
                     </a>

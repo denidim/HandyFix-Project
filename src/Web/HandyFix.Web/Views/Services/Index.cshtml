@@ -23,7 +23,7 @@
     <!-- Header & Breadcrumbs -->
     <section class="services-header">
         <nav class="breadcrumb-nav" aria-label="breadcrumb">
-            <a href="/">Home</a>
+            <a asp-controller="Home" asp-action="Index">Home</a>
             <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
             <span class="breadcrumb-current">Services</span>
         </nav>
@@ -69,7 +69,7 @@
                     }
                 </div>
 
-                <a href="/Services/@category.Slug" class="btn btn-primary service-category-btn">
+                <a asp-route="ServiceCategory" asp-route-categorySlug="@category.Slug" class="btn btn-primary service-category-btn">
                     <span>View All @category.Name</span>
                     <span class="material-symbols-outlined">arrow_forward</span>
                 </a>

@@ -14,9 +14,9 @@
     <!-- Hero & Breadcrumbs Section -->
     <section class="category-hero-section">
         <nav class="breadcrumb-nav mb-6" aria-label="breadcrumb">
-            <a href="/">Home</a>
+            <a asp-controller="Home" asp-action="Index">Home</a>
             <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
-            <a href="/Services">Services</a>
+            <a asp-controller="Services" asp-action="Index">Services</a>
             <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
             <span class="breadcrumb-current">@Model.Name</span>
         </nav>
@@ -103,7 +103,7 @@
                         <li class="sidebar-cta-list-item">✓ Upload problem photos</li>
                         <li class="sidebar-cta-list-item">✓ Guaranteed attendance</li>
                     </ul>
-                    <a href="/Booking" class="btn btn-success sidebar-cta-btn">Instant Booking Wizard</a>
+                    <a asp-controller="Booking" asp-action="Index" class="btn btn-success sidebar-cta-btn">Instant Booking Wizard</a>
                 </div>
 
                 <div class="contact-card-box p-4 border rounded-lg bg-white shadow-sm text-center">

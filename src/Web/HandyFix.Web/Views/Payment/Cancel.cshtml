@@ -31,12 +31,12 @@
         <div class="payment-status-actions">
             @if (bookingId != null)
             {
-                <a href="/Payment/Pay?bookingId=@bookingId" class="btn btn-primary payment-status-btn" id="retry-btn">
+                <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@bookingId" class="btn btn-primary payment-status-btn" id="retry-btn">
                     <span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
                     <span>Retry Payment (£50.00)</span>
                 </a>
             }
-            <a href="/" class="btn btn-outline payment-status-btn" style="border: 2px solid var(--border-subtle); background: transparent; color: var(--text-main);">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline payment-status-btn" style="border: 2px solid var(--border-subtle); background: transparent; color: var(--text-main);">
                 Cancel and Return Home
             </a>
         </div>
@@ -56,7 +56,7 @@
 </div>
 
 <p class="payment-help-text">
-    Having trouble? <a href="/Contact">Contact Support</a> or call 0800-HANDY-FIX
+    Having trouble? <a asp-controller="Home" asp-action="Contact">Contact Support</a> or call 0800-HANDY-FIX
 </p>
 
 @section Scripts {
