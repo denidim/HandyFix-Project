@@ -7,7 +7,7 @@ namespace HandyFix.Web.Controllers
     using System.Threading.Tasks;
 
     using HandyFix.Services;
-    using HandyFix.Services.Data.Availability;
+    using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
@@ -23,20 +23,20 @@ namespace HandyFix.Web.Controllers
         private readonly IReviewsService reviewsService;
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
-        private readonly IAvailabilityService availabilityService;
+        private readonly ICategoriesService categoriesService;
         private readonly IImageService imageService;
 
         public HomeController(
             IReviewsService reviewsService,
             IInquiriesService inquiriesService,
             IServicesService servicesService,
-            IAvailabilityService availabilityService,
+            ICategoriesService categoriesService,
             IImageService imageService)
         {
             this.reviewsService = reviewsService;
             this.inquiriesService = inquiriesService;
             this.servicesService = servicesService;
-            this.availabilityService = availabilityService;
+            this.categoriesService = categoriesService;
             this.imageService = imageService;
         }
 
@@ -44,7 +44,7 @@ namespace HandyFix.Web.Controllers
         {
             // For Hero widget
             var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-            var dates = await this.availabilityService.GetAvailableDatesAsync();
+            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
 
             // Approved Reviews for slider
             var sliderReviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6);
@@ -52,7 +52,7 @@ namespace HandyFix.Web.Controllers
             var model = new HomeIndexViewModel
             {
                 Services = services,
-                AvailableDates = dates,
+                Categories = categories,
                 SliderReviews = sliderReviews,
                 PopularServices = services.Take(4).ToList(),
             };

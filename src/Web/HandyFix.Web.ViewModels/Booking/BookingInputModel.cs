@@ -54,6 +54,10 @@ namespace HandyFix.Web.ViewModels.Booking
 
         public IEnumerable<DateTime> AvailableDates { get; set; } = new List<DateTime>();
 
+        public string SelectedCategorySlug { get; set; }
+
         public Guid? SelectedServiceId { get; set; }
+
+        public string SelectedDate { get; set; }
     }
 }

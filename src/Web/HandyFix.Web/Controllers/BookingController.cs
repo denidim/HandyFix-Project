@@ -33,7 +33,7 @@ namespace HandyFix.Web.Controllers
 
         [HttpGet]
         [Route("Booking")]
-        public async Task<IActionResult> Index(Guid? serviceId)
+        public async Task<IActionResult> Index(string categorySlug = null, string date = null, Guid? selectedServiceId = null)
         {
             try
             {
@@ -44,7 +44,9 @@ namespace HandyFix.Web.Controllers
                 {
                     Services = services,
                     AvailableDates = dates,
-                    SelectedServiceId = serviceId,
+                    SelectedCategorySlug = categorySlug,
+                    SelectedDate = date,
+                    SelectedServiceId = selectedServiceId,
                 };
 
                 return this.View(model);

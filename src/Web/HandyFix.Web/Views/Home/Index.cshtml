@@ -1,6 +1,6 @@
 @model HandyFix.Web.ViewModels.Home.HomeIndexViewModel
 @{
-    var services = this.Model.Services;
+    var categories = this.Model.Categories;
     var popularServices = this.Model.PopularServices;
     var reviews = this.Model.SliderReviews;
     this.ViewData["Title"] = "Home Page";
@@ -44,12 +44,12 @@
           <h3 class="font-headline-md text-primary" style="margin-bottom: var(--spacing-6);">Check Availability</h3>
           <form id="hero-booking-form" method="get" asp-controller="Booking" asp-action="Index">
             <div style="margin-bottom: var(--spacing-6);">
-              <label for="widget-service" class="form-label">Select Service</label>
-              <select id="widget-service" name="serviceId" class="form-control" required>
+              <label for="widget-category" class="form-label">Select Service</label>
+              <select id="widget-category" name="categorySlug" class="form-control" required>
                 <option value="">-- Choose a service --</option>
-                @foreach (var svc in services)
+                @foreach (var cat in categories)
                 {
-                    <option value="@svc.Id">@svc.Name (from £@svc.BasePrice)</option>
+                    <option value="@cat.Slug">@cat.Name (from £@cat.BasePrice/hr)</option>
                 }
               </select>
             </div>
@@ -57,14 +57,20 @@
               <label for="widget-date" class="form-label">Choose Date</label>
               <input type="date" id="widget-date" name="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
             </div>
-            <div id="slots-container-group" style="margin-bottom: var(--spacing-6); display: none;">
-              <label class="form-label">Available Time Slots</label>
-              <div id="widget-slots" class="slots-grid-widget">
-                <!-- Populated dynamically by JS -->
-              </div>
+
+            <!-- Informative Copy Block -->
+            <div style="margin-bottom: var(--spacing-6); padding: var(--spacing-4); border-radius: var(--radius-md); background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                <p class="font-label-sm text-on-tertiary-container" style="margin-bottom: var(--spacing-2); line-height: 1.5;">
+                    <span style="font-weight: 700;">Secure a visit at your convenient time</span><br>
+                    by selecting a time slot & secure deposit on next page. No risk — cancel anytime.
+                </p>
+                <p class="font-label-sm text-on-tertiary-container" style="margin: 0; line-height: 1.5;">
+                    All jobs start with 1-hour base rate by category. 
+                    <a href="#" class="font-button-text" style="color: var(--secondary-container); text-decoration: underline; margin-left: var(--spacing-1);">See Pricing &rarr;</a><!-- TODO: Pricing page -->
+                </p>
             </div>
-            <input type="hidden" id="widget-slot-id" name="slotId" required />
-            <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block" style="margin-top: var(--spacing-4); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3);" disabled>Book Appointment Now</button>
+
+            <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block" style="margin-top: var(--spacing-4); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3);" disabled>See Available Slots & Book &rarr;</button>
           </form>
 
           <div style="margin-top: var(--spacing-6); border-top: 1px solid var(--glass-border); padding-top: var(--spacing-6); text-align: center;">

@@ -6,6 +6,11 @@
     var services = Model.Services;
     var dates = Model.AvailableDates;
     var selectedServiceId = Model.SelectedServiceId;
+    var targetCategorySlug = "plumbing";
+    if (!string.IsNullOrEmpty(Model.SelectedCategorySlug))
+    {
+        targetCategorySlug = Model.SelectedCategorySlug;
+    }
 }
 
 <div class="page-container booking-page">
@@ -46,14 +51,14 @@
                         <h2 class="section-title-centered">Select Service Type</h2>
                         <div class="category-selection-grid mb-6">
                             <label class="cursor-pointer">
-                                <input class="category-radio-input" name="service-category" type="radio" value="plumbing" checked>
+                                <input class="category-radio-input" name="service-category" type="radio" value="plumbing" @(targetCategorySlug == "plumbing" ? "checked" : "")>
                                 <div class="category-radio-card">
                                     <span class="material-symbols-outlined category-radio-icon">plumbing</span>
                                     <span class="font-label-sm font-weight-bold">Plumbing</span>
                                 </div>
                             </label>
                             <label class="cursor-pointer">
-                                <input class="category-radio-input" name="service-category" type="radio" value="handyman">
+                                <input class="category-radio-input" name="service-category" type="radio" value="handyman" @(targetCategorySlug == "handyman" ? "checked" : "")>
                                 <div class="category-radio-card">
                                     <span class="material-symbols-outlined category-radio-icon">home_repair_service</span>
                                     <span class="font-label-sm font-weight-bold">Handyman</span>
@@ -358,8 +363,13 @@
             // ==========================================
             // Custom Open Calendar Logic
             // ==========================================
-            let calCurrentDate = new Date(); // Month navigator pointer
-            let selectedDateStr = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
+            let initialDateStr = '@Model.SelectedDate';
+            if (!initialDateStr) {
+                initialDateStr = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
+            }
+
+            let calCurrentDate = new Date(initialDateStr); // Month navigator pointer
+            let selectedDateStr = initialDateStr; 
             dateInput.value = selectedDateStr;
 
             const calMonthYearLabel = document.getElementById("cal-month-year");
