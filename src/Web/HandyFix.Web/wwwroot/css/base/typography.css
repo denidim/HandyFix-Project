@@ -22,15 +22,29 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .font-headline-xl {
-  font-size: var(--fs-headline-xl);
-  line-height: var(--lh-headline-xl);
-  font-weight: var(--fw-headline-xl);
+  font-size: var(--fs-headline-xl-mobile, 32px);
+  line-height: var(--lh-headline-xl-mobile, 40px);
+  font-weight: var(--fw-headline-xl-mobile, 700);
 }
 
 .font-headline-lg {
-  font-size: var(--fs-headline-lg);
-  line-height: var(--lh-headline-lg);
+  font-size: 28px;
+  line-height: 36px;
   font-weight: var(--fw-headline-lg);
+}
+
+@media (min-width: 768px) {
+  .font-headline-xl {
+    font-size: var(--fs-headline-xl);
+    line-height: var(--lh-headline-xl);
+    font-weight: var(--fw-headline-xl);
+  }
+  
+  .font-headline-lg {
+    font-size: var(--fs-headline-lg);
+    line-height: var(--lh-headline-lg);
+    font-weight: var(--fw-headline-lg);
+  }
 }
 
 .font-headline-md {
