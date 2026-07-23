@@ -8,6 +8,7 @@ namespace HandyFix.Services.Data.Inquiries
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.Home;
 
     using Microsoft.EntityFrameworkCore;
 
@@ -24,20 +25,20 @@ namespace HandyFix.Services.Data.Inquiries
             this.imageRepository = imageRepository;
         }
 
-        public async Task CreateInquiryAsync(string name, string email, string phoneNumber, string message, IEnumerable<string> imageUrls = null)
+        public async Task CreateInquiryAsync(ContactInputModel model, IReadOnlyList<string> imageUrls)
         {
             var inquiry = new Inquiry
             {
-                Name = name,
-                Email = email,
-                PhoneNumber = phoneNumber,
-                Message = message,
+                Name = model.Name,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
+                Message = model.Message,
             };
 
             await this.inquiryRepository.AddAsync(inquiry);
             await this.inquiryRepository.SaveChangesAsync();
 
-            if (imageUrls != null)
+            if (imageUrls != null && imageUrls.Count > 0)
             {
                 foreach (var url in imageUrls)
                 {

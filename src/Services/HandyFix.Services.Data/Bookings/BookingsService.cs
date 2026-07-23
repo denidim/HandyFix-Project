@@ -9,6 +9,7 @@ namespace HandyFix.Services.Data.Bookings
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
+    using HandyFix.Web.ViewModels.Booking;
 
     using Mapster;
 
@@ -40,14 +41,8 @@ namespace HandyFix.Services.Data.Bookings
         }
 
         public async Task<Booking> CreateBookingAsync(
-            string firstName,
-            string lastName,
-            string email,
-            string phone,
-            string address,
-            string problemDescription,
-            Guid slotId,
-            IEnumerable<Guid> serviceIds,
+            BookingInputModel model,
+            IReadOnlyList<string> imageUrls,
             string userId = null)
         {
             var pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
@@ -56,6 +51,7 @@ namespace HandyFix.Services.Data.Bookings
                 throw new InvalidOperationException("Booking status 'Pending' is not seeded.");
             }
 
+            var serviceIds = new[] { model.ServiceId };
             var selectedServices = await this.serviceRepository.All()
                 .Where(x => serviceIds.Contains(x.Id))
                 .ToListAsync();
@@ -66,12 +62,12 @@ namespace HandyFix.Services.Data.Bookings
             // 1. Build the booking object framework completely in-memory
             var booking = new Booking
             {
-                CustomerFirstName = firstName,
-                CustomerLastName = lastName,
-                Email = email,
-                PhoneNumber = phone,
-                Address = address,
-                ProblemDescription = problemDescription,
+                CustomerFirstName = model.CustomerFirstName,
+                CustomerLastName = model.CustomerLastName,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
+                Address = model.Address,
+                ProblemDescription = model.ProblemDescription,
                 StatusId = pendingStatus.Id,
                 UserId = userId,
                 TotalAmount = totalAmount,
@@ -92,13 +88,13 @@ namespace HandyFix.Services.Data.Bookings
             }
 
             // 3. Retrieve and assign the availability slot structure
-            var slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == slotId);
+            var slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == model.SlotId);
             if (slot != null)
             {
                 slot.IsBooked = true;
                 booking.TechnicianId = slot.TechnicianId;
 
-                // EF Core handles linking tracking assignments automatically 
+                // EF Core handles linking tracking assignments automatically
                 // through object configuration when saved.
                 slot.Booking = booking;
             }
@@ -109,16 +105,32 @@ namespace HandyFix.Services.Data.Bookings
             // 5. Fire a single atomic save to eliminate concurrency collisions
             await this.bookingRepository.SaveChangesAsync();
 
-            // 6. Send booking confirmation email safely
+            // 6. Persist uploaded image URLs as BookingImage records
+            if (imageUrls != null && imageUrls.Count > 0)
+            {
+                foreach (var url in imageUrls)
+                {
+                    var image = new BookingImage
+                    {
+                        BookingId = booking.Id,
+                        ImageUrl = url,
+                    };
+                    await this.imageRepository.AddAsync(image);
+                }
+
+                await this.imageRepository.SaveChangesAsync();
+            }
+
+            // 7. Send booking confirmation email safely
             var subject = "Your HandyFix Booking Inquiry has been Received!";
             var body = $@"
-            <h3>Hello {firstName} {lastName},</h3>
+            <h3>Hello {model.CustomerFirstName} {model.CustomerLastName},</h3>
             <p>Thank you for choosing <strong>HandyFix</strong>. We have received your booking request details:</p>
             <ul>
                 <li><strong>Booking Reference:</strong> {booking.Id}</li>
                 <li><strong>Service(s):</strong> {string.Join(", ", selectedServices.Select(s => s.Name))}</li>
                 <li><strong>Scheduled Time:</strong> {(slot != null ? slot.StartTime.ToString("dd MMM yyyy 'at' HH:mm") : string.Empty)}</li>
-                <li><strong>Address:</strong> {address}</li>
+                <li><strong>Address:</strong> {model.Address}</li>
             </ul>
             <p>To secure this appointment slot, please pay the deposit of £{depositAmount.ToString("F2")} on the next screen.</p>
             <p>Once paid, we will confirm your technician assignment.</p>
@@ -128,7 +140,7 @@ namespace HandyFix.Services.Data.Bookings
             await this.emailSender.SendEmailAsync(
                 "no-reply@handyfix.co.uk",
                 "HandyFix Booking System",
-                email,
+                model.Email,
                 subject,
                 body);
 

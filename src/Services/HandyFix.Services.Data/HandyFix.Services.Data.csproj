@@ -3,8 +3,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Data\HandyFix.Data.Common\HandyFix.Data.Common.csproj" />
     <ProjectReference Include="..\..\Data\HandyFix.Data.Models\HandyFix.Data.Models.csproj" />
+    <ProjectReference Include="..\..\Web\HandyFix.Web.ViewModels\HandyFix.Web.ViewModels.csproj" />
     <ProjectReference Include="..\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
     <ProjectReference Include="..\HandyFix.Services.Messaging\HandyFix.Services.Messaging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

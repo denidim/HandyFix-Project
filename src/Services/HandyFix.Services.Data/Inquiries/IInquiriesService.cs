@@ -4,9 +4,11 @@ namespace HandyFix.Services.Data.Inquiries
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    using HandyFix.Web.ViewModels.Home;
+
     public interface IInquiriesService
     {
-        Task CreateInquiryAsync(string name, string email, string phoneNumber, string message, IEnumerable<string> imageUrls = null);
+        Task CreateInquiryAsync(ContactInputModel model, IReadOnlyList<string> imageUrls);
 
         Task<IEnumerable<T>> GetAllAsync<T>();
 

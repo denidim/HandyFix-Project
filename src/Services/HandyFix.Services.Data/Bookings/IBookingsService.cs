@@ -5,18 +5,13 @@ namespace HandyFix.Services.Data.Bookings
     using System.Threading.Tasks;
 
     using HandyFix.Data.Models;
+    using HandyFix.Web.ViewModels.Booking;
 
     public interface IBookingsService
     {
         Task<Booking> CreateBookingAsync(
-            string firstName,
-            string lastName,
-            string email,
-            string phone,
-            string address,
-            string problemDescription,
-            Guid slotId,
-            IEnumerable<Guid> serviceIds,
+            BookingInputModel model,
+            IReadOnlyList<string> imageUrls,
             string userId = null);
 
         Task<T> GetByIdAsync<T>(Guid id);

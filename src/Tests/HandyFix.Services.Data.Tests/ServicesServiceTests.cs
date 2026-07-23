@@ -29,7 +29,7 @@ namespace HandyFix.Services.Data.Tests
             dbContext.ServiceCategories.Add(category);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository);
+            var service = new ServicesService(repository, null);
             await service.CreateAsync("Leaky Pipe Repair", "Repairing leaky pipes quickly", 60.00m, 45, category.Id);
 
             Assert.Equal(1, dbContext.Services.Count());
@@ -64,7 +64,7 @@ namespace HandyFix.Services.Data.Tests
             dbContext.Services.Add(serviceEntity);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository);
+            var service = new ServicesService(repository, null);
             await service.DeleteAsync(serviceEntity.Id);
 
             var inDb = dbContext.Services.IgnoreQueryFilters().FirstOrDefault(x => x.Id == serviceEntity.Id);

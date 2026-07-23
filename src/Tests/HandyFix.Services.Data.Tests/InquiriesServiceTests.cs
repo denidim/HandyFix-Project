@@ -9,6 +9,7 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
     using HandyFix.Services.Data.Inquiries;
+    using HandyFix.Web.ViewModels.Home;
 
     using Microsoft.EntityFrameworkCore;
 
@@ -29,12 +30,15 @@ namespace HandyFix.Services.Data.Tests
             var service = new InquiriesService(inquiryRepository, imageRepository);
             
             var imageUrls = new List<string> { "/uploads/inquiries/some_image_file.jpg" };
-            await service.CreateInquiryAsync(
-                "Jane Doe",
-                "jane@example.com",
-                "07123456789",
-                "Needs leak repairs urgently.",
-                imageUrls);
+            var model = new ContactInputModel
+            {
+                Name = "Jane Doe",
+                Email = "jane@example.com",
+                PhoneNumber = "07123456789",
+                Message = "Needs leak repairs urgently.",
+            };
+
+            await service.CreateInquiryAsync(model, imageUrls);
 
             Assert.Equal(1, dbContext.Inquiries.Count());
             var inquiry = dbContext.Inquiries.Include(x => x.Images).First();

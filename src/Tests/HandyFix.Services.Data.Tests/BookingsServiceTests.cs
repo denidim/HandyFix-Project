@@ -10,6 +10,7 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Data.Repositories;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Messaging;
+    using HandyFix.Web.ViewModels.Booking;
 
     using Microsoft.EntityFrameworkCore;
 
@@ -68,15 +69,21 @@ namespace HandyFix.Services.Data.Tests
                 bookingImageRepo,
                 emailSenderMock.Object);
 
+            var model = new BookingInputModel
+            {
+                CustomerFirstName = "John",
+                CustomerLastName = "Doe",
+                Email = "john@example.com",
+                PhoneNumber = "07123456789",
+                Address = "12 Main Rd, Sutton",
+                ProblemDescription = "Leaking kitchen sink pipe",
+                SlotId = slot.Id,
+                ServiceId = serviceEntity.Id,
+            };
+
             var booking = await bookingsService.CreateBookingAsync(
-                "John",
-                "Doe",
-                "john@example.com",
-                "07123456789",
-                "12 Main Rd, Sutton",
-                "Leaking kitchen sink pipe",
-                slot.Id,
-                new[] { serviceEntity.Id });
+                model,
+                new List<string>());
 
             Assert.NotNull(booking);
             Assert.Equal("John", booking.CustomerFirstName);
