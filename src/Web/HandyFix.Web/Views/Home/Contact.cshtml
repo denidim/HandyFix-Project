@@ -83,11 +83,12 @@
             <div class="form-field">
                 <label class="form-label" style="font-weight: 600;">Project Photos (Optional)</label>
                 <div class="border-dashed-upload d-flex flex-column align-items-center justify-content-center" onclick="document.getElementById('imageUpload').click()">
-                    <input asp-for="Images" id="imageUpload" type="file" multiple accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="updateUploadLabel(this)" />
+                    <input asp-for="Images" id="imageUpload" type="file" multiple accept="image/jpeg,image/png,image/webp" style="display: none;" data-max-files="5" data-max-size-mb="15" data-preview-grid="#contact-image-previews" />
                     <span class="material-symbols-outlined text-secondary" style="font-size: 36px; margin-bottom: var(--spacing-2);">add_a_photo</span>
                     <p class="font-body-md text-on-surface-variant mb-0" id="uploadLabel">Click to upload or drag and drop</p>
-                    <p class="text-muted mb-0" style="font-size: 11px; margin-top: 4px;">PNG, JPG, WEBP up to 5MB each (Max 3 files)</p>
+                    <p class="text-muted mb-0" style="font-size: 11px; margin-top: 4px;">PNG, JPG, WEBP up to 15MB each (Max 5 files). Auto-compressed.</p>
                 </div>
+                <div id="contact-image-previews" class="image-preview-grid mt-3"></div>
                 <span asp-validation-for="Images" class="validation-error"></span>
             </div>
 
@@ -141,16 +142,8 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/image-upload.js" asp-append-version="true"></script>
     <script>
-        function updateUploadLabel(input) {
-            const label = document.getElementById('uploadLabel');
-            if (input.files && input.files.length > 0) {
-                label.innerText = `${input.files.length} file(s) selected`;
-            } else {
-                label.innerText = 'Click to upload or drag and drop';
-            }
-        }
-
         // Combine category selection into message on submit
         const form = document.getElementById('contactForm');
         if (form) {

@@ -151,9 +151,10 @@
                             <div class="upload-dropzone" onclick="document.getElementById('file-upload-input').click()">
                                 <span class="material-symbols-outlined upload-icon">add_a_photo</span>
                                 <p class="upload-text">Drag and drop images here or click to browse</p>
-                                <span class="upload-hint">Supports JPG, PNG (Max 5MB)</span>
-                                <input asp-for="Images" id="file-upload-input" style="display:none" type="file" multiple accept="image/jpeg,image/png,image/webp" />
+                                <span class="upload-hint">Supports JPG, PNG, WEBP (Max 15MB each, up to 5 photos). Auto-compressed.</span>
+                                <input asp-for="Images" id="file-upload-input" style="display:none" type="file" multiple accept="image/jpeg,image/png,image/webp" data-max-files="5" data-max-size-mb="15" data-preview-grid="#booking-image-previews" />
                             </div>
+                            <div id="booking-image-previews" class="image-preview-grid mt-3"></div>
                         </div>
                     </div>
                 </section>
@@ -439,4 +440,5 @@
             serviceSelect.addEventListener("change", checkFormValidity);
         });
     </script>
+    <script src="~/js/image-upload.js" asp-append-version="true"></script>
 }
