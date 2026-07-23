@@ -10,6 +10,8 @@ namespace HandyFix.Services.Data.Availability
 
         Task<IEnumerable<T>> GetAvailableSlotsForDateAsync<T>(DateTime date);
 
+        Task<IEnumerable<T>> GetAllSlotsForDateAsync<T>(DateTime date);
+
         Task<bool> BookSlotAsync(Guid slotId, Guid bookingId);
 
         Task<bool> BlockSlotAsync(Guid slotId);

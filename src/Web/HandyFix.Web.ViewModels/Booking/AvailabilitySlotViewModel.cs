@@ -13,6 +13,12 @@ namespace HandyFix.Web.ViewModels.Booking
 
         public DateTime EndTime { get; set; }
 
+        public bool IsBooked { get; set; }
+
+        public bool IsBlocked { get; set; }
+
+        public bool IsAvailable => !this.IsBooked && !this.IsBlocked;
+
         public string FormattedTime => $"{this.StartTime:HH:mm} - {this.EndTime:HH:mm}";
     }
 }

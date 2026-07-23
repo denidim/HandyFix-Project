@@ -58,6 +58,20 @@ namespace HandyFix.Services.Data.Availability
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<T>> GetAllSlotsForDateAsync<T>(DateTime date)
+        {
+            var targetDate = date.Date;
+            var nextDay = targetDate.AddDays(1);
+
+            await this.GenerateSlotsForRangeAsync(targetDate, targetDate);
+
+            return await this.slotRepository.All()
+                .Where(x => x.StartTime >= targetDate && x.StartTime < nextDay)
+                .OrderBy(x => x.StartTime)
+                .To<T>()
+                .ToListAsync();
+        }
+
         public async Task<bool> BookSlotAsync(Guid slotId, Guid bookingId)
         {
             var slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == slotId);

@@ -66,7 +66,7 @@ namespace HandyFix.Web.Controllers
 
             try
             {
-                var slots = await this.availabilityService.GetAvailableSlotsForDateAsync<AvailabilitySlotViewModel>(parsedDate);
+                var slots = await this.availabilityService.GetAllSlotsForDateAsync<AvailabilitySlotViewModel>(parsedDate);
                 return this.Json(slots);
             }
             catch (Exception)
