@@ -1,17 +1,15 @@
 namespace HandyFix.Web.Controllers
 {
     using System;
-    using System.IO;
-    using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Services;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
 
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
 
     public class BookingController : BaseController
@@ -19,18 +17,18 @@ namespace HandyFix.Web.Controllers
         private readonly IServicesService servicesService;
         private readonly IAvailabilityService availabilityService;
         private readonly IBookingsService bookingsService;
-        private readonly IWebHostEnvironment environment;
+        private readonly IImageService imageService;
 
         public BookingController(
             IServicesService servicesService,
             IAvailabilityService availabilityService,
             IBookingsService bookingsService,
-            IWebHostEnvironment environment)
+            IImageService imageService)
         {
             this.servicesService = servicesService;
             this.availabilityService = availabilityService;
             this.bookingsService = bookingsService;
-            this.environment = environment;
+            this.imageService = imageService;
         }
 
         [HttpGet]
@@ -92,46 +90,8 @@ namespace HandyFix.Web.Controllers
 
             try
             {
-                // Map selected service
-                var serviceIds = new[] { model.ServiceId };
-
-                // Create booking
-                var booking = await this.bookingsService.CreateBookingAsync(
-                    model.CustomerFirstName,
-                    model.CustomerLastName,
-                    model.Email,
-                    model.PhoneNumber,
-                    model.Address,
-                    model.ProblemDescription,
-                    model.SlotId,
-                    serviceIds);
-
-                // Handle images upload
-                if (model.Images != null && model.Images.Count > 0)
-                {
-                    var uploadsFolder = Path.Combine(this.environment.WebRootPath, "uploads", "bookings");
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-
-                    foreach (var image in model.Images)
-                    {
-                        if (image.Length > 0)
-                        {
-                            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(image.FileName)}";
-                            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                            using (var fileStream = new FileStream(filePath, FileMode.Create))
-                            {
-                                await image.CopyToAsync(fileStream);
-                            }
-
-                            var imageUrl = $"/uploads/bookings/{uniqueFileName}";
-                            await this.bookingsService.AddBookingImageAsync(booking.Id, imageUrl);
-                        }
-                    }
-                }
+                var imageUrls = await this.imageService.UploadImagesAsync(model.Images, "bookings");
+                var booking = await this.bookingsService.CreateBookingAsync(model, imageUrls);
 
                 // Redirect to Stripe checkout
                 return this.RedirectToAction("Pay", "Payment", new { bookingId = booking.Id });

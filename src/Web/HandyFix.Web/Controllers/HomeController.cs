@@ -3,7 +3,6 @@ namespace HandyFix.Web.Controllers
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -17,7 +16,6 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.Services;
 
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
 
     public class HomeController : BaseController
@@ -26,23 +24,20 @@ namespace HandyFix.Web.Controllers
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
         private readonly IAvailabilityService availabilityService;
-        private readonly IWebHostEnvironment environment;
-        private readonly ICloudflareR2Service r2Service;
+        private readonly IImageService imageService;
 
         public HomeController(
             IReviewsService reviewsService,
             IInquiriesService inquiriesService,
             IServicesService servicesService,
             IAvailabilityService availabilityService,
-            IWebHostEnvironment environment,
-            ICloudflareR2Service r2Service)
+            IImageService imageService)
         {
             this.reviewsService = reviewsService;
             this.inquiriesService = inquiriesService;
             this.servicesService = servicesService;
             this.availabilityService = availabilityService;
-            this.environment = environment;
-            this.r2Service = r2Service;
+            this.imageService = imageService;
         }
 
         public async Task<IActionResult> Index()
@@ -86,23 +81,8 @@ namespace HandyFix.Web.Controllers
                 return this.View(model);
             }
 
-            var imageUrls = new List<string>();
-            if (model.Images != null && model.Images.Count > 0)
-            {
-                foreach (var image in model.Images)
-                {
-                    if (image.Length > 0)
-                    {
-                        using (var stream = image.OpenReadStream())
-                        {
-                            var url = await this.r2Service.UploadFileAsync(stream, image.FileName, image.ContentType);
-                            imageUrls.Add(url);
-                        }
-                    }
-                }
-            }
-
-            await this.inquiriesService.CreateInquiryAsync(model.Name, model.Email, model.PhoneNumber, model.Message, imageUrls);
+            var imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
+            await this.inquiriesService.CreateInquiryAsync(model, imageUrls);
             this.TempData["SuccessMessage"] = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
 
             return this.RedirectToAction("Contact");
