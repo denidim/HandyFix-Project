@@ -9,145 +9,181 @@
 }
 
 <div class="page-container booking-page">
-    <div class="booking-layout">
-        <!-- Left Column: Booking Wizard -->
-        <div>
-            <header class="booking-header">
-                <h1 class="booking-title">Schedule Your Fix</h1>
-                <p class="booking-subtitle">Professional help is just a few clicks away.</p>
-            </header>
+    <header class="booking-header text-center mb-8">
+        <h1 class="booking-title text-center">Schedule Your Fix</h1>
+        <p class="booking-subtitle text-center">Professional help is just a few clicks away.</p>
+    </header>
 
-            <!-- Stepper -->
-            <div class="stepper-container">
-                <div class="step-indicator step-active" id="step-indicator-1">
-                    <span class="step-bubble">1</span>
-                    <span>Service &amp; Slot</span>
+    <div class="booking-layout">
+        <!-- Far Left: Vertical Stepper Rail -->
+        <div class="vertical-stepper-wrapper">
+            <div class="vertical-stepper">
+                <div class="v-step-item step-active" id="v-step-1">
+                    <div class="v-step-bubble">1</div>
+                    <div class="v-step-label">Service &amp; Slot</div>
                 </div>
-                <div class="stepper-line"></div>
-                <div class="step-indicator step-inactive" id="step-indicator-2">
-                    <span class="step-bubble">2</span>
-                    <span>Contact Info</span>
+                <div class="v-step-line" id="v-line-1"></div>
+                <div class="v-step-item step-inactive" id="v-step-2">
+                    <div class="v-step-bubble">2</div>
+                    <div class="v-step-label">Contact Info</div>
                 </div>
-                <div class="stepper-line"></div>
-                <div class="step-indicator step-inactive" id="step-indicator-3">
-                    <span class="step-bubble">3</span>
-                    <span>Problem Details</span>
+                <div class="v-step-line" id="v-line-2"></div>
+                <div class="v-step-item step-inactive" id="v-step-3">
+                    <div class="v-step-bubble">3</div>
+                    <div class="v-step-label">Problem Details</div>
                 </div>
             </div>
+        </div>
 
-            <!-- Form Wizard -->
-            <form asp-controller="Booking" asp-action="Index" method="post" enctype="multipart/form-data" id="booking-wizard-form">
+        <!-- Centre Column: Scrollable Booking Form -->
+        <div class="booking-form-container">
+            <form asp-controller="Booking" asp-action="Index" method="post" enctype="multipart/form-data" id="booking-form">
                 
-                <!-- Step 1: Service & Scheduling -->
-                <section class="form-step-section" id="step-1">
-                    <div class="glass-card p-6 rounded-xl">
-                        <h3 class="font-headline-sm text-headline-sm mb-4">Select Service Type</h3>
-                        <div class="category-selection-grid">
+                <!-- Section 1: Service & Slot -->
+                <section class="form-step-section" id="section-step-1">
+                    <!-- Service Category & Service Field Card -->
+                    <div>
+                        <h2 class="section-title-centered">Select Service Type</h2>
+                        <div class="category-selection-grid mb-6">
                             <label class="cursor-pointer">
                                 <input class="category-radio-input" name="service-category" type="radio" value="plumbing" checked>
                                 <div class="category-radio-card">
                                     <span class="material-symbols-outlined category-radio-icon">plumbing</span>
-                                    <span class="font-label-sm">Plumbing</span>
+                                    <span class="font-label-sm font-weight-bold">Plumbing</span>
                                 </div>
                             </label>
                             <label class="cursor-pointer">
                                 <input class="category-radio-input" name="service-category" type="radio" value="handyman">
                                 <div class="category-radio-card">
                                     <span class="material-symbols-outlined category-radio-icon">home_repair_service</span>
-                                    <span class="font-label-sm">Handyman</span>
+                                    <span class="font-label-sm font-weight-bold">Handyman</span>
                                 </div>
                             </label>
                         </div>
-                    </div>
 
-                    <div class="glass-card p-6 rounded-xl">
-                        <h3 class="font-headline-sm text-headline-sm mb-4">Select Service</h3>
-                        <div class="form-group">
+                        <div class="stylish-input-card form-group mb-3">
+                            <label for="wizard-service" class="form-label font-weight-bold mb-2">Selected Service</label>
                             <select asp-for="ServiceId" class="form-control" id="wizard-service" required>
                                 <option value="">-- Select a Service --</option>
                                 @foreach (var svc in services)
                                 {
                                     <option value="@svc.Id" data-category="@svc.CategorySlug" data-price="@svc.BasePrice" data-duration="@svc.EstimatedDurationMinutes">
-                                        @svc.Name (from £@svc.BasePrice)
+                                        @svc.Name (from £@svc.BasePrice/hr)
                                     </option>
                                 }
                             </select>
                             <span asp-validation-for="ServiceId" class="text-danger small"></span>
                         </div>
+
+                        <!-- Reassuring Message for Service Category Pricing -->
+                        <div class="reassuring-info-card">
+                            <span class="material-symbols-outlined reassuring-info-icon">info</span>
+                            <p class="reassuring-info-text">
+                                Base rates are applied transparently per hour depending on your chosen service category (Plumbing or Handyman). You don't need to scroll through all service types — your initial deposit covers the 1st hour base rate for your project!
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="grid-2-col gap-6">
-                        <!-- Date Picker -->
-                        <div class="glass-card p-6 rounded-xl">
-                            <h3 class="font-headline-sm text-headline-sm mb-4">Choose Date</h3>
-                            <input class="w-full border-border-subtle rounded-lg p-3 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all" 
-                                   type="date" id="wizard-date" min="@DateTime.Today.ToString("yyyy-MM-dd")" required>
+                    <!-- Date & Time Slot Card -->
+                    <div class="mt-4">
+                        <h2 class="section-title-centered">Choose Date &amp; Available Slot</h2>
+                        <div class="grid-2-col gap-6">
+                            <!-- Left: Custom Open Calendar -->
+                            <div>
+                                <div class="custom-calendar-card">
+                                    <div class="calendar-header">
+                                        <button type="button" class="calendar-nav-btn" id="cal-prev-month" aria-label="Previous Month">
+                                            <span class="material-symbols-outlined">chevron_left</span>
+                                        </button>
+                                        <h4 class="calendar-month-title" id="cal-month-year">Month Year</h4>
+                                        <button type="button" class="calendar-nav-btn" id="cal-next-month" aria-label="Next Month">
+                                            <span class="material-symbols-outlined">chevron_right</span>
+                                        </button>
+                                    </div>
+                                    <div class="calendar-days-header">
+                                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                                    </div>
+                                    <div class="calendar-dates-grid" id="cal-dates-grid">
+                                        <!-- Rendered by JS -->
+                                    </div>
+                                </div>
+                                <input type="hidden" id="wizard-date" required />
+                            </div>
+
+                            <!-- Right: Time Slots 2 in a row -->
+                            <div>
+                                <div id="wizard-slots-group">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <span class="font-label-sm text-on-surface-variant font-weight-bold" id="slots-header-date">Timeslots</span>
+                                        <span class="badge bg-light text-dark font-label-sm" id="slots-count-badge">Today</span>
+                                    </div>
+                                    <div id="wizard-slots" class="slots-selector-grid-2col">
+                                        <!-- Populated by JS with red/green slots -->
+                                    </div>
+                                </div>
+                                <span asp-validation-for="SlotId" class="text-danger small d-block mt-2"></span>
+                                <input type="hidden" asp-for="SlotId" id="wizard-slot-id" required />
+                            </div>
                         </div>
 
-                        <!-- Time Slots -->
-                        <div class="glass-card p-6 rounded-xl">
-                            <h3 class="font-headline-sm text-headline-sm mb-4">Available Slots</h3>
-                            <div id="wizard-slots-group" style="display:none;">
-                                <div id="wizard-slots" class="slots-selector-grid">
-                                    <!-- Populated by JS -->
-                                </div>
-                            </div>
-                            <div id="slots-placeholder" class="text-center p-3 text-muted">
-                                Select a date to view available time slots.
-                            </div>
-                            <span asp-validation-for="SlotId" class="text-danger small d-block mt-2"></span>
-                            <input type="hidden" asp-for="SlotId" id="wizard-slot-id" required />
+                        <!-- Underneath Timeslots Reassuring Message -->
+                        <div class="reassuring-info-card mt-6">
+                            <span class="material-symbols-outlined reassuring-info-icon">schedule</span>
+                            <p class="reassuring-info-text">
+                                Can't find your convenient timeslot or your convenient timeslot isn't available? Note that availability circumstances change often as cancellations may have been made that have not yet been updated to the availability slots, or we have extra technicians on shift that can take your booking. Please leave an inquiry anyway or call us — we may still be able to book your appointment!
+                            </p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Step 2: Contact Info -->
-                <section class="form-step-section hide-step" id="step-2">
-                    <div class="glass-card p-8 rounded-xl space-y-6">
-                        <h3 class="font-headline-sm text-headline-sm mb-4">Personal Details</h3>
+                <!-- Section 2: Contact Info -->
+                <section class="form-step-section" id="section-step-2">
+                    <h2 class="section-title-centered">Personal Details</h2>
+                    <div class="stylish-input-card space-y-6">
                         <div class="grid-2-col gap-4">
                             <div class="form-group">
-                                <label asp-for="CustomerFirstName" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block">First Name</label>
-                                <input asp-for="CustomerFirstName" class="w-full border-border-subtle rounded-lg p-3 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary" placeholder="John" required />
+                                <label asp-for="CustomerFirstName" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">First Name</label>
+                                <input asp-for="CustomerFirstName" class="form-control" placeholder="John" required />
                                 <span asp-validation-for="CustomerFirstName" class="text-danger small"></span>
                             </div>
                             <div class="form-group">
-                                <label asp-for="CustomerLastName" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block">Last Name</label>
-                                <input asp-for="CustomerLastName" class="w-full border-border-subtle rounded-lg p-3 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary" placeholder="Doe" required />
+                                <label asp-for="CustomerLastName" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Last Name</label>
+                                <input asp-for="CustomerLastName" class="form-control" placeholder="Doe" required />
                                 <span asp-validation-for="CustomerLastName" class="text-danger small"></span>
                             </div>
                         </div>
                         <div class="grid-2-col gap-4">
                             <div class="form-group">
-                                <label asp-for="Email" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block">Email Address</label>
-                                <input asp-for="Email" class="w-full border-border-subtle rounded-lg p-3 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary" type="email" placeholder="john.doe@example.com" required />
+                                <label asp-for="Email" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Email Address</label>
+                                <input asp-for="Email" class="form-control" type="email" placeholder="john.doe@example.com" required />
                                 <span asp-validation-for="Email" class="text-danger small"></span>
                             </div>
                             <div class="form-group">
-                                <label asp-for="PhoneNumber" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block">Phone Number</label>
-                                <input asp-for="PhoneNumber" class="w-full border-border-subtle rounded-lg p-3 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary" type="tel" placeholder="07123456789" required />
+                                <label asp-for="PhoneNumber" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Phone Number</label>
+                                <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="07123456789" required />
                                 <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label asp-for="Address" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block">Property Address</label>
-                            <textarea asp-for="Address" class="w-full border-border-subtle rounded-lg p-3 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-none" placeholder="Full street address, city, postcode" rows="3" required></textarea>
+                            <label asp-for="Address" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Property Address</label>
+                            <textarea asp-for="Address" class="form-control resize-none" placeholder="Full street address, city, postcode" rows="3" required></textarea>
                             <span asp-validation-for="Address" class="text-danger small"></span>
                         </div>
                     </div>
                 </section>
 
-                <!-- Step 3: Problem Details -->
-                <section class="form-step-section hide-step" id="step-3">
-                    <div class="glass-card p-8 rounded-xl space-y-6">
-                        <h3 class="font-headline-sm text-headline-sm mb-4">Describe the Issue</h3>
+                <!-- Section 3: Problem Details -->
+                <section class="form-step-section" id="section-step-3">
+                    <h2 class="section-title-centered">Describe the Issue</h2>
+                    <div class="stylish-input-card space-y-6">
                         <div class="form-group">
-                            <label asp-for="ProblemDescription" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block">Problem Description</label>
-                            <textarea asp-for="ProblemDescription" class="w-full border-border-subtle rounded-lg p-3 bg-white focus:ring-2 focus:ring-secondary/20 focus:border-secondary" placeholder="Please provide as much detail as possible about the repair needed..." rows="5" required></textarea>
+                            <label asp-for="ProblemDescription" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Problem Description</label>
+                            <textarea asp-for="ProblemDescription" class="form-control" placeholder="Please provide as much detail as possible about the repair needed..." rows="5" required></textarea>
                             <span asp-validation-for="ProblemDescription" class="text-danger small"></span>
                         </div>
+                        
                         <div class="form-group">
-                            <label asp-for="Images" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block">Upload Photos (Optional)</label>
+                            <h3 class="section-title-centered font-headline-sm text-headline-sm mb-4">Upload Photos (Optional)</h3>
                             <div class="upload-dropzone" onclick="document.getElementById('file-upload-input').click()">
                                 <span class="material-symbols-outlined upload-icon">add_a_photo</span>
                                 <p class="upload-text">Drag and drop images here or click to browse</p>
@@ -157,18 +193,18 @@
                             <div id="booking-image-previews" class="image-preview-grid mt-3"></div>
                         </div>
                     </div>
-                </section>
 
-                <!-- Nav Buttons -->
-                <div class="wizard-nav-buttons">
-                    <button class="wizard-back-btn invisible" id="prev-btn" type="button">Back</button>
-                    <button class="btn btn-primary" id="next-btn" type="button" style="padding: var(--spacing-3) var(--spacing-8);">Continue</button>
-                    <button class="btn btn-success hide-step" id="submit-btn" type="submit" style="padding: var(--spacing-3) var(--spacing-8);" disabled>Proceed to Payment</button>
-                </div>
+                    <!-- Centred Submit Button (Proceed to Payment) -->
+                    <div class="submit-container-centered">
+                        <button class="btn-proceed-payment" id="submit-btn" type="submit" disabled>
+                            Proceed to Payment
+                        </button>
+                    </div>
+                </section>
             </form>
         </div>
 
-        <!-- Right Column: Booking Summary -->
+        <!-- Right Column: Sidebar Summary (Fixed/Sticky) -->
         <aside>
             <div class="sidebar-sticky-wrapper">
                 <div class="summary-glow-card">
@@ -183,18 +219,18 @@
                             <span class="summary-value" id="summary-datetime">--</span>
                         </div>
                         <div class="summary-row">
-                            <span class="summary-label">Call-out Fee</span>
-                            <span class="summary-value">£35.00</span>
+                            <span class="summary-label">Min. Charge (1h rate)</span>
+                            <span class="summary-value" id="summary-min-charge">£0.00</span>
                         </div>
                         <div class="summary-row-total">
                             <span class="summary-label">Deposit Due Now</span>
-                            <span class="summary-value" style="color: var(--secondary-container); font-weight: 700;">£50.00</span>
+                            <span class="summary-value" id="summary-deposit" style="color: var(--secondary-container); font-weight: 700;">£0.00</span>
                         </div>
                     </div>
                     <div class="summary-price-container">
                         <div>
                             <p class="summary-total-label">Total Estimated</p>
-                            <p class="summary-total-price" id="summary-total-price">£35.00</p>
+                            <p class="summary-total-price" id="summary-total-price">£0.00</p>
                         </div>
                         <div class="summary-total-badge">Final price on-site</div>
                     </div>
@@ -218,31 +254,30 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            let currentStep = 1;
-            const totalSteps = 3;
-
-            const nextBtn = document.getElementById('next-btn');
-            const prevBtn = document.getElementById('prev-btn');
-            const submitBtn = document.getElementById('submit-btn');
-            const wizardForm = document.getElementById('booking-wizard-form');
-
+            // Core Elements
             const serviceSelect = document.getElementById("wizard-service");
             const dateInput = document.getElementById("wizard-date");
-            const slotsGroup = document.getElementById("wizard-slots-group");
-            const slotsPlaceholder = document.getElementById("slots-placeholder");
             const slotsContainer = document.getElementById("wizard-slots");
+            const slotsHeaderDate = document.getElementById("slots-header-date");
+            const slotsCountBadge = document.getElementById("slots-count-badge");
             const hiddenSlotInput = document.getElementById("wizard-slot-id");
+            const submitBtn = document.getElementById("submit-btn");
+
+            // Sidebar Elements
             const summaryService = document.getElementById("summary-service");
             const summaryDatetime = document.getElementById("summary-datetime");
-            const summaryTotal = document.getElementById("summary-total-price");
+            const summaryMinCharge = document.getElementById("summary-min-charge");
+            const summaryDeposit = document.getElementById("summary-deposit");
+            const summaryTotalPrice = document.getElementById("summary-total-price");
 
-            // Category Filter logic
+            // Category Filter Logic
             const categoryRadios = document.querySelectorAll('input[name="service-category"]');
-            
+
             function filterServices() {
                 const activeCategory = document.querySelector('input[name="service-category"]:checked').value;
-                let firstMatch = null;
-                
+                let defaultOptionVal = "";
+                let firstCategoryOptionVal = "";
+
                 Array.from(serviceSelect.options).forEach(opt => {
                     if (opt.value === "") {
                         opt.style.display = "";
@@ -250,67 +285,69 @@
                     }
                     if (opt.dataset.category === activeCategory) {
                         opt.style.display = "";
-                        if (!firstMatch) firstMatch = opt.value;
+                        if (!firstCategoryOptionVal) firstCategoryOptionVal = opt.value;
+
+                        // Check for default / general service name
+                        const nameLower = opt.text.toLowerCase();
+                        if (nameLower.includes("general") || nameLower.includes("default")) {
+                            defaultOptionVal = opt.value;
+                        }
                     } else {
                         opt.style.display = "none";
                     }
                 });
-                
-                // If current selection is hidden, reset it
-                const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
-                if (selectedOption && selectedOption.value !== "" && selectedOption.dataset.category !== activeCategory) {
-                    serviceSelect.value = "";
-                }
-                
-                // Preselect matching if serviceId was loaded via query param
-                const selectedServiceId = '@selectedServiceId';
-                if (selectedServiceId && selectedServiceId !== "") {
-                    // Try to check matching category
-                    const matchedOpt = Array.from(serviceSelect.options).find(o => o.value.toLowerCase() === selectedServiceId.toLowerCase());
-                    if (matchedOpt) {
-                        const targetCategory = matchedOpt.dataset.category;
-                        const targetRadio = document.querySelector(`input[name="service-category"][value="${targetCategory}"]`);
-                        if (targetRadio && !targetRadio.checked) {
-                            targetRadio.checked = true;
-                            filterServices(); // Re-run filter
-                            return;
-                        }
+
+                // Auto select default or first matching category service
+                const targetServiceId = '@selectedServiceId';
+                if (targetServiceId && Array.from(serviceSelect.options).some(o => o.value.toLowerCase() === targetServiceId.toLowerCase())) {
+                    const matchedOpt = Array.from(serviceSelect.options).find(o => o.value.toLowerCase() === targetServiceId.toLowerCase());
+                    if (matchedOpt && matchedOpt.dataset.category === activeCategory) {
                         serviceSelect.value = matchedOpt.value;
+                    } else {
+                        serviceSelect.value = defaultOptionVal || firstCategoryOptionVal || "";
                     }
+                } else {
+                    serviceSelect.value = defaultOptionVal || firstCategoryOptionVal || "";
                 }
-                
+
                 updateSummaryPrice();
                 checkFormValidity();
             }
 
             categoryRadios.forEach(radio => {
-                radio.addEventListener('change', filterServices);
+                radio.addEventListener("change", filterServices);
             });
 
-            // Initial Filter
-            filterServices();
-
-            // Price Summary update
+            // Update Price Summary based on selected service base price
             function updateSummaryPrice() {
+                const activeCategory = document.querySelector('input[name="service-category"]:checked').value;
                 const opt = serviceSelect.options[serviceSelect.selectedIndex];
+                let basePrice = 0;
+
                 if (opt && opt.value !== "") {
-                    const price = parseFloat(opt.dataset.price);
+                    basePrice = parseFloat(opt.dataset.price) || 0;
                     summaryService.textContent = opt.text.split(" (from")[0];
-                    summaryTotal.textContent = "£" + (price + 35.00).toFixed(2); // Price + Callout fee
                 } else {
-                    summaryService.textContent = "--";
-                    summaryTotal.textContent = "£35.00";
+                    summaryService.textContent = activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) + " Service";
+                    basePrice = activeCategory === "plumbing" ? 65 : 45; // Default fallback
                 }
+
+                const formattedPrice = "£" + basePrice.toFixed(2);
+                summaryMinCharge.textContent = formattedPrice;
+                summaryDeposit.textContent = formattedPrice;
+                summaryTotalPrice.textContent = formattedPrice;
+
                 updateSummaryDateTime();
             }
 
             function updateSummaryDateTime() {
                 const dateVal = dateInput.value;
-                const slotBtn = document.querySelector(".slot-selection-btn.selected");
-                
-                if (dateVal && slotBtn) {
+                const selectedSlotBtn = document.querySelector(".slot-selection-btn.selected");
+
+                if (dateVal && selectedSlotBtn) {
                     const formattedDate = new Date(dateVal).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                    summaryDatetime.textContent = `${formattedDate}, ${slotBtn.textContent}`;
+                    const timeText = selectedSlotBtn.querySelector(".slot-time-text")?.textContent || selectedSlotBtn.textContent;
+                    summaryDatetime.textContent = `${formattedDate}, ${timeText}`;
                 } else {
                     summaryDatetime.textContent = "--";
                 }
@@ -318,126 +355,265 @@
 
             serviceSelect.addEventListener("change", updateSummaryPrice);
 
-            // Fetch time slots
-            dateInput.addEventListener("change", function () {
-                const selectedDate = dateInput.value;
-                if (!selectedDate) {
-                    slotsGroup.style.display = "none";
-                    slotsPlaceholder.style.display = "block";
-                    return;
+            // ==========================================
+            // Custom Open Calendar Logic
+            // ==========================================
+            let calCurrentDate = new Date(); // Month navigator pointer
+            let selectedDateStr = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
+            dateInput.value = selectedDateStr;
+
+            const calMonthYearLabel = document.getElementById("cal-month-year");
+            const calPrevBtn = document.getElementById("cal-prev-month");
+            const calNextBtn = document.getElementById("cal-next-month");
+            const calDatesGrid = document.getElementById("cal-dates-grid");
+
+            function renderCalendar() {
+                const year = calCurrentDate.getFullYear();
+                const month = calCurrentDate.getMonth();
+                const today = new Date();
+                today.setHours(0,0,0,0);
+
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                calMonthYearLabel.textContent = `${monthNames[month]} ${year}`;
+
+                // Prev button disable check (can't navigate before current month)
+                if (year === today.getFullYear() && month === today.getMonth()) {
+                    calPrevBtn.disabled = true;
+                } else {
+                    calPrevBtn.disabled = false;
                 }
 
-                slotsPlaceholder.style.display = "none";
-                slotsContainer.innerHTML = "<div class='text-center p-3 text-muted w-100' style='grid-column: span 3;'>Loading slots...</div>";
-                slotsGroup.style.display = "block";
+                // First day of month (0 = Sun, convert to 0 = Mon)
+                let firstDayIndex = new Date(year, month, 1).getDay() - 1;
+                if (firstDayIndex < 0) firstDayIndex = 6;
 
-                fetch(`/Booking/GetSlots?date=${selectedDate}`)
+                const lastDate = new Date(year, month + 1, 0).getDate();
+                const prevMonthLastDate = new Date(year, month, 0).getDate();
+
+                calDatesGrid.innerHTML = "";
+
+                // Padding days for previous month
+                for (let i = firstDayIndex; i > 0; i--) {
+                    const cell = document.createElement("button");
+                    cell.type = "button";
+                    cell.className = "cal-day-cell other-month";
+                    cell.textContent = prevMonthLastDate - i + 1;
+                    calDatesGrid.appendChild(cell);
+                }
+
+                // Current month dates
+                for (let day = 1; day <= lastDate; day++) {
+                    const cell = document.createElement("button");
+                    cell.type = "button";
+                    cell.className = "cal-day-cell";
+                    cell.textContent = day;
+
+                    const cellDateObj = new Date(year, month, day);
+                    const yyyy = year;
+                    const mm = String(month + 1).padStart(2, '0');
+                    const dd = String(day).padStart(2, '0');
+                    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+                    if (cellDateObj < today) {
+                        cell.classList.add("disabled");
+                    } else {
+                        if (cellDateObj.getTime() === today.getTime()) {
+                            cell.classList.add("today");
+                        }
+                        if (dateStr === selectedDateStr) {
+                            cell.classList.add("selected");
+                        }
+
+                        cell.addEventListener("click", function () {
+                            selectedDateStr = dateStr;
+                            dateInput.value = selectedDateStr;
+                            renderCalendar();
+                            loadSlotsForDate(selectedDateStr);
+                        });
+                    }
+
+                    calDatesGrid.appendChild(cell);
+                }
+            }
+
+            calPrevBtn.addEventListener("click", function () {
+                calCurrentDate.setMonth(calCurrentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            calNextBtn.addEventListener("click", function () {
+                calCurrentDate.setMonth(calCurrentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            // ==========================================
+            // Timeslots Loading Logic (Red / Green)
+            // ==========================================
+            function loadSlotsForDate(dateStr) {
+                if (!dateStr) return;
+
+                const formattedDateHeading = new Date(dateStr).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+                slotsHeaderDate.textContent = `Slots for ${formattedDateHeading}`;
+                slotsCountBadge.textContent = "Loading...";
+                slotsContainer.innerHTML = "<div class='text-center p-3 text-muted w-100' style='grid-column: span 2;'>Loading availability...</div>";
+
+                fetch(`/Booking/GetSlots?date=${dateStr}`)
                     .then(res => {
                         if (!res.ok) throw new Error("Failed to load slots");
                         return res.json();
                     })
                     .then(slots => {
                         slotsContainer.innerHTML = "";
-                        if (slots.length === 0) {
-                            slotsContainer.innerHTML = "<div class='text-danger p-2 text-center w-100' style='grid-column: span 3;'>No slots available. Try another date.</div>";
+                        hiddenSlotInput.value = "";
+
+                        if (!slots || slots.length === 0) {
+                            slotsCountBadge.textContent = "0 Available";
+                            slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100' style='grid-column: span 2;'>No slots generated for this date. Please pick another date.</div>";
+                            updateSummaryDateTime();
+                            checkFormValidity();
                             return;
                         }
 
+                        let availableCount = 0;
+
                         slots.forEach(slot => {
-                            const button = document.createElement("button");
-                            button.type = "button";
-                            button.className = "slot-selection-btn";
-                            button.textContent = slot.formattedTime;
-                            button.dataset.id = slot.id;
+                            const btn = document.createElement("button");
+                            btn.type = "button";
+                            btn.dataset.id = slot.id;
 
-                            button.addEventListener("click", function () {
-                                document.querySelectorAll(".slot-selection-btn").forEach(b => b.classList.remove('selected'));
-                                button.classList.add('selected');
-                                hiddenSlotInput.value = slot.id;
-                                updateSummaryDateTime();
-                                checkFormValidity();
-                            });
+                            const timeSpan = document.createElement("span");
+                            timeSpan.className = "slot-time-text";
+                            timeSpan.textContent = slot.formattedTime;
+                            btn.appendChild(timeSpan);
 
-                            slotsContainer.appendChild(button);
+                            const badgeSpan = document.createElement("span");
+                            badgeSpan.className = "slot-badge-text";
+
+                            if (slot.isAvailable) {
+                                availableCount++;
+                                btn.className = "slot-selection-btn slot-available";
+                                badgeSpan.textContent = "Available";
+                                btn.appendChild(badgeSpan);
+
+                                btn.addEventListener("click", function () {
+                                    document.querySelectorAll(".slot-selection-btn").forEach(b => b.classList.remove("selected"));
+                                    btn.classList.add("selected");
+                                    hiddenSlotInput.value = slot.id;
+                                    updateSummaryDateTime();
+                                    checkFormValidity();
+                                });
+                            } else {
+                                btn.className = "slot-selection-btn slot-unavailable";
+                                btn.disabled = true;
+                                badgeSpan.textContent = "Unavailable";
+                                btn.appendChild(badgeSpan);
+                            }
+
+                            slotsContainer.appendChild(btn);
                         });
+
+                        slotsCountBadge.textContent = `${availableCount} Available`;
+                        updateSummaryDateTime();
+                        checkFormValidity();
                     })
                     .catch(err => {
                         console.error(err);
-                        slotsContainer.innerHTML = "<div class='text-danger p-2 text-center w-100' style='grid-column: span 3;'>Error loading slots.</div>";
+                        slotsCountBadge.textContent = "Error";
+                        slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100' style='grid-column: span 2;'>Error loading slots.</div>";
                     });
-            });
+            }
 
-            // Form Wizard flow control
-            const updateUI = () => {
-                for (let i = 1; i <= totalSteps; i++) {
-                    const section = document.getElementById(`step-${i}`);
-                    const indicator = document.getElementById(`step-indicator-${i}`);
-                    
-                    if (i === currentStep) {
-                        section.classList.remove('hide-step');
-                        indicator.className = "step-indicator step-active";
-                    } else {
-                        section.classList.add('hide-step');
-                        indicator.className = "step-indicator step-inactive";
-                    }
-                }
+            // ==========================================
+            // Vertical Stepper Illumination & Scroll Tracking
+            // ==========================================
+            const vStep1 = document.getElementById("v-step-1");
+            const vStep2 = document.getElementById("v-step-2");
+            const vStep3 = document.getElementById("v-step-3");
+            const vLine1 = document.getElementById("v-line-1");
+            const vLine2 = document.getElementById("v-line-2");
 
-                if (currentStep === 1) {
-                    prevBtn.classList.add('invisible');
+            function updateStepperState() {
+                const section1 = document.getElementById("section-step-1");
+                const section2 = document.getElementById("section-step-2");
+                const section3 = document.getElementById("section-step-3");
+
+                // Check field completion
+                const isStep1Done = Boolean(serviceSelect.value && hiddenSlotInput.value);
+                const firstName = document.getElementById("CustomerFirstName")?.value.trim();
+                const lastName = document.getElementById("CustomerLastName")?.value.trim();
+                const email = document.getElementById("Email")?.value.trim();
+                const phone = document.getElementById("PhoneNumber")?.value.trim();
+                const address = document.getElementById("Address")?.value.trim();
+                const isStep2Done = Boolean(isStep1Done && firstName && lastName && email && phone && address);
+
+                const problemDesc = document.getElementById("ProblemDescription")?.value.trim();
+                const isStep3Done = Boolean(isStep2Done && problemDesc && problemDesc.length >= 10);
+
+                // Check scroll position
+                const scrollPos = window.scrollY + 250;
+                const sec2Top = section2 ? section2.offsetTop : 99999;
+                const sec3Top = section3 ? section3.offsetTop : 99999;
+
+                // Step 1
+                if (isStep1Done || scrollPos >= sec2Top) {
+                    vStep1.className = "v-step-item step-done";
+                    vLine1.className = "v-step-line line-done";
                 } else {
-                    prevBtn.classList.remove('invisible');
+                    vStep1.className = "v-step-item step-active";
+                    vLine1.className = "v-step-line";
                 }
 
-                if (currentStep === totalSteps) {
-                    nextBtn.classList.add('hide-step');
-                    submitBtn.classList.remove('hide-step');
+                // Step 2
+                if (isStep2Done || scrollPos >= sec3Top) {
+                    vStep2.className = "v-step-item step-done";
+                    vLine2.className = "v-step-line line-done";
+                } else if (isStep1Done || scrollPos >= sec2Top) {
+                    vStep2.className = "v-step-item step-active";
+                    vLine2.className = "v-step-line";
                 } else {
-                    nextBtn.classList.remove('hide-step');
-                    submitBtn.classList.add('hide-step');
+                    vStep2.className = "v-step-item step-inactive";
+                    vLine2.className = "v-step-line";
                 }
 
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            };
-
-            nextBtn.addEventListener('click', () => {
-                if (currentStep < totalSteps) {
-                    // Quick validation before advancing
-                    if (currentStep === 1 && (!serviceSelect.value || !hiddenSlotInput.value)) {
-                        alert("Please select a Service and an available Time Slot before continuing.");
-                        return;
-                    }
-                    if (currentStep === 2) {
-                        const firstName = document.getElementById("CustomerFirstName").value;
-                        const lastName = document.getElementById("CustomerLastName").value;
-                        const email = document.getElementById("Email").value;
-                        const phone = document.getElementById("PhoneNumber").value;
-                        const address = document.getElementById("Address").value;
-                        if (!firstName || !lastName || !email || !phone || !address) {
-                            alert("Please fill out all contact information fields.");
-                            return;
-                        }
-                    }
-                    currentStep++;
-                    updateUI();
-                }
-            });
-
-            prevBtn.addEventListener('click', () => {
-                if (currentStep > 1) {
-                    currentStep--;
-                    updateUI();
-                }
-            });
-
-            function checkFormValidity() {
-                if (hiddenSlotInput.value && serviceSelect.value) {
-                    submitBtn.disabled = false;
+                // Step 3
+                if (isStep3Done) {
+                    vStep3.className = "v-step-item step-done";
+                } else if (isStep2Done || scrollPos >= sec3Top) {
+                    vStep3.className = "v-step-item step-active";
                 } else {
-                    submitBtn.disabled = true;
+                    vStep3.className = "v-step-item step-inactive";
                 }
             }
 
-            serviceSelect.addEventListener("change", checkFormValidity);
+            window.addEventListener("scroll", updateStepperState);
+
+            // Real-time Form Validity Check for Submit Button
+            function checkFormValidity() {
+                const isStep1Done = Boolean(serviceSelect.value && hiddenSlotInput.value);
+                const firstName = document.getElementById("CustomerFirstName")?.value.trim();
+                const lastName = document.getElementById("CustomerLastName")?.value.trim();
+                const email = document.getElementById("Email")?.value.trim();
+                const phone = document.getElementById("PhoneNumber")?.value.trim();
+                const address = document.getElementById("Address")?.value.trim();
+                const problemDesc = document.getElementById("ProblemDescription")?.value.trim();
+
+                const isFormValid = isStep1Done && firstName && lastName && email && phone && address && problemDesc && problemDesc.length >= 10;
+
+                submitBtn.disabled = !isFormValid;
+                updateStepperState();
+            }
+
+            // Input Event Listeners
+            const inputsToWatch = ["CustomerFirstName", "CustomerLastName", "Email", "PhoneNumber", "Address", "ProblemDescription"];
+            inputsToWatch.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener("input", checkFormValidity);
+            });
+
+            // Initializations
+            filterServices();
+            renderCalendar();
+            loadSlotsForDate(selectedDateStr);
         });
     </script>
     <script src="~/js/image-upload.js" asp-append-version="true"></script>
