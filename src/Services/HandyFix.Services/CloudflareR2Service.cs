@@ -17,7 +17,7 @@ namespace HandyFix.Services
             this.configuration = configuration;
         }
 
-        public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType)
+        public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string folder)
         {
             var accessKey = this.configuration["CloudflareR2:AccessKeyId"];
             var secretKey = this.configuration["CloudflareR2:SecretAccessKey"];
@@ -33,8 +33,9 @@ namespace HandyFix.Services
 
             using (var client = new AmazonS3Client(accessKey, secretKey, config))
             {
+                var sanitizedFolder = folder.Trim('/');
                 var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
-                var key = $"inquiries/{uniqueFileName}";
+                var key = $"{sanitizedFolder}/{uniqueFileName}";
 
                 var putRequest = new PutObjectRequest
                 {
@@ -47,7 +48,7 @@ namespace HandyFix.Services
 
                 await client.PutObjectAsync(putRequest);
 
-                return $"{publicUrl.TrimEnd('/')}/inquiries/{uniqueFileName}";
+                return $"{publicUrl.TrimEnd('/')}/{sanitizedFolder}/{uniqueFileName}";
             }
         }
     }

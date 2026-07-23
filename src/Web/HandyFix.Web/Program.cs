@@ -92,6 +92,7 @@ namespace HandyFix.Web
             services.AddTransient<IBookingsService, BookingsService>();
             services.AddTransient<IPaymentsService, PaymentsService>();
             services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();
+            services.AddTransient<IImageService, ImageService>();
             services.AddTransient<IImageStorageService>(sp =>
                 new ImageStorageService(
                     System.IO.Path.Combine(
