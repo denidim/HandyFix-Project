@@ -31,6 +31,7 @@ namespace HandyFix.Data.Seeding
                               new PaymentStatusesSeeder(),
                               new ServiceCategoriesSeeder(),
                               new ServicesSeeder(),
+                              new ServiceAreasSeeder(),
                               new TechniciansSeeder(),
                               new ReviewSeeder(),
                               new SettingsSeeder(),

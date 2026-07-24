@@ -48,6 +48,10 @@ namespace HandyFix.Data
 
         public DbSet<Service> Services { get; set; }
 
+        public DbSet<ServiceArea> ServiceAreas { get; set; }
+
+        public DbSet<ServiceAreaFaq> ServiceAreaFaqs { get; set; }
+
         public DbSet<ServiceCategory> ServiceCategories { get; set; }
 
         public DbSet<ServiceImage> ServiceImages { get; set; }
