@@ -12,6 +12,17 @@ namespace HandyFix.Web.Controllers
 
     public class ServicesController : BaseController
     {
+        // Real, existing services closest in spirit to the "typical job" examples a
+        // customer would picture, hand-picked rather than derived from a category-balance
+        // rule (hence 1 Plumbing / 3 Handyman) - order here is the display order.
+        private static readonly string[] TypicalJobSlugs =
+        {
+            "tap-repairs",
+            "tv-mounting",
+            "shelf-installation",
+            "minor-electrical-tasks",
+        };
+
         private readonly ICategoriesService categoriesService;
         private readonly IServicesService servicesService;
 
@@ -31,12 +42,23 @@ namespace HandyFix.Web.Controllers
         [Route("Pricing", Name = "Pricing")]
         public async Task<IActionResult> Pricing()
         {
-            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            var categories = (await this.categoriesService.GetAllAsync<CategoryViewModel>()).ToList();
+
+            var allServices = categories.SelectMany(c => c.Services);
+            var typicalJobs = TypicalJobSlugs
+                .Select(slug => allServices.FirstOrDefault(s => s.Slug == slug))
+                .Where(s => s != null);
+
+            var model = new PricingViewModel
+            {
+                Categories = categories,
+                TypicalJobs = typicalJobs,
+            };
 
             this.ViewData["Title"] = "Pricing - HandyFix South London";
             this.ViewData["MetaDescription"] = "Transparent, up-front hourly pricing for plumbing and handyman services across Sutton, Croydon, Epsom, and South London. No hidden fees.";
 
-            return this.View(categories);
+            return this.View(model);
         }
 
         [Route("Services/{categorySlug}", Name = "ServiceCategory")]

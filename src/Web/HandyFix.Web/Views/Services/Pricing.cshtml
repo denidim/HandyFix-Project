@@ -1,4 +1,17 @@
-@model IEnumerable<HandyFix.Web.ViewModels.Services.CategoryViewModel>
+@model HandyFix.Web.ViewModels.Services.PricingViewModel
+@using HandyFix.Web.ViewModels.Services
+
+@functions {
+    string GetCategoryIcon(string name)
+    {
+        return name switch
+        {
+            "Plumbing" => "water_drop",
+            "Handyman" => "handyman",
+            _ => "home_repair_service",
+        };
+    }
+}
 
 <div class="page-container services-page">
     <!-- Header & Breadcrumbs -->
@@ -10,66 +23,191 @@
         </nav>
         <div class="services-header-content">
             <h1 class="services-hero-title">
-                Transparent, Up-Front <span>Pricing.</span>
+                Transparent, Simple <span>Pricing.</span>
             </h1>
             <p class="services-subtitle">
                 No hidden fees or call-out charges. Every job starts with a 1-hour base rate for the service category, billed at the hourly rate shown below.
             </p>
+            <a asp-controller="Booking" asp-action="Index" class="btn btn-primary font-button-text pricing-hero-cta">
+                <span>Book Now</span>
+                <span class="material-symbols-outlined">arrow_forward</span>
+            </a>
         </div>
     </section>
 
-    <!-- Pricing Tables by Category -->
-    <section class="pricing-categories">
-        @foreach (var category in this.Model)
-        {
-            <div class="pricing-category-section">
-                <div class="pricing-category-header">
-                    <div>
-                        <h2 class="pricing-category-title">@category.Name</h2>
-                        <p class="pricing-category-desc">@category.Description</p>
+    <!-- Our Hourly Rates -->
+    <section class="pricing-rates-section">
+        <div class="pricing-rates-header">
+            <h2 class="font-headline-lg text-primary">Our Hourly Rates</h2>
+            <p class="font-body-md text-on-surface-variant">
+                Whether you need a local handyman for small repairs or a plumber to fix a leak, our pricing structure keeps everything simple and transparent.
+            </p>
+        </div>
+
+        <div class="pricing-cards-grid">
+            @foreach (var category in Model.Categories)
+            {
+                <div class="glass-card rate-card">
+                    <div class="rate-card-icon-wrapper">
+                        <span class="material-symbols-outlined">@this.GetCategoryIcon(category.Name)</span>
                     </div>
+                    <h3 class="font-headline-sm text-primary rate-card-title">@category.Name</h3>
+                    <div class="rate-card-figure">
+                        <span class="rate-card-price">£@category.BasePrice.ToString("F0")</span>
+                        <span class="text-on-surface-variant">per hour</span>
+                    </div>
+                    <p class="rate-card-pill">Minimum charge 1 hour</p>
                 </div>
+            }
+        </div>
 
-                <div class="pricing-table-wrapper">
-                    <table class="pricing-table">
-                        <thead>
-                            <tr>
-                                <th>Service</th>
-                                <th>Estimated Duration</th>
-                                <th>Hourly Rate</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var svc in category.Services)
-                            {
-                                var duration = svc.EstimatedDurationMinutes >= 60
-                                    ? $"{(svc.EstimatedDurationMinutes / 60.0).ToString("0.#")} hours"
-                                    : $"{svc.EstimatedDurationMinutes} mins";
-
-                                <tr>
-                                    <td class="pricing-service-name">
-                                        <a asp-route="ServiceDetails" asp-route-categorySlug="@category.Slug" asp-route-serviceSlug="@svc.Slug">@svc.Name</a>
-                                    </td>
-                                    <td>@duration</td>
-                                    <td class="pricing-price">From £@svc.BasePrice.ToString("F2")/hr</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
+        <div class="pricing-note-box">
+            <h3>How our pricing works</h3>
+            <p>
+                All bookings begin with a 1-hour base rate for the selected service category. If a job takes longer, additional
+                time is billed at the same hourly rate. Any materials required beyond what our technician carries as standard
+                are quoted and agreed with you before work begins &mdash; no surprises on the invoice.
+            </p>
+        </div>
     </section>
 
-    <!-- Pricing Terms Note -->
-    <div class="pricing-note-box">
-        <h3>How our pricing works</h3>
-        <p>
-            All bookings begin with a 1-hour base rate for the selected service category. If a job takes longer, additional
-            time is billed at the same hourly rate. Any materials required beyond what our technician carries as standard
-            are quoted and agreed with you before work begins &mdash; no surprises on the invoice.
+    <!-- Rates Explained / Materials Bento -->
+    <section class="pricing-bento-section">
+        <div class="pricing-bento-grid">
+            <div class="info-bento-card">
+                <h3 class="font-headline-md text-primary pricing-bento-title">
+                    <span class="material-symbols-outlined text-secondary">info</span>
+                    Our Rates Explained
+                </h3>
+                <ul class="pricing-bento-list">
+                    <li>
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span>No travel charges within our standard service area</span>
+                    </li>
+                    <li>
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span>No call-out fees</span>
+                    </li>
+                    <li>
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span>One-hour minimum charge, thereafter billed at the same hourly rate</span>
+                    </li>
+                    <li>
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span>Materials charged separately where required</span>
+                    </li>
+                    <li>
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span>Payment is due at the end of each visit by card or bank transfer</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="info-bento-card pricing-materials-card">
+                <div>
+                    <h3 class="font-headline-md text-primary pricing-bento-title">
+                        <span class="material-symbols-outlined text-secondary">inventory_2</span>
+                        Materials &amp; Consumables
+                    </h3>
+                    <p class="text-text-main">
+                        Each of our tradespeople carries a selection of standard consumables (screws, wall plugs, basic plumbing/electrical parts) to ensure efficiency.
+                    </p>
+                    <p class="text-text-main">
+                        Where specific materials are needed, we can source them on your behalf. All materials and consumables are quoted and agreed with you before work begins.
+                    </p>
+                </div>
+                <div class="pricing-materials-note">
+                    <span class="material-symbols-outlined text-secondary">verified_user</span>
+                    <p class="text-on-surface-variant">Materials pricing and guarantee terms are confirmed with you at the time of quoting.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Typical Job Costs -->
+    <section class="pricing-typical-jobs-section">
+        <h2 class="font-headline-lg text-primary text-center pricing-section-title">Typical Job Costs</h2>
+        <p class="font-body-md text-on-surface-variant text-center pricing-section-subtitle">
+            A few real examples of jobs we complete regularly, with our transparent starting price.
         </p>
-    </div>
+
+        <div class="pricing-cards-grid">
+            @foreach (var svc in Model.TypicalJobs)
+            {
+                <partial name="_PricingCard" model="@(new PricingCardViewModel
+                                                     {
+                                                         Name = svc.Name,
+                                                         IconName = this.GetCategoryIcon(svc.CategoryName),
+                                                         Description = svc.Description,
+                                                         BasePrice = svc.BasePrice,
+                                                         EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
+                                                         CtaText = "Book Now",
+                                                         CtaUrl = this.Url.Action("Index", "Booking", new { serviceId = svc.Id }),
+                                                     })" />
+            }
+        </div>
+    </section>
+
+    <!-- Local Service Areas Teaser -->
+    <section class="pricing-areas-section text-center">
+        <h2 class="font-headline-md text-primary">Local Service Areas</h2>
+        <p class="text-text-main pricing-section-subtitle">We work across South London, including:</p>
+        <div class="seo-local-areas pricing-areas-badges">
+            <div class="seo-area-badge">
+                <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                <span>Sutton</span>
+            </div>
+            <div class="seo-area-badge">
+                <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                <span>Croydon</span>
+            </div>
+            <div class="seo-area-badge">
+                <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                <span>Epsom</span>
+            </div>
+            <div class="seo-area-badge">
+                <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                <span>Cheam</span>
+            </div>
+            <div class="seo-area-badge">
+                <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                <span>Kingston</span>
+            </div>
+            <div class="seo-area-badge">
+                <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                <span>Bromley</span>
+            </div>
+        </div>
+        <a asp-controller="Home" asp-action="ServiceAreas" class="pricing-areas-link">
+            View all service areas
+            <span class="material-symbols-outlined">arrow_forward</span>
+        </a>
+    </section>
+
+    <!-- Pricing FAQs -->
+    <section class="pricing-faq-section">
+        <h2 class="font-headline-lg text-primary text-center pricing-section-title">Pricing FAQs</h2>
+        <div class="faq-accordion">
+            <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                    <span class="font-headline-sm text-primary">Do you charge for travel?</span>
+                    <span class="material-symbols-outlined arrow-icon">expand_more</span>
+                </button>
+                <div class="accordion-content">
+                    There are no travel charges within our standard service area.
+                </div>
+            </div>
+            <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                    <span class="font-headline-sm text-primary">Can I book multiple jobs in one visit?</span>
+                    <span class="material-symbols-outlined arrow-icon">expand_more</span>
+                </button>
+                <div class="accordion-content">
+                    Yes. Many customers prepare a list of small jobs to make the most of the booking &mdash; additional time beyond the first hour is billed at the same hourly rate.
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- CTA -->
     <div class="pricing-cta-actions">
@@ -77,3 +215,20 @@
         <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-lg">Get a Custom Quote</a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function toggleAccordion(button) {
+            const item = button.closest('.accordion-item');
+            const isActive = item.classList.contains('active');
+
+            document.querySelectorAll('.pricing-faq-section .accordion-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        }
+    </script>
+}

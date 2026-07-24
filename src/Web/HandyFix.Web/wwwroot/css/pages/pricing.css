@@ -1,81 +1,80 @@
 /* Pricing Page - Handy Fix */
 
-.pricing-categories {
+.pricing-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-6);
+}
+
+/* Shared N-agnostic grid used by both the category rate cards and the
+   Typical Job Costs _PricingCard grid - scales to any number of items
+   without layout changes, deliberately not a fixed column count. */
+.pricing-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--spacing-6);
+  margin-top: var(--spacing-8);
+}
+
+.pricing-rates-section {
   margin-top: var(--spacing-12);
 }
 
-.pricing-category-section {
-  margin-bottom: var(--spacing-12);
+.pricing-rates-header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
-.pricing-category-header {
+.rate-card {
+  padding: var(--spacing-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.rate-card-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-fixed);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: var(--spacing-4);
 }
 
-.pricing-category-title {
+.rate-card-icon-wrapper .material-symbols-outlined {
+  font-size: 28px;
+}
+
+.rate-card-title {
+  margin-bottom: var(--spacing-2);
+}
+
+.rate-card-figure {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+}
+
+.rate-card-price {
   font-size: var(--fs-headline-lg);
+  font-weight: 700;
   color: var(--primary);
-  margin: 0;
 }
 
-.pricing-category-desc {
-  font-size: var(--fs-body-md);
-  color: var(--text-main);
-  margin: var(--spacing-2) 0 0 0;
-  line-height: 1.5;
-}
-
-.pricing-table-wrapper {
-  overflow-x: auto;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  background-color: var(--surface-container-lowest);
-  box-shadow: var(--shadow-sm);
-}
-
-.pricing-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.pricing-table th,
-.pricing-table td {
-  padding: var(--spacing-4) var(--spacing-6);
-  text-align: left;
-  border-bottom: 1px solid var(--border-subtle);
-  white-space: nowrap;
-}
-
-.pricing-table th {
+.rate-card-pill {
   font-size: var(--fs-label-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--on-surface-variant);
   background-color: var(--surface-container-low);
-}
-
-.pricing-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.pricing-table td.pricing-service-name {
-  font-weight: 600;
-  white-space: normal;
-}
-
-.pricing-table td.pricing-service-name a {
-  color: var(--text-dark);
-  text-decoration: none;
-}
-
-.pricing-table td.pricing-service-name a:hover {
-  color: var(--secondary);
-  text-decoration: underline;
-}
-
-.pricing-table td.pricing-price {
-  font-weight: 700;
-  color: var(--secondary-container);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-full);
+  margin: 0;
 }
 
 .pricing-note-box {
@@ -99,11 +98,188 @@
   line-height: 1.5;
 }
 
+.pricing-bento-section {
+  margin-top: var(--spacing-16);
+}
+
+.pricing-bento-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  .pricing-bento-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.info-bento-card {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8);
+  box-shadow: var(--shadow-sm);
+}
+
+.pricing-materials-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.pricing-bento-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+}
+
+.pricing-bento-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.pricing-bento-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  color: var(--text-main);
+}
+
+.pricing-materials-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  background-color: var(--surface);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  margin-top: var(--spacing-6);
+}
+
+.pricing-materials-note p {
+  margin: 0;
+  font-size: var(--fs-label-sm);
+}
+
+.pricing-typical-jobs-section,
+.pricing-faq-section {
+  margin-top: var(--spacing-16);
+}
+
+.pricing-section-title {
+  margin-bottom: var(--spacing-2);
+}
+
+.pricing-section-subtitle {
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* _PricingCard partial styling - opaque content card, not the translucent
+   .glass-card treatment (that's reserved for hero/overlay contexts). */
+.pricing-card {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow var(--transition-fast);
+}
+
+.pricing-card:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+.pricing-card-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background-color: var(--primary-fixed);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-4);
+}
+
+.pricing-card-title {
+  font-size: var(--fs-headline-sm);
+  color: var(--primary);
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.pricing-card-desc {
+  color: var(--text-main);
+  font-size: var(--fs-body-md);
+  flex-grow: 1;
+}
+
+.pricing-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: var(--spacing-4) 0;
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pricing-card-price {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.pricing-card-duration {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  color: var(--on-surface-variant);
+  font-size: var(--fs-label-sm);
+}
+
+.pricing-card-duration .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.pricing-card-cta {
+  width: 100%;
+  text-align: center;
+}
+
+.pricing-areas-section {
+  margin-top: var(--spacing-16);
+}
+
+.pricing-areas-badges {
+  justify-content: center;
+  margin: var(--spacing-6) 0;
+}
+
+.pricing-areas-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--secondary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pricing-areas-link:hover {
+  text-decoration: underline;
+}
+
 .pricing-cta-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-4);
-  margin-top: var(--spacing-10);
+  margin-top: var(--spacing-16);
   margin-bottom: var(--spacing-8);
   justify-content: center;
 }
