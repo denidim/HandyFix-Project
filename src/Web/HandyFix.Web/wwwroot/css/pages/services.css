@@ -36,6 +36,12 @@
   max-width: 800px;
 }
 
+/* Modifier for pages whose hero should stay centered (Contact, Terms, Privacy, FAQ) rather
+   than left-aligned like the Services/Areas/Pricing listing pages. */
+.services-header-content.text-center {
+  margin-inline: auto;
+}
+
 .services-hero-title {
   font-size: var(--fs-headline-xl);
   line-height: 1.15;
