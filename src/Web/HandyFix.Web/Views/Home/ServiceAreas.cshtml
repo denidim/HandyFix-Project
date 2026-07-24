@@ -11,14 +11,14 @@
 
     <!-- Search & Map Section -->
     <section class="mb-5">
-        <div class="bg-white rounded-xl border p-4 p-md-5 relative shadow-sm" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+        <div class="bg-white rounded-xl p-4 p-md-5 relative shadow-sm areas-search-card">
             <div class="row align-items-center">
                 <div class="col-lg-4 mb-4 mb-lg-0">
-                    <h2 class="font-headline-md text-primary mb-2" style="font-size: var(--fs-headline-md);">Find My Technician</h2>
+                    <h2 class="font-headline-md text-primary mb-2">Find My Technician</h2>
                     <p class="font-body-md text-on-surface-variant mb-4">Enter your postcode to see if we cover your area and to estimate dispatch times.</p>
                     <div class="d-flex gap-2">
-                        <input class="form-control py-3" placeholder="e.g. CR0 1AA" type="text" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); background-color: var(--surface-container-lowest);" />
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" style="padding: 12px 16px; border-radius: var(--radius-lg);">
+                        <input class="form-control py-3 rounded-lg areas-postcode-input" placeholder="e.g. CR0 1AA" type="text" />
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center rounded-lg areas-search-btn">
                             <span class="material-symbols-outlined">search</span>
                         </button>
                     </div>
@@ -106,9 +106,9 @@
     </section>
 
     <!-- Final CTA -->
-    <section class="p-5 text-center border" style="background-color: var(--surface-container-low); border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+    <section class="p-5 text-center rounded-xl areas-final-cta">
         <h2 class="font-headline-md text-primary mb-2">Ready to book in your area?</h2>
         <p class="font-body-md text-on-surface-variant mb-4 max-w-xl mx-auto">Our local teams are on standby. Secure your preferred time slot today.</p>
-        <a asp-controller="Booking" asp-action="Index" class="btn btn-primary font-button-text px-5 py-3" style="border-radius: var(--radius-lg);">Book Now</a>
+        <a asp-controller="Booking" asp-action="Index" class="btn btn-primary font-button-text px-5 py-3 rounded-lg">Book Now</a>
     </section>
 </div>

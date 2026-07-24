@@ -816,3 +816,62 @@
     justify-content: center;
   }
 }
+
+.confirmed-page-container {
+  padding: var(--spacing-12) 0;
+}
+
+.details-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.stack-gap-2 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.success-balance-total-row {
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-2);
+}
+
+.success-balance-note {
+  text-align: right;
+  margin-top: var(--spacing-4);
+}
+
+.success-balance-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: rgba(78, 222, 163, 0.2);
+  color: var(--on-tertiary-container);
+}
+
+.success-btn-primary {
+  padding: var(--spacing-4) var(--spacing-10);
+  text-decoration: none;
+}
+
+.success-btn-outline {
+  padding: var(--spacing-4) var(--spacing-8);
+  text-decoration: none;
+  border: 2px solid var(--border-subtle);
+  background: #ffffff;
+  color: var(--text-main);
+}
+
+.summary-deposit-highlight {
+  color: var(--secondary-container);
+  font-weight: 700;
+}
+
+.slots-message-full-width {
+  grid-column: span 2;
+}

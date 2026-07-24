@@ -362,3 +362,9 @@
   text-align: center;
   justify-content: center;
 }
+
+.service-details-link {
+  border: 1px solid var(--border-subtle);
+  background: #ffffff;
+  color: var(--text-main);
+}

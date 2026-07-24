@@ -51,6 +51,8 @@
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 .bento-card img {
@@ -93,6 +95,9 @@
   padding: var(--spacing-8);
   border-radius: var(--radius-xl);
   transition: background-color var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .testimonial-card:hover {

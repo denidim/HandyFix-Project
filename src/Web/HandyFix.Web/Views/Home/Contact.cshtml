@@ -3,7 +3,7 @@
     this.ViewData["Title"] = "Get a Custom Quote - Handy Fix";
 }
 
-<div class="info-canvas" style="margin-top: var(--spacing-12); margin-bottom: var(--spacing-12);">
+<div class="info-canvas mt-12 mb-12">
     <!-- Hero Section -->
     <section class="text-center mb-5">
         <h1 class="font-headline-xl text-primary mb-2">Get a Custom Quote</h1>
@@ -15,17 +15,17 @@
     <!-- Success Alert -->
     @if (this.TempData["SuccessMessage"] != null)
     {
-        <div class="p-4 mb-4 text-white d-flex align-items-start gap-3" style="background-color: var(--secondary); border-radius: var(--radius-lg);">
-            <span class="material-symbols-outlined" style="font-size: 24px;">check_circle</span>
+        <div class="p-4 mb-4 text-white d-flex align-items-start gap-3 rounded-lg contact-success-alert">
+            <span class="material-symbols-outlined fs-24">check_circle</span>
             <div>
-                <h3 class="font-headline-sm mb-1 text-white" style="font-size: 16px; font-weight: 700;">Request Received!</h3>
-                <p class="mb-0 text-white" style="font-size: 14px; opacity: 0.9;">@this.TempData["SuccessMessage"]</p>
+                <h3 class="font-headline-sm mb-1 text-white fs-16 fw-bold">Request Received!</h3>
+                <p class="mb-0 text-white fs-14 opacity-90">@this.TempData["SuccessMessage"]</p>
             </div>
         </div>
     }
 
     <!-- Contact Form Container -->
-    <div class="glass-card rounded-xl p-4 p-md-5" style="border-radius: var(--radius-xl);">
+    <div class="glass-card rounded-xl p-4 p-md-5">
         <form id="contactForm" asp-controller="Home" asp-action="Contact" method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
             <div asp-validation-summary="All" class="validation-summary"></div>
 
@@ -33,7 +33,7 @@
                 <!-- Name -->
                 <div class="col-md-6 mb-3 mb-md-0">
                     <div class="form-field">
-                        <label class="form-label" asp-for="Name" style="font-weight: 600;">Full Name</label>
+                        <label class="form-label fw-semibold" asp-for="Name">Full Name</label>
                         <input asp-for="Name" class="form-control" placeholder="John Doe" required />
                         <span asp-validation-for="Name" class="validation-error"></span>
                     </div>
@@ -41,7 +41,7 @@
                 <!-- Email -->
                 <div class="col-md-6">
                     <div class="form-field">
-                        <label class="form-label" asp-for="Email" style="font-weight: 600;">Email Address</label>
+                        <label class="form-label fw-semibold" asp-for="Email">Email Address</label>
                         <input asp-for="Email" class="form-control" type="email" placeholder="john@example.com" required />
                         <span asp-validation-for="Email" class="validation-error"></span>
                     </div>
@@ -52,7 +52,7 @@
                 <!-- Phone -->
                 <div class="col-md-6 mb-3 mb-md-0">
                     <div class="form-field">
-                        <label class="form-label" asp-for="PhoneNumber" style="font-weight: 600;">Phone Number</label>
+                        <label class="form-label fw-semibold" asp-for="PhoneNumber">Phone Number</label>
                         <input asp-for="PhoneNumber" class="form-control" placeholder="+44 7123 456789" required />
                         <span asp-validation-for="PhoneNumber" class="validation-error"></span>
                     </div>
@@ -60,7 +60,7 @@
                 <!-- Service Type (Client-only visual helper combined into message on submit) -->
                 <div class="col-md-6">
                     <div class="form-field">
-                        <label class="form-label" for="serviceCategory" style="font-weight: 600;">Service Category</label>
+                        <label class="form-label fw-semibold" for="serviceCategory">Service Category</label>
                         <select class="form-control" id="serviceCategory">
                             <option value="Plumbing">Plumbing</option>
                             <option value="Electrical">Electrical</option>
@@ -74,19 +74,19 @@
 
             <!-- Message -->
             <div class="form-field">
-                <label class="form-label" asp-for="Message" style="font-weight: 600;">Project Details &amp; Message</label>
-                <textarea asp-for="Message" class="form-control" rows="5" placeholder="Describe the scope of your project, specific requirements, or any questions you have..." required style="resize: none;"></textarea>
+                <label class="form-label fw-semibold" asp-for="Message">Project Details &amp; Message</label>
+                <textarea asp-for="Message" class="form-control resize-none" rows="5" placeholder="Describe the scope of your project, specific requirements, or any questions you have..." required></textarea>
                 <span asp-validation-for="Message" class="validation-error"></span>
             </div>
 
             <!-- Photo Upload -->
             <div class="form-field">
-                <label class="form-label" style="font-weight: 600;">Project Photos (Optional)</label>
+                <label class="form-label fw-semibold">Project Photos (Optional)</label>
                 <div class="border-dashed-upload d-flex flex-column align-items-center justify-content-center" onclick="document.getElementById('imageUpload').click()">
-                    <input asp-for="Images" id="imageUpload" type="file" multiple accept="image/jpeg,image/png,image/webp" style="display: none;" data-max-files="5" data-max-size-mb="15" data-preview-grid="#contact-image-previews" />
-                    <span class="material-symbols-outlined text-secondary" style="font-size: 36px; margin-bottom: var(--spacing-2);">add_a_photo</span>
+                    <input asp-for="Images" id="imageUpload" type="file" multiple accept="image/jpeg,image/png,image/webp" class="d-none" data-max-files="5" data-max-size-mb="15" data-preview-grid="#contact-image-previews" />
+                    <span class="material-symbols-outlined text-secondary fs-36 mb-2">add_a_photo</span>
                     <p class="font-body-md text-on-surface-variant mb-0" id="uploadLabel">Click to upload or drag and drop</p>
-                    <p class="text-muted mb-0" style="font-size: 11px; margin-top: 4px;">PNG, JPG, WEBP up to 15MB each (Max 5 files). Auto-compressed.</p>
+                    <p class="text-muted mb-0 fs-11 mt-1">PNG, JPG, WEBP up to 15MB each (Max 5 files). Auto-compressed.</p>
                 </div>
                 <div id="contact-image-previews" class="image-preview-grid mt-3"></div>
                 <span asp-validation-for="Images" class="validation-error"></span>
@@ -94,7 +94,7 @@
 
             <!-- Submit Button -->
             <div class="pt-2">
-                <button type="submit" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2" style="border-radius: var(--radius-lg); font-size: 16px; font-weight: 600;">
+                <button type="submit" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
                     <span>Send Custom Quote Request</span>
                     <span class="material-symbols-outlined">send</span>
                 </button>
@@ -105,35 +105,35 @@
     <!-- Info Grid -->
     <div class="row mt-5">
         <div class="col-md-4 mb-3 mb-md-0">
-            <div class="p-4 rounded-xl d-flex align-items-center gap-3" style="background-color: var(--surface-container-highest); border-radius: var(--radius-xl);">
-                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background-color: var(--secondary);">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3 contact-info-tile">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white contact-info-icon-box">
                     <span class="material-symbols-outlined">support_agent</span>
                 </div>
                 <div>
-                    <h4 class="font-button-text mb-0" style="font-size: 14px;">Expert Support</h4>
-                    <p class="text-muted mb-0" style="font-size: 12px;">Real human assistance</p>
+                    <h4 class="font-button-text mb-0 fs-14">Expert Support</h4>
+                    <p class="text-muted mb-0 fs-12">Real human assistance</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4 mb-3 mb-md-0">
-            <div class="p-4 rounded-xl d-flex align-items-center gap-3" style="background-color: var(--surface-container-highest); border-radius: var(--radius-xl);">
-                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background-color: var(--secondary);">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3 contact-info-tile">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white contact-info-icon-box">
                     <span class="material-symbols-outlined">timer</span>
                 </div>
                 <div>
-                    <h4 class="font-button-text mb-0" style="font-size: 14px;">Quick Response</h4>
-                    <p class="text-muted mb-0" style="font-size: 12px;">Replies in &lt; 24 hrs</p>
+                    <h4 class="font-button-text mb-0 fs-14">Quick Response</h4>
+                    <p class="text-muted mb-0 fs-12">Replies in &lt; 24 hrs</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="p-4 rounded-xl d-flex align-items-center gap-3" style="background-color: var(--surface-container-highest); border-radius: var(--radius-xl);">
-                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background-color: var(--secondary);">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3 contact-info-tile">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white contact-info-icon-box">
                     <span class="material-symbols-outlined">local_shipping</span>
                 </div>
                 <div>
-                    <h4 class="font-button-text mb-0" style="font-size: 14px;">Local Dispatch</h4>
-                    <p class="text-muted mb-0" style="font-size: 12px;">London &amp; surrounds</p>
+                    <h4 class="font-button-text mb-0 fs-14">Local Dispatch</h4>
+                    <p class="text-muted mb-0 fs-12">London &amp; surrounds</p>
                 </div>
             </div>
         </div>

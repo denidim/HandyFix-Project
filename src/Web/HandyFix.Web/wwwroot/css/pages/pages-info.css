@@ -290,6 +290,129 @@
   transform: rotate(180deg);
 }
 
+/* Feature/callout boxes reused across Privacy, Terms, FAQ, etc. */
+.info-feature-card {
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-container-low);
+}
+
+.info-feature-dark {
+  background-color: var(--primary-container);
+}
+
+.info-feature-translucent {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-feature-light {
+  background-color: var(--surface-container);
+}
+
+.stripe-card-label {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.stripe-card-text {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.stripe-badge {
+  font-size: 18px;
+  opacity: 0.7;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.contact-details-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.info-print-btn {
+  border: 1px solid var(--border-subtle);
+  background: #ffffff;
+  color: var(--text-main);
+}
+
+.terms-cancellation-box {
+  border-left: 4px solid var(--secondary);
+  background-color: var(--surface-container-low);
+}
+
+.info-bottom-action {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.reviews-sidebar-sticky {
+  top: 100px;
+}
+
+.reviews-trust-icon-box {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(0, 150, 104, 0.08) !important;
+}
+
+.reviews-empty-state {
+  border: 2px dashed var(--outline-variant);
+}
+
+.contact-success-alert {
+  background-color: var(--secondary);
+}
+
+.contact-info-tile {
+  background-color: var(--surface-container-highest);
+}
+
+.contact-info-icon-box {
+  width: 48px;
+  height: 48px;
+  background-color: var(--secondary);
+}
+
+.faq-search-input {
+  padding-left: 45px;
+  border: 1px solid var(--outline-variant);
+  background-color: var(--surface-container-lowest);
+}
+
+.accordion-toggle-btn {
+  outline: none;
+}
+
+.faq-emergency-highlight {
+  border: 2px solid var(--secondary);
+}
+
+.faq-contact-cta {
+  border: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.areas-search-card {
+  border: 1px solid var(--border-subtle);
+}
+
+.areas-postcode-input {
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-container-lowest);
+}
+
+.areas-search-btn {
+  padding: 12px 16px;
+}
+
+.areas-final-cta {
+  background-color: var(--surface-container-low);
+  border: 1px solid var(--border-subtle);
+}
+
 /* Contact Us */
 .border-dashed-upload {
   border: 2px dashed var(--outline-variant);

@@ -193,7 +193,7 @@
                                 <span class="material-symbols-outlined upload-icon">add_a_photo</span>
                                 <p class="upload-text">Drag and drop images here or click to browse</p>
                                 <span class="upload-hint">Supports JPG, PNG, WEBP (Max 15MB each, up to 5 photos). Auto-compressed.</span>
-                                <input asp-for="Images" id="file-upload-input" style="display:none" type="file" multiple accept="image/jpeg,image/png,image/webp" data-max-files="5" data-max-size-mb="15" data-preview-grid="#booking-image-previews" />
+                                <input asp-for="Images" id="file-upload-input" class="d-none" type="file" multiple accept="image/jpeg,image/png,image/webp" data-max-files="5" data-max-size-mb="15" data-preview-grid="#booking-image-previews" />
                             </div>
                             <div id="booking-image-previews" class="image-preview-grid mt-3"></div>
                         </div>
@@ -229,7 +229,7 @@
                         </div>
                         <div class="summary-row-total">
                             <span class="summary-label">Deposit Due Now</span>
-                            <span class="summary-value" id="summary-deposit" style="color: var(--secondary-container); font-weight: 700;">£0.00</span>
+                            <span class="summary-value summary-deposit-highlight" id="summary-deposit">£0.00</span>
                         </div>
                     </div>
                     <div class="summary-price-container">
@@ -244,7 +244,7 @@
                 <!-- Trust Badge -->
                 <div class="sidebar-guarantee-card">
                     <div class="guarantee-icon-box">
-                        <span class="material-symbols-outlined guarantee-icon" style="font-variation-settings: 'FILL' 1;">verified</span>
+                        <span class="material-symbols-outlined guarantee-icon icon-fill">verified</span>
                     </div>
                     <div>
                         <p class="guarantee-title">Fixed Price Guarantee</p>
@@ -465,7 +465,7 @@
                 const formattedDateHeading = new Date(dateStr).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
                 slotsHeaderDate.textContent = `Slots for ${formattedDateHeading}`;
                 slotsCountBadge.textContent = "Loading...";
-                slotsContainer.innerHTML = "<div class='text-center p-3 text-muted w-100' style='grid-column: span 2;'>Loading availability...</div>";
+                slotsContainer.innerHTML = "<div class='text-center p-3 text-muted w-100 slots-message-full-width'>Loading availability...</div>";
 
                 fetch(`/Booking/GetSlots?date=${dateStr}`)
                     .then(res => {
@@ -478,7 +478,7 @@
 
                         if (!slots || slots.length === 0) {
                             slotsCountBadge.textContent = "0 Available";
-                            slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100' style='grid-column: span 2;'>No slots generated for this date. Please pick another date.</div>";
+                            slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100 slots-message-full-width'>No slots generated for this date. Please pick another date.</div>";
                             updateSummaryDateTime();
                             checkFormValidity();
                             return;
@@ -529,7 +529,7 @@
                     .catch(err => {
                         console.error(err);
                         slotsCountBadge.textContent = "Error";
-                        slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100' style='grid-column: span 2;'>Error loading slots.</div>";
+                        slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100 slots-message-full-width'>Error loading slots.</div>";
                     });
             }
 

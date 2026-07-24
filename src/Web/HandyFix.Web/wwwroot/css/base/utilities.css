@@ -1,0 +1,108 @@
+/* Spacing, line-height, and max-width utility classes.
+   Mirrors the --spacing-N scale in variables.css so inline styles built on
+   that scale can become classes instead. */
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: var(--spacing-1); }
+.mt-2 { margin-top: var(--spacing-2); }
+.mt-3 { margin-top: var(--spacing-3); }
+.mt-4 { margin-top: var(--spacing-4); }
+.mt-6 { margin-top: var(--spacing-6); }
+.mt-8 { margin-top: var(--spacing-8); }
+.mt-10 { margin-top: var(--spacing-10); }
+.mt-12 { margin-top: var(--spacing-12); }
+.mt-16 { margin-top: var(--spacing-16); }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: var(--spacing-1); }
+.mb-2 { margin-bottom: var(--spacing-2); }
+.mb-3 { margin-bottom: var(--spacing-3); }
+.mb-4 { margin-bottom: var(--spacing-4); }
+.mb-6 { margin-bottom: var(--spacing-6); }
+.mb-8 { margin-bottom: var(--spacing-8); }
+.mb-10 { margin-bottom: var(--spacing-10); }
+.mb-12 { margin-bottom: var(--spacing-12); }
+.mb-16 { margin-bottom: var(--spacing-16); }
+
+.pt-4 { padding-top: var(--spacing-4); }
+.pt-6 { padding-top: var(--spacing-6); }
+.pb-4 { padding-bottom: var(--spacing-4); }
+.pb-6 { padding-bottom: var(--spacing-6); }
+.pl-4 { padding-left: var(--spacing-4); }
+
+/* Line-height utilities (Tailwind-style names for common ratios used across pages) */
+.lh-tight { line-height: 1.25; }
+.lh-snug { line-height: 1.375; }
+.lh-normal { line-height: 1.5; }
+.lh-relaxed { line-height: 1.625; }
+.lh-24 { line-height: 24px; }
+
+.z-1 { z-index: 1; }
+
+.inline-form-reset {
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+}
+
+.btn-link-reset {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Max-width utilities (Tailwind rem scale) - several pages already reference
+   these class names without a definition; defining them here also fixes
+   that latent no-op. */
+.max-w-xl { max-width: 36rem; }
+.max-w-2xl { max-width: 42rem; }
+.max-w-3xl { max-width: 48rem; }
+.max-w-7xl { max-width: 80rem; }
+
+/* Border-radius utilities matching the design-system radius scale. Several
+   pages already reference rounded-lg/rounded-xl/rounded-full as if they were
+   Bootstrap classes, but Bootstrap 5 only ships rounded-0..rounded-5 and
+   rounded-circle/rounded-pill - defining these fixes that latent no-op too. */
+.rounded-lg { border-radius: var(--radius-lg) !important; }
+.rounded-xl { border-radius: var(--radius-xl) !important; }
+.rounded-full { border-radius: var(--radius-full) !important; }
+
+/* Fixed font-size utilities for the one-off pixel sizes used across
+   marketing/info pages (icons, badges, fine print). */
+.fs-11 { font-size: 11px; }
+.fs-12 { font-size: 12px; }
+.fs-13 { font-size: 13px; }
+.fs-14 { font-size: 14px; }
+.fs-16 { font-size: 16px; }
+.fs-18 { font-size: 18px; }
+.fs-20 { font-size: 20px; }
+.fs-24 { font-size: 24px; }
+.fs-36 { font-size: 36px; }
+.fs-48 { font-size: 48px; }
+
+/* "Filled" Material Symbols variant applied via a class instead of an inline
+   font-variation-settings override. */
+.icon-fill {
+  font-variation-settings: 'FILL' 1;
+}
+
+.icon-unfill {
+  font-variation-settings: 'FILL' 0;
+}
+
+.icon-medium-weight {
+  font-variation-settings: 'wght' 500;
+}
+
+.resize-none {
+  resize: none;
+}
+
+/* Opacity utilities for the specific fractional values used across
+   marketing/info pages - Bootstrap's opacity-* scale only covers 25/50/75/100.
+   Terms.cshtml already referenced "opacity-70" as if it were defined; this
+   fixes that latent no-op too. */
+.opacity-70 { opacity: 0.7; }
+.opacity-80 { opacity: 0.8; }
+.opacity-90 { opacity: 0.9; }

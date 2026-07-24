@@ -3,7 +3,7 @@
 }
 
 <!-- Main Content Canvas -->
-<div class="info-canvas" style="margin-top: var(--spacing-12); margin-bottom: var(--spacing-12);">
+<div class="info-canvas mt-12 mb-12">
     <!-- Hero Section -->
     <section class="text-center mb-5">
         <h1 class="font-headline-xl text-primary mb-2">How can we help?</h1>
@@ -14,24 +14,24 @@
 
     <!-- Search Bar -->
     <div class="position-relative mb-5">
-        <input id="faqSearchInput" class="form-control py-3" placeholder="Search for answers..." type="text" style="padding-left: 45px; border-radius: var(--radius-xl); border: 1px solid var(--outline-variant); background-color: var(--surface-container-lowest);" />
-        <span class="material-symbols-outlined position-absolute start-0 top-0 bottom-0 d-flex align-items-center ps-3 text-on-surface-variant" style="pointer-events: none;">search</span>
+        <input id="faqSearchInput" class="form-control py-3 rounded-xl faq-search-input" placeholder="Search for answers..." type="text" />
+        <span class="material-symbols-outlined position-absolute start-0 top-0 bottom-0 d-flex align-items-center ps-3 text-on-surface-variant pe-none">search</span>
     </div>
 
     <!-- FAQ Categories & Accordion -->
     <div class="faq-accordion" id="generalFaq">
-        
+
         <!-- Category: Booking & Process -->
         <div class="d-flex flex-column gap-3">
-            <h2 class="font-headline-sm text-secondary px-2 d-flex align-items-center gap-2 mb-0" style="font-size: var(--fs-headline-sm);">
+            <h2 class="font-headline-sm text-secondary px-2 d-flex align-items-center gap-2 mb-0">
                 <span class="material-symbols-outlined">event_available</span>
                 <span>Booking &amp; Process</span>
             </h2>
-            
+
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0" onclick="toggleAccordion(this)" style="outline: none;">
-                    <span class="font-headline-sm text-primary" style="font-size: 16px; font-weight: 700;">How do I book a service?</span>
-                    <span class="material-symbols-outlined arrow-icon transition-transform" style="font-size: 20px;">expand_more</span>
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                    <span class="font-headline-sm text-primary fs-16 fw-bold">How do I book a service?</span>
+                    <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
                 <div class="accordion-content">
                     Booking is simple. Select your required service (Plumbing, Electrical, etc.) from our main dashboard, choose a preferred time slot, and provide details about the job. You will receive an instant confirmation via email and SMS once a professional is assigned.
@@ -39,9 +39,9 @@
             </div>
 
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0" onclick="toggleAccordion(this)" style="outline: none;">
-                    <span class="font-headline-sm text-primary" style="font-size: 16px; font-weight: 700;">What is the £50 deposit for?</span>
-                    <span class="material-symbols-outlined arrow-icon transition-transform" style="font-size: 20px;">expand_more</span>
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                    <span class="font-headline-sm text-primary fs-16 fw-bold">What is the £50 deposit for?</span>
+                    <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
                 <div class="accordion-content">
                     The £50 deposit secures your appointment and ensures the professional's travel and time are covered. This amount is fully deductible from your final invoice. We use this system to maintain a reliable schedule for all our clients and professionals.
@@ -51,15 +51,15 @@
 
         <!-- Category: Cancellations & Refunds -->
         <div class="d-flex flex-column gap-3 pt-4">
-            <h2 class="font-headline-sm text-secondary px-2 d-flex align-items-center gap-2 mb-0" style="font-size: var(--fs-headline-sm);">
+            <h2 class="font-headline-sm text-secondary px-2 d-flex align-items-center gap-2 mb-0">
                 <span class="material-symbols-outlined">cancel</span>
                 <span>Cancellations &amp; Refunds</span>
             </h2>
-            
+
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0" onclick="toggleAccordion(this)" style="outline: none;">
-                    <span class="font-headline-sm text-primary" style="font-size: 16px; font-weight: 700;">Can I cancel my booking?</span>
-                    <span class="material-symbols-outlined arrow-icon transition-transform" style="font-size: 20px;">expand_more</span>
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                    <span class="font-headline-sm text-primary fs-16 fw-bold">Can I cancel my booking?</span>
+                    <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
                 <div class="accordion-content">
                     Yes, you can cancel or reschedule through your dashboard. Cancellations made more than 24 hours before the appointment are eligible for a full refund of the £50 deposit. Cancellations within 24 hours are non-refundable.
@@ -69,15 +69,15 @@
 
         <!-- Category: Emergency Callouts -->
         <div class="d-flex flex-column gap-3 pt-4">
-            <h2 class="font-headline-sm text-secondary px-2 d-flex align-items-center gap-2 mb-0" style="font-size: var(--fs-headline-sm);">
+            <h2 class="font-headline-sm text-secondary px-2 d-flex align-items-center gap-2 mb-0">
                 <span class="material-symbols-outlined">emergency</span>
                 <span>Emergency Callouts</span>
             </h2>
-            
-            <div class="accordion-item glass-morphism rounded-xl overflow-hidden" style="border: 2px solid var(--secondary) !important;">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0" onclick="toggleAccordion(this)" style="outline: none;">
-                    <span class="font-headline-sm text-primary" style="font-size: 16px; font-weight: 700;">Do you offer 24/7 emergency services?</span>
-                    <span class="material-symbols-outlined arrow-icon transition-transform" style="font-size: 20px;">expand_more</span>
+
+            <div class="accordion-item glass-morphism rounded-xl overflow-hidden faq-emergency-highlight">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                    <span class="font-headline-sm text-primary fs-16 fw-bold">Do you offer 24/7 emergency services?</span>
+                    <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
                 <div class="accordion-content">
                     Absolutely. We provide 24/7 emergency callouts for burst pipes, electrical failures, and HVAC issues. Emergency callouts have a flat fee of £120 plus parts and labor. We aim to have a professional at your door within 60-90 minutes of the request.
@@ -87,17 +87,17 @@
     </div>
 
     <!-- Contact CTA Card -->
-    <section class="mt-5 glass-morphism p-4 rounded-xl d-flex flex-column flex-md-row align-items-center justify-content-between gap-4" style="border: none; box-shadow: var(--shadow-sm); border-radius: var(--radius-xl);">
+    <section class="mt-5 glass-morphism p-4 rounded-xl d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 faq-contact-cta">
         <div class="text-center text-md-start">
-            <h3 class="font-headline-md text-primary mb-1" style="font-size: var(--fs-headline-md);">Still have questions?</h3>
+            <h3 class="font-headline-md text-primary mb-1">Still have questions?</h3>
             <p class="text-on-surface-variant font-body-md mb-0">Our customer support team is available 24/7 to assist you.</p>
         </div>
         <div class="d-flex gap-3">
-            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline d-flex align-items-center gap-2 px-4 py-3" style="background: #ffffff; color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); font-weight: 600;">
+            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline d-flex align-items-center gap-2 px-4 py-3 rounded-lg fw-semibold info-print-btn">
                 <span class="material-symbols-outlined">chat</span>
                 <span>Chat Now</span>
             </a>
-            <a href="tel:+1555HANDYFIX" class="btn btn-primary d-flex align-items-center gap-2 px-4 py-3" style="border-radius: var(--radius-lg); font-weight: 600;">
+            <a href="tel:+1555HANDYFIX" class="btn btn-primary d-flex align-items-center gap-2 px-4 py-3 rounded-lg fw-semibold">
                 <span class="material-symbols-outlined">call</span>
                 <span>Call Us</span>
             </a>
@@ -109,12 +109,12 @@
     function toggleAccordion(button) {
         const item = button.closest('.accordion-item');
         const isActive = item.classList.contains('active');
-        
+
         // Close all items
         document.querySelectorAll('.accordion-item').forEach(el => {
             el.classList.remove('active');
         });
-        
+
         // If the clicked item wasn't active, open it
         if (!isActive) {
             item.classList.add('active');
@@ -133,7 +133,7 @@
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const items = document.querySelectorAll('.accordion-item');
-            
+
             items.forEach(item => {
                 const text = item.innerText.toLowerCase();
                 if (text.includes(term)) {

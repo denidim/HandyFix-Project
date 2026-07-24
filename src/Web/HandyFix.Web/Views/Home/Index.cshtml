@@ -15,8 +15,8 @@
   <div class="page-container hero-content">
     <div class="hero-grid">
       <div class="hero-text-content">
-        <h1 class="font-headline-xl text-primary" style="line-height: 1.25; margin-bottom: var(--spacing-6);">Local Plumbing & Handyman Services in South London</h1>
-        <p class="font-body-lg text-text-main" style="line-height: 1.625; margin-bottom: var(--spacing-8);">Reliable, professional, and fully insured mobile service operating in Sutton, Croydon, Epsom, and beyond. Booking has never been easier.</p>
+        <h1 class="font-headline-xl text-primary lh-tight mb-6">Local Plumbing & Handyman Services in South London</h1>
+        <p class="font-body-lg text-text-main lh-relaxed mb-8">Reliable, professional, and fully insured mobile service operating in Sutton, Croydon, Epsom, and beyond. Booking has never been easier.</p>
         <div class="hero-value-props">
           <div class="value-prop-item">
             <span class="material-symbols-filled text-success font-bold">check_circle</span>
@@ -35,14 +35,14 @@
             <span class="font-button-text text-text-main">100% Customer Satisfaction Guarantee</span>
           </div>
         </div>
-        <a href="#services-overview" class="btn btn-primary btn-lg" style="box-shadow: var(--shadow-lg);">Explore Our Services</a>
+        <a href="#services-overview" class="btn btn-primary btn-lg hero-cta-btn">Explore Our Services</a>
       </div>
 
       <div class="hero-booking-wrapper">
         <div class="glass-card hero-booking-card">
-          <h3 class="font-headline-md text-primary" style="margin-bottom: var(--spacing-6);">Check Availability</h3>
+          <h3 class="font-headline-md text-primary mb-6">Check Availability</h3>
           <form id="hero-booking-form" method="get" asp-controller="Booking" asp-action="Index">
-            <div style="margin-bottom: var(--spacing-6);">
+            <div class="mb-6">
               <label for="widget-category" class="form-label">Select Service</label>
               <select id="widget-category" name="categorySlug" class="form-control" required>
                 <option value="">-- Choose a service --</option>
@@ -52,28 +52,28 @@
                 }
               </select>
             </div>
-            <div style="margin-bottom: var(--spacing-6);">
+            <div class="mb-6">
               <label for="widget-date" class="form-label">Choose Date</label>
               <input type="date" id="widget-date" name="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
             </div>
 
             <!-- Informative Copy Block -->
-            <div style="margin-bottom: var(--spacing-6); padding: var(--spacing-4); border-radius: var(--radius-md); background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
-                <p class="font-label-sm text-on-tertiary-container" style="margin-bottom: var(--spacing-2); line-height: 1.5;">
-                    <span style="font-weight: 700;">Secure a visit at your convenient time</span><br>
+            <div class="hero-note-box">
+                <p class="font-label-sm text-on-tertiary-container mb-2 lh-normal">
+                    <span class="fw-bold">Secure a visit at your convenient time</span><br>
                     by selecting a time slot & secure deposit on next page. No risk — cancel anytime.
                 </p>
-                <p class="font-label-sm text-on-tertiary-container" style="margin: 0; line-height: 1.5;">
+                <p class="font-label-sm text-on-tertiary-container m-0 lh-normal">
                     All jobs start with 1-hour base rate by category.
-                    <a asp-route="Pricing" class="font-button-text" style="color: var(--secondary-container); text-decoration: underline; margin-left: var(--spacing-1);">See Pricing &rarr;</a>
+                    <a asp-route="Pricing" class="font-button-text hero-note-pricing-link">See Pricing &rarr;</a>
                 </p>
             </div>
 
-            <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block" style="margin-top: var(--spacing-4); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3);" disabled>See Available Slots & Book &rarr;</button>
+            <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block hero-submit-btn" disabled>See Available Slots & Book &rarr;</button>
           </form>
 
-          <div style="margin-top: var(--spacing-6); border-top: 1px solid var(--glass-border); padding-top: var(--spacing-6); text-align: center;">
-            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center gap-2" style="background: rgba(0, 101, 145, 0.05); color: var(--primary); border: 2px solid var(--primary); font-weight: 600; border-radius: var(--radius-lg); padding-top: var(--spacing-3); padding-bottom: var(--spacing-3); text-decoration: none; transition: all var(--transition-normal);">
+          <div class="hero-quote-divider">
+            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center gap-2 hero-quote-btn">
               <span class="material-symbols-outlined">request_quote</span>
               <span>Get a Custom Quote</span>
             </a>
@@ -88,10 +88,10 @@
 <section id="services-overview" class="section">
   <div class="page-container">
     <div class="section-header">
-      <h2 class="font-headline-lg" style="margin-bottom: var(--spacing-4);">
+      <h2 class="font-headline-lg mb-4">
         <a asp-controller="Services" asp-action="Index" class="division-title-link">Specialized Divisions</a>
       </h2>
-      <div style="width: 5rem; height: 0.375rem; background-color: var(--secondary); border-radius: 9999px;"></div>
+      <div class="section-header-divider"></div>
     </div>
     
     <div class="divisions-grid">
@@ -102,17 +102,17 @@
         </div>
         <div class="division-card-content">
           <div class="division-header-title">
-            <span class="material-symbols-outlined text-secondary" style="font-size: 2.25rem;">water_drop</span>
-            <h3 class="font-headline-md" style="margin: 0;">Plumbing & Heating</h3>
+            <span class="material-symbols-outlined text-secondary division-icon-lg">water_drop</span>
+            <h3 class="font-headline-md m-0">Plumbing & Heating</h3>
           </div>
-          <p class="text-text-main font-body-md" style="margin-bottom: var(--spacing-6); line-height: 1.625;">
+          <p class="text-text-main font-body-md mb-6 lh-relaxed">
             From emergency burst pipes to full boiler installations, our certified plumbers handle every drop with expert care and precision.
           </p>
           <ul class="division-services-list">
-            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Leak Detection</li>
-            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Boiler Service</li>
-            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Drainage Solutions</li>
-            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Tap Replacement</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary division-check-icon">check</span>Leak Detection</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary division-check-icon">check</span>Boiler Service</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary division-check-icon">check</span>Drainage Solutions</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary division-check-icon">check</span>Tap Replacement</li>
           </ul>
           <a class="division-link" asp-route="ServiceCategory" asp-route-categorySlug="plumbing">
             View Plumbing Rates
@@ -127,17 +127,17 @@
         </div>
         <div class="division-card-content">
           <div class="division-header-title">
-            <span class="material-symbols-outlined text-secondary" style="font-size: 2.25rem;">handyman</span>
-            <h3 class="font-headline-md" style="margin: 0;">General Handyman</h3>
+            <span class="material-symbols-outlined text-secondary division-icon-lg">handyman</span>
+            <h3 class="font-headline-md m-0">General Handyman</h3>
           </div>
-          <p class="text-text-main font-body-md" style="margin-bottom: var(--spacing-6); line-height: 1.625;">
+          <p class="text-text-main font-body-md mb-6 lh-relaxed">
             Tackle your "to-do" list with professionals who specialize in efficiency. No job is too small for our expert property team.
           </p>
           <ul class="division-services-list">
-            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Furniture Assembly</li>
-            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>TV Mounting</li>
-            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Door Repairs</li>
-            <li class="division-service-item"><span class="material-symbols-outlined text-secondary" style="font-size:18px;">check</span>Shelf Installation</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary division-check-icon">check</span>Furniture Assembly</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary division-check-icon">check</span>TV Mounting</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary division-check-icon">check</span>Door Repairs</li>
+            <li class="division-service-item"><span class="material-symbols-outlined text-secondary division-check-icon">check</span>Shelf Installation</li>
           </ul>
           <a class="division-link" asp-route="ServiceCategory" asp-route-categorySlug="handyman">
             View Handyman Rates
@@ -155,11 +155,11 @@
     <div class="page-container">
         <div class="bento-header">
             <div class="section-header-left">
-                <h2 class="font-headline-lg" style="margin-bottom: var(--spacing-2)">
+                <h2 class="font-headline-lg mb-2">
                     Popular Services
                 </h2>
 
-                <p class="text-text-main font-body-md" style="margin: 0">
+                <p class="text-text-main font-body-md m-0">
                     Most requested repairs and installations in South London
                 </p>
             </div>
@@ -174,8 +174,7 @@
                 <a class="bento-card"
                      asp-route="ServiceDetails"
                      asp-route-categorySlug="@svc.CategorySlug"
-                     asp-route-serviceSlug="@svc.Slug"
-                     style="text-decoration: none; color: inherit;">
+                     asp-route-serviceSlug="@svc.Slug">
                     <img src="@svc.ImageUrl"
                          alt="@svc.Name"
                          asp-append-version="true"
@@ -189,7 +188,7 @@
                     <div class="bento-card-content">
                         <h4 class="font-headline-md text-white">@svc.Name</h4>
 
-                        <p class="text-white-80 font-body-md" style="margin: 0">
+                        <p class="text-white-80 font-body-md m-0">
                             From £@svc.BasePrice
                         </p>
                     </div>
@@ -206,46 +205,46 @@
   <div class="page-container">
     <div class="trust-grid">
       <div>
-        <h2 class="font-headline-lg" style="line-height: 1.25; margin-bottom: var(--spacing-6);">Trust Your Home to Qualified Experts</h2>
-        <p class="font-body-lg text-text-main" style="line-height: 1.625; margin-bottom: var(--spacing-8);">
+        <h2 class="font-headline-lg lh-tight mb-6">Trust Your Home to Qualified Experts</h2>
+        <p class="font-body-lg text-text-main lh-relaxed mb-8">
           We don't just fix things; we provide peace of mind. Every member of the Handy Fix team undergoes rigorous background checks and technical vetting to ensure your property is in safe, capable hands.
         </p>
         <div class="trust-cards-list">
           <div class="trust-card">
             <div class="trust-card-icon">
-              <span class="material-symbols-outlined" style="color:var(--on-secondary-fixed);">verified</span>
+              <span class="material-symbols-outlined">verified</span>
             </div>
             <div>
-              <h4 class="font-headline-sm" style="margin: 0 0 var(--spacing-1) 0;">Vetted Professionals</h4>
-              <p class="text-on-surface-variant" style="margin: 0;">Thorough background checks and 5+ years experience required for all staff.</p>
+              <h4 class="font-headline-sm mb-1">Vetted Professionals</h4>
+              <p class="text-on-surface-variant m-0">Thorough background checks and 5+ years experience required for all staff.</p>
             </div>
           </div>
           <div class="trust-card">
             <div class="trust-card-icon">
-              <span class="material-symbols-outlined" style="color:var(--on-secondary-fixed);">payments</span>
+              <span class="material-symbols-outlined">payments</span>
             </div>
             <div>
-              <h4 class="font-headline-sm" style="margin: 0 0 var(--spacing-1) 0;">Transparent Flat Rates</h4>
-              <p class="text-on-surface-variant" style="margin: 0;">No hidden fees, call-out charges, or surprise costs at the end of the job.</p>
+              <h4 class="font-headline-sm mb-1">Transparent Flat Rates</h4>
+              <p class="text-on-surface-variant m-0">No hidden fees, call-out charges, or surprise costs at the end of the job.</p>
             </div>
           </div>
           <div class="trust-card">
             <div class="trust-card-icon">
-              <span class="material-symbols-outlined" style="color:var(--on-secondary-fixed);">shield_with_heart</span>
+              <span class="material-symbols-outlined">shield_with_heart</span>
             </div>
             <div>
-              <h4 class="font-headline-sm" style="margin: 0 0 var(--spacing-1) 0;">Fully Insured</h4>
-              <p class="text-on-surface-variant" style="margin: 0;">Up to £5M Public Liability insurance covering every single visit.</p>
+              <h4 class="font-headline-sm mb-1">Fully Insured</h4>
+              <p class="text-on-surface-variant m-0">Up to £5M Public Liability insurance covering every single visit.</p>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div class="trust-image-wrapper">
         <div class="blur-circle top-right"></div>
         <div class="blur-circle bottom-left"></div>
-        <div class="glass-card" style="padding: var(--spacing-4); position: relative; z-index: 10;">
-          <img src="~/images/hero.png" alt="Trust" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: var(--radius-xl);">
+        <div class="glass-card trust-image-card">
+          <img src="~/images/hero.png" alt="Trust" class="trust-hero-img">
           <div class="trust-stats-card">
             <div class="trust-stats-col">
               <span class="font-bold text-primary">12k+ Jobs Completed</span>
@@ -259,8 +258,8 @@
             </div>
             <div class="trust-stats-divider"></div>
             <div class="trust-stats-col">
-              <span class="font-bold text-on-tertiary-container" style="font-size: 14px;">4.9/5 Rating</span>
-              <span class="text-on-surface-variant" style="font-size: 12px;">Based on 2,500 reviews</span>
+              <span class="font-bold text-on-tertiary-container trust-stats-rating">4.9/5 Rating</span>
+              <span class="text-on-surface-variant trust-stats-reviews">Based on 2,500 reviews</span>
             </div>
           </div>
         </div>
@@ -272,13 +271,13 @@
 <!-- Testimonials -->
 <section class="section testimonials-section">
   <div class="testimonials-section-bg"></div>
-  <div class="page-container" style="position: relative; z-index: 10;">
+  <div class="page-container testimonials-content-layer">
     <div class="section-header">
-      <h2 class="font-headline-lg text-white" style="margin-bottom: var(--spacing-4);">What Our Customers Say</h2>
-      <p class="text-on-primary-container" style="max-width: 42rem; margin: 0 auto;">Real experiences from homeowners across Sutton, Croydon, and Epsom.</p>
+      <h2 class="font-headline-lg text-white mb-4">What Our Customers Say</h2>
+      <p class="text-on-primary-container max-w-2xl mx-auto my-0">Real experiences from homeowners across Sutton, Croydon, and Epsom.</p>
       <div class="mt-4">
         <a asp-controller="Home" asp-action="Reviews" class="btn-testimonial-review">
-          <span class="material-symbols-outlined" style="font-size: 18px;">rate_review</span>
+          <span class="material-symbols-outlined testimonial-review-icon">rate_review</span>
           <span>Leave a Review</span>
         </a>
       </div>
@@ -289,7 +288,7 @@
       {
           @foreach (var review in reviews)
           {
-              <div class="testimonial-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="testimonial-card">
                 <div>
                   <div class="testimonial-stars">
                     @for (int i = 0; i < review.Rating; i++)
@@ -297,13 +296,13 @@
                         <span class="material-symbols-filled">star</span>
                     }
                   </div>
-                  <p class="font-body-md text-white-90 italic" style="margin-bottom: var(--spacing-6); line-height: 1.625;">"@review.Comment"</p>
+                  <p class="font-body-md text-white-90 italic mb-6 lh-relaxed">"@review.Comment"</p>
                 </div>
                 <div class="testimonial-author">
                   <div class="testimonial-avatar"></div>
                   <div>
-                    <p class="font-bold text-white" style="margin: 0;">@review.CustomerName</p>
-                    <p class="text-on-primary-container" style="margin: 0; font-size: 12px;">Verified Client</p>
+                    <p class="font-bold text-white m-0">@review.CustomerName</p>
+                    <p class="text-on-primary-container testimonial-role-label">Verified Client</p>
                   </div>
                 </div>
               </div>
@@ -311,7 +310,7 @@
       }
       else
       {
-          <div style="grid-column: 1 / -1; text-align: center; color: rgba(255, 255, 255, 0.8);">
+          <div class="testimonials-empty-state">
               No reviews yet. Be the first to leave a review!
           </div>
       }
@@ -325,13 +324,13 @@
     <div class="cta-card">
       <div class="cta-card-bg"></div>
       <div class="cta-card-content">
-        <h2 class="font-headline-xl" style="margin-bottom: var(--spacing-6);">Ready to cross those repairs off your list?</h2>
+        <h2 class="font-headline-xl mb-6">Ready to cross those repairs off your list?</h2>
         <p class="font-body-lg text-text-main cta-card-text">
           Join thousands of satisfied South London residents. Book your professional service in under 60 seconds.
         </p>
         <div class="cta-actions">
-          <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg" style="box-shadow: var(--shadow-xl); border-radius: var(--radius-xl);">Book Appointment Now</a>
-          <a asp-controller="Services" asp-action="Index" class="btn btn-outline-primary btn-lg" style="background-color: #fff; border-radius: var(--radius-xl);">View All Services</a>
+          <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg cta-btn-primary-shadow">Book Appointment Now</a>
+          <a asp-controller="Services" asp-action="Index" class="btn btn-outline-primary btn-lg cta-btn-outline-white">View All Services</a>
         </div>
         <div class="cta-benefits">
           <div class="cta-benefit-item"><span class="material-symbols-filled text-success">bolt</span>Same Day Available</div>

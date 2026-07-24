@@ -9,7 +9,7 @@
     <div class="payment-status-card">
         <!-- Icon and Heading -->
         <div class="payment-status-icon-bubble">
-            <span class="material-symbols-outlined payment-status-icon" style="font-variation-settings: 'wght' 500;">warning</span>
+            <span class="material-symbols-outlined payment-status-icon icon-medium-weight">warning</span>
         </div>
         <h1 class="payment-status-title">Payment Cancelled</h1>
         <p class="payment-status-desc">
@@ -22,7 +22,7 @@
             <div>
                 <p class="payment-status-alert-title">Important Reminder</p>
                 <p class="payment-status-alert-text">
-                    To secure your chosen time slot and technician, a <span style="font-weight: 700; color: var(--primary);">£50.00 deposit</span> is required. This amount will be deducted from your final bill once the job is complete.
+                    To secure your chosen time slot and technician, a <span class="fw-bold text-primary">£50.00 deposit</span> is required. This amount will be deducted from your final bill once the job is complete.
                 </p>
             </div>
         </div>
@@ -32,11 +32,11 @@
             @if (bookingId != null)
             {
                 <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@bookingId" class="btn btn-primary payment-status-btn" id="retry-btn">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
+                    <span class="material-symbols-outlined fs-20">refresh</span>
                     <span>Retry Payment (£50.00)</span>
                 </a>
             }
-            <a asp-controller="Home" asp-action="Index" class="btn btn-outline payment-status-btn" style="border: 2px solid var(--border-subtle); background: transparent; color: var(--text-main);">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline payment-status-btn payment-status-btn-outline">
                 Cancel and Return Home
             </a>
         </div>
@@ -44,11 +44,11 @@
         <!-- Security Note -->
         <div class="payment-status-security-note">
             <div class="security-note-item">
-                <span class="material-symbols-outlined" style="font-size: 14px;">lock</span>
+                <span class="material-symbols-outlined fs-14">lock</span>
                 <span>Secure Stripe Checkout</span>
             </div>
             <div class="security-note-item">
-                <span class="material-symbols-outlined" style="font-size: 14px;">verified_user</span>
+                <span class="material-symbols-outlined fs-14">verified_user</span>
                 <span>PCI Compliant</span>
             </div>
         </div>
@@ -68,15 +68,15 @@
                 // Prevent immediate navigation so the user sees transition
                 e.preventDefault();
                 const targetHref = this.getAttribute('href');
-                
+
                 this.innerHTML = `
-                    <svg class="animate-spin" style="height: 20px; width: 20px; color: #ffffff;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg class="animate-spin spinner-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     <span>Reconnecting to Stripe...</span>
                 `;
-                
+
                 setTimeout(() => {
                     window.location.href = targetHref;
                 }, 1000);
