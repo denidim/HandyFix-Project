@@ -151,6 +151,18 @@ Extends the sortable/queryable "Order by" pattern built for Bookings (Section 3d
 
 ---
 
+## 3f. Admin Reviews List: Sorting and Status Filtering (2026-07-24)
+
+Extends the same pattern to the Reviews admin list, the last of the three lists named in the Sprint 3 roadmap line — that line is now fully done.
+
+- Added `ReviewSortField` (`CreatedOn`, `CustomerName`, `Rating`, in `HandyFix.Web.ViewModels.Reviews`) and extended `IReviewsService.GetAllAsync<T>` with `sortField`/`descending`/`statusFilter` parameters. Since `Review.IsApproved` is a bool rather than a named status entity, `statusFilter` is a string (`"Approved"`/`"Pending"`) matched against it in the query rather than joined against a status table.
+- `ReviewsController.Index` now also recomputes the summary stat cards (Average Rating, Total Published, Approval Rate, Pending count) from an always-unfiltered fetch, same reasoning as Bookings' summary cards — applying the new status filter to the table shouldn't skew them.
+- `Reviews/Index.cshtml` uses a new `ReviewListViewModel`; "Customer", "Rating", and "Date" headers are sort toggles, and a status filter `<select>` (All/Approved/Pending) sits next to the existing "Refresh List" button, reusing the `admin-status-filter`/`admin-sort-link` CSS already added for Bookings — no new CSS was needed.
+- Covered by new tests: `ReviewsServiceTests.GetAllAsyncShouldSortByRatingDescendingWhenRequested`/`GetAllAsyncShouldFilterByApprovalStatusWhenRequested`.
+- Verified both this and the Enquiries page (Section 3e) by running the app locally (Playwright driver script, since `chromium-cli` isn't available in this Windows environment), logging in as the seeded admin, and screenshotting both pages default/sorted/filtered — sorting, filtering, and the unfiltered summary stats all behave correctly. `console --errors` surfaced a pre-existing `s.parseJSON is not a function` error from the bundled `jquery-validation-unobtrusive` library (fires on the login page, unrelated to this change) and some pre-existing 404s for missing static assets (see Images gap below) — neither is new.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Images (carried over from Sprint 2 — needs real assets, not more engineering)
@@ -160,8 +172,8 @@ Extends the sortable/queryable "Order by" pattern built for Bookings (Section 3d
 - Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
 
 ### Sprint 3 — Admin & Polish
-- Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists). Bookings done (Section 3d), Enquiries done (Section 3e), Reviews still outstanding.
-- Usability enhancements across the admin area.
+- ~~Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists).~~ **Done** — Bookings in Section 3d, Enquiries in Section 3e, Reviews in Section 3f.
+- Usability enhancements across the admin area. **Unscoped** — no concrete items identified yet; needs specifics before this can be called done.
 - ~~Admin-area inline-style cleanup (343 occurrences, deferred here from Sprint 2 to avoid mixing scope).~~ **Done** — see Section 3a below.
 
 ### Sprint 4 — Testing, Documentation & Deployment

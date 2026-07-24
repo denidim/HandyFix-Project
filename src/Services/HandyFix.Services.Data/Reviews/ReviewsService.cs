@@ -8,6 +8,7 @@ namespace HandyFix.Services.Data.Reviews
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.Reviews;
 
     using Microsoft.EntityFrameworkCore;
 
@@ -65,12 +66,36 @@ namespace HandyFix.Services.Data.Reviews
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync<T>()
+        public async Task<IEnumerable<T>> GetAllAsync<T>(
+            ReviewSortField sortField = ReviewSortField.CreatedOn,
+            bool descending = true,
+            string statusFilter = null)
         {
-            return await this.reviewRepository.AllWithDeleted()
-                .OrderByDescending(x => x.CreatedOn)
-                .To<T>()
-                .ToListAsync();
+            var query = this.reviewRepository.AllWithDeleted();
+
+            if (string.Equals(statusFilter, "Approved", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(x => x.IsApproved);
+            }
+            else if (string.Equals(statusFilter, "Pending", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(x => !x.IsApproved);
+            }
+
+            query = sortField switch
+            {
+                ReviewSortField.CustomerName => descending
+                    ? query.OrderByDescending(x => x.CustomerName)
+                    : query.OrderBy(x => x.CustomerName),
+                ReviewSortField.Rating => descending
+                    ? query.OrderByDescending(x => x.Rating)
+                    : query.OrderBy(x => x.Rating),
+                _ => descending
+                    ? query.OrderByDescending(x => x.CreatedOn)
+                    : query.OrderBy(x => x.CreatedOn),
+            };
+
+            return await query.To<T>().ToListAsync();
         }
     }
 }

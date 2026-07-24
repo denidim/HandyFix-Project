@@ -8,6 +8,7 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
     using HandyFix.Services.Data.Reviews;
+    using HandyFix.Web.ViewModels.Reviews;
 
     using Microsoft.EntityFrameworkCore;
 
@@ -53,6 +54,51 @@ namespace HandyFix.Services.Data.Tests
 
             var updated = dbContext.Reviews.First(x => x.Id == review.Id);
             Assert.True(updated.IsApproved);
+        }
+
+        [Fact]
+        public async Task GetAllAsyncShouldSortByRatingDescendingWhenRequested()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Review>(dbContext);
+
+            dbContext.Reviews.Add(new Review { CustomerName = "Low Rater", Comment = "It was okay overall.", Rating = 2 });
+            dbContext.Reviews.Add(new Review { CustomerName = "High Rater", Comment = "Fantastic service, would recommend.", Rating = 5 });
+            await dbContext.SaveChangesAsync();
+
+            var service = new ReviewsService(repository);
+            var results = (await service.GetAllAsync<ReviewViewModel>(ReviewSortField.Rating, descending: true)).ToList();
+
+            Assert.Equal("High Rater", results.First().CustomerName);
+            Assert.Equal("Low Rater", results.Last().CustomerName);
+        }
+
+        [Fact]
+        public async Task GetAllAsyncShouldFilterByApprovalStatusWhenRequested()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Review>(dbContext);
+
+            var approved = new Review { CustomerName = "Approved Reviewer", Comment = "Great work, very tidy.", Rating = 5, IsApproved = true };
+            var pending = new Review { CustomerName = "Pending Reviewer", Comment = "Still waiting for moderation.", Rating = 3, IsApproved = false };
+            dbContext.Reviews.AddRange(approved, pending);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ReviewsService(repository);
+
+            var approvedResults = (await service.GetAllAsync<ReviewViewModel>(statusFilter: "Approved")).ToList();
+            Assert.Single(approvedResults);
+            Assert.Equal(approved.Id, approvedResults.Single().Id);
+
+            var pendingResults = (await service.GetAllAsync<ReviewViewModel>(statusFilter: "Pending")).ToList();
+            Assert.Single(pendingResults);
+            Assert.Equal(pending.Id, pendingResults.Single().Id);
         }
     }
 }

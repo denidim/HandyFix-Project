@@ -1,12 +1,20 @@
-@model IEnumerable<HandyFix.Web.ViewModels.Reviews.ReviewViewModel>
+@model HandyFix.Web.ViewModels.Reviews.ReviewListViewModel
 @{
     this.ViewData["Title"] = "Moderate Reviews";
 
-    var pendingReviews = Model.Count(r => !r.IsApproved);
-    var averageRating = Model.Any() ? Model.Average(r => r.Rating) : 0;
-    var totalPublished = Model.Count(r => r.IsApproved);
-    var approvalRate = Model.Any() ? (totalPublished * 100) / Model.Count() : 0;
+    var reviews = Model.Reviews;
+    var pendingReviews = Model.PendingCount;
+    var averageRating = Model.AverageRating;
+    var totalPublished = Model.TotalPublished;
+    var approvalRate = Model.ApprovalRate;
     var flaggedReviews = 0; // Simulated field or 0 as database fallback
+}
+
+@functions {
+    bool NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField field)
+    {
+        return this.Model.SortField == field ? !this.Model.Descending : false;
+    }
 }
 
 <!-- Top Header Context -->
@@ -17,10 +25,21 @@
             @pendingReviews Pending
         </span>
     </div>
-    <a asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 w-100 w-md-auto rounded-lg btn-py3-px6">
-        <span class="material-symbols-outlined">refresh</span>
-        <span>Refresh List</span>
-    </a>
+    <div class="d-flex align-items-center gap-3">
+        <form method="get" asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="m-0">
+            <input type="hidden" name="sortField" value="@Model.SortField" />
+            <input type="hidden" name="descending" value="@(Model.Descending.ToString())" />
+            <select name="status" class="admin-status-filter font-body-md" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="Approved" selected="@(Model.StatusFilter == "Approved")">Approved</option>
+                <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
+            </select>
+        </form>
+        <a asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 w-100 w-md-auto rounded-lg btn-py3-px6">
+            <span class="material-symbols-outlined">refresh</span>
+            <span>Refresh List</span>
+        </a>
+    </div>
 </div>
 
 <!-- Summary Stats (Bento Style) -->
@@ -62,17 +81,47 @@
         <table class="table mb-0 text-left admin-table">
             <thead>
                 <tr class="admin-table-head">
-                    <th class="px-4 py-3 font-label-sm uppercase">Customer</th>
-                    <th class="px-4 py-3 font-label-sm uppercase">Rating</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">
+                        <a asp-area="Administration" asp-controller="Reviews" asp-action="Index"
+                           asp-route-sortField="CustomerName" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.CustomerName)" asp-route-status="@Model.StatusFilter"
+                           class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.CustomerName ? "active" : "")">
+                            Customer
+                            @if (Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.CustomerName)
+                            {
+                                <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
+                            }
+                        </a>
+                    </th>
+                    <th class="px-4 py-3 font-label-sm uppercase">
+                        <a asp-area="Administration" asp-controller="Reviews" asp-action="Index"
+                           asp-route-sortField="Rating" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.Rating)" asp-route-status="@Model.StatusFilter"
+                           class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.Rating ? "active" : "")">
+                            Rating
+                            @if (Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.Rating)
+                            {
+                                <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
+                            }
+                        </a>
+                    </th>
                     <th class="px-4 py-3 font-label-sm uppercase w-50">Comment</th>
-                    <th class="px-4 py-3 font-label-sm uppercase">Date</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">
+                        <a asp-area="Administration" asp-controller="Reviews" asp-action="Index"
+                           asp-route-sortField="CreatedOn" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
+                           class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.CreatedOn ? "active" : "")">
+                            Date
+                            @if (Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.CreatedOn)
+                            {
+                                <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
+                            }
+                        </a>
+                    </th>
                     <th class="px-4 py-3 font-label-sm uppercase text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white">
-                @if (Model.Any())
+                @if (reviews.Any())
                 {
-                    @foreach (var review in Model)
+                    @foreach (var review in reviews)
                     {
                         var names = review.CustomerName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         var initials = names.Length > 1 ? $"{names[0][0]}{names[1][0]}" : $"{names[0][0]}";

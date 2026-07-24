@@ -4,6 +4,8 @@ namespace HandyFix.Services.Data.Reviews
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    using HandyFix.Web.ViewModels.Reviews;
+
     public interface IReviewsService
     {
         Task AddReviewAsync(string customerName, string comment, int rating, string userId = null);
@@ -14,6 +16,9 @@ namespace HandyFix.Services.Data.Reviews
 
         Task<IEnumerable<T>> GetLatestApprovedAsync<T>(int count);
 
-        Task<IEnumerable<T>> GetAllAsync<T>();
+        Task<IEnumerable<T>> GetAllAsync<T>(
+            ReviewSortField sortField = ReviewSortField.CreatedOn,
+            bool descending = true,
+            string statusFilter = null);
     }
 }
