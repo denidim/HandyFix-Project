@@ -3,15 +3,23 @@
     this.ViewData["Title"] = "Get a Custom Quote - Handy Fix";
 }
 
-<div class="info-canvas mt-12 mb-12">
-    <!-- Hero Section -->
-    <section class="text-center mb-5">
-        <h1 class="font-headline-xl text-primary mb-2">Get a Custom Quote</h1>
-        <p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto">
-            Have a large-scale project or specialized maintenance need? Tell us the details, and our experts will provide a tailored professional estimate.
-        </p>
+<div class="page-container services-page">
+    <!-- Header & Breadcrumbs -->
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">Contact</span>
+        </nav>
+        <div class="services-header-content">
+            <h1 class="services-hero-title">Get a Custom <span>Quote.</span></h1>
+            <p class="services-subtitle">
+                Have a large-scale project or specialized maintenance need? Tell us the details, and our experts will provide a tailored professional estimate.
+            </p>
+        </div>
     </section>
 
+    <div class="info-canvas">
     <!-- Success Alert -->
     @if (this.TempData["SuccessMessage"] != null)
     {
@@ -137,6 +145,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </div>
 
