@@ -29,7 +29,5 @@ namespace HandyFix.Web.ViewModels.ServiceAreas
         // custom collection mapping under the EF Core InMemory provider), so the
         // controller re-orders it explicitly by DisplayOrder after mapping.
         public IEnumerable<ServiceAreaFaqViewModel> Faqs { get; set; }
-
-        public IEnumerable<ServiceAreaViewModel> NearbyAreas { get; set; }
     }
 }

@@ -1,5 +1,18 @@
 /* Our Areas - Handy Fix */
 
+.area-hero-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.area-reviews-section {
+  margin-top: var(--spacing-16);
+}
+
 .areas-overview-hero {
   margin-top: var(--spacing-10);
   border-radius: var(--radius-xl);

@@ -21,10 +21,17 @@ namespace HandyFix.Web.ViewComponents
         public async Task<IViewComponentResult> InvokeAsync(
             Guid? excludeAreaId = null, int take = 6, bool featuredOnly = false)
         {
+            // Passing excludeAreaId means "areas near this one" - use the service's
+            // drive-time-proximity ordering rather than the default featured/all list.
+            if (excludeAreaId.HasValue)
+            {
+                var nearest = await this.areasService.GetNearestAsync<ServiceAreaViewModel>(excludeAreaId.Value, take);
+                return this.View(nearest.ToList());
+            }
+
             var areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
 
             var filtered = areas
-                .Where(a => excludeAreaId == null || a.Id != excludeAreaId)
                 .Where(a => !featuredOnly || a.IsFeatured)
                 .Take(take)
                 .ToList();

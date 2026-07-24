@@ -1,0 +1,227 @@
+@model HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaDetailsPageViewModel
+@using HandyFix.Web.ViewModels.Services
+@{
+    this.Layout = "_Layout";
+
+    var area = Model.Area;
+    var driveTimeText = area.DriveTimeMinutes == 0 ? "Home Base" : $"~{area.DriveTimeMinutes} min from Chessington";
+
+    var faqJsonEntries = area.Faqs != null && area.Faqs.Any()
+        ? string.Join(",", area.Faqs.Select(f =>
+            $"{{ \"@type\": \"Question\", \"name\": {System.Text.Json.JsonSerializer.Serialize(f.Question)}, \"acceptedAnswer\": {{ \"@type\": \"Answer\", \"text\": {System.Text.Json.JsonSerializer.Serialize(f.Answer)} }} }}"))
+        : null;
+}
+
+<div class="page-container services-page">
+    <!-- Hero -->
+    <section class="service-hero-section">
+        <img src="~/images/areas/@(area.Slug)-hero.webp"
+             alt="HandyFix handyman and plumbing services in @area.Name, Surrey"
+             class="area-hero-image"
+             width="1600" height="700"
+             loading="eager" fetchpriority="high"
+             onerror="this.src='/images/hero.png';" />
+        <div class="service-hero-overlay"></div>
+        <div class="service-hero-content">
+            <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
+                <a asp-route="Areas">Our Areas</a>
+                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                <span class="text-white">@area.Name</span>
+            </nav>
+            <h1 class="service-hero-title">Handyman &amp; Plumbing in @area.Name</h1>
+            <div class="service-hero-badges">
+                <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined">verified</span> Professional Service
+                </span>
+                <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined">directions_car</span> @driveTimeText
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Specs Bento -->
+    <div class="specs-bento-grid">
+        <div class="spec-bento-card">
+            <span class="material-symbols-outlined spec-bento-icon">map</span>
+            <span class="spec-bento-label">Region</span>
+            <span class="spec-bento-value">@area.Region</span>
+        </div>
+        <div class="spec-bento-card">
+            <span class="material-symbols-outlined spec-bento-icon">directions_car</span>
+            <span class="spec-bento-label">From Chessington</span>
+            <span class="spec-bento-value">@driveTimeText</span>
+        </div>
+        <div class="spec-bento-card col-span-2">
+            <span class="material-symbols-outlined spec-bento-icon">payments</span>
+            <span class="spec-bento-label">Pricing</span>
+            <span class="spec-bento-value">Transparent hourly rates, no travel charge in-radius</span>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <section class="details-prose">
+        <h2 class="details-section-title">About @area.Name</h2>
+        <p>@area.IntroCopy</p>
+        <p>@area.LocalNeighbourhoodsCopy</p>
+    </section>
+
+    <!-- Related Services -->
+    @if (Model.RelatedServices != null && Model.RelatedServices.Any())
+    {
+        <section class="pricing-typical-jobs-section">
+            <h2 class="details-section-title text-center">Popular Services in @area.Name</h2>
+            <div class="pricing-cards-grid">
+                @foreach (var svc in Model.RelatedServices)
+                {
+                    <partial name="_PricingCard" model="@(new PricingCardViewModel
+                                                         {
+                                                             Name = svc.Name,
+                                                             IconName = svc.CategoryName == "Plumbing" ? "water_drop" : "handyman",
+                                                             Description = svc.Description,
+                                                             BasePrice = svc.BasePrice,
+                                                             EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
+                                                             CtaText = "Book Now",
+                                                             CtaUrl = this.Url.Action("Index", "Booking", new { serviceId = svc.Id }),
+                                                         })" />
+                }
+            </div>
+        </section>
+    }
+
+    <!-- FAQ Accordion -->
+    @if (area.Faqs != null && area.Faqs.Any())
+    {
+        <section class="faq-accordion-group">
+            <h2 class="details-section-title">@area.Name Handyman &amp; Plumbing FAQs</h2>
+            @foreach (var faq in area.Faqs)
+            {
+                <details class="faq-accordion">
+                    <summary class="faq-accordion-summary">
+                        <span class="faq-accordion-title">@faq.Question</span>
+                        <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
+                    </summary>
+                    <div class="faq-accordion-content">
+                        @faq.Answer
+                    </div>
+                </details>
+            }
+        </section>
+    }
+
+    <!-- Reviews -->
+    @if (Model.Reviews != null && Model.Reviews.Any())
+    {
+        <section class="area-reviews-section">
+            <h2 class="details-section-title text-center">What Our Customers Say</h2>
+            <div class="review-feed">
+                @foreach (var review in Model.Reviews)
+                {
+                    <article class="review-card">
+                        <div class="review-author-row">
+                            <div class="review-author-info">
+                                <div class="review-avatar">
+                                    @if (!string.IsNullOrEmpty(review.CustomerName) && review.CustomerName.Length >= 2)
+                                    {
+                                        <span>@review.CustomerName.Substring(0, 2).ToUpper()</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="material-symbols-outlined">person</span>
+                                    }
+                                </div>
+                                <div>
+                                    <h3 class="font-headline-sm text-primary mb-0 fs-16 fw-bold">@review.CustomerName</h3>
+                                    <p class="text-muted mb-0 fs-12">Client Review</p>
+                                </div>
+                            </div>
+                            <div class="text-warning d-flex">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= review.Rating)
+                                    {
+                                        <span class="material-symbols-outlined icon-fill fs-20">star</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="material-symbols-outlined icon-unfill fs-20">star</span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <p class="font-body-md text-on-surface mb-3">"@review.Comment"</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="verified-badge">
+                                <span class="material-symbols-outlined fs-14">verified_user</span>
+                                <span>Verified Client</span>
+                            </div>
+                            <small class="text-muted fs-11">@review.CreatedOn.ToString("dd MMM yyyy")</small>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+
+    <!-- Nearby Areas -->
+    <section class="areas-section">
+        <h2 class="font-headline-lg text-primary text-center areas-section-title">Nearby Areas We Also Cover</h2>
+        <vc:area-card exclude-area-id="@area.Id" take="4"></vc:area-card>
+    </section>
+
+    <!-- CTA -->
+    <div class="pricing-cta-actions">
+        <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg">Book Appointment in @area.Name</a>
+        <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-lg">Get a Custom Quote</a>
+    </div>
+</div>
+
+<!-- JSON-LD: Service / LocalBusiness -->
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "Service",
+  "serviceType": "Handyman and Plumbing Services",
+  "areaServed": {
+    "@@type": "City",
+    "name": "@area.Name"
+  },
+  "provider": {
+    "@@type": "LocalBusiness",
+    "name": "HandyFix",
+    "telephone": "07123456789",
+    "priceRange": "$$",
+    "address": {
+      "@@type": "PostalAddress",
+      "addressLocality": "Chessington",
+      "addressRegion": "London",
+      "addressCountry": "GB"
+    }
+  }
+}
+</script>
+
+@if (faqJsonEntries != null)
+{
+    <!-- JSON-LD: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "FAQPage",
+      "mainEntity": [ @Html.Raw(faqJsonEntries) ]
+    }
+    </script>
+}
+
+<!-- JSON-LD: BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@@type": "ListItem", "position": 1, "name": "Home", "item": "@(this.Context.Request.Scheme)://@(this.Context.Request.Host)/" },
+    { "@@type": "ListItem", "position": 2, "name": "Our Areas", "item": "@(this.Url.RouteUrl("Areas", null, this.Context.Request.Scheme))" },
+    { "@@type": "ListItem", "position": 3, "name": "@area.Name", "item": "@(this.ViewData["Canonical"])" }
+  ]
+}
+</script>

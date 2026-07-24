@@ -35,6 +35,7 @@ namespace HandyFix.Web.Controllers
 
             this.ViewData["Title"] = "Our Areas - HandyFix Coverage Across Surrey & South London";
             this.ViewData["MetaDescription"] = "See every town and village HandyFix covers across South London and Surrey, from Chessington and Kingston out to Guildford and Cobham. Find your area and book online.";
+            this.ViewData["Canonical"] = this.Url.RouteUrl("Areas", null, this.Request.Scheme);
 
             return this.View(areas);
         }
@@ -51,7 +52,6 @@ namespace HandyFix.Web.Controllers
             // Guaranteed FAQ ordering - see ServiceAreaDetailsViewModel for why this
             // isn't done via a custom Mapster collection mapping.
             area.Faqs = area.Faqs.OrderBy(x => x.DisplayOrder).ToList();
-            area.NearbyAreas = (await this.areasService.GetNearestAsync<ServiceAreaViewModel>(area.Id)).ToList();
 
             var plumbingServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Plumbing");
             var handymanServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman");
@@ -68,6 +68,8 @@ namespace HandyFix.Web.Controllers
 
             this.ViewData["Title"] = $"Handyman & Plumbing in {area.Name} - HandyFix";
             this.ViewData["MetaDescription"] = $"Local handyman and plumbing services in {area.Name}. Transparent hourly pricing, no call-out fee, usually available within days. Book HandyFix online today.";
+            this.ViewData["Canonical"] = this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme);
+            this.ViewData["OgImage"] = $"{this.Request.Scheme}://{this.Request.Host}/images/areas/{area.Slug}-hero.webp";
 
             return this.View(model);
         }

@@ -8,7 +8,26 @@
     {
         <meta name="description" content="@this.ViewData["MetaDescription"]" />
     }
+    @if (this.ViewData["Canonical"] != null)
+    {
+        <link rel="canonical" href="@this.ViewData["Canonical"]" />
+    }
     <title>@this.ViewData["Title"] - @GlobalConstants.SystemName</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="@GlobalConstants.SystemName" />
+    <meta property="og:title" content="@this.ViewData["Title"] - @GlobalConstants.SystemName" />
+    @if (this.ViewData["MetaDescription"] != null)
+    {
+        <meta property="og:description" content="@this.ViewData["MetaDescription"]" />
+    }
+    @if (this.ViewData["Canonical"] != null)
+    {
+        <meta property="og:url" content="@this.ViewData["Canonical"]" />
+    }
+    @if (this.ViewData["OgImage"] != null)
+    {
+        <meta property="og:image" content="@this.ViewData["OgImage"]" />
+    }
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
