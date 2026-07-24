@@ -6,6 +6,7 @@
     using HandyFix.Data.Common;
 
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Storage;
 
     public class DbQueryRunner : IDbQueryRunner
     {
@@ -19,6 +20,11 @@
         public Task RunQueryAsync(string query, params object[] parameters)
         {
             return this.Context.Database.ExecuteSqlRawAsync(query, parameters);
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return this.Context.Database.BeginTransactionAsync();
         }
 
         public void Dispose()
