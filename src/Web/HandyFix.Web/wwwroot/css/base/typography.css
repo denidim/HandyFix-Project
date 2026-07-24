@@ -13,6 +13,17 @@ h1, h2, h3, h4, h5, h6 {
 .text-white-90 { color: rgba(255, 255, 255, 0.9) !important; }
 .text-on-primary-container { color: var(--on-primary-container) !important; }
 
+/* This color family was only half-defined - text-on-surface,
+   text-on-secondary-container, text-on-tertiary-container, text-outline,
+   and text-error were all already referenced across the admin area (and a
+   couple of public views) but never actually defined, same silent-no-op
+   category as font-bold/text-right in utilities.css. */
+.text-on-surface { color: var(--on-surface) !important; }
+.text-on-secondary-container { color: var(--on-secondary-container) !important; }
+.text-on-tertiary-container { color: var(--on-tertiary-container) !important; }
+.text-outline { color: var(--outline) !important; }
+.text-error { color: var(--error) !important; }
+
 /* Font size utilities based on variables */
 .font-display-brand {
   font-size: var(--fs-display-brand);

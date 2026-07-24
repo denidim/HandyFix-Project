@@ -106,3 +106,29 @@
 .opacity-70 { opacity: 0.7; }
 .opacity-80 { opacity: 0.8; }
 .opacity-90 { opacity: 0.9; }
+
+/* Several Tailwind-named classes were referenced across both public and
+   admin views (uppercase, italic, leading-relaxed, select-all, block, text-xs,
+   tracking-wide/wider) as if Bootstrap shipped them - it doesn't, so these
+   were silent no-ops everywhere they appeared. Defining them here fixes that
+   sitewide, the same category of latent bug as rounded-lg/opacity-70 above. */
+.uppercase { text-transform: uppercase; }
+.italic { font-style: italic; }
+.leading-relaxed { line-height: 1.625; }
+.select-all { user-select: all; }
+.block { display: block; }
+.text-xs { font-size: 12px; }
+.tracking-wide { letter-spacing: 0.025em; }
+.tracking-wider { letter-spacing: 0.05em; }
+
+/* font-bold/font-medium and text-right/text-left are the same story, but
+   much higher-impact: font-bold alone is used 50 times across 15 views
+   (public and admin) and had zero definition anywhere - every element meant
+   to render bold text was silently rendering at normal weight sitewide.
+   text-right/text-left look like they should be Bootstrap classes but
+   Bootstrap 5 renamed these to the logical text-end/text-start, so these
+   were no-ops too everywhere they appeared. */
+.font-bold { font-weight: 700; }
+.font-medium { font-weight: 500; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
