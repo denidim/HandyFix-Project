@@ -11,8 +11,10 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Hosting;
 
     using Stripe;
     using Stripe.Checkout;
@@ -22,16 +24,24 @@ namespace HandyFix.Web.Controllers
         private readonly IBookingsService bookingsService;
         private readonly IPaymentsService paymentsService;
         private readonly IConfiguration configuration;
+        private readonly IWebHostEnvironment environment;
 
         public PaymentController(
             IBookingsService bookingsService,
             IPaymentsService paymentsService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IWebHostEnvironment environment)
         {
             this.bookingsService = bookingsService;
             this.paymentsService = paymentsService;
             this.configuration = configuration;
-            StripeConfiguration.ApiKey = this.configuration["Stripe:SecretKey"] ?? "sk_test_51MockSecretKeyForCompilingAndTesting12345";
+            this.environment = environment;
+
+            var secretKey = this.configuration["Stripe:SecretKey"];
+            if (!string.IsNullOrWhiteSpace(secretKey))
+            {
+                StripeConfiguration.ApiKey = secretKey;
+            }
         }
 
         [HttpGet]
@@ -44,14 +54,23 @@ namespace HandyFix.Web.Controllers
                 return this.NotFound();
             }
 
-            // For testing: check if Stripe API key is configured. If not, bypass Stripe redirects.
             var secretKey = this.configuration["Stripe:SecretKey"];
-            if (string.IsNullOrWhiteSpace(secretKey) || secretKey.StartsWith("sk_test_Mock"))
+            var keyMissing = string.IsNullOrWhiteSpace(secretKey);
+
+            if (keyMissing && this.environment.IsDevelopment())
             {
-                // Sandbox Mode: Automatically redirect to Success page directly
+                // Sandbox Mode: no Stripe key configured locally, bypass Stripe entirely
+                // so the booking flow can still be exercised without a real account.
                 var mockSessionId = $"mock_session_{Guid.NewGuid()}";
                 await this.paymentsService.CreatePaymentRecordAsync(bookingId, booking.DepositAmount, "Stripe-Mock", mockSessionId);
                 return this.RedirectToAction("Success", new { session_id = mockSessionId });
+            }
+
+            if (keyMissing)
+            {
+                // Never silently fake a payment or attempt a doomed Stripe call outside
+                // development: fail loudly so a missing production secret gets noticed.
+                throw new InvalidOperationException("Stripe is not configured for this environment. Set Stripe:SecretKey before accepting real payments.");
             }
 
             // Production-Ready Stripe Checkout integration
