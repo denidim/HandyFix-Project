@@ -19,6 +19,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Data.Services;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
+    using HandyFix.Web.BackgroundServices;
     using HandyFix.Web.ViewModels;
 
     using Microsoft.AspNetCore.Builder;
@@ -100,6 +101,9 @@ namespace HandyFix.Web
                         "images",
                         "services"),
                     sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ImageStorageService>>()));
+
+            // Background workers
+            services.AddHostedService<StaleBookingCleanupService>();
         }
 
         private static void Configure(WebApplication app)
