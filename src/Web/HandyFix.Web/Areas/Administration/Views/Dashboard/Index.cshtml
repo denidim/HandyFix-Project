@@ -4,17 +4,17 @@
 }
 
 <!-- Header -->
-<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <div>
-        <h1 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Administration Dashboard</h1>
-        <p class="font-body-md text-on-surface-variant mt-1" style="margin: 0;">Real-time overview of Handy Fix platform performance.</p>
+        <h1 class="admin-page-title">Administration Dashboard</h1>
+        <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Real-time overview of Handy Fix platform performance.</p>
     </div>
     <div class="d-flex align-items-center gap-4">
         <div class="d-none d-md-flex flex-column text-right">
             <span class="font-label-sm font-bold text-on-surface">@DateTime.Now.ToString("dddd, MMM dd")</span>
             <span class="font-label-sm text-on-surface-variant">System Status: Optimal</span>
         </div>
-        <div class="p-2 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border: 1px solid var(--border-subtle);">
+        <div class="p-2 rounded-circle shadow-sm d-flex align-items-center justify-content-center dim-40 admin-card">
             <span class="material-symbols-outlined text-secondary">notifications_active</span>
         </div>
     </div>
@@ -25,10 +25,10 @@
     <!-- Revenue -->
     <div class="bento-card">
         <div class="bento-card-header">
-            <div class="bento-card-icon-wrapper" style="background-color: rgba(0, 101, 145, 0.1);">
+            <div class="bento-card-icon-wrapper tint-secondary">
                 <span class="material-symbols-outlined text-secondary">payments</span>
             </div>
-            <span class="font-label-sm font-bold px-2 py-1 rounded" style="background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container);">+12.5%</span>
+            <span class="font-label-sm font-bold px-2 py-1 rounded tint-success">+12.5%</span>
         </div>
         <div>
             <p class="bento-card-label">Total Revenue</p>
@@ -39,10 +39,10 @@
     <!-- Bookings -->
     <div class="bento-card">
         <div class="bento-card-header">
-            <div class="bento-card-icon-wrapper" style="background-color: rgba(0, 0, 0, 0.05);">
+            <div class="bento-card-icon-wrapper tint-black-soft">
                 <span class="material-symbols-outlined text-primary">calendar_today</span>
             </div>
-            <span class="font-label-sm font-bold px-2 py-1 rounded" style="background-color: rgba(57, 184, 253, 0.2); color: var(--on-secondary-container);">@Model.PendingBookingsCount Pending</span>
+            <span class="font-label-sm font-bold px-2 py-1 rounded tint-info">@Model.PendingBookingsCount Pending</span>
         </div>
         <div>
             <p class="bento-card-label">Total Bookings</p>
@@ -53,10 +53,10 @@
     <!-- Enquiries -->
     <div class="bento-card">
         <div class="bento-card-header">
-            <div class="bento-card-icon-wrapper" style="background-color: rgba(0, 101, 145, 0.1);">
+            <div class="bento-card-icon-wrapper tint-secondary">
                 <span class="material-symbols-outlined text-secondary">chat_bubble</span>
             </div>
-            <span class="font-label-sm font-bold px-2 py-1 rounded" style="background-color: var(--surface-container); color: var(--on-surface-variant);">New Leads</span>
+            <span class="font-label-sm font-bold px-2 py-1 rounded tint-neutral-soft">New Leads</span>
         </div>
         <div>
             <p class="bento-card-label">Total Enquiries</p>
@@ -67,11 +67,11 @@
     <!-- Unapproved Reviews -->
     <div class="bento-card">
         <div class="bento-card-header">
-            <div class="bento-card-icon-wrapper" style="background-color: rgba(186, 26, 26, 0.1);">
+            <div class="bento-card-icon-wrapper tint-error-soft">
                 <span class="material-symbols-outlined text-error">star_half</span>
             </div>
-            <div class="d-flex align-items-center gap-1 text-error" style="font-weight: 700; font-size: var(--fs-label-sm);">
-                <span class="rounded-circle" style="width: 8px; height: 8px; background-color: var(--error); display: inline-block;"></span>
+            <div class="d-flex align-items-center gap-1 text-error font-bold font-label-sm">
+                <span class="rounded-circle legend-dot legend-dot-error"></span>
                 <span>Action Req.</span>
             </div>
         </div>
@@ -89,7 +89,7 @@
             <span class="material-symbols-outlined">bolt</span>
             <span>Quick Actions</span>
         </h3>
-        
+
         <div class="quick-actions-grid">
             <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="action-btn-card">
                 <div class="action-btn-circle">
@@ -121,20 +121,20 @@
                 </div>
                 <span class="font-button-text text-primary">Moderate Reviews</span>
             </a>
-            <div class="action-btn-card" style="border: 2px dashed var(--outline-variant); background: transparent; cursor: not-allowed; opacity: 0.5;">
-                <span class="material-symbols-outlined text-outline-variant mb-2" style="font-size: 32px;">add</span>
+            <div class="action-btn-card add-widget-placeholder">
+                <span class="material-symbols-outlined text-outline-variant mb-2 fs-32">add</span>
                 <span class="font-button-text text-on-surface-variant">Add Widget</span>
             </div>
         </div>
 
         <!-- Activity Graph Mockup -->
-        <div class="mt-4 p-5 bg-white rounded-xl shadow-sm border" style="border-radius: var(--radius-xl); height: 280px; display: flex; align-items: center; justify-content: center; position: relative;">
-            <div class="text-center" style="position: relative; z-index: 10;">
-                <div class="w-16 h-16 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 56px; height: 56px; background-color: rgba(0, 101, 145, 0.1);">
-                    <span class="material-symbols-outlined text-secondary" style="font-size: 28px;">insights</span>
+        <div class="mt-4 p-5 rounded-xl shadow-sm admin-card activity-graph-placeholder">
+            <div class="text-center stack-above">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 dim-56 tint-secondary">
+                    <span class="material-symbols-outlined text-secondary fs-28">insights</span>
                 </div>
                 <h4 class="font-headline-sm text-primary mb-1">Activity Visualization</h4>
-                <p class="font-body-md text-on-surface-variant max-w-sm mx-auto" style="margin: 0;">Detailed performance graphs are generating based on real-time booking trends.</p>
+                <p class="font-body-md text-on-surface-variant max-w-sm mx-auto admin-page-subtitle">Detailed performance graphs are generating based on real-time booking trends.</p>
             </div>
         </div>
     </div>
@@ -142,11 +142,11 @@
     <!-- Sidebar Stats (1/3 Column) -->
     <div class="col-lg-4">
         <!-- Newest Leads -->
-        <div class="bg-white rounded-xl p-4 border shadow-sm mb-4" style="border-radius: var(--radius-xl);">
+        <div class="rounded-xl p-4 shadow-sm mb-4 admin-card">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="font-headline-sm text-primary mb-0" style="font-size: var(--fs-headline-sm);">Platform Health</h3>
+                <h3 class="font-headline-sm text-primary mb-0">Platform Health</h3>
             </div>
-            
+
             <div class="health-stat-item">
                 <div class="health-stat-header">
                     <span class="health-stat-label">Server Capacity</span>
@@ -157,24 +157,24 @@
                 </div>
             </div>
 
-            <div class="health-stat-item" style="margin: 0;">
+            <div class="health-stat-item m-0">
                 <div class="health-stat-header">
                     <span class="health-stat-label">Inquiry Response Rate</span>
                     <span class="font-label-sm">98%</span>
                 </div>
                 <div class="health-progress-bar">
-                    <div class="health-progress-fill" style="width: 98%; background-color: var(--on-tertiary-container);"></div>
+                    <div class="health-progress-fill tint-tertiary-fill" style="width: 98%;"></div>
                 </div>
             </div>
         </div>
 
         <!-- System Logs / Info Card -->
-        <div class="bg-white rounded-xl p-4 border shadow-sm" style="border-radius: var(--radius-xl); background: rgba(0, 101, 145, 0.05) !important;">
+        <div class="rounded-xl p-4 shadow-sm admin-card tint-secondary-faint">
             <div class="d-flex align-items-center gap-3">
-                <span class="material-symbols-outlined text-secondary" style="font-size: 32px;">verified_user</span>
+                <span class="material-symbols-outlined text-secondary fs-32">verified_user</span>
                 <div>
                     <h4 class="font-label-sm font-bold text-primary mb-1">Administrator Mode</h4>
-                    <p class="font-body-md text-on-surface-variant mb-0" style="font-size: 13px; line-height: 1.4;">All dashboard actions are logged. Ensure credentials are kept confidential.</p>
+                    <p class="font-body-md text-on-surface-variant mb-0 fs-13 lh-snug">All dashboard actions are logged. Ensure credentials are kept confidential.</p>
                 </div>
             </div>
         </div>

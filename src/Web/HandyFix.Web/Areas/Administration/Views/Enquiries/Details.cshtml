@@ -4,7 +4,7 @@
 }
 
 <!-- Breadcrumbs & Header Actions -->
-<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <nav class="breadcrumb-nav mb-0" aria-label="breadcrumb">
         <a asp-area="Administration" asp-controller="Dashboard" asp-action="Index">Admin</a>
         <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
@@ -12,7 +12,7 @@
         <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
         <span class="breadcrumb-current">Enquiry Details</span>
     </nav>
-    <a asp-area="Administration" asp-controller="Enquiries" asp-action="Index" class="btn btn-outline d-flex align-items-center gap-2" style="border: 1px solid var(--border-subtle); padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: var(--fs-label-sm); background: #ffffff; color: var(--text-main);">
+    <a asp-area="Administration" asp-controller="Enquiries" asp-action="Index" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
         <span class="material-symbols-outlined">arrow_back</span>
         <span>Back to List</span>
     </a>
@@ -20,10 +20,10 @@
 
 <div class="mb-5">
     <div class="d-flex align-items-center gap-3">
-        <h2 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Enquiry #@Model.Id</h2>
-        <span class="px-3 py-1 font-bold font-label-sm rounded-full" style="background-color: rgba(57, 184, 253, 0.2); color: var(--on-secondary-container); border: 1px solid rgba(57, 184, 253, 0.3); font-size: 11px; text-transform: uppercase;">New Enquiry</span>
+        <h2 class="admin-page-title">Enquiry #@Model.Id</h2>
+        <span class="px-3 py-1 font-bold font-label-sm rounded-full status-badge tint-info border-info-soft">New Enquiry</span>
     </div>
-    <p class="font-body-md text-on-surface-variant mt-1" style="margin: 0;">Received on @Model.CreatedOn.ToString("MMMM dd, yyyy 'at' hh:mm tt")</p>
+    <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Received on @Model.CreatedOn.ToString("MMMM dd, yyyy 'at' hh:mm tt")</p>
 </div>
 
 <!-- Bento Layout -->
@@ -31,9 +31,9 @@
     <!-- Main Content Column -->
     <div class="col-lg-8 mb-4">
         <!-- Enquiry Message -->
-        <section class="glass-card p-4 p-md-5 rounded-xl mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
-            <h3 class="font-headline-sm text-primary mb-4 pb-3" style="font-size: var(--fs-headline-sm); border-bottom: 1px solid var(--border-subtle);">Service Request Message</h3>
-            <p class="font-body-lg leading-relaxed text-text-main" style="white-space: pre-wrap; font-style: italic;">
+        <section class="glass-card p-4 p-md-5 rounded-xl mb-4 admin-card">
+            <h3 class="font-headline-sm text-primary mb-4 pb-3 section-title-underline">Service Request Message</h3>
+            <p class="font-body-lg leading-relaxed text-text-main italic pre-wrap">
                 "@Model.Message"
             </p>
         </section>
@@ -41,15 +41,15 @@
         <!-- Attachment Gallery -->
         @if (Model.ImageUrls != null && Model.ImageUrls.Any())
         {
-            <section class="glass-card p-4 p-md-5 rounded-xl" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
+            <section class="glass-card p-4 p-md-5 rounded-xl admin-card">
                 <h3 class="font-headline-sm text-primary mb-4">Attached Visuals (@Model.ImageUrls.Count())</h3>
                 <div class="row">
                     @foreach (var url in Model.ImageUrls)
                     {
                         <div class="col-sm-4 mb-3">
-                            <div class="group relative overflow-hidden border" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); aspect-ratio: 1/1;">
+                            <div class="group relative overflow-hidden border admin-thumbnail-tile">
                                 <a href="@url" target="_blank" class="d-block h-100 w-100">
-                                    <img src="@url" class="w-100 h-100" alt="Attachment" style="object-fit: cover; transition: transform var(--transition-normal);" />
+                                    <img src="@url" class="w-100 h-100" alt="Attachment" />
                                 </a>
                             </div>
                         </div>
@@ -62,59 +62,59 @@
     <!-- Sidebar Actions Column -->
     <div class="col-lg-4">
         <!-- Client Info Card -->
-        <section class="glass-card p-4 rounded-xl mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
-            <h3 class="font-headline-sm text-primary mb-4" style="font-size: var(--fs-headline-sm);">Client Information</h3>
+        <section class="glass-card p-4 rounded-xl mb-4 admin-card">
+            <h3 class="font-headline-sm text-primary mb-4">Client Information</h3>
             <div class="d-flex align-items-center gap-3 mb-4">
                 @{
                     var names = Model.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     var initials = names.Length > 1 ? $"{names[0][0]}{names[1][0]}" : $"{names[0][0]}";
                 }
-                <div class="rounded-circle d-flex align-items-center justify-content-center font-bold" style="width: 56px; height: 56px; background-color: var(--primary-fixed-dim); color: var(--primary); font-size: 20px;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center font-bold dim-56 tint-primary-fixed-dim fs-20">
                     @initials.ToUpper()
                 </div>
                 <div>
-                    <h4 class="font-headline-sm text-primary mb-1" style="font-size: 16px;">@Model.Name</h4>
-                    <p class="font-label-sm text-on-surface-variant mb-0" style="font-size: 12px;">Registered Customer</p>
+                    <h4 class="font-headline-sm text-primary mb-1 fs-16">@Model.Name</h4>
+                    <p class="font-label-sm text-on-surface-variant mb-0 fs-12">Registered Customer</p>
                 </div>
             </div>
-            
-            <div style="display: flex; flex-direction: column; gap: var(--spacing-3);">
+
+            <div class="stack-gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <span class="material-symbols-outlined text-on-surface-variant" style="font-size: 20px;">mail</span>
+                    <span class="material-symbols-outlined text-on-surface-variant fs-20">mail</span>
                     <div>
-                        <p class="text-on-surface-variant mb-0" style="font-size: 11px;">Email Address</p>
-                        <p class="font-body-md mb-0 select-all" style="font-size: 13px;">@Model.Email</p>
+                        <p class="text-on-surface-variant mb-0 fs-11">Email Address</p>
+                        <p class="font-body-md mb-0 select-all fs-13">@Model.Email</p>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="material-symbols-outlined text-on-surface-variant" style="font-size: 20px;">call</span>
+                    <span class="material-symbols-outlined text-on-surface-variant fs-20">call</span>
                     <div>
-                        <p class="text-on-surface-variant mb-0" style="font-size: 11px;">Phone Number</p>
-                        <p class="font-body-md mb-0 select-all" style="font-size: 13px;">@Model.PhoneNumber</p>
+                        <p class="text-on-surface-variant mb-0 fs-11">Phone Number</p>
+                        <p class="font-body-md mb-0 select-all fs-13">@Model.PhoneNumber</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Quick Actions -->
-        <section class="glass-card p-4 rounded-xl mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); display: flex; flex-direction: column; gap: var(--spacing-3);">
-            <h3 class="font-headline-sm text-primary mb-2" style="font-size: var(--fs-headline-sm);">Quick Actions</h3>
-            <a href="mailto:@Model.Email?subject=Re:%20HandyFix%20Enquiry" class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); text-decoration: none;">
-                <span class="material-symbols-outlined" style="font-size: 20px;">reply</span>
+        <section class="glass-card p-4 rounded-xl mb-4 admin-card stack-gap-3">
+            <h3 class="font-headline-sm text-primary mb-2">Quick Actions</h3>
+            <a href="mailto:@Model.Email?subject=Re:%20HandyFix%20Enquiry" class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 text-no-decoration">
+                <span class="material-symbols-outlined fs-20">reply</span>
                 <span>Reply via Email</span>
             </a>
-            <a href="tel:@Model.PhoneNumber" class="btn btn-outline font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); border: 2px solid var(--border-subtle); text-decoration: none; color: var(--text-main); background: transparent;">
-                <span class="material-symbols-outlined" style="font-size: 20px;">call</span>
+            <a href="tel:@Model.PhoneNumber" class="btn btn-outline font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 btn-outline-thick text-no-decoration">
+                <span class="material-symbols-outlined fs-20">call</span>
                 <span>Call Customer</span>
             </a>
         </section>
 
         <!-- Management Status & Controls -->
-        <section class="glass-card p-4 rounded-xl border-t-danger" style="background: #ffffff; border: 1px solid var(--border-subtle); border-top: 4px solid var(--error) !important; border-radius: var(--radius-xl); display: flex; flex-direction: column; gap: var(--spacing-3);">
-            <h3 class="font-headline-sm text-primary mb-2" style="font-size: var(--fs-headline-sm);">Manage Enquiry</h3>
+        <section class="glass-card p-4 rounded-xl border-t-danger admin-card admin-card-accent-error stack-gap-3">
+            <h3 class="font-headline-sm text-primary mb-2">Manage Enquiry</h3>
             <form asp-area="Administration" asp-controller="Enquiries" asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Are you sure you want to permanently delete this enquiry?');">
-                <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); border: 1px solid rgba(186, 26, 26, 0.2); background: rgba(186, 26, 26, 0.05); color: var(--error);">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg tint-error-soft border-error-soft btn-block-py3 text-error">
+                    <span class="material-symbols-outlined fs-20">delete</span>
                     <span>Delete Permanent</span>
                 </button>
             </form>

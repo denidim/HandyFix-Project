@@ -5,17 +5,17 @@
 }
 
 <!-- Sticky Header -->
-<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <div>
-        <h1 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Availability Calendar</h1>
-        <p class="font-label-sm text-on-surface-variant mt-1" style="margin: 0;">Configure your operational hours and manage booking slots.</p>
+        <h1 class="admin-page-title">Availability Calendar</h1>
+        <p class="font-label-sm text-on-surface-variant mt-1 admin-page-subtitle">Configure your operational hours and manage booking slots.</p>
     </div>
-    
+
     <!-- Date Navigation picker -->
-    <div class="flex items-center gap-3 bg-white p-2 rounded-xl border shadow-sm">
+    <div class="d-flex align-items-center gap-3 p-2 rounded-xl border shadow-sm date-nav-card">
         <form method="get" asp-area="Administration" asp-controller="Calendar" asp-action="Index" class="form-inline d-flex align-items-center gap-2 m-0">
-            <span class="font-button-text px-2" style="font-size: 13px; color: var(--on-surface-variant);">Select Date:</span>
-            <input type="date" name="date" class="form-control form-control-sm" value="@targetDate.ToString("yyyy-MM-dd")" onchange="this.form.submit()" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 4px 8px; font-family: 'Outfit'; font-size: 13px;" />
+            <span class="font-button-text px-2 fs-13 text-on-surface-variant">Select Date:</span>
+            <input type="date" name="date" class="form-control form-control-sm date-input-compact" value="@targetDate.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
         </form>
     </div>
 </div>
@@ -23,53 +23,53 @@
 <div class="row">
     <!-- Left Column: Daily Slots List -->
     <div class="col-lg-7 mb-4">
-        <div class="d-flex items-center justify-content-between mb-4">
-            <h2 class="font-headline-sm text-primary mb-0" style="font-size: var(--fs-headline-sm); display: flex; align-items: center; gap: 8px;">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h2 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
                 <span class="material-symbols-outlined text-secondary">schedule</span>
                 <span>Slots for @targetDate.ToString("dd MMM yyyy")</span>
             </h2>
-            <div class="d-flex gap-3 text-on-surface-variant font-bold" style="font-size: 11px;">
-                <span class="d-flex align-items-center gap-1"><span class="rounded-circle" style="width: 8px; height: 8px; background-color: var(--tertiary-fixed-dim); display: inline-block;"></span> Available</span>
-                <span class="d-flex align-items-center gap-1"><span class="rounded-circle" style="width: 8px; height: 8px; background-color: var(--secondary-container); display: inline-block;"></span> Booked</span>
-                <span class="d-flex align-items-center gap-1"><span class="rounded-circle" style="width: 8px; height: 8px; background-color: var(--outline-variant); display: inline-block;"></span> Blocked</span>
+            <div class="d-flex gap-3 text-on-surface-variant font-bold fs-11">
+                <span class="d-flex align-items-center gap-1"><span class="legend-dot legend-dot-available"></span> Available</span>
+                <span class="d-flex align-items-center gap-1"><span class="legend-dot legend-dot-booked"></span> Booked</span>
+                <span class="d-flex align-items-center gap-1"><span class="legend-dot legend-dot-blocked"></span> Blocked</span>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border shadow-sm p-4" style="border-radius: var(--radius-xl); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: var(--spacing-3);">
+        <div class="admin-card p-4 d-flex flex-column gap-3">
             @if (Model.Slots.Any())
             {
                 @foreach (var slot in Model.Slots)
                 {
-                    var itemBg = slot.IsBooked ? "background-color: rgba(57, 184, 253, 0.05); border-color: rgba(57, 184, 253, 0.2);" :
-                                 slot.IsBlocked ? "background-color: var(--surface-container-low); border-color: var(--border-subtle); opacity: 0.75;" :
-                                 "background-color: var(--surface-container-lowest); border-color: var(--border-subtle);";
-                                 
-                    var timelineIndicatorColor = slot.IsBooked ? "var(--secondary-container)" :
-                                                 slot.IsBlocked ? "var(--outline-variant)" :
-                                                 "var(--tertiary-fixed-dim)";
+                    var slotStateClass = slot.IsBooked ? "slot-booked" :
+                                 slot.IsBlocked ? "slot-blocked" :
+                                 "slot-available";
 
-                    <div class="d-flex align-items-center justify-content-between p-3 rounded-lg border transition-all" style="@itemBg">
+                    var timelineStateClass = slot.IsBooked ? "timeline-booked" :
+                                                 slot.IsBlocked ? "timeline-blocked" :
+                                                 "timeline-available";
+
+                    <div class="d-flex align-items-center justify-content-between p-3 rounded-lg border transition-all slot-row @slotStateClass">
                         <div class="d-flex align-items-center gap-4">
-                            <div class="text-center" style="min-width: 60px;">
-                                <p class="font-headline-sm mb-0 text-primary" style="font-size: 18px; font-weight: 700;">@slot.StartTime.ToString("HH:mm")</p>
-                                <p class="text-on-surface-variant mb-0 uppercase tracking-wider" style="font-size: 9px; font-weight: 500;">@slot.StartTime.ToString("tt")</p>
+                            <div class="text-center slot-time-col">
+                                <p class="font-headline-sm mb-0 text-primary fs-18 font-bold">@slot.StartTime.ToString("HH:mm")</p>
+                                <p class="text-on-surface-variant mb-0 uppercase tracking-wider fs-9 font-medium">@slot.StartTime.ToString("tt")</p>
                             </div>
-                            <div class="rounded-full" style="width: 3px; height: 32px; background-color: @timelineIndicatorColor;"></div>
+                            <div class="rounded-full timeline-indicator @timelineStateClass"></div>
                             <div>
                                 @if (slot.IsBooked)
                                 {
-                                    <span class="px-2 py-0.5 rounded font-bold uppercase mb-1" style="background-color: rgba(57, 184, 253, 0.2); color: var(--on-secondary-container); font-size: 9px; display: inline-block;">Booked</span>
-                                    <p class="font-body-md text-primary mb-0" style="font-size: 13px;">Ref #@slot.BookingId.ToString().Substring(0, 8).ToUpper() | Tech: @(slot.Technician != null ? $"{slot.Technician.FirstName} {slot.Technician.LastName}" : "Unassigned")</p>
+                                    <span class="rounded slot-tag slot-tag-booked mb-1">Booked</span>
+                                    <p class="font-body-md text-primary mb-0 fs-13">Ref #@slot.BookingId.ToString().Substring(0, 8).ToUpper() | Tech: @(slot.Technician != null ? $"{slot.Technician.FirstName} {slot.Technician.LastName}" : "Unassigned")</p>
                                 }
                                 else if (slot.IsBlocked)
                                 {
-                                    <span class="px-2 py-0.5 rounded font-bold uppercase mb-1" style="background-color: var(--outline-variant); color: var(--on-surface-variant); font-size: 9px; display: inline-block;">Blocked</span>
-                                    <p class="font-body-md text-on-surface-variant mb-0" style="font-size: 13px;">Manual Block</p>
+                                    <span class="rounded slot-tag slot-tag-blocked mb-1">Blocked</span>
+                                    <p class="font-body-md text-on-surface-variant mb-0 fs-13">Manual Block</p>
                                 }
                                 else
                                 {
-                                    <span class="px-2 py-0.5 rounded font-bold uppercase mb-1" style="background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container); font-size: 9px; display: inline-block;">Available</span>
-                                    <p class="font-body-md text-primary mb-0" style="font-size: 13px;">Standard Open Slot | Tech: @(slot.Technician != null ? $"{slot.Technician.FirstName} {slot.Technician.LastName}" : "Unassigned")</p>
+                                    <span class="rounded slot-tag slot-tag-available mb-1">Available</span>
+                                    <p class="font-body-md text-primary mb-0 fs-13">Standard Open Slot | Tech: @(slot.Technician != null ? $"{slot.Technician.FirstName} {slot.Technician.LastName}" : "Unassigned")</p>
                                 }
                             </div>
                         </div>
@@ -80,7 +80,7 @@
                                 <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post" class="m-0">
                                     <input type="hidden" name="id" value="@slot.Id" />
                                     <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
-                                    <button type="submit" class="btn btn-sm font-button-text" style="border: 1px solid var(--border-subtle); padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: 12px; background: transparent; color: var(--text-main);">Release</button>
+                                    <button type="submit" class="btn btn-sm font-button-text slot-action-btn">Release</button>
                                 </form>
                             }
                             else if (slot.IsBlocked)
@@ -88,7 +88,7 @@
                                 <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post" class="m-0">
                                     <input type="hidden" name="id" value="@slot.Id" />
                                     <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
-                                    <button type="submit" class="btn btn-sm font-button-text" style="border: 1px solid var(--border-subtle); padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: 12px; background: transparent; color: var(--text-main);">Unblock</button>
+                                    <button type="submit" class="btn btn-sm font-button-text slot-action-btn">Unblock</button>
                                 </form>
                             }
                             else
@@ -96,7 +96,7 @@
                                 <form asp-area="Administration" asp-controller="Calendar" asp-action="BlockSlot" method="post" class="m-0">
                                     <input type="hidden" name="id" value="@slot.Id" />
                                     <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
-                                    <button type="submit" class="btn btn-sm font-button-text" style="border: 1px solid rgba(186, 26, 26, 0.2); padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: 12px; background: rgba(186, 26, 26, 0.05); color: var(--error);">Block</button>
+                                    <button type="submit" class="btn btn-sm font-button-text slot-action-btn-block">Block</button>
                                 </form>
                             }
                         </div>
@@ -113,12 +113,12 @@
     <!-- Right Column: Tools & Generators -->
     <div class="col-lg-5">
         <!-- Entire Day Block Tool -->
-        <section class="glass-card rounded-xl p-4 border-t-danger mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-top: 4px solid var(--error) !important; border-radius: var(--radius-xl);">
-            <h3 class="font-headline-sm text-primary mb-2" style="font-size: var(--fs-headline-sm);">Day Management</h3>
-            <p class="text-on-surface-variant font-body-md mb-4" style="font-size: 13px;">Instantly toggle availability for the entire selected date (@targetDate.ToString("dd MMM yyyy")).</p>
+        <section class="glass-card rounded-xl p-4 border-t-danger mb-4 admin-card admin-card-accent-error">
+            <h3 class="font-headline-sm text-primary mb-2">Day Management</h3>
+            <p class="text-on-surface-variant font-body-md mb-4 fs-13">Instantly toggle availability for the entire selected date (@targetDate.ToString("dd MMM yyyy")).</p>
             <form asp-area="Administration" asp-controller="Calendar" asp-action="BlockDate" method="post" class="m-0">
                 <input type="hidden" name="date" value="@targetDate.ToString("yyyy-MM-dd")" />
-                <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); border: 1px solid rgba(186, 26, 26, 0.2); background: rgba(186, 26, 26, 0.05); color: var(--error);">
+                <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg tint-error-soft btn-block-py3 btn-danger-soft">
                     <span class="material-symbols-outlined">do_not_disturb_on</span>
                     <span>Block Entire Day</span>
                 </button>
@@ -126,30 +126,30 @@
         </section>
 
         <!-- Slot Generator Form -->
-        <section class="glass-card rounded-xl p-4 mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
+        <section class="glass-card rounded-xl p-4 mb-4 admin-card">
             <div class="d-flex align-items-center gap-2 mb-4">
-                <div class="rounded-lg d-flex align-items-center justify-content-center text-secondary" style="width: 32px; height: 32px; background-color: rgba(0, 101, 145, 0.1);">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">auto_awesome</span>
+                <div class="rounded-lg d-flex align-items-center justify-content-center text-secondary dim-32 tint-secondary">
+                    <span class="material-symbols-outlined fs-18">auto_awesome</span>
                 </div>
-                <h3 class="font-headline-sm text-primary mb-0" style="font-size: var(--fs-headline-sm);">Slot Generator</h3>
+                <h3 class="font-headline-sm text-primary mb-0">Slot Generator</h3>
             </div>
-            
-            <form asp-area="Administration" asp-controller="Calendar" asp-action="GenerateSlots" method="post" class="space-y-4" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
+
+            <form asp-area="Administration" asp-controller="Calendar" asp-action="GenerateSlots" method="post" class="d-flex flex-column gap-4">
                 <div class="row">
                     <div class="col-md-6 form-group">
                         <label class="form-label font-label-sm text-on-surface-variant mb-2">Start Date</label>
-                        <input class="form-control py-2" type="date" name="startDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); background-color: var(--surface-container-lowest);" />
+                        <input class="form-control py-2 admin-form-control" type="date" name="startDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
                     </div>
                     <div class="col-md-6 form-group">
                         <label class="form-label font-label-sm text-on-surface-variant mb-2">End Date</label>
-                        <input class="form-control py-2" type="date" name="endDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" required style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); background-color: var(--surface-container-lowest);" />
+                        <input class="form-control py-2 admin-form-control" type="date" name="endDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
                     </div>
                 </div>
-                
-                <div class="pt-3" style="border-top: 1px solid var(--border-subtle);">
-                    <p class="font-label-sm text-on-surface-variant mb-3" style="font-size: 11px; line-height: 1.4;">* Automatically generates standard hourly slots from 9:00 AM to 5:00 PM for the selected date range. Sundays are excluded.</p>
-                    <button class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2" type="submit" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg);">
-                        <span class="material-symbols-outlined" style="font-size: 20px;">calendar_today</span>
+
+                <div class="pt-3 divider-subtle">
+                    <p class="font-label-sm text-on-surface-variant mb-3 fs-11 lh-snug">* Automatically generates standard hourly slots from 9:00 AM to 5:00 PM for the selected date range. Sundays are excluded.</p>
+                    <button class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg" type="submit">
+                        <span class="material-symbols-outlined fs-20">calendar_today</span>
                         <span>Generate Slots</span>
                     </button>
                 </div>

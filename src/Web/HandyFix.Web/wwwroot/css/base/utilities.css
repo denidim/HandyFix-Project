@@ -99,6 +99,14 @@
   resize: none;
 }
 
+.pre-wrap {
+  white-space: pre-wrap;
+}
+
+.text-no-decoration {
+  text-decoration: none;
+}
+
 /* Opacity utilities for the specific fractional values used across
    marketing/info pages - Bootstrap's opacity-* scale only covers 25/50/75/100.
    Terms.cshtml already referenced "opacity-70" as if it were defined; this
@@ -106,6 +114,13 @@
 .opacity-70 { opacity: 0.7; }
 .opacity-80 { opacity: 0.8; }
 .opacity-90 { opacity: 0.9; }
+
+/* More fixed font-size utilities (admin area needs a wider range than the
+   marketing pages did). */
+.fs-9 { font-size: 9px; }
+.fs-10 { font-size: 10px; }
+.fs-15 { font-size: 15px; }
+.fs-headline-lg { font-size: var(--fs-headline-lg); }
 
 /* Several Tailwind-named classes were referenced across both public and
    admin views (uppercase, italic, leading-relaxed, select-all, block, text-xs,
@@ -132,3 +147,30 @@
 .font-medium { font-weight: 500; }
 .text-right { text-align: right; }
 .text-left { text-align: left; }
+
+/* Fixed circle/square dimensions for the repeated avatar-initials and
+   icon-badge patterns (admin tables and stat cards size these consistently
+   but previously did it via a one-off inline width/height every time). */
+.dim-32 { width: 32px; height: 32px; }
+.dim-40 { width: 40px; height: 40px; }
+.dim-48 { width: 48px; height: 48px; }
+.dim-56 { width: 56px; height: 56px; }
+.dim-36 { width: 36px; height: 36px; }
+
+/* Fixed-color "tint" backgrounds used for status pills, category badges, and
+   stat-card icon wrappers throughout the admin area - each pairs with one of
+   the existing text-* color classes for the foreground. */
+.tint-neutral { background-color: var(--surface-container-highest); color: var(--on-surface-variant); }
+.tint-error { background-color: var(--error-container); color: var(--error); }
+.tint-error-soft { background-color: rgba(186, 26, 26, 0.1); }
+.tint-success { background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container); }
+.tint-secondary { background-color: rgba(0, 101, 145, 0.1); color: var(--secondary); }
+.tint-secondary-soft { background-color: rgba(0, 101, 145, 0.08); color: var(--secondary); }
+.tint-secondary-faint { background-color: rgba(0, 101, 145, 0.05); }
+.tint-info { background-color: rgba(57, 184, 253, 0.2); color: var(--on-secondary-container); }
+.tint-neutral-soft { background-color: var(--surface-container); color: var(--on-surface-variant); }
+.tint-black-soft { background-color: rgba(0, 0, 0, 0.05); }
+.tint-tertiary-fill { background-color: var(--on-tertiary-container); }
+.tint-secondary-fixed { background-color: var(--secondary-fixed); }
+.tint-primary-fixed-dim { background-color: var(--primary-fixed-dim); }
+.tint-surface-high { background-color: var(--surface-container-high); }

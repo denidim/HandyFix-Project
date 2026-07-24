@@ -152,8 +152,472 @@
 .admin-page-title {
   margin: 0;
   color: var(--primary);
-  font-size: var(--fs-headline-md);
+  /* Every page that uses this class overrode the size to --fs-headline-lg
+     inline, so the --fs-headline-md default below was never actually
+     rendered anywhere - baking it in here removes ~10 identical overrides. */
+  font-size: var(--fs-headline-lg);
   font-weight: 700;
+}
+
+.admin-page-subtitle {
+  margin: 0;
+}
+
+/* The shared header row every list/details page starts with: a breadcrumb
+   or title on the left, an action/search element on the right. */
+.admin-header-row {
+  margin-top: var(--spacing-2);
+}
+
+/* Generic white bordered card, standing in for the
+   "border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);"
+   inline style repeated on nearly every section/table/card wrapper. */
+.admin-card {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+}
+
+.admin-card-accent-error {
+  border-top: 4px solid var(--error) !important;
+}
+
+/* Compact pill button, e.g. the "Back to List" link at the top of every
+   Details page and small in-table row actions. */
+.admin-btn-compact {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-label-sm);
+}
+
+.admin-btn-outline {
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-container-lowest);
+  color: var(--text-main);
+}
+
+/* Uppercase micro-label used above nearly every read-only detail value
+   ("Customer Name", "Service Address", etc). Also fixes a latent bug: the
+   original inline style used "tracking: 0.1em", which isn't a real CSS
+   property (should be letter-spacing) and was silently doing nothing. */
+.detail-label {
+  display: block;
+  color: var(--on-surface-variant);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-1);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+/* Status/payment/category pill badges. Each pairs with a .tint-* background
+   from utilities.css; these just add the pill shape and text treatment. */
+.status-badge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.payment-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+}
+
+.payment-dot-paid {
+  background-color: var(--on-tertiary-container);
+}
+
+.payment-dot-unpaid {
+  background-color: var(--outline);
+}
+
+/* Table header cells shared by every admin list page. */
+.admin-table-head {
+  background-color: var(--surface-container-low);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-table-head th {
+  color: var(--on-surface-variant);
+  font-weight: 700;
+}
+
+.admin-table-row {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Circular avatar/icon badge used for initials and stat-card icons - pairs
+   with a .dim-* size and a .tint-* background from utilities.css. */
+.avatar-badge {
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Callout box for freeform customer-entered text (booking problem
+   descriptions, etc). */
+.customer-note-box {
+  border-left: 4px solid var(--secondary) !important;
+  background-color: var(--surface-container-low) !important;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Thumbnail image tile used in the problem/attachment photo galleries. */
+.admin-thumbnail-tile {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  aspect-ratio: 1 / 1;
+}
+
+.admin-thumbnail-tile img {
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+/* Dark "financial summary" sidebar card on the booking details page. */
+.financial-summary-card {
+  background-color: var(--primary-container);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--on-primary-fixed);
+}
+
+.financial-summary-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: var(--spacing-2) 0;
+}
+
+.financial-summary-deposit-box {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Search input with a leading icon, used on every list page's header. */
+.admin-search-wrap {
+  max-width: 320px;
+}
+
+.admin-search-icon {
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.admin-search-input {
+  padding-left: 40px;
+  padding-right: 16px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-container-lowest);
+  border-radius: var(--radius-lg);
+}
+
+/* Standard form control look shared by every admin create/edit form field. */
+.admin-form-control {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-container-lowest);
+}
+
+/* Fields that don't rely on a Bootstrap py-* class need their own explicit
+   padding - kept separate from .admin-form-control since several existing
+   usages pair that class with py-2/py-3 instead, and a baked-in padding
+   there would fight with Bootstrap's directional spacing utility. */
+.form-pad-standard {
+  padding: 12px 16px;
+}
+
+.form-control-price-affix {
+  padding: 12px 16px 12px 32px;
+}
+
+.form-control-duration-affix {
+  padding: 12px 48px 12px 16px;
+}
+
+.file-input-pad {
+  padding: 8px 12px;
+}
+
+.btn-py3-px8 {
+  padding: var(--spacing-3) var(--spacing-8);
+}
+
+.admin-form-affix {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 700;
+  color: var(--on-surface-variant);
+}
+
+.admin-form-affix-left {
+  left: 16px;
+}
+
+.admin-form-affix-right {
+  right: 16px;
+  font-weight: 400;
+}
+
+/* One-off action-button color treatments used on Details/status-change
+   pages (approve/complete/cancel, etc). */
+.btn-block-py2 {
+  padding: var(--spacing-2) 0;
+}
+
+.btn-block-py3 {
+  padding: var(--spacing-3) 0;
+}
+
+.btn-approve-outline {
+  border: 1px solid var(--secondary);
+  background: transparent;
+  color: var(--secondary);
+}
+
+.btn-complete-fill {
+  background-color: var(--on-tertiary-container);
+  border: none;
+}
+
+.btn-danger-soft {
+  border: 1px solid rgba(186, 26, 26, 0.2);
+  color: var(--error);
+}
+
+.divider-subtle {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.section-divider-spaced {
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--spacing-4) 0;
+}
+
+.financial-row-muted {
+  color: var(--on-primary-container);
+}
+
+.section-title-underline {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Calendar page: date-picker card, slot list rows, and their state colors. */
+.date-nav-card {
+  background-color: var(--surface-container-lowest);
+}
+
+.date-input-compact {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 8px;
+  font-family: 'Outfit';
+  font-size: 13px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+.legend-dot-available { background-color: var(--tertiary-fixed-dim); }
+.legend-dot-booked { background-color: var(--secondary-container); }
+.legend-dot-blocked { background-color: var(--outline-variant); }
+
+.slot-row {
+  border: 1px solid transparent;
+}
+
+.slot-available { background-color: var(--surface-container-lowest); border-color: var(--border-subtle); }
+.slot-booked { background-color: rgba(57, 184, 253, 0.05); border-color: rgba(57, 184, 253, 0.2); }
+.slot-blocked { background-color: var(--surface-container-low); border-color: var(--border-subtle); opacity: 0.75; }
+
+.slot-time-col {
+  min-width: 60px;
+}
+
+.timeline-indicator {
+  width: 3px;
+  height: 32px;
+}
+
+.timeline-available { background-color: var(--tertiary-fixed-dim); }
+.timeline-booked { background-color: var(--secondary-container); }
+.timeline-blocked { background-color: var(--outline-variant); }
+
+.slot-tag {
+  display: inline-block;
+  padding: 2px var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+.slot-tag-available { background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container); }
+.slot-tag-booked { background-color: rgba(57, 184, 253, 0.2); color: var(--on-secondary-container); }
+.slot-tag-blocked { background-color: var(--outline-variant); color: var(--on-surface-variant); }
+
+.slot-action-btn {
+  border: 1px solid var(--border-subtle);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  background: transparent;
+  color: var(--text-main);
+}
+
+.slot-action-btn-block {
+  border: 1px solid rgba(186, 26, 26, 0.2);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  background: rgba(186, 26, 26, 0.05);
+  color: var(--error);
+}
+
+/* Small stat card used across Bookings/Services/Reviews/Enquiries index
+   pages ("Today's Appointments", "Average Price", etc). */
+.admin-stat-card {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+}
+
+.admin-table-toolbar {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.btn-py3-px6 {
+  padding: var(--spacing-3) var(--spacing-6);
+}
+
+.border-error-soft {
+  border: 1px solid rgba(186, 26, 26, 0.2);
+}
+
+.service-desc-truncate {
+  max-width: 320px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.border-secondary-soft {
+  border: 1px solid rgba(0, 101, 145, 0.15);
+}
+
+.message-snippet-truncate {
+  max-width: 450px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  line-clamp: 2;
+}
+
+.btn-no-border {
+  border: none;
+}
+
+.border-info-soft {
+  border: 1px solid rgba(57, 184, 253, 0.3);
+}
+
+.stack-gap-3 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.btn-outline-thick {
+  border: 2px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-main);
+}
+
+.legend-dot-error {
+  background-color: var(--error);
+}
+
+.stack-above {
+  position: relative;
+  z-index: 10;
+}
+
+.add-widget-placeholder {
+  border: 2px dashed var(--outline-variant);
+  background: transparent;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.activity-graph-placeholder {
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Service Create/Edit form pages. */
+.admin-form-container {
+  max-width: 800px;
+  margin-bottom: var(--spacing-12);
+}
+
+.form-actions-row {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--spacing-4);
+}
+
+.help-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+}
+
+.help-card-icon {
+  flex-shrink: 0;
+}
+
+.checkbox-lg {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  position: relative;
+  margin: 0;
+}
+
+.label-clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.current-image-thumb {
+  width: 120px;
+  height: 90px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  background-color: var(--surface-container-low);
+}
+
+.current-image-thumb img {
+  object-fit: cover;
 }
 
 .admin-main-content {

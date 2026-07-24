@@ -4,10 +4,14 @@
     this.ViewData["Title"] = $"Booking Details - {Model.Id.ToString().Substring(0, 8).ToUpper()}";
     var technicians = Model.Technicians;
     var balanceDue = Model.TotalAmount - Model.DepositAmount;
+    var statusBadgeClass = Model.StatusName == "Pending" ? "tint-neutral" :
+                       Model.StatusName == "Cancelled" ? "tint-error" :
+                       Model.StatusName == "Completed" ? "tint-success" :
+                       "tint-secondary";
 }
 
 <!-- Breadcrumbs & Header Actions -->
-<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4" style="margin-top: var(--spacing-2);">
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <nav class="breadcrumb-nav mb-0" aria-label="breadcrumb">
         <a asp-area="Administration" asp-controller="Dashboard" asp-action="Index">Admin</a>
         <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
@@ -15,7 +19,7 @@
         <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
         <span class="breadcrumb-current">Booking Details</span>
     </nav>
-    <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="btn btn-outline d-flex align-items-center gap-2" style="border: 1px solid var(--border-subtle); padding: var(--spacing-2) var(--spacing-4); border-radius: var(--radius-lg); font-size: var(--fs-label-sm); background: #ffffff; color: var(--text-main);">
+    <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
         <span class="material-symbols-outlined">arrow_back</span>
         <span>Back to List</span>
     </a>
@@ -23,19 +27,13 @@
 
 <div class="mb-5">
     <div class="d-flex align-items-center gap-3">
-        <h2 class="admin-page-title" style="font-size: var(--fs-headline-lg);">Booking #@Model.Id.ToString().Substring(0, 8).ToUpper()</h2>
+        <h2 class="admin-page-title">Booking #@Model.Id.ToString().Substring(0, 8).ToUpper()</h2>
         <div class="d-flex gap-2">
-            @{
-                var statusClass = Model.StatusName == "Pending" ? "background-color: var(--surface-container-highest); color: var(--on-surface-variant);" :
-                                   Model.StatusName == "Cancelled" ? "background-color: var(--error-container); color: var(--error);" :
-                                   Model.StatusName == "Completed" ? "background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container);" :
-                                   "background-color: rgba(0, 101, 145, 0.1); color: var(--secondary);";
-            }
-            <span class="px-3 py-1 font-bold font-label-sm rounded-full" style="@statusClass font-size: 11px; text-transform: uppercase;">@Model.StatusName</span>
-            <span class="px-3 py-1 font-bold font-label-sm rounded-full" style="background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container); font-size: 11px; text-transform: uppercase;">@Model.PaymentStatus</span>
+            <span class="status-badge @statusBadgeClass">@Model.StatusName</span>
+            <span class="status-badge tint-success">@Model.PaymentStatus</span>
         </div>
     </div>
-    <p class="font-body-md text-on-surface-variant mt-1" style="margin: 0;">Scheduled appointment for client @Model.CustomerFirstName @Model.CustomerLastName</p>
+    <p class="font-body-md text-on-surface-variant admin-page-subtitle">Scheduled appointment for client @Model.CustomerFirstName @Model.CustomerLastName</p>
 </div>
 
 <!-- Two Column Layout -->
@@ -43,61 +41,61 @@
     <!-- Left Column: Details & Images -->
     <div class="col-lg-8 mb-4">
         <!-- Customer & Service Details -->
-        <section class="bg-white rounded-xl p-4 p-md-5 border border-border-subtle shadow-sm mb-4" style="border-radius: var(--radius-xl);">
-            <h2 class="font-headline-sm text-primary mb-4 pb-3" style="font-size: var(--fs-headline-sm); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: var(--spacing-2);">
+        <section class="admin-card p-4 p-md-5 shadow-sm mb-4">
+            <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
                 <span class="material-symbols-outlined text-secondary">person_pin_circle</span>
                 <span>Customer &amp; Service Details</span>
             </h2>
-            
+
             <div class="row">
                 <div class="col-md-6 mb-4">
-                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Customer Name</label>
+                    <label class="detail-label">Customer Name</label>
                     <p class="font-body-lg text-primary font-bold mb-0">@Model.CustomerFirstName @Model.CustomerLastName</p>
                 </div>
                 <div class="col-md-6 mb-4">
-                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Service Address</label>
-                    <p class="font-body-md text-primary mb-0" style="line-height: 1.5;">@Model.Address</p>
+                    <label class="detail-label">Service Address</label>
+                    <p class="font-body-md text-primary mb-0 lh-normal">@Model.Address</p>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-4">
-                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Contact Details</label>
+                    <label class="detail-label">Contact Details</label>
                     <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2 select-all">
-                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">call</span>
+                        <span class="material-symbols-outlined text-secondary fs-16">call</span>
                         <span>@Model.PhoneNumber</span>
                     </p>
                     <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2 select-all">
-                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">mail</span>
+                        <span class="material-symbols-outlined text-secondary fs-16">mail</span>
                         <span>@Model.Email</span>
                     </p>
                 </div>
                 <div class="col-md-6 mb-4">
-                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Service Requested</label>
+                    <label class="detail-label">Service Requested</label>
                     <p class="font-body-lg text-secondary font-bold mb-0">@string.Join(", ", Model.Services)</p>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-4">
-                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Scheduled Time</label>
+                    <label class="detail-label">Scheduled Time</label>
                     <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">calendar_today</span>
+                        <span class="material-symbols-outlined text-secondary fs-16">calendar_today</span>
                         <span>@Model.ScheduledTime.ToString("MMMM dd, yyyy")</span>
                     </p>
                     <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">schedule</span>
+                        <span class="material-symbols-outlined text-secondary fs-16">schedule</span>
                         <span>@Model.ScheduledTime.ToString("hh:mm tt") - @Model.ScheduledEndTime.ToString("hh:mm tt")</span>
                     </p>
                 </div>
                 <div class="col-md-6 mb-4">
-                    <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px; tracking: 0.1em;">Booking Received</label>
+                    <label class="detail-label">Booking Received</label>
                     <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">mail</span>
+                        <span class="material-symbols-outlined text-secondary fs-16">mail</span>
                         <span>@Model.CreatedOn.ToString("MMMM dd, yyyy")</span>
                     </p>
                     <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">schedule</span>
+                        <span class="material-symbols-outlined text-secondary fs-16">schedule</span>
                         <span>@Model.CreatedOn.ToString("hh:mm tt")</span>
                     </p>
                 </div>
@@ -107,9 +105,9 @@
             {
                 <div class="row">
                     <div class="col-12 mt-2">
-                        <div class="p-3 bg-light rounded-lg border-start border-secondary" style="border-left: 4px solid var(--secondary) !important; background-color: var(--surface-container-low) !important; word-wrap: break-word; word-break: break-word; overflow-wrap: anywhere;">
-                            <label class="text-secondary font-bold uppercase block mb-1" style="font-size: 10px;">Customer Note</label>
-                            <p class="italic text-on-surface-variant mb-0" style="font-size: 13px; line-height: 1.4; word-wrap: break-word; word-break: break-word; overflow-wrap: anywhere;">"@Model.ProblemDescription"</p>
+                        <div class="p-3 bg-light rounded-lg border-start border-secondary customer-note-box">
+                            <label class="text-secondary font-bold uppercase block mb-1 fs-10">Customer Note</label>
+                            <p class="italic text-on-surface-variant mb-0 fs-13 lh-snug">"@Model.ProblemDescription"</p>
                         </div>
                     </div>
                 </div>
@@ -119,8 +117,8 @@
         <!-- Problem Images -->
         @if (Model.ImageUrls != null && Model.ImageUrls.Any())
         {
-            <section class="bg-white rounded-xl p-4 p-md-5 border border-border-subtle shadow-sm" style="border-radius: var(--radius-xl);">
-                <h2 class="font-headline-sm text-primary mb-4 flex items-center gap-2" style="font-size: var(--fs-headline-sm);">
+            <section class="admin-card p-4 p-md-5 shadow-sm">
+                <h2 class="font-headline-sm text-primary mb-4 flex items-center gap-2">
                     <span class="material-symbols-outlined text-secondary">image</span>
                     <span>Problem Visuals Attached</span>
                 </h2>
@@ -128,9 +126,9 @@
                     @foreach (var url in Model.ImageUrls)
                     {
                         <div class="col-sm-4 mb-3">
-                            <div class="group relative overflow-hidden border" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); aspect-ratio: 1/1;">
+                            <div class="group relative overflow-hidden border admin-thumbnail-tile">
                                 <a href="@url" target="_blank" class="d-block h-100 w-100">
-                                    <img src="@url" class="w-100 h-100" alt="Attachment" style="object-fit: cover; transition: transform var(--transition-normal);" />
+                                    <img src="@url" class="w-100 h-100" alt="Attachment" />
                                 </a>
                             </div>
                         </div>
@@ -143,15 +141,15 @@
     <!-- Right Column: Sidebar Controls -->
     <div class="col-lg-4">
         <!-- Status & Assignment Card -->
-        <section class="glass-card rounded-xl p-4 shadow-sm border mb-4" style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);">
-            <h2 class="font-headline-sm text-primary mb-4" style="font-size: var(--fs-headline-sm);">Status &amp; Assignment</h2>
-            
+        <section class="glass-card rounded-xl p-4 shadow-sm border mb-4 admin-card">
+            <h2 class="font-headline-sm text-primary mb-4">Status &amp; Assignment</h2>
+
             <!-- Technician Assignment Form -->
             <form asp-area="Administration" asp-controller="Bookings" asp-action="AssignTechnician" method="post" class="mb-4">
                 <input type="hidden" name="id" value="@Model.Id" />
                 <div class="form-group mb-3">
                     <label for="technicianId" class="form-label font-label-sm text-on-surface-variant mb-2">Assign Technician</label>
-                    <select name="technicianId" id="technicianId" class="form-control py-3" style="border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); background-color: var(--surface-container-lowest);">
+                    <select name="technicianId" id="technicianId" class="form-control py-3 admin-form-control">
                         <option value="">-- Choose Technician --</option>
                         @foreach (var tech in technicians)
                         {
@@ -166,23 +164,23 @@
                         }
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-2) 0; border-radius: var(--radius-lg);">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
+                <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
+                    <span class="material-symbols-outlined fs-20">save</span>
                     <span>Update Assignment</span>
                 </button>
             </form>
 
-            <hr style="border-top: 1px solid var(--border-subtle); margin: var(--spacing-4) 0;">
+            <hr class="section-divider-spaced">
 
             <!-- Status Actions -->
             <div class="d-flex flex-column gap-2">
-                <label class="text-on-surface-variant font-bold uppercase block mb-1" style="font-size: 11px;">Manage Booking Status</label>
-                
+                <label class="text-on-surface-variant font-bold uppercase block mb-1 fs-11">Manage Booking Status</label>
+
                 @if (Model.StatusName == "Pending")
                 {
                     <form asp-area="Administration" asp-controller="Bookings" asp-action="Approve" method="post" class="w-100">
                         <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-outline font-button-text w-100 d-flex align-items-center justify-content-center gap-2" style="border: 1px solid var(--secondary); background: transparent; color: var(--secondary); padding: var(--spacing-3) 0; border-radius: var(--radius-lg);">
+                        <button type="submit" class="btn btn-outline font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 btn-approve-outline">
                             <span class="material-symbols-outlined">check_circle</span>
                             <span>Approve Booking</span>
                         </button>
@@ -193,7 +191,7 @@
                 {
                     <form asp-area="Administration" asp-controller="Bookings" asp-action="Complete" method="post" class="w-100">
                         <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); background-color: var(--on-tertiary-container); border: none;">
+                        <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 btn-complete-fill">
                             <span class="material-symbols-outlined">done_all</span>
                             <span>Complete Service</span>
                         </button>
@@ -204,7 +202,7 @@
                 {
                     <form asp-area="Administration" asp-controller="Bookings" asp-action="Cancel" method="post" class="w-100">
                         <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2" style="padding: var(--spacing-3) 0; border-radius: var(--radius-lg); border: 1px solid rgba(186, 26, 26, 0.2); background: rgba(186, 26, 26, 0.05); color: var(--error);">
+                        <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg tint-error-soft btn-block-py3 btn-danger-soft">
                             <span class="material-symbols-outlined">cancel</span>
                             <span>Cancel Booking</span>
                         </button>
@@ -214,26 +212,26 @@
         </section>
 
         <!-- Financial Summary -->
-        <section class="glass-card rounded-xl p-4 shadow-sm border mb-4" style="background: var(--primary-container); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-xl); color: var(--on-primary-fixed);">
-            <h2 class="font-headline-sm text-white mb-4" style="font-size: var(--fs-headline-sm);">Financial Summary</h2>
-            <div style="display: flex; flex-direction: column; gap: var(--spacing-2);">
-                <div class="d-flex justify-content-between" style="color: var(--on-primary-container);">
+        <section class="glass-card rounded-xl p-4 shadow-sm border mb-4 financial-summary-card">
+            <h2 class="font-headline-sm text-white mb-4">Financial Summary</h2>
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex justify-content-between financial-row-muted">
                     <span class="font-body-md">Base Service Estimate</span>
                     <span class="font-bold">£@Model.TotalAmount.ToString("F2")</span>
                 </div>
-                <hr style="border-top: 1px solid rgba(255,255,255,0.1); margin: var(--spacing-2) 0;">
+                <hr class="financial-summary-divider">
                 <div class="d-flex justify-content-between align-items-end">
                     <span class="font-body-md text-white">Total Estimated</span>
-                    <span class="font-bold text-white" style="font-size: 20px;">£@Model.TotalAmount.ToString("F2")</span>
+                    <span class="font-bold text-white fs-20">£@Model.TotalAmount.ToString("F2")</span>
                 </div>
-                <div class="mt-3 p-3 rounded-lg" style="background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="mt-3 p-3 rounded-lg financial-summary-deposit-box">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="font-bold text-secondary-container" style="font-size: 11px; text-transform: uppercase;">Deposit Paid</span>
+                        <span class="font-bold text-secondary-container uppercase fs-11">Deposit Paid</span>
                         <span class="font-bold text-secondary-container">£@Model.DepositAmount.ToString("F2")</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="font-bold text-white" style="font-size: 13px;">Balance Due</span>
-                        <span class="font-bold text-white" style="font-size: 15px;">£@balanceDue.ToString("F2")</span>
+                        <span class="font-bold text-white fs-13">Balance Due</span>
+                        <span class="font-bold text-white fs-15">£@balanceDue.ToString("F2")</span>
                     </div>
                 </div>
             </div>
