@@ -2,14 +2,22 @@
     this.ViewData["Title"] = "Terms & Conditions - Handy Fix";
 }
 
-<div class="info-canvas mt-12">
-    <!-- Hero Section for Terms -->
-    <div class="text-center mb-5">
-        <h1 class="font-headline-xl text-primary mb-2">Terms of Service</h1>
-        <p class="font-body-lg text-on-surface-variant mb-1">Please read these terms carefully before booking our services.</p>
-        <p class="font-label-sm text-on-surface-variant font-medium opacity-70 fs-12">Last updated: October 24, 2024</p>
-    </div>
+<div class="page-container services-page">
+    <!-- Header & Breadcrumbs -->
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">Terms</span>
+        </nav>
+        <div class="services-header-content">
+            <h1 class="services-hero-title">Terms of <span>Service.</span></h1>
+            <p class="services-subtitle mb-1">Please read these terms carefully before booking our services.</p>
+            <p class="font-label-sm text-on-surface-variant font-medium opacity-70 fs-12">Last updated: October 24, 2024</p>
+        </div>
+    </section>
 
+    <div class="info-canvas">
     <!-- Content Area -->
     <div class="info-card">
         <!-- 1. Services Provided -->
@@ -135,5 +143,6 @@
         <h3>Have questions?</h3>
         <p class="font-body-md text-on-surface-variant mb-3">Our support team is ready to clarify any part of these terms.</p>
         <a href="mailto:support@handyfix.com">support@handyfix.com</a>
+    </div>
     </div>
 </div>

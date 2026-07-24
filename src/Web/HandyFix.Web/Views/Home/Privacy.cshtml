@@ -2,17 +2,22 @@
     this.ViewData["Title"] = "Privacy Policy - Handy Fix";
 }
 
-<!-- Hero Decorative Header -->
-<div class="info-hero">
-    <div class="info-hero-bg" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD6hvST1alGedZvXOKNjRUghiUWnYvrmDGOgaE2Rr5OUmbmodvMjS1mv_zo-FOmCbQQ2nJ5Ow9L-Rs3lLa8zbiDdj1RL9CBrCDcmla7NXUq18FzwNIItZG9DIoE3jg68r4RNBUNwcDowKGgv5kU_Y-h_wSMPrsS-XqoK2knIk-2YThHTUgVYbxVP5DPDIq1KydbcPtDMeqGAoYt-ioRFAS2Zl7vOKsgmt4dwFJqBDUpu2OV-iK1oqilhY0-KcJWqd5f2B18kiw1P6jp');"></div>
-    <div class="info-hero-content">
-        <h1 class="text-white font-headline-xl">Privacy Policy</h1>
-        <p class="update-badge">Last Updated: June 15, 2024</p>
-    </div>
-</div>
+<div class="page-container services-page">
+    <!-- Header & Breadcrumbs -->
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">Privacy</span>
+        </nav>
+        <div class="services-header-content">
+            <h1 class="services-hero-title">Privacy <span>Policy.</span></h1>
+            <p class="font-label-sm text-on-surface-variant font-medium opacity-70 fs-12">Last Updated: June 15, 2024</p>
+        </div>
+    </section>
 
-<!-- Content Canvas -->
-<div class="info-canvas">
+    <!-- Content Canvas -->
+    <div class="info-canvas">
     <!-- Main Content Card -->
     <div class="info-card">
         <section class="info-section">
@@ -143,5 +148,6 @@
             <span class="material-symbols-outlined">download</span>
             <span class="font-button-text">Download as PDF</span>
         </button>
+    </div>
     </div>
 </div>

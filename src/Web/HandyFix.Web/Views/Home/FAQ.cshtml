@@ -2,16 +2,24 @@
     this.ViewData["Title"] = "Frequently Asked Questions - Handy Fix";
 }
 
-<!-- Main Content Canvas -->
-<div class="info-canvas mt-12 mb-12">
-    <!-- Hero Section -->
-    <section class="text-center mb-5">
-        <h1 class="font-headline-xl text-primary mb-2">How can we help?</h1>
-        <p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto">
-            Everything you need to know about our professional home maintenance services, booking process, and policies.
-        </p>
+<div class="page-container services-page">
+    <!-- Header & Breadcrumbs -->
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">FAQ</span>
+        </nav>
+        <div class="services-header-content">
+            <h1 class="services-hero-title">How can we <span>help?</span></h1>
+            <p class="services-subtitle">
+                Everything you need to know about our professional home maintenance services, booking process, and policies.
+            </p>
+        </div>
     </section>
 
+    <!-- Main Content Canvas -->
+    <div class="info-canvas">
     <!-- Search Bar -->
     <div class="position-relative mb-5">
         <input id="faqSearchInput" class="form-control py-3 rounded-xl faq-search-input" placeholder="Search for answers..." type="text" />
@@ -103,6 +111,7 @@
             </a>
         </div>
     </section>
+    </div>
 </div>
 
 <script>

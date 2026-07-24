@@ -3,13 +3,20 @@
     this.ViewData["Title"] = "Customer Reviews - Handy Fix";
 }
 
-<div class="info-canvas mt-12 mb-12">
-    <!-- Hero Section -->
-    <section class="mb-5 text-center text-md-start">
-        <h1 class="font-headline-xl text-primary mb-2">What Our Clients Say</h1>
-        <p class="font-body-lg text-on-surface-variant max-w-2xl">
-            Discover why thousands of homeowners trust Handy Fix for their maintenance needs. Verified reviews from our community.
-        </p>
+<div class="page-container services-page">
+    <!-- Header & Breadcrumbs -->
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">Reviews</span>
+        </nav>
+        <div class="services-header-content">
+            <h1 class="services-hero-title">What Our <span>Clients Say.</span></h1>
+            <p class="services-subtitle">
+                Discover why thousands of homeowners trust Handy Fix for their maintenance needs. Verified reviews from our community.
+            </p>
+        </div>
     </section>
 
     @if (this.TempData["SuccessMessage"] != null)
@@ -19,7 +26,7 @@
         </div>
     }
 
-    <div class="reviews-container">
+    <div class="reviews-container mt-12">
         <!-- Sidebar: Review Form -->
         <aside class="order-2 order-lg-1">
             <div class="glass-card rounded-xl p-4 sticky-top reviews-sidebar-sticky">
