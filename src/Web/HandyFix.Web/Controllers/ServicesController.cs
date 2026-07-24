@@ -88,6 +88,12 @@ namespace HandyFix.Web.Controllers
                 return this.NotFound();
             }
 
+            var categoryServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(service.CategoryName);
+            service.RelatedServices = categoryServices
+                .Where(s => !s.Slug.Equals(service.Slug, StringComparison.OrdinalIgnoreCase))
+                .Take(3)
+                .ToList();
+
             this.ViewData["Title"] = $"{service.Name} - HandyFix London";
             this.ViewData["MetaDescription"] = $"Need {service.Name.ToLower()} in South London? Certified plumbers and handymen, transparent pricing starting from £{service.BasePrice}. Book a slot now.";
 

@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Services.ServiceDetailsViewModel
+@using HandyFix.Web.ViewModels.Services
 @{
     this.Layout = "_Layout";
     this.ViewData["Title"] = $"{Model.Name} - HandyFix South London";
@@ -31,6 +32,16 @@
     var expertBio = isPlumbing
         ? "I've spent 15 years servicing homes across Sutton, Croydon, and Epsom. I specialize in high-end bathroom remodels and precision leak detection."
         : "I've spent over 12 years helping homeowners with carpentry, mounting, and general property maintenance in Croydon and South London.";
+
+    string GetCategoryIcon(string name)
+    {
+        return name switch
+        {
+            "Plumbing" => "water_drop",
+            "Handyman" => "handyman",
+            _ => "home_repair_service",
+        };
+    }
 }
 
 <div class="page-container services-page">
@@ -218,6 +229,33 @@
             </div>
         </aside>
     </div>
+
+    @if (Model.RelatedServices != null && Model.RelatedServices.Any())
+    {
+        <!-- You Might Also Need -->
+        <section class="pricing-typical-jobs-section">
+            <h2 class="font-headline-lg text-primary text-center pricing-section-title">You Might Also Need</h2>
+            <p class="font-body-md text-on-surface-variant text-center pricing-section-subtitle">
+                Other @Model.CategoryName.ToLower() services our customers often book alongside this one.
+            </p>
+
+            <div class="pricing-cards-grid">
+                @foreach (var related in Model.RelatedServices)
+                {
+                    <partial name="_PricingCard" model="@(new PricingCardViewModel
+                                                         {
+                                                             Name = related.Name,
+                                                             IconName = GetCategoryIcon(related.CategoryName),
+                                                             Description = related.Description,
+                                                             BasePrice = related.BasePrice,
+                                                             EstimatedDurationMinutes = related.EstimatedDurationMinutes,
+                                                             CtaText = "View Details",
+                                                             CtaUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = related.CategorySlug, serviceSlug = related.Slug }),
+                                                         })" />
+                }
+            </div>
+        </section>
+    }
 </div>
 
 <!-- JSON-LD Service schema structured data -->

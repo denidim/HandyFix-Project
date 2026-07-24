@@ -1,6 +1,7 @@
 namespace HandyFix.Web.ViewModels.Services
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
 
     using HandyFix.Data.Models;
@@ -29,6 +30,8 @@ namespace HandyFix.Web.ViewModels.Services
         public string CategorySlug { get; set; }
 
         public string ImageUrl { get; set; }
+
+        public IEnumerable<ServiceViewModel> RelatedServices { get; set; }
 
         public void CreateMappings(TypeAdapterConfig config)
         {
