@@ -16,7 +16,10 @@ namespace HandyFix.Services.Data.Bookings
 
         Task<T> GetByIdAsync<T>(Guid id);
 
-        Task<IEnumerable<T>> GetAllBookingsAsync<T>();
+        Task<IEnumerable<T>> GetAllBookingsAsync<T>(
+            BookingSortField sortField = BookingSortField.CreatedOn,
+            bool descending = true,
+            string statusFilter = null);
 
         Task<IEnumerable<T>> GetUserBookingsAsync<T>(string userId);
 

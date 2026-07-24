@@ -176,12 +176,35 @@ namespace HandyFix.Services.Data.Bookings
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllBookingsAsync<T>()
+        public async Task<IEnumerable<T>> GetAllBookingsAsync<T>(
+            BookingSortField sortField = BookingSortField.CreatedOn,
+            bool descending = true,
+            string statusFilter = null)
         {
-            return await this.bookingRepository.All()
-                .OrderByDescending(x => x.CreatedOn)
-                .To<T>()
-                .ToListAsync();
+            var query = this.bookingRepository.All();
+
+            if (!string.IsNullOrWhiteSpace(statusFilter))
+            {
+                query = query.Where(x => x.Status.Name == statusFilter);
+            }
+
+            query = sortField switch
+            {
+                BookingSortField.AppointmentTime => descending
+                    ? query.OrderByDescending(x => x.AvailabilitySlot.StartTime)
+                    : query.OrderBy(x => x.AvailabilitySlot.StartTime),
+                BookingSortField.CustomerName => descending
+                    ? query.OrderByDescending(x => x.CustomerFirstName).ThenByDescending(x => x.CustomerLastName)
+                    : query.OrderBy(x => x.CustomerFirstName).ThenBy(x => x.CustomerLastName),
+                BookingSortField.Status => descending
+                    ? query.OrderByDescending(x => x.Status.Name)
+                    : query.OrderBy(x => x.Status.Name),
+                _ => descending
+                    ? query.OrderByDescending(x => x.CreatedOn)
+                    : query.OrderBy(x => x.CreatedOn),
+            };
+
+            return await query.To<T>().ToListAsync();
         }
 
         public async Task<IEnumerable<T>> GetUserBookingsAsync<T>(string userId)

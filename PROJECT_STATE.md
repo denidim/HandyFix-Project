@@ -130,6 +130,17 @@ Audited `AvailabilityService`, slot generation, and booking-concurrency handling
 
 ---
 
+## 3d. Admin Bookings Index: Submitted-On Column, Sorting, and Status Filter (2026-07-24)
+
+- Added a "Submitted On" column to `Bookings/Index.cshtml` showing `Booking.CreatedOn` (stored strictly in UTC per `ApplicationDbContext.SaveChanges`) converted to local time via `.ToLocalTime()` before formatting — the only column on this page that needed a UTC conversion, since `AvailabilitySlot.StartTime` is generated and stored as naive local wall-clock business hours already.
+- `IBookingsService.GetAllBookingsAsync<T>` now takes `BookingSortField sortField = CreatedOn, bool descending = true, string statusFilter = null` (new `BookingSortField` enum: `CreatedOn`, `AppointmentTime`, `CustomerName`, `Status`, defined in `HandyFix.Web.ViewModels.Booking` alongside the other Booking DTOs, since `HandyFix.Services.Data` already depends on that project — not the other way around — so that's the layer both sides can share). Sorting and status filtering happen as a real `IQueryable<Booking>` `OrderBy`/`Where` before the Mapster projection, translated fully to SQL, not done in memory. Default behavior (creation date, newest first) is unchanged from before this change.
+- `Bookings/Index.cshtml`'s "Customer", "Scheduled Date", and "Booking Status" column headers are now clickable sort toggles (arrow indicator on the active column, click again to reverse direction); a status filter `<select>` was added next to the existing client-side Ref-ID/customer-name search box, which stays client-side since it's already instant and works well for this data volume.
+- `BookingsController.Index` now also fetches an always-unfiltered booking list to compute the "Today's Appointments"/"Pending Approval"/"Monthly Revenue" summary cards, so applying a status filter to the table no longer skews those figures — they were previously computed from whatever the (now-filterable) list happened to contain.
+- **Bug caught during verification, fixed before committing**: a hidden `<input type="hidden" name="descending" value="@Model.Descending" />` used to persist the current sort direction across a status-filter form submit was corrupted by Razor's automatic boolean-attribute collapsing (any HTML attribute whose interpolated value has static type `bool` gets rendered as a valueless attribute, e.g. `value` with no `="..."`, which browsers then read back as `value="value"` per the HTML boolean-attribute spec). Fixed by forcing the value through `.ToString()` first so Razor sees a `string`, not a `bool`, and doesn't apply the collapsing behavior.
+- Verified by running the app locally and screenshotting the default view, a customer-name-sorted view, and a status-filtered view — sorting, filtering, and the summary cards all behave correctly.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Images (carried over from Sprint 2 — needs real assets, not more engineering)

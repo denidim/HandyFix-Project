@@ -628,5 +628,121 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal(cancelledPaymentStatus.Id, stalePaymentInDb.StatusId);
             Assert.Equal(pendingPaymentStatus.Id, freshPaymentInDb.StatusId);
         }
+
+        [Fact]
+        public async Task GetAllBookingsAsyncShouldDefaultToCreatedOnDescending()
+        {
+            var bookingsService = CreateBookingsServiceWithThreeBookings(out var older, out var newer, out _);
+
+            var results = (await bookingsService.GetAllBookingsAsync<BookingDetailsViewModel>()).ToList();
+
+            Assert.Equal(newer.Id, results.First().Id);
+            Assert.Equal(older.Id, results.Last().Id);
+        }
+
+        [Fact]
+        public async Task GetAllBookingsAsyncShouldSortByCustomerNameAscendingWhenRequested()
+        {
+            var bookingsService = CreateBookingsServiceWithThreeBookings(out _, out _, out _);
+
+            var results = (await bookingsService.GetAllBookingsAsync<BookingDetailsViewModel>(
+                BookingSortField.CustomerName,
+                descending: false)).ToList();
+
+            var names = results.Select(x => x.CustomerFirstName).ToList();
+            var expectedOrder = names.OrderBy(x => x).ToList();
+            Assert.Equal(expectedOrder, names);
+        }
+
+        [Fact]
+        public async Task GetAllBookingsAsyncShouldFilterByStatusWhenRequested()
+        {
+            var bookingsService = CreateBookingsServiceWithThreeBookings(out _, out _, out var cancelled);
+
+            var results = (await bookingsService.GetAllBookingsAsync<BookingDetailsViewModel>(statusFilter: "Cancelled")).ToList();
+
+            Assert.Single(results);
+            Assert.Equal(cancelled.Id, results.Single().Id);
+        }
+
+        private static BookingsService CreateBookingsServiceWithThreeBookings(out Booking older, out Booking newer, out Booking cancelled)
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
+                .Options;
+
+            var dbContext = new ApplicationDbContext(options);
+            var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
+            var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
+            var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+            var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
+            var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
+            var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
+
+            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var dbQueryRunner = new DbQueryRunner(dbContext);
+
+            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
+            var cancelledStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            dbContext.BookingStatuses.AddRange(pendingStatus, cancelledStatus);
+
+            older = new Booking
+            {
+                CustomerFirstName = "Zack",
+                CustomerLastName = "Adams",
+                Email = "zack@example.com",
+                PhoneNumber = "07000000010",
+                Address = "10 Old Rd, Sutton",
+                ProblemDescription = "Created first, so it's the oldest booking",
+                StatusId = pendingStatus.Id,
+            };
+            newer = new Booking
+            {
+                CustomerFirstName = "Amy",
+                CustomerLastName = "Bell",
+                Email = "amy@example.com",
+                PhoneNumber = "07000000011",
+                Address = "11 New Rd, Sutton",
+                ProblemDescription = "Created after 'older', so it's the newest booking",
+                StatusId = pendingStatus.Id,
+            };
+            cancelled = new Booking
+            {
+                CustomerFirstName = "Mia",
+                CustomerLastName = "Cole",
+                Email = "mia@example.com",
+                PhoneNumber = "07000000012",
+                Address = "12 Cancel Rd, Sutton",
+                ProblemDescription = "This one has been cancelled",
+                StatusId = cancelledStatus.Id,
+            };
+
+            dbContext.Bookings.Add(older);
+            dbContext.Bookings.Add(cancelled);
+            dbContext.Bookings.Add(newer);
+            dbContext.SaveChanges();
+
+            // Back-date CreatedOn explicitly rather than relying on incidental
+            // real-time gaps between the SaveChanges calls above.
+            older.CreatedOn = DateTime.UtcNow.AddDays(-2);
+            cancelled.CreatedOn = DateTime.UtcNow.AddDays(-1);
+            dbContext.SaveChanges();
+
+            return new BookingsService(
+                bookingRepo,
+                serviceRepo,
+                slotRepo,
+                bookingStatusRepo,
+                bookingImageRepo,
+                availabilityService,
+                paymentsService,
+                dbQueryRunner,
+                emailSenderMock.Object);
+        }
     }
 }
