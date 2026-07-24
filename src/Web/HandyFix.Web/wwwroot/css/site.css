@@ -16,6 +16,7 @@
 /* Pages */
 @import 'pages/home.css';
 @import 'pages/services.css';
+@import 'pages/pricing.css';
 @import 'pages/service-details.css';
 @import 'pages/booking.css';
 @import 'pages/service-category.css';

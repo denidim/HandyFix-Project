@@ -28,6 +28,17 @@ namespace HandyFix.Web.Controllers
             return this.View(categories);
         }
 
+        [Route("Pricing", Name = "Pricing")]
+        public async Task<IActionResult> Pricing()
+        {
+            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+
+            this.ViewData["Title"] = "Pricing - HandyFix South London";
+            this.ViewData["MetaDescription"] = "Transparent, up-front hourly pricing for plumbing and handyman services across Sutton, Croydon, Epsom, and South London. No hidden fees.";
+
+            return this.View(categories);
+        }
+
         [Route("Services/{categorySlug}", Name = "ServiceCategory")]
         public async Task<IActionResult> Category(string categorySlug)
         {

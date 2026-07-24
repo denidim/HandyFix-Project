@@ -1,0 +1,109 @@
+/* Pricing Page - Handy Fix */
+
+.pricing-categories {
+  margin-top: var(--spacing-12);
+}
+
+.pricing-category-section {
+  margin-bottom: var(--spacing-12);
+}
+
+.pricing-category-header {
+  margin-bottom: var(--spacing-4);
+}
+
+.pricing-category-title {
+  font-size: var(--fs-headline-lg);
+  color: var(--primary);
+  margin: 0;
+}
+
+.pricing-category-desc {
+  font-size: var(--fs-body-md);
+  color: var(--text-main);
+  margin: var(--spacing-2) 0 0 0;
+  line-height: 1.5;
+}
+
+.pricing-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background-color: var(--surface-container-lowest);
+  box-shadow: var(--shadow-sm);
+}
+
+.pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pricing-table th,
+.pricing-table td {
+  padding: var(--spacing-4) var(--spacing-6);
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.pricing-table th {
+  font-size: var(--fs-label-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-variant);
+  background-color: var(--surface-container-low);
+}
+
+.pricing-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pricing-table td.pricing-service-name {
+  font-weight: 600;
+  white-space: normal;
+}
+
+.pricing-table td.pricing-service-name a {
+  color: var(--text-dark);
+  text-decoration: none;
+}
+
+.pricing-table td.pricing-service-name a:hover {
+  color: var(--secondary);
+  text-decoration: underline;
+}
+
+.pricing-table td.pricing-price {
+  font-weight: 700;
+  color: var(--secondary-container);
+}
+
+.pricing-note-box {
+  margin-top: var(--spacing-8);
+  padding: var(--spacing-6);
+  border-radius: var(--radius-xl);
+  background-color: rgba(0, 101, 145, 0.05);
+  border: 1px solid rgba(0, 101, 145, 0.1);
+}
+
+.pricing-note-box h3 {
+  font-size: var(--fs-headline-sm);
+  color: var(--primary);
+  margin-bottom: var(--spacing-2);
+}
+
+.pricing-note-box p {
+  font-size: var(--fs-body-md);
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.pricing-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-10);
+  margin-bottom: var(--spacing-8);
+  justify-content: center;
+}
