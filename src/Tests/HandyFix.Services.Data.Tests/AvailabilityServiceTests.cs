@@ -148,6 +148,36 @@ namespace HandyFix.Services.Data.Tests
         }
 
         [Fact]
+        public async Task ReleaseSlotAsyncShouldReturnFalseWhenAnotherRequestWonTheConcurrencyRace()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
+
+            var slot = new AvailabilitySlot
+            {
+                StartTime = DateTime.Today.AddHours(9),
+                EndTime = DateTime.Today.AddHours(10),
+                IsBooked = true,
+                BookingId = Guid.NewGuid(),
+            };
+            dbContext.AvailabilitySlots.Add(slot);
+            await dbContext.SaveChangesAsync();
+
+            // Simulate another request having already updated this row between our
+            // read and our write, exactly as SQL Server's rowversion column would.
+            dbContext.Entry(slot).Property(x => x.RowVersion).OriginalValue = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var result = await service.ReleaseSlotAsync(slot.Id);
+
+            Assert.False(result);
+        }
+
+        [Fact]
         public async Task GetAvailableDatesAsyncShouldExcludeTodayWhenAllOfTodaysSlotsHaveAlreadyPassed()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
