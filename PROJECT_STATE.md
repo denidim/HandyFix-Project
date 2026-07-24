@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-24 (mid Sprint 3)
+> **Last updated**: 2026-07-24 (Sprint 3 closed; Pricing page rebuild underway)
 
 ---
 
@@ -163,6 +163,19 @@ Extends the same pattern to the Reviews admin list, the last of the three lists 
 
 ---
 
+## 3g. Pricing Page Rebuild: Stitch Design Migration (2026-07-24)
+
+Sprint 3 closed (list refinements + admin usability polish complete, per Sections 3a-3f). The next initiative — rebuilding the public Pricing page from a Google Stitch-generated visual design — began the same day. The Stitch output (Tailwind/inline-style HTML) was treated strictly as a design reference, not copy-pasted; the page was rebuilt natively against existing Razor/CSS conventions and real `CategoryViewModel`/`ServiceViewModel` data.
+
+- **New reusable partial**: `Views/Shared/_PricingCard.cshtml` + `PricingCardViewModel` (Name, IconName, Description, BasePrice, EstimatedDurationMinutes, optional CtaText/CtaUrl) — a service-level card, styled via a new `.pricing-card` class (`pricing.css`, modeled on the existing `.trust-card` token set: `--radius-xl`/`--shadow-lg`→`--shadow-xl` on hover). Used in three places: the Pricing page's "Typical Job Costs" section, and a new "You Might Also Need" section on `Services/Details.cshtml` (2-3 sibling services from the same category, via a new `ServiceDetailsViewModel.RelatedServices` property populated in `ServicesController.Details()`).
+- **Pricing page** (`ServicesController.Pricing()` now returns a new composed `PricingViewModel { Categories, TypicalJobs }`, modeled on the existing `HomeIndexViewModel` pattern): the old exhaustive per-category service table was replaced with — a hero with a "Book Now" CTA; an "Our Hourly Rates" section looping real `ServiceCategory` rows into `.glass-card.rate-card`s (icon via a `GetCategoryIcon` name-keyed switch, `"From £X per hour"` from `CategoryViewModel.BasePrice`, a "Minimum charge 1 hour" pill); a "Rates Explained"/"Materials & Consumables" two-column bento section; a "Typical Job Costs" grid of `_PricingCard`s for four hand-picked real services (`tap-repairs`, `tv-mounting`, `shelf-installation`, `minor-electrical-tasks` — a curated `TypicalJobSlugs` array in the controller, not a category-balance rule, hence 1 Plumbing/3 Handyman); a "Local Service Areas" teaser (real South London towns, linking to the full `Home/ServiceAreas` page); and a Pricing-specific FAQ accordion reusing the exact `.faq-accordion`/`toggleAccordion()` pattern from `Home/FAQ.cshtml`.
+- The rate-card and Typical-Job-Costs grids both use one new shared CSS class, `.pricing-cards-grid` (`repeat(auto-fit, minmax(260px, 1fr))`), deliberately not a fixed column count — the "Electrical Repairs" card from the Stitch design doesn't appear because only Plumbing and Handyman exist as real `ServiceCategory` rows (`ServiceCategoriesSeeder.cs`), not because of a name-based skip; any category added later will appear automatically without layout changes.
+- **Not fixed, deliberately** — several figures in the Stitch design don't correspond to anything in the data model or existing site copy and were confirmed by the user to be placeholder content, not real business facts: a tiered "£X first hour / £Y per ¼ hour thereafter" rate (only a single flat hourly `BasePrice` exists per service), specific "Monday to Saturday 8am–6pm" operating hours, a VAT-exempt disclaimer, and a 25% materials handling fee citing the Consumer Rights Act 2015. All were omitted rather than hardcoded (same treatment as the existing fabricated £5M insurance claim noted in Section 3, Sprint 2 SEO notes) — needs real business input before these specifics can be added.
+- **Tech debt fixed along the way**: `.glass-card` was defined twice — the real, token-based definition in `wwwroot/css/components/cards.css`, and a second hardcoded (non-variable, no radius/shadow) redefinition in `wwwroot/css/pages/pages-info.css`. Because `pages-info.css` loads after `components/cards.css` in `site.css`, the hardcoded copy was silently winning everywhere `.glass-card` was used (e.g. `Services/Details.cshtml`'s hero badges), suppressing the intended blur/radius/shadow. The duplicate was removed; the token-based definition now applies everywhere.
+- Verified: `dotnet build` (0 errors), `dotnet test` on both `HandyFix.Services.Data.Tests` and `HandyFix.Web.Tests` (all pre-existing tests still pass unchanged — no service-layer signatures were touched), plus a local run + Playwright-driven browser check of `/Pricing` and a Service Details page.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Images (carried over from Sprint 2 — needs real assets, not more engineering)
@@ -171,10 +184,13 @@ Extends the same pattern to the Reviews admin list, the last of the three lists 
 - `wwwroot/images/handyfix-proof.jpg`, referenced by `Services/Index.cshtml`, doesn't exist and needs to be sourced or the reference removed.
 - Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
 
-### Sprint 3 — Admin & Polish
+### Sprint 3 — Admin & Polish — **CLOSED** (2026-07-24)
 - ~~Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists).~~ **Done** — Bookings in Section 3d, Enquiries in Section 3e, Reviews in Section 3f.
-- Usability enhancements across the admin area. **Unscoped** — no concrete items identified yet; needs specifics before this can be called done.
+- ~~Usability enhancements across the admin area.~~ **Dropped** — stayed unscoped with no concrete items identified; user confirmed the list-refinement work above satisfies Sprint 3's usability goals and closed the sprint without further items here.
 - ~~Admin-area inline-style cleanup (343 occurrences, deferred here from Sprint 2 to avoid mixing scope).~~ **Done** — see Section 3a below.
+
+### Pricing Page Migration & Pricing System Integration — in progress (2026-07-24)
+Next initiative after Sprint 3, not part of the original Sprint 4 plan below. See Section 3g for what's been completed so far (new `_PricingCard` partial, rebuilt Pricing page, Service Details integration, `.glass-card` dedupe fix).
 
 ### Sprint 4 — Testing, Documentation & Deployment
 - Comprehensive unit test coverage beyond what Sprint 1 required (controller-level tests, broader service coverage).
