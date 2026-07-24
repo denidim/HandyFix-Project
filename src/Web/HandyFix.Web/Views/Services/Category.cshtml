@@ -123,22 +123,13 @@
                     Handy Fix provides premium @Model.Name.ToLower() services across <strong>Sutton, Croydon, and Epsom</strong>. We are committed to local excellence, ensuring that our response times are the fastest in the region. Whether you're in the heart of the town or in a surrounding village, our local vans are equipped with the latest diagnostic tools to solve your issues on the first visit.
                 </p>
                 <div class="seo-local-areas">
-                    <div class="seo-area-badge">
-                        <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                        <span>Sutton</span>
-                    </div>
-                    <div class="seo-area-badge">
-                        <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                        <span>Croydon</span>
-                    </div>
-                    <div class="seo-area-badge">
-                        <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                        <span>Epsom</span>
-                    </div>
-                    <div class="seo-area-badge">
-                        <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                        <span>Cheam</span>
-                    </div>
+                    @foreach (var area in Model.LocalAreas)
+                    {
+                        <a asp-route="AreaDetails" asp-route-areaSlug="@area.Slug" class="seo-area-badge">
+                            <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                            <span>@area.Name</span>
+                        </a>
+                    }
                 </div>
             </div>
             <div class="seo-map-container">

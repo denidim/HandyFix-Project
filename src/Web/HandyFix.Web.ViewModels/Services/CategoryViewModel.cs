@@ -6,6 +6,7 @@ namespace HandyFix.Web.ViewModels.Services
 
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.ServiceAreas;
 
     public class CategoryViewModel : IMapFrom<ServiceCategory>, IHaveCustomMappings
     {
@@ -20,6 +21,8 @@ namespace HandyFix.Web.ViewModels.Services
         public decimal BasePrice { get; set; }
 
         public virtual ICollection<ServiceViewModel> Services { get; set; }
+
+        public IEnumerable<ServiceAreaViewModel> LocalAreas { get; set; }
 
         public void CreateMappings(Mapster.TypeAdapterConfig config)
         {

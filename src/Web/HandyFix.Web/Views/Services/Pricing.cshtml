@@ -151,32 +151,15 @@
     <!-- Local Service Areas Teaser -->
     <section class="pricing-areas-section text-center">
         <h2 class="font-headline-md text-primary">Local Service Areas</h2>
-        <p class="text-text-main pricing-section-subtitle">We work across South London, including:</p>
+        <p class="text-text-main pricing-section-subtitle">We work across South London and Surrey, including:</p>
         <div class="seo-local-areas pricing-areas-badges">
-            <div class="seo-area-badge">
-                <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                <span>Sutton</span>
-            </div>
-            <div class="seo-area-badge">
-                <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                <span>Croydon</span>
-            </div>
-            <div class="seo-area-badge">
-                <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                <span>Epsom</span>
-            </div>
-            <div class="seo-area-badge">
-                <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                <span>Cheam</span>
-            </div>
-            <div class="seo-area-badge">
-                <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                <span>Kingston</span>
-            </div>
-            <div class="seo-area-badge">
-                <span class="material-symbols-outlined seo-area-icon">location_on</span>
-                <span>Bromley</span>
-            </div>
+            @foreach (var area in Model.LocalAreas)
+            {
+                <a asp-route="AreaDetails" asp-route-areaSlug="@area.Slug" class="seo-area-badge">
+                    <span class="material-symbols-outlined seo-area-icon">location_on</span>
+                    <span>@area.Name</span>
+                </a>
+            }
         </div>
         <a asp-route="Areas" class="pricing-areas-link">
             View all service areas

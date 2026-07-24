@@ -1,7 +1,6 @@
 /* Service Category details - Stitch Translation */
 
 .category-hero-section {
-  padding: var(--spacing-12) 0;
   position: relative;
   overflow: hidden;
 }
@@ -248,7 +247,7 @@
 
 .seo-local-areas {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--spacing-4);
 }
 
@@ -258,6 +257,15 @@
   gap: var(--spacing-2);
   font-weight: 700;
   font-size: var(--fs-label-sm);
+  color: var(--text-main);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.seo-area-badge:hover {
+  background-color: var(--surface-container-low);
+  color: var(--secondary);
 }
 
 .seo-area-icon {

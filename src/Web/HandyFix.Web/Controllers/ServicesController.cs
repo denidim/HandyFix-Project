@@ -5,7 +5,9 @@ namespace HandyFix.Web.Controllers
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Mvc;
@@ -25,11 +27,13 @@ namespace HandyFix.Web.Controllers
 
         private readonly ICategoriesService categoriesService;
         private readonly IServicesService servicesService;
+        private readonly IServiceAreasService serviceAreasService;
 
-        public ServicesController(ICategoriesService categoriesService, IServicesService servicesService)
+        public ServicesController(ICategoriesService categoriesService, IServicesService servicesService, IServiceAreasService serviceAreasService)
         {
             this.categoriesService = categoriesService;
             this.servicesService = servicesService;
+            this.serviceAreasService = serviceAreasService;
         }
 
         [Route("Services", Name = "ServicesList")]
@@ -49,10 +53,13 @@ namespace HandyFix.Web.Controllers
                 .Select(slug => allServices.FirstOrDefault(s => s.Slug == slug))
                 .Where(s => s != null);
 
+            var localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
+
             var model = new PricingViewModel
             {
                 Categories = categories,
                 TypicalJobs = typicalJobs,
+                LocalAreas = localAreas.Take(12),
             };
 
             this.ViewData["Title"] = "Pricing - HandyFix South London";
@@ -72,6 +79,9 @@ namespace HandyFix.Web.Controllers
 
             var services = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(category.Name);
             category.Services = services.ToList();
+
+            var localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
+            category.LocalAreas = localAreas.Take(12);
 
             this.ViewData["Title"] = $"{category.Name} Services in South London";
             this.ViewData["MetaDescription"] = $"Professional {category.Name.ToLower()} services operating in Sutton, Croydon, Epsom, Kingston, Bromley, and across South London. Book your service online.";

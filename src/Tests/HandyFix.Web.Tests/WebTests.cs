@@ -77,6 +77,16 @@
         }
 
         [Fact]
+        public async Task PricingPageShouldContainRealClickableAreaLinks()
+        {
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/Pricing");
+            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains("href=\"/Areas/", responseContent);
+        }
+
+        [Fact]
         public async Task SitemapShouldIncludeAreasIndexAndAreaDetailUrls()
         {
             var client = this.server.CreateClient();
