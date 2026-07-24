@@ -66,5 +66,120 @@ namespace HandyFix.Services.Data.Tests
             Assert.Contains(date1.Date, dates);
             Assert.Contains(date2.Date, dates);
         }
+
+        [Fact]
+        public async Task BookSlotAsyncShouldReturnFalseWhenSlotAlreadyBooked()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
+
+            var existingBookingId = Guid.NewGuid();
+            var slot = new AvailabilitySlot
+            {
+                StartTime = DateTime.Today.AddHours(9),
+                EndTime = DateTime.Today.AddHours(10),
+                IsBooked = true,
+                BookingId = existingBookingId,
+            };
+            dbContext.AvailabilitySlots.Add(slot);
+            await dbContext.SaveChangesAsync();
+
+            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var result = await service.BookSlotAsync(slot.Id, Guid.NewGuid());
+
+            Assert.False(result);
+            var slotInDb = dbContext.AvailabilitySlots.First(x => x.Id == slot.Id);
+            Assert.Equal(existingBookingId, slotInDb.BookingId);
+        }
+
+        [Fact]
+        public async Task BookSlotAsyncShouldReturnFalseWhenSlotIsBlocked()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
+
+            var slot = new AvailabilitySlot
+            {
+                StartTime = DateTime.Today.AddHours(9),
+                EndTime = DateTime.Today.AddHours(10),
+                IsBooked = false,
+                IsBlocked = true,
+            };
+            dbContext.AvailabilitySlots.Add(slot);
+            await dbContext.SaveChangesAsync();
+
+            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var result = await service.BookSlotAsync(slot.Id, Guid.NewGuid());
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public async Task BookSlotAsyncShouldReturnFalseWhenAnotherRequestWonTheConcurrencyRace()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
+
+            var slot = new AvailabilitySlot { StartTime = DateTime.Today.AddHours(9), EndTime = DateTime.Today.AddHours(10), IsBooked = false };
+            dbContext.AvailabilitySlots.Add(slot);
+            await dbContext.SaveChangesAsync();
+
+            // Simulate another request having already updated this row (and thereby
+            // bumped its RowVersion) between our read and our write, exactly as SQL
+            // Server's auto-incrementing rowversion column would in production.
+            dbContext.Entry(slot).Property(x => x.RowVersion).OriginalValue = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var result = await service.BookSlotAsync(slot.Id, Guid.NewGuid());
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public async Task GetAvailableDatesAsyncShouldExcludeTodayWhenAllOfTodaysSlotsHaveAlreadyPassed()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
+
+            // Today's only slot already started an hour ago; tomorrow has a normal slot.
+            var pastSlot = new AvailabilitySlot
+            {
+                StartTime = DateTime.Now.AddHours(-1),
+                EndTime = DateTime.Now,
+                IsBooked = false,
+            };
+            var tomorrow = DateTime.Today.AddDays(1);
+            var futureSlot = new AvailabilitySlot
+            {
+                StartTime = tomorrow.AddHours(9),
+                EndTime = tomorrow.AddHours(10),
+                IsBooked = false,
+            };
+            dbContext.AvailabilitySlots.Add(pastSlot);
+            dbContext.AvailabilitySlots.Add(futureSlot);
+            await dbContext.SaveChangesAsync();
+
+            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var dates = (await service.GetAvailableDatesAsync()).ToList();
+
+            Assert.DoesNotContain(DateTime.Today, dates);
+            Assert.Contains(tomorrow.Date, dates);
+        }
     }
 }
