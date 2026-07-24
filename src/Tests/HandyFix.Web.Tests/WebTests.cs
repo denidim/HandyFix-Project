@@ -33,5 +33,16 @@
             var response = await client.GetAsync("Identity/Account/Manage");
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         }
+
+        [Fact]
+        public async Task AreasIndexPageShouldReturnStatusCode200WithFeaturedArea()
+        {
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/Areas");
+            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains("Our Areas", responseContent);
+            Assert.Contains("Guildford", responseContent);
+        }
     }
 }

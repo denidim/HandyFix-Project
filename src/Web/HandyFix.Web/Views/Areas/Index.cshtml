@@ -1,0 +1,60 @@
+@model IEnumerable<HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaViewModel>
+
+<div class="page-container services-page">
+    <!-- Header & Breadcrumbs -->
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">Our Areas</span>
+        </nav>
+        <div class="services-header-content">
+            <h1 class="services-hero-title">
+                Our <span>Areas.</span>
+            </h1>
+            <p class="services-subtitle">
+                From our Chessington base out across South London and Surrey, our technicians already know the streets, the property types, and the postcodes. Find your town below and book online today.
+            </p>
+            <div class="category-hero-badges">
+                <div class="category-hero-badge category-hero-badge-primary">
+                    <span class="material-symbols-outlined">location_on</span>
+                    <span>@Model.Count() Areas Covered</span>
+                </div>
+                <div class="category-hero-badge category-hero-badge-tertiary">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <span>No Travel Charge In-Radius</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Coverage Map -->
+    <section class="areas-overview-hero">
+        <img src="~/images/areas/overview-coverage-map.webp"
+             alt="Stylised map of HandyFix's handyman and plumbing coverage radius, centred on Chessington and extending across South London and Surrey"
+             class="areas-overview-map"
+             width="1200" height="600"
+             loading="eager" fetchpriority="high"
+             onerror="this.closest('.areas-overview-hero').style.display='none';" />
+    </section>
+
+    <!-- Featured Areas -->
+    <section class="areas-section">
+        <h2 class="font-headline-lg text-primary text-center areas-section-title">Featured Areas</h2>
+        <p class="font-body-md text-on-surface-variant text-center areas-section-subtitle">Our busiest coverage zones, closest to the Chessington base.</p>
+        <vc:area-card featured-only="true" take="6"></vc:area-card>
+    </section>
+
+    <!-- All Areas -->
+    <section class="areas-section">
+        <h2 class="font-headline-lg text-primary text-center areas-section-title">All Areas We Cover</h2>
+        <p class="font-body-md text-on-surface-variant text-center areas-section-subtitle">Every town and village within our standard service radius.</p>
+        <vc:area-card take="20"></vc:area-card>
+    </section>
+
+    <!-- CTA -->
+    <div class="pricing-cta-actions">
+        <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg">Book Appointment Now</a>
+        <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-lg">Ask About Your Area</a>
+    </div>
+</div>

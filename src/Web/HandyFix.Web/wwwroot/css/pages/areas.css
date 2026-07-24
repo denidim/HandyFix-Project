@@ -1,5 +1,34 @@
 /* Our Areas - Handy Fix */
 
+.areas-overview-hero {
+  margin-top: var(--spacing-10);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.areas-overview-map {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.areas-section {
+  margin-top: var(--spacing-16);
+}
+
+.areas-section-title {
+  margin-bottom: var(--spacing-2);
+}
+
+.areas-section-subtitle {
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: var(--spacing-2);
+}
+
 .area-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
