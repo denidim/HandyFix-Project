@@ -124,8 +124,16 @@ namespace HandyFix.Services.Data.Availability
             slot.IsBooked = false;
             slot.BookingId = null;
 
-            await this.slotRepository.SaveChangesAsync();
-            return true;
+            try
+            {
+                await this.slotRepository.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Another request already changed this slot between our read and write.
+                return false;
+            }
         }
 
         public async Task BlockDateAsync(DateTime date)

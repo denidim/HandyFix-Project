@@ -10,7 +10,7 @@ namespace HandyFix.Data.Seeding
     {
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
-            var statusNames = new[] { "Pending", "Approved", "InProgress", "Completed", "Cancelled" };
+            var statusNames = new[] { "Pending", "Approved", "InProgress", "Completed", "Cancelled", "Abandoned" };
 
             foreach (var name in statusNames)
             {

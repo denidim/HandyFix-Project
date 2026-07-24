@@ -116,7 +116,7 @@ namespace HandyFix.Services.Data.Bookings
                 if (!slotBooked)
                 {
                     await transaction.RollbackAsync();
-                    throw new InvalidOperationException("The selected time slot is no longer available. Please choose a different time.");
+                    throw new SlotUnavailableException("The selected time slot is no longer available. Please choose a different time.");
                 }
 
                 await transaction.CommitAsync();
@@ -256,25 +256,86 @@ namespace HandyFix.Services.Data.Bookings
         public async Task RescheduleBookingAsync(Guid bookingId, Guid newSlotId)
         {
             var booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
-            var newSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == newSlotId);
-
-            if (booking != null && newSlot != null && !newSlot.IsBooked && !newSlot.IsBlocked)
+            if (booking == null)
             {
-                // Release old slots
-                var oldSlots = await this.slotRepository.All().Where(x => x.BookingId == bookingId).ToListAsync();
-                foreach (var slot in oldSlots)
+                throw new InvalidOperationException("The booking does not exist.");
+            }
+
+            var newSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == newSlotId);
+            if (newSlot == null)
+            {
+                throw new InvalidOperationException("The selected time slot does not exist. Please choose a different time.");
+            }
+
+            var oldSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.BookingId == bookingId);
+
+            // Release the old slot and claim the new one atomically: if the new slot was
+            // taken, blocked, or lost a concurrency race, roll back so the booking stays
+            // exactly where it was instead of ending up with no appointment time at all.
+            await using (var transaction = await this.dbQueryRunner.BeginTransactionAsync())
+            {
+                if (oldSlot != null)
                 {
-                    slot.IsBooked = false;
-                    slot.BookingId = null;
+                    var oldSlotReleased = await this.availabilityService.ReleaseSlotAsync(oldSlot.Id);
+                    if (!oldSlotReleased)
+                    {
+                        await transaction.RollbackAsync();
+                        throw new SlotUnavailableException("Unable to reschedule this booking right now. Please try again.");
+                    }
                 }
 
-                // Book new slot
-                newSlot.IsBooked = true;
-                newSlot.BookingId = bookingId;
-                booking.TechnicianId = newSlot.TechnicianId;
+                var newSlotBooked = await this.availabilityService.BookSlotAsync(newSlotId, bookingId);
+                if (!newSlotBooked)
+                {
+                    await transaction.RollbackAsync();
+                    throw new SlotUnavailableException("The selected time slot is no longer available. Please choose a different time.");
+                }
 
+                booking.TechnicianId = newSlot.TechnicianId;
                 await this.bookingRepository.SaveChangesAsync();
+
+                await transaction.CommitAsync();
             }
+        }
+
+        public async Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan)
+        {
+            var pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            var abandonedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Abandoned");
+            if (pendingStatus == null || abandonedStatus == null)
+            {
+                return 0;
+            }
+
+            var cutoff = DateTime.UtcNow - olderThan;
+            var staleBookings = await this.bookingRepository.All()
+                .Where(x => x.StatusId == pendingStatus.Id && x.CreatedOn < cutoff)
+                .ToListAsync();
+
+            if (staleBookings.Count == 0)
+            {
+                return 0;
+            }
+
+            var staleBookingIds = staleBookings.Select(x => x.Id).ToList();
+            var slotsToRelease = await this.slotRepository.All()
+                .Where(x => x.BookingId != null && staleBookingIds.Contains(x.BookingId.Value))
+                .ToListAsync();
+
+            foreach (var booking in staleBookings)
+            {
+                booking.StatusId = abandonedStatus.Id;
+            }
+
+            foreach (var slot in slotsToRelease)
+            {
+                slot.IsBooked = false;
+                slot.BookingId = null;
+            }
+
+            await this.bookingRepository.SaveChangesAsync();
+
+            return staleBookings.Count;
         }
 
         public async Task AddBookingImageAsync(Guid bookingId, string imageUrl)

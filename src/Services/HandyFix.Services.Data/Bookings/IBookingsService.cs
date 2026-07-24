@@ -29,5 +29,7 @@ namespace HandyFix.Services.Data.Bookings
         Task RescheduleBookingAsync(Guid bookingId, Guid newSlotId);
 
         Task AddBookingImageAsync(Guid bookingId, string imageUrl);
+
+        Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan);
     }
 }
