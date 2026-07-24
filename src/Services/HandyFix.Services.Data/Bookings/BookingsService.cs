@@ -241,16 +241,48 @@ namespace HandyFix.Services.Data.Bookings
 
             var cancelledStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
 
-            if (booking != null && cancelledStatus != null)
+            if (booking == null || cancelledStatus == null)
             {
-                booking.StatusId = cancelledStatus.Id;
+                return;
+            }
 
-                // Release slot
-                var slots = await this.slotRepository.All().Where(x => x.BookingId == bookingId).ToListAsync();
-                foreach (var slot in slots)
+            booking.StatusId = cancelledStatus.Id;
+
+            // Release slot
+            var slots = await this.slotRepository.All().Where(x => x.BookingId == bookingId).ToListAsync();
+            foreach (var slot in slots)
+            {
+                slot.IsBooked = false;
+                slot.BookingId = null;
+            }
+
+            try
+            {
+                await this.bookingRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                // A concurrent process (e.g. StaleBookingCleanupService's abandonment
+                // sweep touching the same slot at the same moment an admin cancels it
+                // here) bumped one of these slots' RowVersion between our read and our
+                // write. Refresh the conflicting entries' original values to the current
+                // database state so the retry's concurrency check succeeds, while
+                // keeping our own intended "release this slot" values - the booking's
+                // own status change has no concurrency token, so it can't be what
+                // conflicted, and is safe to resend as-is.
+                foreach (var entry in ex.Entries)
                 {
-                    slot.IsBooked = false;
-                    slot.BookingId = null;
+                    var databaseValues = await entry.GetDatabaseValuesAsync();
+                    if (databaseValues == null)
+                    {
+                        // The row is gone entirely (hard-deleted concurrently) - nothing
+                        // left to reconcile for this entry.
+                        entry.State = EntityState.Detached;
+                    }
+                    else
+                    {
+                        entry.OriginalValues.SetValues(databaseValues);
+                    }
                 }
 
                 await this.bookingRepository.SaveChangesAsync();

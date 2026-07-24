@@ -426,6 +426,84 @@ namespace HandyFix.Services.Data.Tests
         }
 
         [Fact]
+        public async Task CancelBookingAsyncShouldRecoverWhenSlotWasConcurrentlyModified()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
+                .Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
+            using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
+            using var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+            using var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
+            using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
+            using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
+
+            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var dbQueryRunner = new DbQueryRunner(dbContext);
+
+            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
+            var cancelledStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            dbContext.BookingStatuses.AddRange(pendingStatus, cancelledStatus);
+
+            var booking = new Booking
+            {
+                CustomerFirstName = "John",
+                CustomerLastName = "Doe",
+                Email = "john@example.com",
+                PhoneNumber = "07123456789",
+                Address = "12 Main Rd, Sutton",
+                ProblemDescription = "Leaking kitchen sink pipe",
+                StatusId = pendingStatus.Id,
+            };
+            dbContext.Bookings.Add(booking);
+
+            var slot = new AvailabilitySlot
+            {
+                StartTime = DateTime.Today.AddHours(9),
+                EndTime = DateTime.Today.AddHours(10),
+                IsBooked = true,
+                BookingId = booking.Id,
+            };
+            dbContext.AvailabilitySlots.Add(slot);
+            await dbContext.SaveChangesAsync();
+
+            var bookingsService = new BookingsService(
+                bookingRepo,
+                serviceRepo,
+                slotRepo,
+                bookingStatusRepo,
+                bookingImageRepo,
+                availabilityService,
+                paymentsService,
+                dbQueryRunner,
+                emailSenderMock.Object);
+
+            // Simulate a concurrent process (e.g. the stale-booking cleanup sweep)
+            // having already updated this slot's row - and thereby bumped its
+            // RowVersion - between our read and our write, exactly as SQL Server's
+            // auto-incrementing rowversion column would in production.
+            dbContext.Entry(slot).Property(x => x.RowVersion).OriginalValue = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+            // The concurrency conflict must be absorbed internally rather than
+            // bubbling up as an unhandled exception to the controller.
+            await bookingsService.CancelBookingAsync(booking.Id);
+
+            var bookingInDb = dbContext.Bookings.First(x => x.Id == booking.Id);
+            var slotInDb = dbContext.AvailabilitySlots.First(x => x.Id == slot.Id);
+
+            Assert.Equal(cancelledStatus.Id, bookingInDb.StatusId);
+            Assert.False(slotInDb.IsBooked);
+            Assert.Null(slotInDb.BookingId);
+        }
+
+        [Fact]
         public async Task ReleaseAbandonedBookingsAsyncShouldAbandonStaleBookingsAndFreeSlots()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()

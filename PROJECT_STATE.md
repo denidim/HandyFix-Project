@@ -113,6 +113,17 @@ Pulled forward from Sprint 3 and completed on 2026-07-24, same pattern as the Sp
 
 ---
 
+## 3b. Availability Slots Logic Audit (2026-07-24)
+
+Audited `AvailabilityService`, slot generation, and booking-concurrency handling end to end against three concerns: past-slot filtering, double-booking prevention, and slot release on expiry/cancellation.
+
+- **Past-slot filtering**: correct as-is. `GetAvailableDatesAsync`/`GetAvailableSlotsForDateAsync`/`GetAllSlotsForDateAsync` all compare against `DateTime.Now` (not just `DateTime.Today`), so an hourly slot that has already started stops appearing as bookable partway through the day. Already covered by `GetAvailableDatesAsyncShouldExcludeTodayWhenAllOfTodaysSlotsHaveAlreadyPassed`.
+- **Double-booking prevention**: correct as-is. `BookSlotAsync`/`ReleaseSlotAsync` both catch `DbUpdateConcurrencyException` from `AvailabilitySlot.RowVersion` and return `false` rather than letting a losing request silently overwrite the winner; `CreateBookingAsync`/`RescheduleBookingAsync` wrap the slot claim in a real transaction and roll back cleanly via `SlotUnavailableException` on conflict.
+- **Bug found and fixed**: `BookingsService.CancelBookingAsync` was the one slot-mutating path with no concurrency handling at all — if a concurrent process (chiefly `StaleBookingCleanupService`'s 5-minute abandonment sweep) touched the same slot at the same moment an admin clicked "Cancel Booking", `SaveChangesAsync` would throw an uncaught `DbUpdateConcurrencyException`, surfacing as an unhandled 500 to the admin instead of the cancellation succeeding. Fixed using EF Core's documented conflict-resolution pattern: on catch, refresh each conflicting entry's original values from the database via `GetDatabaseValuesAsync`/`OriginalValues.SetValues` (or detach if the row is gone) and retry the save once — the booking's own status change has no concurrency token, so it's never what conflicts and is safe to resend unchanged. Covered by `CancelBookingAsyncShouldRecoverWhenSlotWasConcurrentlyModified`.
+- **Observation, not fixed**: `IAvailabilityService.GetAvailableSlotsForDateAsync<T>` has no production caller anywhere (only `GetAvailableDatesAsync` and `GetAllSlotsForDateAsync` are actually used, by the public `BookingController`) — looks like dead code, left alone since removing it wasn't part of this audit's scope.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Images (carried over from Sprint 2 — needs real assets, not more engineering)
