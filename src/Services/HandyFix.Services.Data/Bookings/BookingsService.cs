@@ -5,8 +5,10 @@ namespace HandyFix.Services.Data.Bookings
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Data.Common;
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
+    using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
@@ -22,6 +24,8 @@ namespace HandyFix.Services.Data.Bookings
         private readonly IDeletableEntityRepository<AvailabilitySlot> slotRepository;
         private readonly IDeletableEntityRepository<BookingStatus> statusRepository;
         private readonly IDeletableEntityRepository<BookingImage> imageRepository;
+        private readonly IAvailabilityService availabilityService;
+        private readonly IDbQueryRunner dbQueryRunner;
         private readonly IEmailSender emailSender;
 
         public BookingsService(
@@ -30,6 +34,8 @@ namespace HandyFix.Services.Data.Bookings
             IDeletableEntityRepository<AvailabilitySlot> slotRepository,
             IDeletableEntityRepository<BookingStatus> statusRepository,
             IDeletableEntityRepository<BookingImage> imageRepository,
+            IAvailabilityService availabilityService,
+            IDbQueryRunner dbQueryRunner,
             IEmailSender emailSender)
         {
             this.bookingRepository = bookingRepository;
@@ -37,6 +43,8 @@ namespace HandyFix.Services.Data.Bookings
             this.slotRepository = slotRepository;
             this.statusRepository = statusRepository;
             this.imageRepository = imageRepository;
+            this.availabilityService = availabilityService;
+            this.dbQueryRunner = dbQueryRunner;
             this.emailSender = emailSender;
         }
 
@@ -49,6 +57,14 @@ namespace HandyFix.Services.Data.Bookings
             if (pendingStatus == null)
             {
                 throw new InvalidOperationException("Booking status 'Pending' is not seeded.");
+            }
+
+            // Slot must exist before we do any work; its StartTime/TechnicianId are needed
+            // below, and the actual availability check happens atomically in BookSlotAsync.
+            var slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == model.SlotId);
+            if (slot == null)
+            {
+                throw new InvalidOperationException("The selected time slot does not exist. Please choose a different time.");
             }
 
             var serviceIds = new[] { model.ServiceId };
@@ -72,6 +88,7 @@ namespace HandyFix.Services.Data.Bookings
                 UserId = userId,
                 TotalAmount = totalAmount,
                 DepositAmount = depositAmount,
+                TechnicianId = slot.TechnicianId,
                 BookingServices = new List<BookingService>(),
             };
 
@@ -87,25 +104,25 @@ namespace HandyFix.Services.Data.Bookings
                 booking.BookingServices.Add(bookingService);
             }
 
-            // 3. Retrieve and assign the availability slot structure
-            var slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == model.SlotId);
-            if (slot != null)
+            // 3. Create the booking and claim the slot atomically: if the slot was taken
+            // or blocked in the meantime, roll back the booking instead of leaving an
+            // orphaned booking with no appointment time.
+            await using (var transaction = await this.dbQueryRunner.BeginTransactionAsync())
             {
-                slot.IsBooked = true;
-                booking.TechnicianId = slot.TechnicianId;
+                await this.bookingRepository.AddAsync(booking);
+                await this.bookingRepository.SaveChangesAsync();
 
-                // EF Core handles linking tracking assignments automatically
-                // through object configuration when saved.
-                slot.Booking = booking;
+                var slotBooked = await this.availabilityService.BookSlotAsync(model.SlotId, booking.Id);
+                if (!slotBooked)
+                {
+                    await transaction.RollbackAsync();
+                    throw new InvalidOperationException("The selected time slot is no longer available. Please choose a different time.");
+                }
+
+                await transaction.CommitAsync();
             }
 
-            // 4. Add to repository tracking exactly once
-            await this.bookingRepository.AddAsync(booking);
-
-            // 5. Fire a single atomic save to eliminate concurrency collisions
-            await this.bookingRepository.SaveChangesAsync();
-
-            // 6. Persist uploaded image URLs as BookingImage records
+            // 4. Persist uploaded image URLs as BookingImage records
             if (imageUrls != null && imageUrls.Count > 0)
             {
                 foreach (var url in imageUrls)
@@ -121,7 +138,7 @@ namespace HandyFix.Services.Data.Bookings
                 await this.imageRepository.SaveChangesAsync();
             }
 
-            // 7. Send booking confirmation email safely
+            // 5. Send booking confirmation email safely
             var subject = "Your HandyFix Booking Inquiry has been Received!";
             var body = $@"
             <h3>Hello {model.CustomerFirstName} {model.CustomerLastName},</h3>
@@ -129,7 +146,7 @@ namespace HandyFix.Services.Data.Bookings
             <ul>
                 <li><strong>Booking Reference:</strong> {booking.Id}</li>
                 <li><strong>Service(s):</strong> {string.Join(", ", selectedServices.Select(s => s.Name))}</li>
-                <li><strong>Scheduled Time:</strong> {(slot != null ? slot.StartTime.ToString("dd MMM yyyy 'at' HH:mm") : string.Empty)}</li>
+                <li><strong>Scheduled Time:</strong> {slot.StartTime:dd MMM yyyy 'at' HH:mm}</li>
                 <li><strong>Address:</strong> {model.Address}</li>
             </ul>
             <p>To secure this appointment slot, please pay the deposit of £{depositAmount.ToString("F2")} on the next screen.</p>

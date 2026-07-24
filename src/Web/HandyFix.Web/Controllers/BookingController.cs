@@ -98,6 +98,16 @@ namespace HandyFix.Web.Controllers
                 // Redirect to Stripe checkout
                 return this.RedirectToAction("Pay", "Payment", new { bookingId = booking.Id });
             }
+            catch (InvalidOperationException ex)
+            {
+                this.ModelState.AddModelError(string.Empty, ex.Message);
+
+                model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+                model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
+                model.SelectedServiceId = model.ServiceId;
+
+                return this.View(model);
+            }
             catch (Exception)
             {
                 this.ModelState.AddModelError(string.Empty, "An error occurred while saving your booking. Please try again.");
