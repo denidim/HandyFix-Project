@@ -133,6 +133,29 @@
   gap: var(--spacing-4);
 }
 
+/* A clearly button-styled way back to the public site, so it reads as a real
+   navigation action rather than a plain text link easy to miss. */
+.admin-view-site-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-container-lowest);
+  color: var(--secondary);
+  font-weight: 700;
+  font-size: var(--fs-label-sm);
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.admin-view-site-link:hover {
+  background-color: var(--surface-container);
+  color: var(--secondary);
+  text-decoration: none;
+}
+
 .admin-sidebar-toggle {
   background: transparent;
   border: none;

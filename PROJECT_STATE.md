@@ -124,6 +124,12 @@ Audited `AvailabilityService`, slot generation, and booking-concurrency handling
 
 ---
 
+## 3c. Admin Layout Polish: Prominent Public-Site Link (2026-07-24)
+
+- `_AdminTopbar.cshtml`'s link back to the public site was a plain text `<a>` reading "Home" — easy to miss and ambiguous with the admin's own "Dashboard". Replaced with a button-styled `.admin-view-site-link` (icon + "View Public Site" label, bordered card treatment matching the rest of the admin chrome) that opens the public site in a new tab (`target="_blank" rel="noopener"`), so the admin/technician can jump back and forth without losing their place in the admin panel.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Images (carried over from Sprint 2 — needs real assets, not more engineering)
