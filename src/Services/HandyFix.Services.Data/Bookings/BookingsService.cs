@@ -9,6 +9,7 @@ namespace HandyFix.Services.Data.Bookings
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Availability;
+    using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
@@ -25,6 +26,7 @@ namespace HandyFix.Services.Data.Bookings
         private readonly IDeletableEntityRepository<BookingStatus> statusRepository;
         private readonly IDeletableEntityRepository<BookingImage> imageRepository;
         private readonly IAvailabilityService availabilityService;
+        private readonly IPaymentsService paymentsService;
         private readonly IDbQueryRunner dbQueryRunner;
         private readonly IEmailSender emailSender;
 
@@ -35,6 +37,7 @@ namespace HandyFix.Services.Data.Bookings
             IDeletableEntityRepository<BookingStatus> statusRepository,
             IDeletableEntityRepository<BookingImage> imageRepository,
             IAvailabilityService availabilityService,
+            IPaymentsService paymentsService,
             IDbQueryRunner dbQueryRunner,
             IEmailSender emailSender)
         {
@@ -44,6 +47,7 @@ namespace HandyFix.Services.Data.Bookings
             this.statusRepository = statusRepository;
             this.imageRepository = imageRepository;
             this.availabilityService = availabilityService;
+            this.paymentsService = paymentsService;
             this.dbQueryRunner = dbQueryRunner;
             this.emailSender = emailSender;
         }
@@ -333,7 +337,15 @@ namespace HandyFix.Services.Data.Bookings
                 slot.BookingId = null;
             }
 
-            await this.bookingRepository.SaveChangesAsync();
+            // Keep the booking/slot release and the payment cleanup consistent: either
+            // both land together, or neither does.
+            await using (var transaction = await this.dbQueryRunner.BeginTransactionAsync())
+            {
+                await this.bookingRepository.SaveChangesAsync();
+                await this.paymentsService.CancelPendingPaymentsForBookingsAsync(staleBookingIds);
+
+                await transaction.CommitAsync();
+            }
 
             return staleBookings.Count;
         }

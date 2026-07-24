@@ -154,6 +154,14 @@ namespace HandyFix.Web.Controllers
                         await this.paymentsService.ProcessPaymentSuccessAsync(session.Id, session.PaymentIntentId);
                     }
                 }
+                else if (stripeEvent.Type == Events.CheckoutSessionExpired)
+                {
+                    var session = stripeEvent.Data.Object as Session;
+                    if (session != null)
+                    {
+                        await this.paymentsService.CancelPaymentAsync(session.Id);
+                    }
+                }
 
                 return this.Ok();
             }

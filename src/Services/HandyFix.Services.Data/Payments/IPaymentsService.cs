@@ -10,6 +10,10 @@ namespace HandyFix.Services.Data.Payments
 
         Task ProcessPaymentSuccessAsync(string checkoutSessionId, string transactionId);
 
+        Task CancelPaymentAsync(string checkoutSessionId);
+
+        Task CancelPendingPaymentsForBookingsAsync(IEnumerable<Guid> bookingIds);
+
         Task<IEnumerable<T>> GetPaymentsForBookingAsync<T>(Guid bookingId);
 
         Task<IEnumerable<T>> GetAllPaymentsAsync<T>();

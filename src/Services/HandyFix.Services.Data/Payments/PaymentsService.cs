@@ -38,6 +38,22 @@ namespace HandyFix.Services.Data.Payments
                 throw new InvalidOperationException("Payment status 'Pending' is not seeded.");
             }
 
+            // Supersede any earlier, still-pending payment attempt for this booking so a
+            // customer retrying checkout doesn't pile up orphaned Pending rows pointing
+            // at abandoned Stripe sessions.
+            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            if (cancelledStatus != null)
+            {
+                var existingPendingPayments = await this.paymentRepository.All()
+                    .Where(x => x.BookingId == bookingId && x.StatusId == pendingStatus.Id)
+                    .ToListAsync();
+
+                foreach (var existing in existingPendingPayments)
+                {
+                    existing.StatusId = cancelledStatus.Id;
+                }
+            }
+
             var payment = new Payment
             {
                 BookingId = bookingId,
@@ -83,6 +99,65 @@ namespace HandyFix.Services.Data.Payments
                 {
                     booking.StatusId = approvedStatus.Id;
                 }
+            }
+
+            await this.paymentRepository.SaveChangesAsync();
+        }
+
+        public async Task CancelPaymentAsync(string checkoutSessionId)
+        {
+            var payment = await this.paymentRepository.All()
+                .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
+            if (payment == null)
+            {
+                return;
+            }
+
+            var pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            if (cancelledStatus == null)
+            {
+                return;
+            }
+
+            // Only a still-pending payment can expire; never overwrite a payment that
+            // already succeeded (e.g. the success webhook raced ahead of this one).
+            if (pendingStatus != null && payment.StatusId != pendingStatus.Id)
+            {
+                return;
+            }
+
+            payment.StatusId = cancelledStatus.Id;
+            await this.paymentRepository.SaveChangesAsync();
+        }
+
+        public async Task CancelPendingPaymentsForBookingsAsync(IEnumerable<Guid> bookingIds)
+        {
+            var pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            if (pendingStatus == null || cancelledStatus == null)
+            {
+                return;
+            }
+
+            var idList = bookingIds?.ToList() ?? new List<Guid>();
+            if (idList.Count == 0)
+            {
+                return;
+            }
+
+            var pendingPayments = await this.paymentRepository.All()
+                .Where(x => idList.Contains(x.BookingId) && x.StatusId == pendingStatus.Id)
+                .ToListAsync();
+
+            if (pendingPayments.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var payment in pendingPayments)
+            {
+                payment.StatusId = cancelledStatus.Id;
             }
 
             await this.paymentRepository.SaveChangesAsync();
