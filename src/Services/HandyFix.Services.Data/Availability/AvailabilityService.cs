@@ -26,6 +26,7 @@ namespace HandyFix.Services.Data.Availability
 
         public async Task<IEnumerable<DateTime>> GetAvailableDatesAsync(int daysAhead = 30)
         {
+            var now = DateTime.Now;
             var today = DateTime.Today;
             var endDate = today.AddDays(daysAhead);
 
@@ -33,7 +34,7 @@ namespace HandyFix.Services.Data.Availability
             await this.GenerateSlotsForRangeAsync(today, endDate);
 
             var dates = await this.slotRepository.All()
-                .Where(x => x.StartTime >= today && x.StartTime <= endDate && !x.IsBooked && !x.IsBlocked)
+                .Where(x => x.StartTime > now && x.StartTime <= endDate && !x.IsBooked && !x.IsBlocked)
                 .Select(x => x.StartTime.Date)
                 .Distinct()
                 .OrderBy(x => x)
@@ -46,13 +47,15 @@ namespace HandyFix.Services.Data.Availability
         {
             var targetDate = date.Date;
             var nextDay = targetDate.AddDays(1);
+            var now = DateTime.Now;
 
             // 1. Ensure slots are fully generated and saved to DB before querying
             await this.GenerateSlotsForRangeAsync(targetDate, targetDate);
 
-            // 2. Query using an index-friendly range comparison instead of .Date
+            // 2. Query using an index-friendly range comparison instead of .Date.
+            // StartTime > now hides past hours when targetDate is today.
             return await this.slotRepository.All()
-                .Where(x => x.StartTime >= targetDate && x.StartTime < nextDay && !x.IsBooked && !x.IsBlocked)
+                .Where(x => x.StartTime >= targetDate && x.StartTime < nextDay && x.StartTime > now && !x.IsBooked && !x.IsBlocked)
                 .OrderBy(x => x.StartTime)
                 .To<T>()
                 .ToListAsync();
@@ -62,11 +65,12 @@ namespace HandyFix.Services.Data.Availability
         {
             var targetDate = date.Date;
             var nextDay = targetDate.AddDays(1);
+            var now = DateTime.Now;
 
             await this.GenerateSlotsForRangeAsync(targetDate, targetDate);
 
             return await this.slotRepository.All()
-                .Where(x => x.StartTime >= targetDate && x.StartTime < nextDay)
+                .Where(x => x.StartTime >= targetDate && x.StartTime < nextDay && x.StartTime > now)
                 .OrderBy(x => x.StartTime)
                 .To<T>()
                 .ToListAsync();
@@ -83,8 +87,16 @@ namespace HandyFix.Services.Data.Availability
             slot.IsBooked = true;
             slot.BookingId = bookingId;
 
-            await this.slotRepository.SaveChangesAsync();
-            return true;
+            try
+            {
+                await this.slotRepository.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Another request booked/blocked this slot between our read and write.
+                return false;
+            }
         }
 
         public async Task<bool> BlockSlotAsync(Guid slotId)
