@@ -83,7 +83,22 @@ namespace HandyFix.Web
             services.AddScoped<IDbQueryRunner, DbQueryRunner>();
 
             // Application services
-            services.AddTransient<IEmailSender, NullMessageSender>();
+            services.AddTransient<IEmailSender>(sp =>
+            {
+                var apiKey = configuration["SendGrid:ApiKey"];
+                if (!string.IsNullOrWhiteSpace(apiKey))
+                {
+                    return new SendGridEmailSender(apiKey);
+                }
+
+                var env = sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+                if (env.IsDevelopment())
+                {
+                    return new NullMessageSender();
+                }
+
+                throw new System.InvalidOperationException("SendGrid is not configured for this environment. Set SendGrid:ApiKey before accepting real bookings.");
+            });
             services.AddTransient<ISettingsService, SettingsService>();
             services.AddTransient<ICategoriesService, CategoriesService>();
             services.AddTransient<IServicesService, ServicesService>();
