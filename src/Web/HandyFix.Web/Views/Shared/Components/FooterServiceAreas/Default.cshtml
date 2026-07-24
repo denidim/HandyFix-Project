@@ -1,0 +1,8 @@
+@model IEnumerable<HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaViewModel>
+
+<div class="footer-areas-grid">
+    @foreach (var area in Model)
+    {
+        <a asp-route="AreaDetails" asp-route-areaSlug="@area.Slug" class="footer-link">@area.Name</a>
+    }
+</div>
