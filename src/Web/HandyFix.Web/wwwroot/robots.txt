@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /Administration/
+Disallow: /Identity/
+Disallow: /Payment/
+Disallow: /Settings/
+
+Sitemap: https://handyfix.co.uk/sitemap.xml

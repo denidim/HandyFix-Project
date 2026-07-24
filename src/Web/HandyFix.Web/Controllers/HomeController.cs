@@ -68,6 +68,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult Contact()
         {
             this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
+            this.ViewData["MetaDescription"] = "Get in touch with Handy Fix for a custom quote or emergency plumbing and handyman help across Sutton, Croydon, Epsom, and South London.";
             return this.View(new ContactInputModel());
         }
 
@@ -99,6 +100,7 @@ namespace HandyFix.Web.Controllers
             };
 
             this.ViewData["Title"] = "Customer Reviews - HandyFix London";
+            this.ViewData["MetaDescription"] = "Read verified customer reviews for Handy Fix's plumbing and handyman services across South London, or leave your own.";
             return this.View(model);
         }
 
@@ -106,6 +108,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult About()
         {
             this.ViewData["Title"] = "About Handy Fix - Professional Handyman Services";
+            this.ViewData["MetaDescription"] = "Learn about Handy Fix, the fully insured plumbing and handyman team serving Sutton, Croydon, Epsom, and South London.";
             return this.View();
         }
 
@@ -113,6 +116,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult FAQ()
         {
             this.ViewData["Title"] = "Frequently Asked Questions - Handy Fix";
+            this.ViewData["MetaDescription"] = "Answers to common questions about booking, pricing, and scheduling plumbing and handyman services with Handy Fix.";
             return this.View();
         }
 
@@ -120,6 +124,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult ServiceAreas()
         {
             this.ViewData["Title"] = "Service Coverage Areas - South London, Surrey & Kent";
+            this.ViewData["MetaDescription"] = "Handy Fix covers Sutton, Croydon, Epsom, Kingston, Bromley, Kent, and the surrounding South London area. Check if we serve your postcode.";
             return this.View();
         }
 
@@ -127,6 +132,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult Privacy()
         {
             this.ViewData["Title"] = "Privacy Policy - Handy Fix";
+            this.ViewData["MetaDescription"] = "How Handy Fix collects, uses, and protects your personal data.";
             return this.View();
         }
 
@@ -134,6 +140,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult Terms()
         {
             this.ViewData["Title"] = "Terms & Conditions - Handy Fix";
+            this.ViewData["MetaDescription"] = "The terms and conditions governing bookings and service delivery with Handy Fix.";
             return this.View();
         }
 
@@ -141,6 +148,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult CookiePolicy()
         {
             this.ViewData["Title"] = "Cookie Policy - Handy Fix";
+            this.ViewData["MetaDescription"] = "How Handy Fix uses cookies on this website.";
             return this.View();
         }
 
