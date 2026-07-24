@@ -10,6 +10,7 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Data.Repositories;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
 
@@ -39,8 +40,11 @@ namespace HandyFix.Services.Data.Tests
             using var bookingServiceRepo = new EfDeletableEntityRepository<BookingService>(dbContext);
             using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
             using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var emailSenderMock = new Mock<IEmailSender>();
@@ -76,6 +80,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 availabilityService,
+                paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object);
 
@@ -142,8 +147,11 @@ namespace HandyFix.Services.Data.Tests
             using var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
             using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
             using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
             var dbQueryRunner = new DbQueryRunner(dbContext);
             var emailSenderMock = new Mock<IEmailSender>();
 
@@ -194,6 +202,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 availabilityService,
+                paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object);
 
@@ -245,8 +254,11 @@ namespace HandyFix.Services.Data.Tests
             using var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
             using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
             using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
             var dbQueryRunner = new DbQueryRunner(dbContext);
             var emailSenderMock = new Mock<IEmailSender>();
 
@@ -293,6 +305,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 availabilityService,
+                paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object);
 
@@ -330,8 +343,11 @@ namespace HandyFix.Services.Data.Tests
             using var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
             using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
             using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
             var dbQueryRunner = new DbQueryRunner(dbContext);
             var emailSenderMock = new Mock<IEmailSender>();
 
@@ -387,6 +403,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 availabilityService,
+                paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object);
 
@@ -423,8 +440,11 @@ namespace HandyFix.Services.Data.Tests
             using var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
             using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
             using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
             var dbQueryRunner = new DbQueryRunner(dbContext);
             var emailSenderMock = new Mock<IEmailSender>();
 
@@ -432,6 +452,10 @@ namespace HandyFix.Services.Data.Tests
             var approvedStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Approved" };
             var abandonedStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Abandoned" };
             dbContext.BookingStatuses.AddRange(pendingStatus, approvedStatus, abandonedStatus);
+
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
+            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, cancelledPaymentStatus);
 
             // A ghost checkout: created 20 minutes ago, deposit never paid.
             var staleBooking = new Booking
@@ -474,6 +498,12 @@ namespace HandyFix.Services.Data.Tests
             var freshSlot = new AvailabilitySlot { StartTime = DateTime.Today.AddHours(11), EndTime = DateTime.Today.AddHours(12), IsBooked = true, BookingId = freshBooking.Id };
             var paidSlot = new AvailabilitySlot { StartTime = DateTime.Today.AddHours(13), EndTime = DateTime.Today.AddHours(14), IsBooked = true, BookingId = paidBooking.Id };
             dbContext.AvailabilitySlots.AddRange(staleSlot, freshSlot, paidSlot);
+
+            // Each Pending booking has its own still-pending Stripe checkout payment;
+            // abandoning the booking must cancel the stale one but leave the fresh one.
+            var stalePayment = new Payment { BookingId = staleBooking.Id, Amount = 50.00m, Provider = "Stripe", CheckoutSessionId = "cs_stale", StatusId = pendingPaymentStatus.Id };
+            var freshPayment = new Payment { BookingId = freshBooking.Id, Amount = 50.00m, Provider = "Stripe", CheckoutSessionId = "cs_fresh", StatusId = pendingPaymentStatus.Id };
+            dbContext.Payments.AddRange(stalePayment, freshPayment);
             await dbContext.SaveChangesAsync();
 
             // Back-date the stale booking's CreatedOn past the 15-minute grace period.
@@ -488,6 +518,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 availabilityService,
+                paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object);
 
@@ -511,6 +542,13 @@ namespace HandyFix.Services.Data.Tests
             Assert.Null(staleSlotInDb.BookingId);
             Assert.True(freshSlotInDb.IsBooked);
             Assert.True(paidSlotInDb.IsBooked);
+
+            // The stale booking's pending payment must be cancelled in sync with the
+            // booking being abandoned; the fresh booking's payment is untouched.
+            var stalePaymentInDb = dbContext.Payments.First(x => x.Id == stalePayment.Id);
+            var freshPaymentInDb = dbContext.Payments.First(x => x.Id == freshPayment.Id);
+            Assert.Equal(cancelledPaymentStatus.Id, stalePaymentInDb.StatusId);
+            Assert.Equal(pendingPaymentStatus.Id, freshPaymentInDb.StatusId);
         }
     }
 }
