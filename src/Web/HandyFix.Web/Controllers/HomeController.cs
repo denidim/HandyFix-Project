@@ -120,12 +120,13 @@ namespace HandyFix.Web.Controllers
             return this.View();
         }
 
+        // Superseded by the dynamic Our Areas feature (AreasController); redirected
+        // (not removed) so any existing links/bookmarks to the old static page keep
+        // their SEO equity instead of hitting a dead end.
         [Route("ServiceAreas")]
         public IActionResult ServiceAreas()
         {
-            this.ViewData["Title"] = "Service Coverage Areas - South London, Surrey & Kent";
-            this.ViewData["MetaDescription"] = "Handy Fix covers Sutton, Croydon, Epsom, Kingston, Bromley, Kent, and the surrounding South London area. Check if we serve your postcode.";
-            return this.View();
+            return this.RedirectToRoutePermanent("Areas");
         }
 
         [Route("PrivacyPolicy")]

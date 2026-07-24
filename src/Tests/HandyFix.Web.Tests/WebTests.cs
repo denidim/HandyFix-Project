@@ -68,6 +68,26 @@
         }
 
         [Fact]
+        public async Task OldServiceAreasRouteShouldRedirectPermanentlyToAreas()
+        {
+            var client = this.server.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            var response = await client.GetAsync("/ServiceAreas");
+            Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
+            Assert.EndsWith("/Areas", response.Headers.Location.ToString());
+        }
+
+        [Fact]
+        public async Task SitemapShouldIncludeAreasIndexAndAreaDetailUrls()
+        {
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/sitemap.xml");
+            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains("/Areas</loc>", responseContent);
+            Assert.Contains("/Areas/guildford</loc>", responseContent);
+        }
+
+        [Fact]
         public async Task AreaDetailsPageNearbyAreasShouldBeOrderedByDriveTimeNotFeaturedStatus()
         {
             // Cobham (~20 min) is nearest to Wimbledon (~20 min) and Walton-on-Thames &

@@ -7,7 +7,9 @@ namespace HandyFix.Web.Controllers
     using System.Xml.Linq;
 
     using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Mvc;
@@ -18,11 +20,13 @@ namespace HandyFix.Web.Controllers
 
         private readonly ICategoriesService categoriesService;
         private readonly IServicesService servicesService;
+        private readonly IServiceAreasService areasService;
 
-        public SeoController(ICategoriesService categoriesService, IServicesService servicesService)
+        public SeoController(ICategoriesService categoriesService, IServicesService servicesService, IServiceAreasService areasService)
         {
             this.categoriesService = categoriesService;
             this.servicesService = servicesService;
+            this.areasService = areasService;
         }
 
         [Route("sitemap.xml")]
@@ -39,7 +43,7 @@ namespace HandyFix.Web.Controllers
                 this.Url.Action("Contact", "Home", null, protocol),
                 this.Url.Action("About", "Home", null, protocol),
                 this.Url.Action("FAQ", "Home", null, protocol),
-                this.Url.Action("ServiceAreas", "Home", null, protocol),
+                this.Url.RouteUrl("Areas", null, protocol),
                 this.Url.Action("Reviews", "Home", null, protocol),
                 this.Url.Action("Privacy", "Home", null, protocol),
                 this.Url.Action("Terms", "Home", null, protocol),
@@ -56,6 +60,12 @@ namespace HandyFix.Web.Controllers
             foreach (var service in services)
             {
                 urls.Add(this.Url.RouteUrl("ServiceDetails", new { categorySlug = service.CategorySlug, serviceSlug = service.Slug }, protocol));
+            }
+
+            var areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
+            foreach (var area in areas)
+            {
+                urls.Add(this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, protocol));
             }
 
             var xml = new XElement(

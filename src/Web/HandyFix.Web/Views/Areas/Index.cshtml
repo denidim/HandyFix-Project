@@ -1,4 +1,8 @@
 @model IEnumerable<HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaViewModel>
+@{
+    var itemListEntries = string.Join(",", Model.Select((a, i) =>
+        $"{{ \"@type\": \"ListItem\", \"position\": {i + 1}, \"name\": {System.Text.Json.JsonSerializer.Serialize(a.Name)}, \"url\": {System.Text.Json.JsonSerializer.Serialize(this.Url.RouteUrl("AreaDetails", new { areaSlug = a.Slug }, this.Context.Request.Scheme))} }}"));
+}
 
 <div class="page-container services-page">
     <!-- Header & Breadcrumbs -->
@@ -58,3 +62,12 @@
         <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-lg">Ask About Your Area</a>
     </div>
 </div>
+
+<!-- JSON-LD: ItemList of all coverage areas -->
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "ItemList",
+  "itemListElement": [ @Html.Raw(itemListEntries) ]
+}
+</script>
