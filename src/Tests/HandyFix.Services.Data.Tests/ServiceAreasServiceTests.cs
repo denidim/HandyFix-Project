@@ -8,6 +8,7 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
     using HandyFix.Services.Data.ServiceAreas;
+    using HandyFix.Web.ViewModels.ServiceAreas;
 
     using Microsoft.EntityFrameworkCore;
 
@@ -114,6 +115,31 @@ namespace HandyFix.Services.Data.Tests
             var results = await service.GetNearestAsync<ServiceArea>(Guid.NewGuid());
 
             Assert.Empty(results);
+        }
+
+        [Fact]
+        public async Task GetBySlugAsyncShouldMapAllFaqsForTheArea()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<ServiceArea>(dbContext);
+
+            var area = CreateArea("guildford", "Guildford", isFeatured: true, displayOrder: 1);
+            area.Faqs.Add(new ServiceAreaFaq { Question = "Second question", Answer = "Second answer", DisplayOrder = 2 });
+            area.Faqs.Add(new ServiceAreaFaq { Question = "First question", Answer = "First answer", DisplayOrder = 1 });
+            dbContext.ServiceAreas.Add(area);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServiceAreasService(repository);
+            var result = await service.GetBySlugAsync<ServiceAreaDetailsViewModel>("guildford");
+
+            Assert.NotNull(result);
+            var faqs = result.Faqs.ToList();
+            Assert.Equal(2, faqs.Count);
+            Assert.Contains(faqs, f => f.Question == "First question" && f.DisplayOrder == 1);
+            Assert.Contains(faqs, f => f.Question == "Second question" && f.DisplayOrder == 2);
         }
 
         private static ServiceArea CreateArea(
