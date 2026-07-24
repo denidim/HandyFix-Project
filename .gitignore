@@ -437,6 +437,7 @@ src/Web/HandyFix.Web/appsettings.Development.json
 
 # Custom ignores
 .agents/
+.claude/
 clean_base64.txt
 design_base64.txt
 src/TextUi/
