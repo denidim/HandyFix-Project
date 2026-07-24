@@ -8,8 +8,12 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
     using HandyFix.Services.Data.Payments;
+    using HandyFix.Services.Messaging;
 
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+
+    using Moq;
 
     using Xunit;
 
@@ -20,7 +24,7 @@ namespace HandyFix.Services.Data.Tests
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-            
+
             using var dbContext = new ApplicationDbContext(options);
             using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
@@ -65,7 +69,8 @@ namespace HandyFix.Services.Data.Tests
             dbContext.Payments.Add(payment);
             await dbContext.SaveChangesAsync();
 
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_9999");
 
             // Verify payment update
@@ -76,6 +81,109 @@ namespace HandyFix.Services.Data.Tests
             // Verify associated booking update
             var updatedBooking = dbContext.Bookings.First(x => x.Id == booking.Id);
             Assert.Equal(approvedBookingStatus.Id, updatedBooking.StatusId);
+        }
+
+        [Fact]
+        public async Task ProcessPaymentSuccessAsyncShouldSendClientConfirmationAndAdminNotificationEmails()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
+            using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
+            using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
+
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
+            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "DepositPaid" };
+            dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, paidPaymentStatus);
+
+            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
+            var approvedBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Approved" };
+            dbContext.BookingStatuses.AddRange(pendingBookingStatus, approvedBookingStatus);
+
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
+            dbContext.ServiceCategories.Add(category);
+
+            var serviceEntity = new Service
+            {
+                Id = Guid.NewGuid(),
+                Name = "Leak Fix",
+                Description = "Repair leak",
+                Slug = "leak-fix",
+                BasePrice = 80.00m,
+                CategoryId = category.Id,
+            };
+            dbContext.Services.Add(serviceEntity);
+
+            var technician = new Technician { Id = Guid.NewGuid(), FirstName = "Alex", LastName = "Smith", PhoneNumber = "07000000000" };
+            dbContext.Technicians.Add(technician);
+
+            var booking = new Booking
+            {
+                CustomerFirstName = "John",
+                CustomerLastName = "Doe",
+                Email = "john@example.com",
+                PhoneNumber = "07123",
+                Address = "12 Main Rd",
+                ProblemDescription = "Leak",
+                StatusId = pendingBookingStatus.Id,
+                TechnicianId = technician.Id,
+            };
+            dbContext.Bookings.Add(booking);
+
+            var slot = new AvailabilitySlot
+            {
+                StartTime = DateTime.Today.AddHours(9),
+                EndTime = DateTime.Today.AddHours(10),
+                IsBooked = true,
+                BookingId = booking.Id,
+                TechnicianId = technician.Id,
+            };
+            dbContext.AvailabilitySlots.Add(slot);
+
+            dbContext.BookingServices.Add(new BookingService { BookingId = booking.Id, ServiceId = serviceEntity.Id, PriceAtBooking = serviceEntity.BasePrice, Quantity = 1 });
+
+            var checkoutSessionId = "cs_test_email_dispatch";
+            var payment = new Payment
+            {
+                BookingId = booking.Id,
+                Amount = 50.00m,
+                Provider = "Stripe",
+                CheckoutSessionId = checkoutSessionId,
+                StatusId = pendingPaymentStatus.Id,
+            };
+            dbContext.Payments.Add(payment);
+            await dbContext.SaveChangesAsync();
+
+            var emailSenderMock = new Mock<IEmailSender>();
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new[] { new System.Collections.Generic.KeyValuePair<string, string>("Admin:NotificationEmail", "owner@handyfix.co.uk") })
+                .Build();
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, configuration);
+
+            await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_email_test");
+
+            emailSenderMock.Verify(
+                x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    "john@example.com",
+                    It.IsAny<string>(),
+                    It.Is<string>(body => body.Contains("Leak Fix") && body.Contains("Alex Smith")),
+                    null),
+                Times.Once);
+
+            emailSenderMock.Verify(
+                x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    "owner@handyfix.co.uk",
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    null),
+                Times.Once);
         }
 
         [Fact]
@@ -122,10 +230,12 @@ namespace HandyFix.Services.Data.Tests
             dbContext.Payments.Add(payment);
             await dbContext.SaveChangesAsync();
 
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
 
             // Stripe retries webhooks; the success handler and the Success redirect can
-            // also both fire for the same session. Neither should be able to corrupt state.
+            // also both fire for the same session. Neither should be able to corrupt state
+            // or send a duplicate confirmation email.
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_9999");
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_9999");
 
@@ -136,6 +246,38 @@ namespace HandyFix.Services.Data.Tests
 
             var updatedBooking = dbContext.Bookings.First(x => x.Id == booking.Id);
             Assert.Equal(approvedBookingStatus.Id, updatedBooking.StatusId);
+
+            // Exactly two emails total (one client, one admin) across both calls, not four.
+            emailSenderMock.Verify(
+                x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    null),
+                Times.Exactly(2));
+
+            emailSenderMock.Verify(
+                x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    "john@example.com",
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    null),
+                Times.Once);
+
+            // No admin config supplied, so the default admin mailbox should have been used.
+            emailSenderMock.Verify(
+                x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    "admin@handyfix.co.uk",
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    null),
+                Times.Once);
         }
 
         [Fact]
@@ -170,7 +312,8 @@ namespace HandyFix.Services.Data.Tests
             dbContext.Bookings.Add(booking);
             await dbContext.SaveChangesAsync();
 
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
 
             // Customer clicks "Pay" twice (e.g. hits back and retries) before completing
             // either Stripe checkout.
@@ -215,7 +358,8 @@ namespace HandyFix.Services.Data.Tests
             dbContext.Payments.Add(payment);
             await dbContext.SaveChangesAsync();
 
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             await service.CancelPaymentAsync(checkoutSessionId);
 
             var updatedPayment = dbContext.Payments.First(x => x.Id == payment.Id);
@@ -254,7 +398,8 @@ namespace HandyFix.Services.Data.Tests
             dbContext.Payments.Add(payment);
             await dbContext.SaveChangesAsync();
 
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             await service.CancelPaymentAsync(checkoutSessionId);
 
             var updatedPayment = dbContext.Payments.First(x => x.Id == payment.Id);
@@ -290,7 +435,8 @@ namespace HandyFix.Services.Data.Tests
             dbContext.Payments.AddRange(stalePayment, otherStalePayment, paidPayment, untouchedPayment);
             await dbContext.SaveChangesAsync();
 
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
 
             // Only the stale bookings' pending payments should be cancelled; the paid
             // one must be left alone even though it's in the id list, and the pending

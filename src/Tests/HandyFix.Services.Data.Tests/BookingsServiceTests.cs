@@ -17,6 +17,7 @@ namespace HandyFix.Services.Data.Tests
     using Microsoft.Data.Sqlite;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
+    using Microsoft.Extensions.Configuration;
 
     using Moq;
 
@@ -44,10 +45,9 @@ namespace HandyFix.Services.Data.Tests
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
-            var dbQueryRunner = new DbQueryRunner(dbContext);
-
             var emailSenderMock = new Mock<IEmailSender>();
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var dbQueryRunner = new DbQueryRunner(dbContext);
 
             // Seed required statuses
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -151,9 +151,9 @@ namespace HandyFix.Services.Data.Tests
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
-            var dbQueryRunner = new DbQueryRunner(dbContext);
             var emailSenderMock = new Mock<IEmailSender>();
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
             dbContext.BookingStatuses.Add(pendingStatus);
@@ -258,9 +258,9 @@ namespace HandyFix.Services.Data.Tests
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
-            var dbQueryRunner = new DbQueryRunner(dbContext);
             var emailSenderMock = new Mock<IEmailSender>();
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
             dbContext.BookingStatuses.Add(pendingStatus);
@@ -347,9 +347,9 @@ namespace HandyFix.Services.Data.Tests
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
-            var dbQueryRunner = new DbQueryRunner(dbContext);
             var emailSenderMock = new Mock<IEmailSender>();
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
             dbContext.BookingStatuses.Add(pendingStatus);
@@ -444,9 +444,9 @@ namespace HandyFix.Services.Data.Tests
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
             var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo);
-            var dbQueryRunner = new DbQueryRunner(dbContext);
             var emailSenderMock = new Mock<IEmailSender>();
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
             var approvedStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Approved" };
