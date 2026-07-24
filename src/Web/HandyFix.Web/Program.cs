@@ -16,6 +16,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Data.Reviews;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
@@ -102,6 +103,7 @@ namespace HandyFix.Web
             services.AddTransient<ISettingsService, SettingsService>();
             services.AddTransient<ICategoriesService, CategoriesService>();
             services.AddTransient<IServicesService, ServicesService>();
+            services.AddTransient<IServiceAreasService, ServiceAreasService>();
             services.AddTransient<IReviewsService, ReviewsService>();
             services.AddTransient<IInquiriesService, InquiriesService>();
             services.AddTransient<IAvailabilityService, AvailabilityService>();
