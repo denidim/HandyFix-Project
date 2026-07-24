@@ -409,12 +409,14 @@
 
 /* Stylish Form Control & Inputs */
 .stylish-input-card {
-  background: var(--surface-container-lowest);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-6);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-fast);
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition-fast);
+    margin-top: var(--spacing-3);
+    margin-bottom: var(--spacing-3);
 }
 
 .stylish-input-card:focus-within {
