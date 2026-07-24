@@ -11,6 +11,7 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
 
     public class BookingController : BaseController
     {
@@ -83,11 +84,7 @@ namespace HandyFix.Web.Controllers
         {
             if (!this.ModelState.IsValid)
             {
-                model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-                model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
-                model.SelectedServiceId = model.ServiceId;
-
-                return this.View(model);
+                return await this.RedisplayBookingForm(model);
             }
 
             try
@@ -98,26 +95,36 @@ namespace HandyFix.Web.Controllers
                 // Redirect to Stripe checkout
                 return this.RedirectToAction("Pay", "Payment", new { bookingId = booking.Id });
             }
+            catch (Exception ex) when (ex is SlotUnavailableException || ex is DbUpdateConcurrencyException)
+            {
+                // Someone else claimed this slot between the customer picking it and
+                // submitting the form. Clear it so they have to pick a fresh one, but
+                // keep every other field they already filled in.
+                model.SlotId = Guid.Empty;
+                return await this.RedisplayBookingForm(model, "This slot was just taken by someone else, please pick another.");
+            }
             catch (InvalidOperationException ex)
             {
-                this.ModelState.AddModelError(string.Empty, ex.Message);
-
-                model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-                model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
-                model.SelectedServiceId = model.ServiceId;
-
-                return this.View(model);
+                return await this.RedisplayBookingForm(model, ex.Message);
             }
             catch (Exception)
             {
-                this.ModelState.AddModelError(string.Empty, "An error occurred while saving your booking. Please try again.");
-
-                model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-                model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
-                model.SelectedServiceId = model.ServiceId;
-
-                return this.View(model);
+                return await this.RedisplayBookingForm(model, "An error occurred while saving your booking. Please try again.");
             }
+        }
+
+        private async Task<IActionResult> RedisplayBookingForm(BookingInputModel model, string errorMessage = null)
+        {
+            if (errorMessage != null)
+            {
+                this.ModelState.AddModelError(string.Empty, errorMessage);
+            }
+
+            model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+            model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
+            model.SelectedServiceId = model.ServiceId;
+
+            return this.View(model);
         }
 
         [HttpGet]
