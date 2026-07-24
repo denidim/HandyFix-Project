@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-24 (Sprint 3 closed; Pricing page rebuild underway)
+> **Last updated**: 2026-07-24 (Sprint 3 closed; Pricing page rebuild and Our Areas feature both shipped)
 
 ---
 
@@ -176,6 +176,23 @@ Sprint 3 closed (list refinements + admin usability polish complete, per Section
 
 ---
 
+## 3h. Our Areas: Dynamic Service-Area Pages (2026-07-24)
+
+Full "Our Areas" feature shipped end-to-end, built from a prior research brief (competitive analysis of Surrey Handyman's area-page structure, a Chessington-based 90-minute drive-time radius, and a top-15 shortlist balancing proximity/market value/consistency with the site's existing South-London footprint). Implemented incrementally as eight reviewed phases, each its own Conventional Commit; every phase compiled cleanly and the full test suite passed before moving to the next.
+
+- **Data layer**: `ServiceArea`/`ServiceAreaFaq` entities (`BaseDeletableModel<Guid>`, unique `Slug` index), following `ServiceCategory`'s exact shape. No `HeroImageUrl` column — area hero images are resolved by convention from `Slug` at the view layer (`wwwroot/images/areas/{slug}-hero.webp`), the same pattern `ServiceCategory` already uses for its own hero images. Migration `AddServiceAreaAndServiceAreaFaq` applied and verified against the real database. `ServiceAreasSeeder` seeds all 15 approved areas (Chessington, Surbiton, Kingston upon Thames, Worcester Park & Ewell, Epsom, Sutton, Banstead, Esher, Leatherhead, Wimbledon, Cobham, Walton-on-Thames & Weybridge, Reigate, Dorking, Guildford) with real, non-placeholder intro/neighbourhood copy and FAQs — no fabricated founding dates or fake testimonials, matching the discipline already established for the Pricing page rebuild.
+- **Service layer**: `IServiceAreasService`/`ServiceAreasService` (`GetAllAsync`, `GetBySlugAsync`, `GetNearestAsync`) mirrors `CategoriesService` exactly — inject the generic repository directly, real `IQueryable` translated to SQL (including `GetNearestAsync`'s `Math.Abs(DriveTimeMinutes)` ordering).
+- **View models**: `ServiceAreaViewModel` (grid/card), `ServiceAreaFaqViewModel`, and an independent `ServiceAreaDetailsViewModel` (not a subclass — mirrors the existing `ServiceViewModel`/`ServiceDetailsViewModel` parallel-class precedent, not inheritance). `ServiceAreaDetailsPageViewModel` composes `Area` + `RelatedServices` + `Reviews`, reusing the existing `ServiceViewModel`/`ReviewViewModel` types rather than inventing new ones.
+- **Routing**: `AreasController` at `/Areas` (route name `Areas`) and `/Areas/{areaSlug}` (route name `AreaDetails`), same attribute-routing convention as `ServicesController`.
+- **`AreaCardViewComponent`** — the project's first `ViewComponent`. It owns its own data fetch so any view can drop in `<vc:area-card />` without its controller needing to pre-populate area data. **Bug found and fixed during manual verification**: passing `excludeAreaId` only filtered the default featured-first list rather than actually querying nearest-by-drive-time, so the Area Details page's "Nearby Areas" block showed unrelated featured areas instead of true neighbours (e.g. Cobham showed Chessington/Kingston/Epsom/Sutton instead of Wimbledon/Walton-Weybridge/Guildford). Fixed so `excludeAreaId` now triggers `GetNearestAsync`; covered by a regression test asserting the correct nearest-neighbour link appears.
+- **Areas Index page** (`Views/Areas/Index.cshtml`): hero with an area-count badge, a coverage-map image, a "Featured Areas" teaser and a full "All Areas We Cover" grid, both rendered via `<vc:area-card>` (never inline markup or a partial, per the ViewComponent-only rule). No pagination — 15 areas fit the auto-fit grid comfortably.
+- **Area Details page** (`Views/Areas/Details.cshtml`): dynamic hero (an `<img>`, not the sibling Service Details page's inline-style background-div — kept this feature at zero inline styles per the stricter rule for this work), quick specs, About copy, Related Services (reusing the existing `_PricingCard` partial from the Pricing rebuild), native `<details>` FAQ accordion (matching `Services/Details.cshtml`'s own pattern), Reviews (reusing the `review-card` markup from `Home/Reviews.cshtml`), and Nearby Areas via `<vc:area-card>`. Full JSON-LD: `Service`/`LocalBusiness`, `FAQPage`, `BreadcrumbList`.
+- **SEO wiring**: added generic `Canonical`/OpenGraph support to `_Layout.cshtml` (there was no existing mechanism for this anywhere in the app — extended the same `ViewData["MetaDescription"]`-style optional-tag pattern rather than inventing a new one). `SeoController.Sitemap()` now includes the Areas index and all 15 area pages, fetched live so it can't go stale. The old static `Home/ServiceAreas` page is retired: its route now issues a permanent redirect to `/Areas` (preserving link equity) and the now-unused view was deleted. Fixed two stale links that still pointed at the old route (navbar, Pricing page's "View all service areas" link). Added `ItemList` JSON-LD to the Areas index.
+- **Verified**: `dotnet build` (0 errors) and the full test suite (41 service-layer + 8 web-integration tests, all passing) after every phase; a live app run + Playwright-driven browser check of both pages, the fixed nearest-areas behaviour, the sitemap, and the old-route redirect; zero Tailwind classes and zero inline `style=` attributes confirmed via rendered-HTML inspection.
+- **Deliberately not done**: physical hero image assets. Per the agreed convention, HandyFix only writes the path strings/markup (`wwwroot/images/areas/{slug}-hero.webp`, `overview-coverage-map.webp`); asset generation/upload is external. Until those files exist, hero `<img>` tags fall back gracefully via `onerror` to the existing `/images/hero.png`.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Images (carried over from Sprint 2 — needs real assets, not more engineering)
@@ -183,6 +200,7 @@ Sprint 3 closed (list refinements + admin usability polish complete, per Section
 - `hero.png` (6.6MB PNG) should be re-encoded to WebP and brought into a resize pipeline the way `images/services/` already is — that's an engineering task once someone confirms it's fine to touch the source file.
 - `wwwroot/images/handyfix-proof.jpg`, referenced by `Services/Index.cshtml`, doesn't exist and needs to be sourced or the reference removed.
 - Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
+- `wwwroot/images/areas/` needs 16 new assets: one hero per area (`{slug}-hero.webp`, 15 areas — see Section 3h) plus `overview-coverage-map.webp` for the Areas index hero. All 16 paths are already wired into the Area pages' markup with graceful `onerror` fallback to `/images/hero.png` in the meantime.
 
 ### Sprint 3 — Admin & Polish — **CLOSED** (2026-07-24)
 - ~~Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists).~~ **Done** — Bookings in Section 3d, Enquiries in Section 3e, Reviews in Section 3f.
