@@ -1,0 +1,75 @@
+namespace HandyFix.Web.Controllers
+{
+    using System.Linq;
+    using System.Threading.Tasks;
+
+    using HandyFix.Services.Data.Reviews;
+    using HandyFix.Services.Data.ServiceAreas;
+    using HandyFix.Services.Data.Services;
+    using HandyFix.Web.ViewModels.Reviews;
+    using HandyFix.Web.ViewModels.ServiceAreas;
+    using HandyFix.Web.ViewModels.Services;
+
+    using Microsoft.AspNetCore.Mvc;
+
+    public class AreasController : BaseController
+    {
+        private readonly IServiceAreasService areasService;
+        private readonly IServicesService servicesService;
+        private readonly IReviewsService reviewsService;
+
+        public AreasController(
+            IServiceAreasService areasService,
+            IServicesService servicesService,
+            IReviewsService reviewsService)
+        {
+            this.areasService = areasService;
+            this.servicesService = servicesService;
+            this.reviewsService = reviewsService;
+        }
+
+        [Route("Areas", Name = "Areas")]
+        public async Task<IActionResult> Index()
+        {
+            var areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
+
+            this.ViewData["Title"] = "Our Areas - HandyFix Coverage Across Surrey & South London";
+            this.ViewData["MetaDescription"] = "See every town and village HandyFix covers across South London and Surrey, from Chessington and Kingston out to Guildford and Cobham. Find your area and book online.";
+
+            return this.View(areas);
+        }
+
+        [Route("Areas/{areaSlug}", Name = "AreaDetails")]
+        public async Task<IActionResult> Details(string areaSlug)
+        {
+            var area = await this.areasService.GetBySlugAsync<ServiceAreaDetailsViewModel>(areaSlug);
+            if (area == null)
+            {
+                return this.NotFound();
+            }
+
+            // Guaranteed FAQ ordering - see ServiceAreaDetailsViewModel for why this
+            // isn't done via a custom Mapster collection mapping.
+            area.Faqs = area.Faqs.OrderBy(x => x.DisplayOrder).ToList();
+            area.NearbyAreas = (await this.areasService.GetNearestAsync<ServiceAreaViewModel>(area.Id)).ToList();
+
+            var plumbingServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Plumbing");
+            var handymanServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman");
+            var relatedServices = plumbingServices.Take(2).Concat(handymanServices.Take(2)).ToList();
+
+            var reviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(3);
+
+            var model = new ServiceAreaDetailsPageViewModel
+            {
+                Area = area,
+                RelatedServices = relatedServices,
+                Reviews = reviews,
+            };
+
+            this.ViewData["Title"] = $"Handyman & Plumbing in {area.Name} - HandyFix";
+            this.ViewData["MetaDescription"] = $"Local handyman and plumbing services in {area.Name}. Transparent hourly pricing, no call-out fee, usually available within days. Book HandyFix online today.";
+
+            return this.View(model);
+        }
+    }
+}
