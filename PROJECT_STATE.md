@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-24 (Sprint 3 closed; Pricing page rebuild and Our Areas feature both shipped)
+> **Last updated**: 2026-07-24 (Sprint 3 closed; Pricing page rebuild and Our Areas feature both shipped; Pricing Migration initiative officially closed — Images gap remains in progress, pending real asset files)
 
 ---
 
@@ -195,20 +195,21 @@ Full "Our Areas" feature shipped end-to-end, built from a prior research brief (
 
 ## 4. Current Standing & Remaining Roadmap
 
-### Images (carried over from Sprint 2 — needs real assets, not more engineering)
+### Images — **IN PROGRESS** (carried over from Sprint 2 — blocked on real assets, not more engineering)
 - Only 24 images exist (all under `wwwroot/images/services/`), not the ~50 originally assumed. More area/marketing images need sourcing before the site can lean on real photography site-wide.
 - `hero.png` (6.6MB PNG) should be re-encoded to WebP and brought into a resize pipeline the way `images/services/` already is — that's an engineering task once someone confirms it's fine to touch the source file.
 - `wwwroot/images/handyfix-proof.jpg`, referenced by `Services/Index.cshtml`, doesn't exist and needs to be sourced or the reference removed.
 - Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
 - `wwwroot/images/areas/` needs 16 new assets: one hero per area (`{slug}-hero.webp`, 15 areas — see Section 3h) plus `overview-coverage-map.webp` for the Areas index hero. All 16 paths are already wired into the Area pages' markup with graceful `onerror` fallback to `/images/hero.png` in the meantime.
+- **Not yet resolved** — pending the user supplying the physical asset files. Do not mark this item done until the files actually exist on disk.
 
 ### Sprint 3 — Admin & Polish — **CLOSED** (2026-07-24)
 - ~~Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists).~~ **Done** — Bookings in Section 3d, Enquiries in Section 3e, Reviews in Section 3f.
 - ~~Usability enhancements across the admin area.~~ **Dropped** — stayed unscoped with no concrete items identified; user confirmed the list-refinement work above satisfies Sprint 3's usability goals and closed the sprint without further items here.
 - ~~Admin-area inline-style cleanup (343 occurrences, deferred here from Sprint 2 to avoid mixing scope).~~ **Done** — see Section 3a below.
 
-### Pricing Page Migration & Pricing System Integration — in progress (2026-07-24)
-Next initiative after Sprint 3, not part of the original Sprint 4 plan below. See Section 3g for what's been completed so far (new `_PricingCard` partial, rebuilt Pricing page, Service Details integration, `.glass-card` dedupe fix).
+### Pricing Page Migration & Pricing System Integration — **CLOSED** (2026-07-24)
+Next initiative after Sprint 3, not part of the original Sprint 4 plan below. See Section 3g for the full scope of what shipped (new `_PricingCard` partial, rebuilt Pricing page, Service Details integration, `.glass-card` dedupe fix). Confirmed complete — no further work planned under this initiative.
 
 ### Sprint 4 — Testing, Documentation & Deployment
 - Comprehensive unit test coverage beyond what Sprint 1 required (controller-level tests, broader service coverage).
