@@ -1,15 +1,26 @@
+@using System
 @using HandyFix.Common
+@{
+    string currentPath = this.Context.Request.Path.Value ?? "/";
+
+    bool IsActive(string pathPrefix)
+    {
+        return pathPrefix == "/"
+            ? currentPath == "/"
+            : currentPath.StartsWith(pathPrefix, StringComparison.OrdinalIgnoreCase);
+    }
+}
 <header class="header-docked">
     <div class="page-container navbar-container">
         <a class="font-display-brand text-primary" asp-area="" asp-controller="Home" asp-action="Index">@GlobalConstants.SystemName</a>
-        
+
         <nav class="nav-links">
-            <a class="nav-link font-bold text-secondary" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">About</a>
-            <a class="nav-link" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
-            <a class="nav-link" asp-area="" asp-route="Pricing">Pricing</a>
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
-            <a class="nav-link" asp-area="" asp-route="Areas">Areas</a>
+            <a class="nav-link @(IsActive("/") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+            <a class="nav-link @(IsActive("/About") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="About">About</a>
+            <a class="nav-link @(IsActive("/Services") ? "active" : "")" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
+            <a class="nav-link @(IsActive("/Pricing") ? "active" : "")" asp-area="" asp-route="Pricing">Pricing</a>
+            <a class="nav-link @(IsActive("/Contact") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
+            <a class="nav-link @(IsActive("/Areas") ? "active" : "")" asp-area="" asp-route="Areas">Areas</a>
             <a href="tel:07123456789" class="btn btn-primary navbar-call-btn">Call Now</a>
             <partial name="_LoginPartial" />
         </nav>
@@ -24,16 +35,16 @@
     
     <div class="mobile-nav-dropdown" id="mobile-nav-menu">
         <nav class="mobile-nav-links">
-            <a class="nav-link font-bold text-secondary" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">About</a>
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
-            <a class="nav-link" asp-area="" asp-route="Areas">Areas</a>
-            <a class="nav-link" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
-            <a class="nav-link" asp-area="" asp-route="Pricing">Pricing</a>
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Reviews">Reviews</a>
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Terms">Terms</a>
-            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="FAQ">FAQ</a>
+            <a class="nav-link @(IsActive("/") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+            <a class="nav-link @(IsActive("/About") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="About">About</a>
+            <a class="nav-link @(IsActive("/Contact") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
+            <a class="nav-link @(IsActive("/Areas") ? "active" : "")" asp-area="" asp-route="Areas">Areas</a>
+            <a class="nav-link @(IsActive("/Services") ? "active" : "")" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
+            <a class="nav-link @(IsActive("/Pricing") ? "active" : "")" asp-area="" asp-route="Pricing">Pricing</a>
+            <a class="nav-link @(IsActive("/PrivacyPolicy") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <a class="nav-link @(IsActive("/Reviews") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Reviews">Reviews</a>
+            <a class="nav-link @(IsActive("/TermsAndConditions") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Terms">Terms</a>
+            <a class="nav-link @(IsActive("/FAQ") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="FAQ">FAQ</a>
             <div class="mobile-nav-divider"></div>
             <partial name="_LoginPartial" />
         </nav>
