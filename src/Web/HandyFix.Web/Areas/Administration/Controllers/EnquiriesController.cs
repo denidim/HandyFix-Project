@@ -17,10 +17,18 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             this.inquiriesService = inquiriesService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(InquirySortField sortField = InquirySortField.CreatedOn, bool descending = true)
         {
-            var inquiries = await this.inquiriesService.GetAllAsync<EnquiryViewModel>();
-            return this.View(inquiries);
+            var inquiries = await this.inquiriesService.GetAllAsync<EnquiryViewModel>(sortField, descending);
+
+            var model = new EnquiryListViewModel
+            {
+                Inquiries = inquiries,
+                SortField = sortField,
+                Descending = descending,
+            };
+
+            return this.View(model);
         }
 
         public async Task<IActionResult> Details(Guid id)

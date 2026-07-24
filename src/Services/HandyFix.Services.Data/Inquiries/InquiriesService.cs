@@ -8,6 +8,7 @@ namespace HandyFix.Services.Data.Inquiries
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.Administration.Enquiries;
     using HandyFix.Web.ViewModels.Home;
 
     using Microsoft.EntityFrameworkCore;
@@ -54,12 +55,23 @@ namespace HandyFix.Services.Data.Inquiries
             }
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync<T>()
+        public async Task<IEnumerable<T>> GetAllAsync<T>(
+            InquirySortField sortField = InquirySortField.CreatedOn,
+            bool descending = true)
         {
-            return await this.inquiryRepository.All()
-                .OrderByDescending(x => x.CreatedOn)
-                .To<T>()
-                .ToListAsync();
+            var query = this.inquiryRepository.All();
+
+            query = sortField switch
+            {
+                InquirySortField.Name => descending
+                    ? query.OrderByDescending(x => x.Name)
+                    : query.OrderBy(x => x.Name),
+                _ => descending
+                    ? query.OrderByDescending(x => x.CreatedOn)
+                    : query.OrderBy(x => x.CreatedOn),
+            };
+
+            return await query.To<T>().ToListAsync();
         }
 
         public async Task<T> GetByIdAsync<T>(Guid id)

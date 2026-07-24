@@ -1,7 +1,15 @@
-@model IEnumerable<HandyFix.Web.ViewModels.Administration.Enquiries.EnquiryViewModel>
+@model HandyFix.Web.ViewModels.Administration.Enquiries.EnquiryListViewModel
 @{
     this.ViewData["Title"] = "Client Enquiries";
-    var totalEnquiries = Model.Count();
+    var inquiries = Model.Inquiries;
+    var totalEnquiries = inquiries.Count();
+}
+
+@functions {
+    bool NextDescending(HandyFix.Web.ViewModels.Administration.Enquiries.InquirySortField field)
+    {
+        return this.Model.SortField == field ? !this.Model.Descending : false;
+    }
 }
 
 <!-- Top Header Context -->
@@ -24,16 +32,36 @@
         <table class="table mb-0 text-left admin-table">
             <thead>
                 <tr class="admin-table-head">
-                    <th class="px-4 py-3 font-label-sm uppercase">Client Details</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">
+                        <a asp-area="Administration" asp-controller="Enquiries" asp-action="Index"
+                           asp-route-sortField="Name" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Administration.Enquiries.InquirySortField.Name)"
+                           class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Administration.Enquiries.InquirySortField.Name ? "active" : "")">
+                            Client Details
+                            @if (Model.SortField == HandyFix.Web.ViewModels.Administration.Enquiries.InquirySortField.Name)
+                            {
+                                <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
+                            }
+                        </a>
+                    </th>
                     <th class="px-4 py-3 font-label-sm uppercase w-50">Message Snippet</th>
-                    <th class="px-4 py-3 font-label-sm uppercase">Submission Date</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">
+                        <a asp-area="Administration" asp-controller="Enquiries" asp-action="Index"
+                           asp-route-sortField="CreatedOn" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Administration.Enquiries.InquirySortField.CreatedOn)"
+                           class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Administration.Enquiries.InquirySortField.CreatedOn ? "active" : "")">
+                            Submission Date
+                            @if (Model.SortField == HandyFix.Web.ViewModels.Administration.Enquiries.InquirySortField.CreatedOn)
+                            {
+                                <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
+                            }
+                        </a>
+                    </th>
                     <th class="px-4 py-3 font-label-sm uppercase text-right">Actions</th>
                 </tr>
             </thead>
             <tbody id="enquiries-table-body" class="bg-white">
-                @if (Model.Any())
+                @if (inquiries.Any())
                 {
-                    @foreach (var inquiry in Model)
+                    @foreach (var inquiry in inquiries)
                     {
                         var names = inquiry.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         var initials = names.Length > 1 ? $"{names[0][0]}{names[1][0]}" : $"{names[0][0]}";

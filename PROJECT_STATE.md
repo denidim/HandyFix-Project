@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-24 (end of Sprint 2)
+> **Last updated**: 2026-07-24 (mid Sprint 3)
 
 ---
 
@@ -141,6 +141,16 @@ Audited `AvailabilityService`, slot generation, and booking-concurrency handling
 
 ---
 
+## 3e. Admin Enquiries List: Sorting (2026-07-24)
+
+Extends the sortable/queryable "Order by" pattern built for Bookings (Section 3d) to the Enquiries admin list, one of the two remaining lists named in the Sprint 3 roadmap line.
+
+- Added `InquirySortField` (`CreatedOn`, `Name`, in `HandyFix.Web.ViewModels.Administration.Enquiries` alongside `EnquiryViewModel`) and `IInquiriesService.GetAllAsync<T>(sortField, descending)`, applied as a real `IQueryable` `OrderBy` translated to SQL. No status filter was added here — `Inquiry` has no status-like field to filter on.
+- `EnquiriesController.Index` and `Enquiries/Index.cshtml` now use a new `EnquiryListViewModel`; the "Client Details" and "Submission Date" column headers are clickable sort toggles, same interaction pattern as Bookings (arrow indicator, click again to reverse).
+- Covered by new tests: `InquiriesServiceTests.GetAllAsyncShouldDefaultToCreatedOnDescending`/`GetAllAsyncShouldSortByNameAscendingWhenRequested`.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Images (carried over from Sprint 2 — needs real assets, not more engineering)
@@ -150,7 +160,7 @@ Audited `AvailabilityService`, slot generation, and booking-concurrency handling
 - Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
 
 ### Sprint 3 — Admin & Polish
-- Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists).
+- Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists). Bookings done (Section 3d), Enquiries done (Section 3e), Reviews still outstanding.
 - Usability enhancements across the admin area.
 - ~~Admin-area inline-style cleanup (343 occurrences, deferred here from Sprint 2 to avoid mixing scope).~~ **Done** — see Section 3a below.
 
