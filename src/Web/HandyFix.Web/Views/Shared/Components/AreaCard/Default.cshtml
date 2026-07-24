@@ -1,0 +1,22 @@
+@model IEnumerable<HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaViewModel>
+
+@if (Model.Any())
+{
+    <div class="area-card-grid">
+        @foreach (var area in Model)
+        {
+            <a asp-route="AreaDetails" asp-route-areaSlug="@area.Slug" class="area-card">
+                @if (area.IsFeatured)
+                {
+                    <span class="area-card-badge">Featured</span>
+                }
+                <h3 class="area-card-title">@area.Name</h3>
+                <p class="area-card-region">@area.Region</p>
+                <div class="area-card-meta">
+                    <span class="material-symbols-outlined">directions_car</span>
+                    <span>@(area.DriveTimeMinutes == 0 ? "Home base" : $"~{area.DriveTimeMinutes} min drive")</span>
+                </div>
+            </a>
+        }
+    </div>
+}

@@ -1,0 +1,69 @@
+/* Our Areas - Handy Fix */
+
+.area-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-5);
+}
+
+.area-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-6);
+  text-decoration: none;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.area-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--secondary);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.area-card-badge {
+  position: absolute;
+  top: var(--spacing-4);
+  right: var(--spacing-4);
+  font-size: var(--fs-label-sm);
+  font-weight: 600;
+  color: var(--secondary);
+  background-color: var(--secondary-fixed);
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+}
+
+.area-card-title {
+  font-size: var(--fs-headline-sm);
+  color: var(--primary);
+  margin: 0;
+  padding-right: var(--spacing-10);
+}
+
+.area-card-region {
+  font-size: var(--fs-label-sm);
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+.area-card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: auto;
+  padding-top: var(--spacing-3);
+  color: var(--text-main);
+  font-size: var(--fs-label-sm);
+  font-weight: 600;
+}
+
+.area-card-meta .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--secondary);
+}
