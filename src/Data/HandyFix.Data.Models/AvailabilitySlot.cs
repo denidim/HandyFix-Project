@@ -1,6 +1,7 @@
 ﻿namespace HandyFix.Data.Models
 {
     using System;
+    using System.ComponentModel.DataAnnotations;
 
     using HandyFix.Data.Common.Models;
 
@@ -18,6 +19,9 @@
         public bool IsBooked { get; set; }
 
         public bool IsBlocked { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
 
         public TimeSpan Duration => this.EndTime - this.StartTime;
 
