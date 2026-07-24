@@ -8,26 +8,36 @@ namespace HandyFix.Services.Data.Payments
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Services.Messaging;
 
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
 
     public class PaymentsService : IPaymentsService
     {
+        private const string DefaultAdminNotificationEmail = "admin@handyfix.co.uk";
+
         private readonly IDeletableEntityRepository<Payment> paymentRepository;
         private readonly IDeletableEntityRepository<PaymentStatus> paymentStatusRepository;
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
         private readonly IDeletableEntityRepository<BookingStatus> bookingStatusRepository;
+        private readonly IEmailSender emailSender;
+        private readonly IConfiguration configuration;
 
         public PaymentsService(
             IDeletableEntityRepository<Payment> paymentRepository,
             IDeletableEntityRepository<PaymentStatus> paymentStatusRepository,
             IDeletableEntityRepository<Booking> bookingRepository,
-            IDeletableEntityRepository<BookingStatus> bookingStatusRepository)
+            IDeletableEntityRepository<BookingStatus> bookingStatusRepository,
+            IEmailSender emailSender,
+            IConfiguration configuration)
         {
             this.paymentRepository = paymentRepository;
             this.paymentStatusRepository = paymentStatusRepository;
             this.bookingRepository = bookingRepository;
             this.bookingStatusRepository = bookingStatusRepository;
+            this.emailSender = emailSender;
+            this.configuration = configuration;
         }
 
         public async Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId)
@@ -72,7 +82,9 @@ namespace HandyFix.Services.Data.Payments
         public async Task ProcessPaymentSuccessAsync(string checkoutSessionId, string transactionId)
         {
             var payment = await this.paymentRepository.All()
-                .Include(x => x.Booking)
+                .Include(x => x.Booking).ThenInclude(b => b.BookingServices).ThenInclude(bs => bs.Service)
+                .Include(x => x.Booking).ThenInclude(b => b.AvailabilitySlot)
+                .Include(x => x.Booking).ThenInclude(b => b.Technician)
                 .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
 
             if (payment == null)
@@ -80,11 +92,18 @@ namespace HandyFix.Services.Data.Payments
                 return;
             }
 
+            var paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
+
+            // The Stripe webhook and the browser's Success redirect can both call this
+            // for the same session. Only the first call — the one that actually moves
+            // the payment from Pending to DepositPaid — should trigger confirmation
+            // emails; a repeat call is a harmless status re-confirmation.
+            var alreadyProcessed = paidStatus != null && payment.StatusId == paidStatus.Id;
+
             // Set transaction ID
             payment.TransactionId = transactionId;
 
             // Change payment status to "DepositPaid"
-            var paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
             if (paidStatus != null)
             {
                 payment.StatusId = paidStatus.Id;
@@ -102,6 +121,70 @@ namespace HandyFix.Services.Data.Payments
             }
 
             await this.paymentRepository.SaveChangesAsync();
+
+            if (!alreadyProcessed && booking != null)
+            {
+                await this.SendBookingConfirmationEmailsAsync(booking, payment);
+            }
+        }
+
+        private async Task SendBookingConfirmationEmailsAsync(Booking booking, Payment payment)
+        {
+            var serviceNames = booking.BookingServices != null
+                ? string.Join(", ", booking.BookingServices.Select(x => x.Service?.Name).Where(name => !string.IsNullOrWhiteSpace(name)))
+                : string.Empty;
+            var scheduledTime = booking.AvailabilitySlot != null
+                ? booking.AvailabilitySlot.StartTime.ToString("dd MMM yyyy 'at' HH:mm")
+                : "To be confirmed";
+            var technicianName = booking.Technician != null
+                ? $"{booking.Technician.FirstName} {booking.Technician.LastName}"
+                : "Not yet assigned";
+
+            var clientSubject = "Your HandyFix Booking is Confirmed!";
+            var clientBody = $@"
+                <h3>Hi {booking.CustomerFirstName},</h3>
+                <p>Great news — your deposit of £{payment.Amount:F2} has been received and your booking is now confirmed.</p>
+                <ul>
+                    <li><strong>Booking Reference:</strong> {booking.Id}</li>
+                    <li><strong>Service(s):</strong> {serviceNames}</li>
+                    <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
+                    <li><strong>Address:</strong> {booking.Address}</li>
+                    <li><strong>Technician:</strong> {technicianName}</li>
+                </ul>
+                <p>We look forward to helping you. Thank you for choosing HandyFix!</p>";
+
+            await this.emailSender.SendEmailAsync(
+                "bookings@handyfix.co.uk",
+                "HandyFix Bookings",
+                booking.Email,
+                clientSubject,
+                clientBody);
+
+            var adminEmail = this.configuration["Admin:NotificationEmail"];
+            if (string.IsNullOrWhiteSpace(adminEmail))
+            {
+                adminEmail = DefaultAdminNotificationEmail;
+            }
+
+            var adminSubject = $"New Confirmed Booking - {booking.CustomerFirstName} {booking.CustomerLastName}";
+            var adminBody = $@"
+                <h3>A booking deposit has just been paid.</h3>
+                <ul>
+                    <li><strong>Booking Reference:</strong> {booking.Id}</li>
+                    <li><strong>Customer:</strong> {booking.CustomerFirstName} {booking.CustomerLastName} ({booking.Email}, {booking.PhoneNumber})</li>
+                    <li><strong>Service(s):</strong> {serviceNames}</li>
+                    <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
+                    <li><strong>Address:</strong> {booking.Address}</li>
+                    <li><strong>Deposit Paid:</strong> £{payment.Amount:F2}</li>
+                </ul>
+                <p>Please review and assign a technician if one isn't already set.</p>";
+
+            await this.emailSender.SendEmailAsync(
+                "no-reply@handyfix.co.uk",
+                "HandyFix System",
+                adminEmail,
+                adminSubject,
+                adminBody);
         }
 
         public async Task CancelPaymentAsync(string checkoutSessionId)
