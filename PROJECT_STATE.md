@@ -102,6 +102,17 @@ All items below are implemented and merged to `main`. Sprint 2 was audited on 20
 
 ---
 
+## 3a. Completed Milestones — Sprint 3 (partial): Admin Inline-Style Cleanup & CSS Bugfixes
+
+Pulled forward from Sprint 3 and completed on 2026-07-24, same pattern as the Sprint 2 public-views pass.
+
+- All 343 inline `style="..."` occurrences across the 10 admin views that had them (`Bookings/Index`, `Bookings/Details`, `Calendar/Index`, `Enquiries/Index`, `Enquiries/Details`, `Reviews/Index`, `Services/Index`, `Services/Create`, `Services/Edit`, `Dashboard/Index`) were converted to CSS classes — new admin-specific semantic classes in `wwwroot/css/pages/admin.css` (`admin-card`, `detail-label`, `status-badge`, `admin-table-head`, `avatar-badge`, `financial-summary-card`, `admin-form-control`, `help-card`, etc.), plus shared `dim-*`/`tint-*` sizing and color helpers added to `wwwroot/css/base/utilities.css`.
+- Two exceptions were kept inline deliberately: the two `health-progress-fill` bar widths on `Dashboard/Index.cshtml`, because the page's script reads `element.style.width` directly to drive a load animation — moving that value into a CSS class would silently break the animation (`element.style` only reflects inline styles).
+- **Found and fixed a much larger, previously-undiscovered bug while doing this**: `font-bold` — used 50 times across 15 views, public and admin alike — had no CSS definition anywhere in the project and was a pure no-op sitewide; every element meant to render bold text had been rendering at normal weight since Sprint 2 (and before). Also fixed in the same pass: `font-medium`, `text-right`/`text-left` (Bootstrap 5 renamed these to `text-end`/`text-start`, so the originals never worked), and a half-defined color-token family (`text-on-surface`, `text-on-secondary-container`, `text-on-tertiary-container`, `text-outline`, `text-error` were referenced but never defined, alongside siblings like `text-on-surface-variant` that were). These fixes live in `utilities.css`/`typography.css` and take effect on already-shipped Sprint 2 public pages too, not just the admin views touched this pass.
+- Verified by running the app locally, logging in as the seeded admin, and screenshotting every converted page — no layout regressions.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Images (carried over from Sprint 2 — needs real assets, not more engineering)
@@ -113,7 +124,7 @@ All items below are implemented and merged to `main`. Sprint 2 was audited on 20
 ### Sprint 3 — Admin & Polish
 - Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists).
 - Usability enhancements across the admin area.
-- Admin-area inline-style cleanup (343 occurrences, deferred here from Sprint 2 to avoid mixing scope).
+- ~~Admin-area inline-style cleanup (343 occurrences, deferred here from Sprint 2 to avoid mixing scope).~~ **Done** — see Section 3a below.
 
 ### Sprint 4 — Testing, Documentation & Deployment
 - Comprehensive unit test coverage beyond what Sprint 1 required (controller-level tests, broader service coverage).
