@@ -1,0 +1,32 @@
+@model HandyFix.Web.ViewModels.Services.PricingCardViewModel
+
+@functions {
+    string FormatDuration(int minutes)
+    {
+        return minutes >= 60
+            ? $"{(minutes / 60.0).ToString("0.#")} Hours"
+            : $"{minutes} Mins";
+    }
+}
+
+<article class="pricing-card">
+    <div class="pricing-card-icon-wrapper">
+        <span class="material-symbols-outlined">@Model.IconName</span>
+    </div>
+    <h3 class="pricing-card-title">@Model.Name</h3>
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <p class="pricing-card-desc">@Model.Description</p>
+    }
+    <div class="pricing-card-meta">
+        <span class="pricing-card-price">From £@Model.BasePrice.ToString("F0")</span>
+        <span class="pricing-card-duration">
+            <span class="material-symbols-outlined">timer</span>
+            @this.FormatDuration(Model.EstimatedDurationMinutes)
+        </span>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.CtaText) && !string.IsNullOrWhiteSpace(Model.CtaUrl))
+    {
+        <a href="@Model.CtaUrl" class="btn btn-primary pricing-card-cta">@Model.CtaText</a>
+    }
+</article>
