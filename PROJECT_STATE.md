@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-24 (end of Sprint 1)
+> **Last updated**: 2026-07-24 (end of Sprint 2)
 
 ---
 
@@ -72,14 +72,43 @@ All items below are implemented, unit-tested, and merged to `main`.
 
 ---
 
-## 3. Current Standing & Remaining Roadmap
+## 3. Completed Milestones — Sprint 2: UI/UX & SEO
 
-### Sprint 2 — UI/UX & Content (audited 2026-07-24, not yet implemented)
-A full repository audit was completed; key findings to act on:
-- **Images**: only 24 images currently exist (all under `wwwroot/images/services/`), not the ~50 originally assumed — more area/marketing images need sourcing. Zero `<img>` tags anywhere use `loading="lazy"`, `srcset`, or explicit `width`/`height`. The existing WebP pipeline doesn't cover the homepage hero or future area images.
-- **Pricing page**: doesn't exist — `Home/Index.cshtml` has a dead `href="#"` link with a literal `<!-- TODO: Pricing page -->` comment. The underlying data (`Service.BasePrice`) is already queried and displayed per-service, so this is mostly a new view + controller action, not new data modeling.
-- **CSS/HTML unification**: the boxed hero/`page-container` convention is already consistent site-wide — that goal is essentially met. The real gap is 598 inline `style="..."` occurrences (255 in public views, 343 in the admin area — admin cleanup belongs to Sprint 3, not Sprint 2).
-- **SEO**: two live bugs found — `Home/Index.cshtml` overwrites the controller's SEO-friendly `<title>` with a generic "Home Page", and `ViewData["MetaDescription"]` is set everywhere but never rendered (`_Layout.cshtml` has no `<meta name="description">` tag at all). No `robots.txt` or `sitemap.xml` exist. Structured data (`JSON-LD`) on Home and Service Details pages currently contains **fabricated business content presented as fact** (invented technician names/bios, an unverified "£5M public liability insurance" claim, a made-up completed-jobs count) that needs real business input before launch, not further engineering.
+All items below are implemented and merged to `main`. Sprint 2 was audited on 2026-07-24 and implemented the same day.
+
+### SEO Fixes
+- `Home/Index.cshtml` no longer overwrites the controller's SEO-friendly `<title>` with a generic "Home Page" — the view-level `ViewData["Title"]` assignment that clobbered it was removed.
+- `_Layout.cshtml` now renders `<meta name="description">` from `ViewData["MetaDescription"]` when set. That value is now populated on every public page's controller action (Home, Contact, Reviews, About, FAQ, ServiceAreas, Privacy, Terms, CookiePolicy, Booking, Services/Category, Services/Details, Services/Pricing) — previously only 3 of these ever set it.
+- `robots.txt` added under `wwwroot/`, disallowing `/Administration/`, `/Identity/`, `/Payment/`, `/Settings/`, and pointing to the sitemap.
+- `SeoController` (`Web/HandyFix.Web/Controllers/SeoController.cs`) serves a dynamically generated `sitemap.xml` — static routes plus every category and service slug pulled live from `ICategoriesService`/`IServicesService`, so it never goes stale as services are added/removed via the admin panel.
+- **Not fixed, deliberately** — the JSON-LD structured data on `Home/Index.cshtml` and `Services/Details.cshtml` still contains fabricated business content (invented technician names/bios, an unverified "£5M public liability insurance" claim, a made-up completed-jobs count/rating). This needs real business input, not engineering, and was explicitly left alone this sprint per user direction.
+
+### Pricing Page
+- New `Services/Pricing.cshtml` view + `ServicesController.Pricing()` action (route name `Pricing`), listing every service grouped by category with hourly rate and estimated duration, sourced from the same `CategoryViewModel`/`ServiceViewModel` data the rest of the Services area already uses — no new data modeling was needed.
+- The dead `href="#"` / `<!-- TODO: Pricing page -->` link on the homepage booking widget now points at this page via `asp-route="Pricing"`, and a "Pricing" link was added to both the desktop and mobile nav.
+- New `wwwroot/css/pages/pricing.css`, imported from `site.css`.
+
+### Inline-Style Cleanup (Public Views)
+- All ~253 inline `style="..."` occurrences across the 14 public views that had them (`Home/Index`, `Privacy`, `Reviews`, `Contact`, `About`, `FAQ`, `Terms`, `Booking/Confirmed`, `Payment/Cancel`, `ServiceAreas`, `Booking/Index`, `Services/Category`, `Services/Details`, `_Footer`, `_LoginPartial`) were converted to CSS classes — either existing page-specific classes, new semantic classes added to the relevant `pages/*.css` file, or a new `wwwroot/css/base/utilities.css` for repeated spacing/typography/opacity/border-radius patterns (`mb-*`/`mt-*`, `fs-*`, `lh-*`, `opacity-*`, `rounded-lg`/`rounded-xl`/`rounded-full`, `icon-fill`/`icon-unfill`, `max-w-*`, etc.).
+- Two intentional exceptions remain, both dynamic per-instance `background-image: url(...)` values (`Home/Privacy.cshtml`'s hero banner and `Services/Details.cshtml`'s per-service hero) — these are content data, not design-system values, same category as an `<img src>`.
+- This pass also fixed several latent bugs uncovered along the way: multiple views referenced Bootstrap-*looking* classes that were never actually defined (`rounded-lg`, `rounded-xl`, `rounded-full`, `opacity-70`, `max-w-xl`/`max-w-2xl`/`max-w-7xl`) and were silently no-ops; `utilities.css` now defines all of them for real. `Services/Category.cshtml`'s "Details" button also referenced a non-existent `var(--border)` CSS variable (only `--border-subtle` exists), which meant it was likely rendering with no border at all — fixed to use `--border-subtle` like every other button of its kind.
+- Verified visually: the app was run locally and screenshotted (Home, Pricing, Contact, FAQ, Reviews, About, Privacy) — no layout regressions.
+
+### Image Loading Attributes
+- Added `loading="lazy"` to every below-the-fold `<img>` in public views; the homepage hero image (the LCP candidate) was explicitly kept eager and given `fetchpriority="high"` instead.
+- Added explicit `width`/`height` wherever a real intrinsic size was knowable (`hero.png` is 2752×1536; the plumbing/handyman category heroes are 1024×1024 each — dimensions read directly from the file headers since these are static assets). Where the source is dynamic (per-service uploaded images) or external, the containing element's own fixed CSS box size was used instead (e.g. 96×96 for the local-expert avatar, 256×256 for the services-page proof image), which is the correct technique when the true source size isn't controlled.
+- **`srcset` was not added** — every image on the site currently exists at a single resolution (see the Images gap below), so there are no size variants to put in a `srcset` yet. Adding one meaningfully requires either sourcing multiple resolutions or extending `ImageStorageService` to generate them, both bigger than an attribute-only fix.
+- **Found but not fixed**: `wwwroot/images/hero.png` is an unoptimized 6.6MB PNG (2752×1536) used as the homepage hero, About page image, and Trust section image — the single biggest real performance cost on the site, and outside the WebP pipeline (which only covers `images/services/`). `Services/Index.cshtml`'s `quality-proof-image` also points at `wwwroot/images/handyfix-proof.jpg`, which doesn't exist on disk at all — it always falls through to the `onerror` placeholder.
+
+---
+
+## 4. Current Standing & Remaining Roadmap
+
+### Images (carried over from Sprint 2 — needs real assets, not more engineering)
+- Only 24 images exist (all under `wwwroot/images/services/`), not the ~50 originally assumed. More area/marketing images need sourcing before the site can lean on real photography site-wide.
+- `hero.png` (6.6MB PNG) should be re-encoded to WebP and brought into a resize pipeline the way `images/services/` already is — that's an engineering task once someone confirms it's fine to touch the source file.
+- `wwwroot/images/handyfix-proof.jpg`, referenced by `Services/Index.cshtml`, doesn't exist and needs to be sourced or the reference removed.
+- Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
 
 ### Sprint 3 — Admin & Polish
 - Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists).
@@ -94,10 +123,12 @@ A full repository audit was completed; key findings to act on:
 
 ---
 
-## 4. Architectural Decisions Worth Remembering
+## 5. Architectural Decisions Worth Remembering
 
 - **Optimistic concurrency needs a provider that actually enforces it.** EF Core's InMemory provider silently ignores both transactions and `RowVersion` concurrency checks — tests that need to prove rollback or double-booking rejection use Sqlite in-memory (`Microsoft.Data.Sqlite`, `DataSource=:memory:`, open connection kept alive for the test's duration), not InMemory.
 - **`IDbQueryRunner.BeginTransactionAsync`** is the standard way to wrap multi-repository mutations atomically; nested `SaveChangesAsync` calls from different repositories sharing the same scoped `DbContext` automatically join the ambient transaction — no need to pass a transaction object around explicitly.
 - **The "fail loud outside development, fall back safely inside it" pattern** is now used twice (Stripe key, SendGrid key) and should be the default template for any future third-party integration key: never let a missing production secret silently degrade to mock/no-op behavior.
 - **`SlotUnavailableException`** exists specifically so controllers can distinguish "the resource you wanted is gone" from generic `InvalidOperationException` validation failures — reuse this pattern rather than string-matching exception messages.
+- **`wwwroot/css/base/utilities.css`** (added in Sprint 2) holds the small, generic spacing/typography/opacity/radius classes shared across every page (`mb-*`, `fs-*`, `lh-*`, `opacity-*`, `rounded-*`, `icon-fill`, etc.) — check here before inventing a new one-off class or reaching for an inline `style=`. Anything page-specific still belongs in that page's own `pages/*.css` file.
+- **The sitemap is generated, not static** — `SeoController.Sitemap()` queries categories/services live via `ICategoriesService`/`IServicesService` rather than hardcoding URLs, specifically so it can't go stale as services are added or removed through the admin panel. Follow the same approach for any future sitemap-like listing.
 - **Commit hygiene**: this project follows Conventional Commits with prose-paragraph bodies (not bullet lists) — see recent `git log` for the established style before writing commit messages.
