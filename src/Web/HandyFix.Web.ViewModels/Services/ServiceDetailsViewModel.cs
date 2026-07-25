@@ -39,7 +39,7 @@ namespace HandyFix.Web.ViewModels.Services
                 .Map(dest => dest.ImageUrl, src =>
                     src.Images != null && src.Images.Any(i => !string.IsNullOrWhiteSpace(i.ImageUrl))
                         ? src.Images.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.ImageUrl)).ImageUrl
-                        : (!string.IsNullOrWhiteSpace(src.Slug) ? $"/images/services/{src.Slug}-hero.webp" : "/images/hero.png"));
+                        : (!string.IsNullOrWhiteSpace(src.Slug) ? $"/images/services/{src.Slug}-hero.webp" : "/images/hero.webp"));
         }
     }
 }
