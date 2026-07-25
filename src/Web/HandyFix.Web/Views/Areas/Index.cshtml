@@ -34,12 +34,7 @@
 
     <!-- Coverage Map -->
     <section class="areas-overview-hero">
-        <img src="~/images/areas/overview-coverage-map.webp"
-             alt="Stylised map of HandyFix's handyman and plumbing coverage radius, centred on Chessington and extending across South London and Surrey"
-             class="areas-overview-map"
-             width="1200" height="600"
-             loading="eager" fetchpriority="high"
-             onerror="this.closest('.areas-overview-hero').style.display='none';" />
+        <partial name="_AreaCoverageMap" model="Model" />
     </section>
 
     <!-- Featured Areas -->

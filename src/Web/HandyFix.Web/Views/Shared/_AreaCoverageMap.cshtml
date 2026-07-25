@@ -1,0 +1,163 @@
+@model IEnumerable<HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaViewModel>
+@{
+    // Schematic coverage diagram, not a geographic map.
+    //
+    // Each town sits at its true compass bearing from the Chessington base, at a
+    // radius proportional to its real DriveTimeMinutes - so both axes carry real
+    // meaning and nothing here is invented. Label anchors and offsets are hand-set
+    // per town to keep the 14 labels from colliding; an area with no entry below is
+    // simply left off the diagram (it still appears in the mobile list and the cards
+    // further down the page), so adding a new ServiceArea never breaks this view.
+    const int Cx = 450;
+    const int Cy = 355;
+    const double MinuteRadius = 11.0;
+
+    var geometry = new Dictionary<string, (double Bearing, string Anchor, int Dx, int Dy, string Label)>
+    {
+        ["kingston-upon-thames"] = (10, "start", 13, 5, "Kingston"),
+        ["wimbledon"] = (42, "start", 13, 5, "Wimbledon"),
+        ["worcester-park-ewell"] = (61, "start", 13, 5, "Worcester Park"),
+        ["sutton"] = (88, "start", 13, 5, "Sutton"),
+        ["banstead"] = (122, "start", 13, 5, "Banstead"),
+        ["epsom"] = (138, "end", -13, 5, "Epsom"),
+        ["reigate"] = (154, "start", 13, 5, "Reigate"),
+        ["dorking"] = (189, "middle", 0, 26, "Dorking"),
+        ["leatherhead"] = (196, "end", -13, 5, "Leatherhead"),
+        ["guildford"] = (234, "end", -13, 5, "Guildford"),
+        ["cobham"] = (247, "end", -13, 5, "Cobham"),
+        ["esher"] = (284, "end", -13, 5, "Esher"),
+        ["walton-on-thames-weybridge"] = (290, "end", -13, 5, "Walton & Weybridge"),
+        ["surbiton"] = (345, "middle", 0, -16, "Surbiton"),
+    };
+
+    var hub = Model.FirstOrDefault(a => a.Slug == "chessington");
+    var plotted = Model
+        .Where(a => geometry.ContainsKey(a.Slug))
+        .Select(a =>
+        {
+            var g = geometry[a.Slug];
+            var radians = g.Bearing * Math.PI / 180.0;
+            var radius = a.DriveTimeMinutes * MinuteRadius;
+            return new
+            {
+                Area = a,
+                Geo = g,
+                X = Cx + (radius * Math.Sin(radians)),
+                Y = Cy - (radius * Math.Cos(radians)),
+            };
+        })
+        .OrderBy(p => p.Area.DriveTimeMinutes)
+        .ToList();
+
+    // Mobile falls back to grouped pills - a 780px-wide diagram is unreadable on a phone.
+    var bands = new (string Label, Func<int, bool> Match)[]
+    {
+        ("Under 10 minutes", m => m <= 10),
+        ("10 to 20 minutes", m => m > 10 && m <= 20),
+        ("20 to 25 minutes", m => m > 20),
+    };
+}
+
+<figure class="coverage-map">
+    <svg class="coverage-map-svg"
+         viewBox="0 0 780 740"
+         xmlns="http://www.w3.org/2000/svg"
+         aria-labelledby="coverageMapTitle coverageMapDesc">
+        <title id="coverageMapTitle">Coverage diagram for our service areas</title>
+        <desc id="coverageMapDesc">
+            A schematic showing @Model.Count() towns arranged by direction and driving time from our Chessington base. Each town links to its own page.
+        </desc>
+
+        @* Drive-time rings. *@
+        @foreach (var minutes in new[] { 10, 20, 25 })
+        {
+            <circle class="coverage-ring" cx="@Cx" cy="@Cy" r="@(minutes * MinuteRadius)" />
+        }
+
+        @* Ring labels sit on their own ring in the empty western sector. The three bearings are
+           staggered because the 20 and 25 minute rings are only 55px apart - at a shared bearing
+           their pills collide. Verified by rendering, not by eye. *@
+        @foreach (var (minutes, bearing) in new[] { (10, 270.0), (20, 262.0), (25, 278.0) })
+        {
+            var ringRadians = bearing * Math.PI / 180.0;
+            var lx = Cx + ((minutes * MinuteRadius) * Math.Sin(ringRadians));
+            var ly = Cy - ((minutes * MinuteRadius) * Math.Cos(ringRadians));
+            <g class="coverage-ring-label">
+                <rect x="@((lx - 26).ToString("F1"))" y="@((ly - 10).ToString("F1"))" width="52" height="19" rx="9" />
+                <text x="@lx.ToString("F1")" y="@((ly + 4).ToString("F1"))" text-anchor="middle">@minutes min</text>
+            </g>
+        }
+
+        @* Legend, tucked into the empty north-west corner outside the outer ring. *@
+        <g class="coverage-legend">
+            <circle class="coverage-dot coverage-dot-solid" cx="40" cy="64" r="7" />
+            <text class="coverage-legend-text" x="56" y="69">Featured area</text>
+            <circle class="coverage-dot" cx="40" cy="94" r="7" />
+            <text class="coverage-legend-text" x="56" y="99">Also covered</text>
+        </g>
+
+        @* Spokes from the hub. *@
+        @foreach (var p in plotted)
+        {
+            <line class="coverage-spoke" x1="@Cx" y1="@Cy" x2="@p.X.ToString("F1")" y2="@p.Y.ToString("F1")" />
+        }
+
+        @* Outer towns. *@
+        @foreach (var p in plotted)
+        {
+            <a class="coverage-node @(p.Area.IsFeatured ? "is-featured" : string.Empty)"
+               href="@Url.RouteUrl("AreaDetails", new { areaSlug = p.Area.Slug })"
+               aria-label="@p.Area.Name, about @p.Area.DriveTimeMinutes minutes from our Chessington base">
+                <circle class="coverage-hit" cx="@p.X.ToString("F1")" cy="@p.Y.ToString("F1")" r="26" />
+                <circle class="coverage-dot" cx="@p.X.ToString("F1")" cy="@p.Y.ToString("F1")" r="7" />
+                <text class="coverage-label"
+                      x="@((p.X + p.Geo.Dx).ToString("F1"))"
+                      y="@((p.Y + p.Geo.Dy).ToString("F1"))"
+                      text-anchor="@p.Geo.Anchor">@p.Geo.Label</text>
+            </a>
+        }
+
+        @* The Chessington hub, drawn last so it sits above the spokes. *@
+        @if (hub != null)
+        {
+            <a class="coverage-node coverage-node-hub"
+               href="@Url.RouteUrl("AreaDetails", new { areaSlug = hub.Slug })"
+               aria-label="@hub.Name, our base">
+                <circle class="coverage-hub-halo" cx="@Cx" cy="@Cy" r="19" />
+                <circle class="coverage-hub" cx="@Cx" cy="@Cy" r="11" />
+                <text class="coverage-label coverage-label-hub" x="@Cx" y="@(Cy + 40)" text-anchor="middle">@hub.Name</text>
+                <text class="coverage-hub-sub" x="@Cx" y="@(Cy + 58)" text-anchor="middle">Our base</text>
+            </a>
+        }
+    </svg>
+
+    @* Phone layout: the diagram's labels are far too small to read below ~768px. *@
+    <div class="coverage-list">
+        @foreach (var band in bands)
+        {
+            var inBand = Model.Where(a => band.Match(a.DriveTimeMinutes)).OrderBy(a => a.DriveTimeMinutes).ToList();
+            if (inBand.Count == 0)
+            {
+                continue;
+            }
+
+            <div class="coverage-list-band">
+                <h3 class="coverage-list-heading">@band.Label</h3>
+                <ul class="coverage-list-items">
+                    @foreach (var area in inBand)
+                    {
+                        <li>
+                            <a class="coverage-pill @(area.IsFeatured ? "is-featured" : string.Empty)"
+                               asp-route="AreaDetails"
+                               asp-route-areaSlug="@area.Slug">@area.Name</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+
+    <figcaption class="coverage-caption">
+        Approximate driving times from our Chessington base. Directions and distances are indicative &mdash; this is a coverage diagram, not a street map. Select any town for local details.
+    </figcaption>
+</figure>

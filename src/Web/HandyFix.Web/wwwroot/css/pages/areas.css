@@ -20,11 +20,199 @@
   box-shadow: var(--shadow-md);
 }
 
-.areas-overview-map {
+/* Coverage diagram -------------------------------------------------------- */
+
+.coverage-map {
+  margin: 0;
+  padding: var(--spacing-6) var(--spacing-4) var(--spacing-4);
+  background-color: var(--surface-container-lowest);
+}
+
+.coverage-map-svg {
+  display: none;
   width: 100%;
+  /* Cap the upscale: the viewBox is 780 wide, so an uncapped SVG on a 1440px
+     screen renders the 15px labels at ~24px. */
+  max-width: 880px;
   height: auto;
-  display: block;
-  object-fit: cover;
+  margin-inline: auto;
+}
+
+.coverage-ring {
+  fill: none;
+  stroke: var(--outline-variant);
+  stroke-width: 1;
+  stroke-dasharray: 3 6;
+}
+
+.coverage-ring-label rect {
+  fill: var(--surface-container-lowest);
+}
+
+.coverage-ring-label text {
+  fill: var(--outline);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.coverage-spoke {
+  stroke: var(--outline-variant);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.coverage-node {
+  cursor: pointer;
+}
+
+.coverage-hit {
+  fill: transparent;
+}
+
+.coverage-dot {
+  fill: var(--surface-container-lowest);
+  stroke: var(--secondary);
+  stroke-width: 2.5;
+  transition: fill 0.2s ease, stroke-width 0.2s ease;
+}
+
+.coverage-node.is-featured .coverage-dot,
+.coverage-dot-solid {
+  fill: var(--secondary);
+}
+
+.coverage-legend-text {
+  fill: var(--outline);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.coverage-label {
+  fill: var(--on-surface-variant);
+  font-size: 15px;
+  font-weight: 500;
+  transition: fill 0.2s ease;
+}
+
+.coverage-node:hover .coverage-dot,
+.coverage-node:focus-visible .coverage-dot {
+  fill: var(--secondary);
+  stroke-width: 5;
+}
+
+.coverage-node:hover .coverage-label,
+.coverage-node:focus-visible .coverage-label {
+  fill: var(--secondary);
+  font-weight: 700;
+}
+
+.coverage-node:focus-visible {
+  outline: none;
+}
+
+.coverage-hub-halo {
+  fill: var(--secondary-fixed);
+}
+
+.coverage-hub {
+  fill: var(--primary);
+}
+
+.coverage-label-hub {
+  fill: var(--primary);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.coverage-hub-sub {
+  fill: var(--outline);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.coverage-node-hub:hover .coverage-hub-halo,
+.coverage-node-hub:focus-visible .coverage-hub-halo {
+  fill: var(--secondary-fixed-dim);
+}
+
+.coverage-caption {
+  max-width: 640px;
+  margin: var(--spacing-6) auto 0;
+  color: var(--on-surface-variant);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Phone layout: grouped pills instead of the diagram. */
+.coverage-list-band + .coverage-list-band {
+  margin-top: var(--spacing-6);
+}
+
+.coverage-list-heading {
+  margin: 0 0 var(--spacing-3);
+  color: var(--outline);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.coverage-list-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coverage-pill {
+  display: inline-block;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-full);
+  color: var(--on-surface-variant);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.coverage-pill.is-featured {
+  border-color: var(--secondary);
+  color: var(--secondary);
+}
+
+.coverage-pill:hover,
+.coverage-pill:focus-visible {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+  color: var(--surface-container-lowest);
+}
+
+@media (min-width: 768px) {
+  .coverage-map {
+    padding: var(--spacing-8);
+  }
+
+  .coverage-map-svg {
+    display: block;
+  }
+
+  .coverage-list {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coverage-dot,
+  .coverage-label,
+  .coverage-pill {
+    transition: none;
+  }
 }
 
 .areas-section {

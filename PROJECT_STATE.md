@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-25 (Pre-Sprint 4 TODOs section added — image-generation, reviews/Google Business, and fabricated-trust-content cleanup all scoped and decided. TODO item 2 shipped: hero image migrated to WebP, 6.6 MB → 90 KB, see §3j. The boot-time JPG sweep was then removed as completed migration code carrying a data-loss bug, see §3k)
+> **Last updated**: 2026-07-25 (Pre-Sprint 4 TODOs section added and three of its ten items shipped: hero image migrated to WebP at 6.6 MB → 90 KB (§3j), image cache-busting completed (item 6), and the Areas coverage map rebuilt as an inline interactive SVG (§3l). The boot-time JPG sweep was also removed as completed migration code carrying a data-loss bug (§3k))
 
 ---
 
@@ -235,6 +235,20 @@ The boot-time legacy-image sweep has been **deleted**, reversing the "keep it as
 
 ---
 
+## 3l. Areas Coverage Map: Inline Interactive SVG (2026-07-25)
+
+Closes Pre-Sprint 4 TODO item 4. The Areas index referenced `overview-coverage-map.webp`, which never existed — the `onerror` handler simply hid the whole section, so the page shipped without its visual anchor. Replaced with a hand-built SVG rather than a generated raster, because image models garble text and geography and misspelled Surrey town names would have undercut the very local-SEO story the page exists to tell.
+
+- **New partial `Views/Shared/_AreaCoverageMap.cshtml`** takes the page's existing `IEnumerable<ServiceAreaViewModel>` — no controller change, no new data fetch, no new view model.
+- **Both axes carry real data.** Each town sits at its true compass bearing from the Chessington base, at a radius proportional to its actual seeded `DriveTimeMinutes`. Nothing about the placement is invented, and drive-time rings at 10/20/25 minutes make the scale explicit. It is presented as a coverage *diagram*, not a street map, and the caption says so.
+- **Every town is a real link** to `/Areas/{slug}` with an `aria-label` carrying the full name and drive time — so unlike the raster it replaced, the town names are selectable text, crawlable, and navigable. The hub links to Chessington.
+- **Label collision was the actual engineering problem.** 14 labels around a circle collide badly at shared anchors — Kingston/Surbiton are 5° apart, Dorking/Leatherhead 7°. Solved by hand-anchoring each label (`start`/`middle`/`end` plus offsets) rather than distorting the bearings, so geographic accuracy is preserved. The 20- and 25-minute ring labels are only 55px apart at a shared bearing, so those three are staggered across bearings 270°/262°/278°. **Verified by rendering to PNG with headless Edge and inspecting, not by eye** — the first two layout attempts both had collisions that were only visible once drawn.
+- **Mobile gets a different layout, not a shrunken one.** Below 768px the SVG is hidden and the same data renders as pills grouped into drive-time bands — a 780px-wide diagram is unreadable on a phone. The SVG is also capped at `max-width: 880px`, since an uncapped upscale rendered the 15px labels at ~24px on a 1440px screen.
+- **Unknown slugs degrade gracefully**: the geometry table is keyed by slug, and any area without an entry is simply omitted from the diagram while still appearing in the mobile list and the cards below. Adding a `ServiceArea` can never break this view.
+- **Verified**: `dotnet build` (0 errors), full suite (41 + 9) passing, and a live run confirming HTTP 200, all 15 area slugs present as links, the old image reference gone, and correct rendering at 700px and 1440px. Note the standard `--window-size=390` headless capture is misleading — Chromium on Windows clamps window width to ~500px, so narrow screenshots clip content on every page, touched or not.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — agreed decisions, not yet implemented (logged 2026-07-25)
@@ -255,7 +269,7 @@ A planning pass on visual assets and pre-launch trust content. **Nothing below h
   - No resize is needed on your side for service images: at 1024×1024 they are under the app pipeline's 1920px threshold, so it would not have resized them either. Only area heroes (1600×700) and any large marketing images need attention to dimensions.
   - The admin upload form remains available as an alternative for one-off replacements — it still does resize + WebP + correct naming automatically, and it is the path that produced `hero.webp` in §3j. It is just not the efficient route for a 40-image batch.
   - Filename conventions are fixed and must be matched exactly: services `/images/services/{slug}-hero.webp` (hardcoded in four independent places — `ImageStorageService`, `ServicesSeeder.cs:79`, admin `ServicesController.cs:168`, and the `ServiceViewModel`/`ServiceDetailsViewModel` Mapster fallback); areas `/images/areas/{slug}-hero.webp` (resolved by convention at the view layer — `ServiceArea` deliberately has no image column). Note the two category tiles break the pattern: `{slug}-category-hero.webp`.
-  - Target dimensions the markup already declares: service/category 1024×1024, area heroes 1600×700, coverage map 1200×600.
+  - Target dimensions the markup already declares: service/category 1024×1024, area heroes 1600×700. (The coverage map is no longer an image asset — see §3l.)
 
 **2. Hero image handling.** ~~Keep `hero.png`; re-upload it manually through the admin panel so the existing SkiaSharp pipeline compresses it and converts it to WebP, rather than adding a new pipeline for it.~~ **Done 2026-07-25 — see §3j.** Shipped as `hero.webp` (90 KB, 1920×1072, down from 6.6 MB), converted through the existing admin upload path after raising the upload cap to 20 MB. All 8 references repointed and the stale declared dimensions corrected.
 
@@ -266,7 +280,7 @@ A planning pass on visual assets and pre-launch trust content. **Nothing below h
   - Constraints for the future import: Google's structured-data policy **forbids marking up third-party reviews as your own `aggregateRating`**, and the Places API terms restrict caching review content. The correct route — since we will be managing the client's profile — is the **Business Profile API with owner OAuth**, not Places.
   - Sequencing note: real reviews should be collected on the Google Business Profile *first*, since that is where they compound for local SEO and what the map pack ranks on.
 
-**4. Area map.** Replace the static `overview-coverage-map.webp` (`Views/Areas/Index.cshtml:37`) with an **inline interactive SVG map**. Town labels become real `<a href="/Areas/{slug}">` links to the 15 seeded area pages, using existing design tokens. Rejected AI generation for this: image models garble text and geography, and misspelled Surrey town names would actively undermine the local-SEO story. Removes the last remaining `onerror`-hides-the-section hack.
+**4. Area map.** ~~Replace the static `overview-coverage-map.webp` with an inline interactive SVG map.~~ **Done 2026-07-25 — see §3l.** Shipped as `Views/Shared/_AreaCoverageMap.cshtml`: a radial drive-time diagram with all 15 towns as real links, plus a grouped-pill fallback below 768px. The `onerror`-hides-the-section hack is gone, and `overview-coverage-map.webp` is no longer needed — the image backlog drops to 15 area heroes.
 
 **5. Broken links & metadata.** Fix `handyfix-proof.jpg` (`Views/Services/Index.cshtml:105`) — the file has never existed on disk, so it always falls through to an external gstatic placeholder SVG. Remove the missing `logo.png` from the JSON-LD (`Views/Home/Index.cshtml:351`, `"image": "https://handyfix.co.uk/images/logo.png"`) rather than generating one, since the business name may change. When branding does settle, build the wordmark as SVG from the existing Outfit font and the navbar's cyan accent dot — not as AI output, which cannot render text reliably.
 
@@ -298,7 +312,7 @@ A planning pass on visual assets and pre-launch trust content. **Nothing below h
 - ~~`hero.png` (6.6MB PNG) should be re-encoded to WebP and brought into a resize pipeline the way `images/services/` already is.~~ **Done 2026-07-25 — see §3j.** Now `hero.webp`, 90 KB / 1920×1072.
 - `wwwroot/images/handyfix-proof.jpg`, referenced by `Services/Index.cshtml`, doesn't exist and needs to be sourced or the reference removed.
 - Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
-- `wwwroot/images/areas/` needs 16 new assets: one hero per area (`{slug}-hero.webp`, 15 areas — see Section 3h) plus `overview-coverage-map.webp` for the Areas index hero. All 16 paths are already wired into the Area pages' markup with graceful `onerror` fallback to `/images/hero.webp` in the meantime. Per Pre-Sprint 4 TODO item 4, the coverage map will be an inline interactive SVG rather than a raster asset, so only 15 files are actually needed here.
+- `wwwroot/images/areas/` needs **15** new assets: one hero per area (`{slug}-hero.webp` — see Section 3h). All 15 paths are already wired into the Area pages' markup with graceful `onerror` fallback to `/images/hero.webp` in the meantime. `overview-coverage-map.webp` is no longer required — the Areas index now renders an inline SVG diagram instead (§3l).
 - **Not yet resolved** — pending the user supplying the physical asset files. Do not mark this item done until the files actually exist on disk.
 
 ### Sprint 3 — Admin & Polish — **CLOSED** (2026-07-24)
