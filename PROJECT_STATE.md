@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-24 (Sprint 3 closed; Pricing page rebuild and Our Areas feature both shipped; Pricing Migration initiative officially closed; public-site UI consistency pass completed — Images gap remains in progress, pending real asset files)
+> **Last updated**: 2026-07-25 (Pre-Sprint 4 TODOs section added — image-generation, reviews/Google Business, and fabricated-trust-content cleanup all scoped and decided. TODO item 2 already shipped: hero image migrated to WebP, 6.6 MB → 90 KB, see §3j)
 
 ---
 
@@ -209,14 +209,76 @@ Manual QA surfaced a long list of cross-page inconsistencies and layout bugs on 
 
 ---
 
+## 3j. Hero Image WebP Migration (2026-07-25)
+
+Closes Pre-Sprint 4 TODO item 2 (see §4) — the first of those items to ship, and the single biggest performance win on the site.
+
+- **`hero.png` (6.6 MB PNG, 2752×1536) is retired and replaced by `hero.webp` (90 KB, 1920×1072) — a 98.6% reduction** on an image that is the homepage LCP candidate, the About page image, the Trust section image, and the `onerror` fallback for every service and area image.
+- **Method, deliberately reusing the existing pipeline rather than building a new one**: the admin service-image upload cap was raised from 5 MB to 20 MB (`ServiceAdminInputModel.ImageFile`'s `[MaxFileSize]`, plus the matching help text on the Create/Edit views) because the 6.6 MB original could not otherwise pass validation. The PNG was then uploaded through the existing admin Services form so `ImageStorageService`'s SkiaSharp pipeline did the conversion — resize to 1920 wide since the source exceeded that threshold, then WebP at quality 80 — and the output was moved to `wwwroot/images/` root. `ConvertExistingJpgServiceImages` was left untouched, as agreed.
+- **8 references updated across 6 files**: `Home/Index.cshtml` (hero, Trust image, and the popular-services `onerror` fallback), `Home/About.cshtml`, `Services/Category.cshtml` (`onerror`), `Areas/Details.cshtml` (`onerror`), and the Mapster fallback expression in both `ServiceViewModel` and `ServiceDetailsViewModel`.
+- **Declared dimensions corrected**: the three `<img>` tags still carried the source PNG's `width="2752" height="1536"`, but the pipeline's resize changed the intrinsic size to 1920×1072. Now accurate, matching the Sprint 2 convention of reading dimensions straight from the file header. Aspect ratio was effectively preserved by the resize (1.7917 → 1.7910), so the practical CLS impact of the stale values was negligible — but they were wrong, and explicit dimensions exist precisely to be right.
+- **Known leftover, not cleaned up here**: `images/services/test-image-from-admin-edit-hero.webp` is now a 90 KB copy of the hero image, since that throwaway service record was the vehicle for the upload. It is gitignored (`**/wwwroot/images/**/test*`) so it is not committed, but it and its orphan `Service` row in the database should be removed. No real service image was overwritten — verified by timestamp and by a clean `git status` on `images/services/`.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors) and the full suite — 41 service-layer + 9 web-integration tests, all passing.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
+### Pre-Sprint 4 TODOs — agreed decisions, not yet implemented (logged 2026-07-25)
+
+A planning pass on visual assets and pre-launch trust content. **Nothing below has been built yet** — this section exists so the decisions and their reasoning survive until the work is picked up. Items 3 and 7–10 are launch blockers; items 1–2 and 4–6 are quality/perf.
+
+**Audit findings that drove these decisions** (all verified against the code on 2026-07-25):
+- `wwwroot/images/services/` holds 23 files but only **16 unique images** — the original Gemini run hit a rate limit and left 7 byte-identical duplicates across four groups: `door-repairs`/`furniture-assembly`/`minor-home-repairs`; `curtain-and-blind-fitting`/`handyman-category`/`painting-touch-ups`/`property-maintenance`; `tv-mounting`/`wall-mounting`; `minor-electrical-tasks`/`shelf-installation`. Plus one junk file, `test-image-from-admin-edit-hero.webp` (670×458, gitignored by `**/wwwroot/images/**/test*`).
+- **Every existing image has a garbled, inconsistent "HandyFix" logo rendered on the technician's polo** — an AI text artifact that differs in every frame. The business name may still change, so all future artwork must be logo-free and text-free.
+- The plumbing/handyman two-tone is currently **baked into the artwork pixels**. There is no division-scoped image tint anywhere in `wwwroot/css/` — every existing overlay (`.hero-bg-overlay`, `.bento-card-overlay`, `.service-hero-overlay`) is chromatically neutral. This is what motivates decision 1's move to CSS.
+- `wwwroot/images/areas/` does not exist; all 16 of its paths are already wired into the Areas feature with graceful `onerror` fallback to `/images/hero.webp` (was `hero.png` until §3j).
+- **There is no `aggregateRating` / `Review` structured data anywhere in the repo.** Section 3's Sprint 2 SEO note describes the fabricated content as "JSON-LD" — that is imprecise. The invented technicians, £5M insurance claim, and job counts are all in ordinary HTML markup on `Home/Index.cshtml` and `Services/Details.cshtml`. The JSON-LD's actual problem is fake NAP data (item 10).
+
+**1. Image generation strategy.** Bulk-generate and download images via a terminal script kept **outside the repo** — no committed generator project. The plumbing/handyman two-tone gets applied **via CSS later**, not baked into the generated artwork, so the tone can be retuned without regenerating anything. Keep `ImageStorageService.ConvertExistingJpgServiceImages` exactly as-is.
+  - Caution for whoever runs the script: `wwwroot/images/services/` is a **destructive directory**. `ConvertExistingJpgServiceImages()` runs on every app boot (`Program.cs:135-136`) and its `File.Delete(jpgPath)` (`ImageStorageService.cs:235`) sits outside *both* the decode-success guard and the webp-exists guard — a `.jpg` staged there is deleted on next boot even if conversion failed and nothing was written. `DeleteLegacyImages` does the same on any admin save/rename/delete. Stage generated files outside `wwwroot` and copy in only finished `.webp`.
+  - Filename conventions are fixed and must be matched exactly: services `/images/services/{slug}-hero.webp` (hardcoded in four independent places — `ImageStorageService`, `ServicesSeeder.cs:79`, admin `ServicesController.cs:168`, and the `ServiceViewModel`/`ServiceDetailsViewModel` Mapster fallback); areas `/images/areas/{slug}-hero.webp` (resolved by convention at the view layer — `ServiceArea` deliberately has no image column). Note the two category tiles break the pattern: `{slug}-category-hero.webp`.
+  - Target dimensions the markup already declares: service/category 1024×1024, area heroes 1600×700, coverage map 1200×600.
+
+**2. Hero image handling.** ~~Keep `hero.png`; re-upload it manually through the admin panel so the existing SkiaSharp pipeline compresses it and converts it to WebP, rather than adding a new pipeline for it.~~ **Done 2026-07-25 — see §3j.** Shipped as `hero.webp` (90 KB, 1920×1072, down from 6.6 MB), converted through the existing admin upload path after raising the upload cap to 20 MB. All 8 references repointed and the stale declared dimensions corrected.
+
+**3. Reviews strategy.** **Remove local review submission entirely.** Point users at the Google Business Profile instead, and pull reviews back via the Google API later. **Do not add `Source`, `ExternalId`, or `BookingId` columns to `Review` yet** — deferred until the import is actually built.
+  - Immediate cleanup this implies: delete the 5 seeded fake reviews (`ReviewSeeder`, unregistered at `ApplicationDbContextSeeder.cs:36`; the `if (dbContext.Reviews.Any()) return;` guard means the rows must also be removed from the live DB). They are generic e-commerce filler — *"delivery took a little longer than expected"*, *"fits the description perfectly"* — on a plumbing site, all seeded `IsApproved = true`, all sharing one `CreatedOn` timestamp, averaging 4.2 against the "4.9/5" claimed elsewhere.
+  - Also remove the **"Verified Client" badges** (`Home/Index.cshtml:306`, `Home/Reviews.cshtml:160-163`, `Areas/Details.cshtml:160-163`) and the sidebar claim *"Every review is manually verified by our support team"* (`Home/Reviews.cshtml:84`) — submission requires no booking, no account and no email, so the site asserts verification it does not perform.
+  - All three display surfaces already degrade gracefully with zero reviews (Home and Reviews show a "be the first" prompt; Areas hides its section), so removal needs no layout work.
+  - Constraints for the future import: Google's structured-data policy **forbids marking up third-party reviews as your own `aggregateRating`**, and the Places API terms restrict caching review content. The correct route — since we will be managing the client's profile — is the **Business Profile API with owner OAuth**, not Places.
+  - Sequencing note: real reviews should be collected on the Google Business Profile *first*, since that is where they compound for local SEO and what the map pack ranks on.
+
+**4. Area map.** Replace the static `overview-coverage-map.webp` (`Views/Areas/Index.cshtml:37`) with an **inline interactive SVG map**. Town labels become real `<a href="/Areas/{slug}">` links to the 15 seeded area pages, using existing design tokens. Rejected AI generation for this: image models garble text and geography, and misspelled Surrey town names would actively undermine the local-SEO story. Removes the last remaining `onerror`-hides-the-section hack.
+
+**5. Broken links & metadata.** Fix `handyfix-proof.jpg` (`Views/Services/Index.cshtml:105`) — the file has never existed on disk, so it always falls through to an external gstatic placeholder SVG. Remove the missing `logo.png` from the JSON-LD (`Views/Home/Index.cshtml:351`, `"image": "https://handyfix.co.uk/images/logo.png"`) rather than generating one, since the business name may change. When branding does settle, build the wordmark as SVG from the existing Outfit font and the navbar's cyan accent dot — not as AI output, which cannot render text reliably.
+
+**6. Caching.** Add `asp-append-version="true"` to the image tags that lack it: both area images (`Areas/Details.cshtml:18`, `Areas/Index.cshtml:37`), all three `hero.webp` usages (`Home/Index.cshtml:11,248`, `Home/About.cshtml:31`), and the two hardcoded category tiles (`Home/Index.cshtml:101,126`). Service images already have it. Without this, regenerating an already-deployed asset in place will not bust browser caches. (The `hero.png` → `hero.webp` rename in §3j was self-busting because the URL changed; that will not be true of future in-place regenerations.)
+
+**7. Controller bug — review submission errors are invisible.** `ReviewsController` sets `TempData["ErrorMessage"]` on validation failure, but `Views/Home/Reviews.cshtml:22` only renders `TempData["SuccessMessage"]`. Because it is a redirect, the `asp-validation-for` spans are empty too — so a failed submission looks to the user like nothing happened at all. (Scope depends on item 3: if local submission is removed, this may disappear with it.)
+
+**8. Fake statistics.** Replace fabricated figures with real, verifiable facts across six files — `Home/Index`, `Home/Reviews`, `Home/About`, `Services/Index`, `Services/Details`, `Services/Category`:
+  - `12k+ Jobs Completed`, `4.9/5 Rating`, `Based on 2,500 reviews` (`Home/Index.cshtml:251,262,263`); `4.9` + `2.4k Verified Reviews` (`Home/Reviews.cshtml:96,109-113`); `4.9/5 Rating` + `Over 1,200 services completed` (`Services/Details.cshtml:170,173`); `4.9/5 Average Rating` (`Services/Index.cshtml:95`); `5,000+ Successful Fixes`, `15+ Specialist Techs`, `Crafting Quality Since 2018` (`Home/About.cshtml:14,48-53`); `3 Active Technicians Nearby` (`Services/Category.cshtml:140`).
+  - The counts contradict each other (12k+ vs 5,000+ vs 1,200 jobs; 2,500 vs 2.4k reviews vs 5 rows in the database).
+  - `Up to £5M Public Liability insurance` (`Home/Index.cshtml:238`, `Services/Details.cshtml:153,217`) — insurance is probably genuine, just likely not £5M.
+  - Each removal needs honest replacement copy, not just deletion: a site showing zero reviews under "Based on 2,500 reviews" is worse than one with five bad ones. Defensible substitutes available from real data: *"Direct to your technician — no call centre"*, *"Covering 15 areas from Chessington"* (real `ServiceArea` rows), *"Fixed hourly rates, quoted upfront"* (real `BasePrice`), *"Pay securely online — deposit only"* (real Stripe integration).
+  - **Blocked on client input:** real public liability figure + certificate, real years in business, real phone number, real trading address.
+  - Worth noting on the upside: no Gas Safe, NICEIC, TrustMark, Which? or Checkatrade badges appear anywhere — the highest-severity category (Gas Safe numbers are legally regulated) is clean.
+
+**9. Technicians.** Remove the hardcoded `"David"` / `"Mark"` Razor variables at `Views/Services/Details.cshtml:29-34` — invented names, roles, boroughs and first-person bios (*"I've spent 15 years servicing homes across Sutton, Croydon, and Epsom…"*), rendered with an external gstatic placeholder avatar. Bind the block dynamically to the real `Technician` entity instead (`TechniciansSeeder` already exists, currently seeding a placeholder `John Doe / 07123456789`), seeded with the owner's actual name, real experience and a real photo. This is also the platform-aligned fix — the long-term vision has many vetted technicians, so this block should have been data-driven from the start. Do **not** AI-generate a face here.
+
+**10. NAP consistency.** The site must state one identity before the Google Business Profile is claimed. Currently: phone `07123456789` (fake/sequential) appears in three JSON-LD blocks (`Home/Index.cshtml`, `Services/Details.cshtml`, `Areas/Details.cshtml`); `addressLocality` is `Croydon` on Home but `Chessington` on Area pages; `streetAddress` is the non-address `"South London Dispatch Office"` with invalid partial postcode `"CR0 1XX"`; and `sameAs` points at two probably-nonexistent social profiles. Chessington is correct per the seeded drive-time data (0 minutes, "Home Turf"). Remove `sameAs` until real profiles exist. Bad NAP/social data actively harms local SEO and will conflict with the real profile once claimed.
+
+---
+
 ### Images — **IN PROGRESS** (carried over from Sprint 2 — blocked on real assets, not more engineering)
+
+> Superseded in part by the Pre-Sprint 4 TODOs above — items 1, 2 and 5 cover the strategy for closing this gap. The asset inventory below remains accurate.
 - Only 24 images exist (all under `wwwroot/images/services/`), not the ~50 originally assumed. More area/marketing images need sourcing before the site can lean on real photography site-wide.
-- `hero.png` (6.6MB PNG) should be re-encoded to WebP and brought into a resize pipeline the way `images/services/` already is — that's an engineering task once someone confirms it's fine to touch the source file.
+- ~~`hero.png` (6.6MB PNG) should be re-encoded to WebP and brought into a resize pipeline the way `images/services/` already is.~~ **Done 2026-07-25 — see §3j.** Now `hero.webp`, 90 KB / 1920×1072.
 - `wwwroot/images/handyfix-proof.jpg`, referenced by `Services/Index.cshtml`, doesn't exist and needs to be sourced or the reference removed.
 - Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
-- `wwwroot/images/areas/` needs 16 new assets: one hero per area (`{slug}-hero.webp`, 15 areas — see Section 3h) plus `overview-coverage-map.webp` for the Areas index hero. All 16 paths are already wired into the Area pages' markup with graceful `onerror` fallback to `/images/hero.png` in the meantime.
+- `wwwroot/images/areas/` needs 16 new assets: one hero per area (`{slug}-hero.webp`, 15 areas — see Section 3h) plus `overview-coverage-map.webp` for the Areas index hero. All 16 paths are already wired into the Area pages' markup with graceful `onerror` fallback to `/images/hero.webp` in the meantime. Per Pre-Sprint 4 TODO item 4, the coverage map will be an inline interactive SVG rather than a raster asset, so only 15 files are actually needed here.
 - **Not yet resolved** — pending the user supplying the physical asset files. Do not mark this item done until the files actually exist on disk.
 
 ### Sprint 3 — Admin & Polish — **CLOSED** (2026-07-24)
