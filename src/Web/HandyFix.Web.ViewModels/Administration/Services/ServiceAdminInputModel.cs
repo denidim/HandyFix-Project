@@ -35,7 +35,7 @@ namespace HandyFix.Web.ViewModels.Administration.Services
         public Guid CategoryId { get; set; }
 
         [Display(Name = "Service Image")]
-        [MaxFileSize(5 * 1024 * 1024)]
+        [MaxFileSize(20 * 1024 * 1024)]
         public IFormFile ImageFile { get; set; }
 
         public IEnumerable<SelectListItem> Categories { get; set; }
