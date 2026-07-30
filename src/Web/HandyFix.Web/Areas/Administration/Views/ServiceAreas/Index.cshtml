@@ -1,0 +1,172 @@
+@model IEnumerable<HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaAdminListViewModel>
+@{
+    this.ViewData["Title"] = "Manage Service Areas";
+
+    var totalAreas = Model.Count();
+    var featuredAreas = Model.Count(a => a.IsFeatured);
+    var averageDriveTime = Model.Any() ? Model.Average(a => a.DriveTimeMinutes) : 0;
+}
+
+<!-- Sticky Topbar Header -->
+<div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
+    <div>
+        <h1 class="admin-page-title">Manage Service Areas</h1>
+        <p class="font-label-sm text-on-surface-variant mt-1 admin-page-subtitle">Add, update, or remove the towns covered by the business.</p>
+    </div>
+    <a asp-area="Administration" asp-controller="ServiceAreas" asp-action="Create" class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 w-100 w-md-auto rounded-lg btn-py3-px6">
+        <span class="material-symbols-outlined">add_location_alt</span>
+        <span>Add Service Area</span>
+    </a>
+</div>
+
+@if (this.TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4" role="alert">@this.TempData["SuccessMessage"]</div>
+}
+
+<!-- Quick Stats -->
+<div class="bento-grid bento-grid-3 mb-5">
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between admin-stat-card">
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1">Total Areas</p>
+            <h3 class="font-headline-md mb-0 fs-headline-md font-bold text-primary">@totalAreas</h3>
+        </div>
+        <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary dim-48 tint-secondary">
+            <span class="material-symbols-outlined">location_on</span>
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between admin-stat-card">
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1">Featured</p>
+            <h3 class="font-headline-md mb-0 fs-headline-md font-bold text-primary">@featuredAreas</h3>
+        </div>
+        <div class="rounded-circle d-flex align-items-center justify-content-center text-on-tertiary-container dim-48 tint-success">
+            <span class="material-symbols-outlined">star</span>
+        </div>
+    </div>
+
+    <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between admin-stat-card">
+        <div>
+            <p class="font-label-sm text-on-surface-variant mb-1">Average Drive Time</p>
+            <h3 class="font-headline-md mb-0 fs-headline-md font-bold text-primary">@averageDriveTime.ToString("F0") min</h3>
+        </div>
+        <div class="rounded-circle d-flex align-items-center justify-content-center text-primary dim-48 tint-surface-high">
+            <span class="material-symbols-outlined">directions_car</span>
+        </div>
+    </div>
+</div>
+
+<!-- Areas Table -->
+<div class="rounded-xl overflow-hidden shadow-sm admin-card">
+    <div class="px-4 py-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4 admin-table-toolbar">
+        <div class="position-relative max-w-sm w-100 admin-search-wrap">
+            <span class="material-symbols-outlined position-absolute text-outline admin-search-icon">search</span>
+            <input class="w-100 py-2 border rounded-lg outline-none font-body-md admin-search-input" placeholder="Search areas..." type="text" id="areas-search">
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table mb-0 text-left admin-table">
+            <thead>
+                <tr class="admin-table-head">
+                    <th class="px-4 py-3 font-label-sm uppercase">Area</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">Region</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">Drive Time</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">FAQs</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">Status</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="areas-table-body" class="bg-white">
+                @if (Model.Any())
+                {
+                    @foreach (var area in Model)
+                    {
+                        <tr class="align-middle admin-table-row">
+                            <td class="px-4 py-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-lg d-flex align-items-center justify-content-center dim-40 tint-surface-high">
+                                        <span class="material-symbols-outlined text-secondary">location_on</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-body-md font-bold mb-0 text-primary">@area.Name</p>
+                                        <p class="text-on-surface-variant mb-0 fs-12">/@area.Slug</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-3 py-1 rounded-full font-label-sm tint-neutral">@area.Region</span>
+                            </td>
+                            <td class="px-4 py-3 font-body-md text-primary">@area.DriveTimeMinutes mins</td>
+                            <td class="px-4 py-3 font-body-md text-on-surface-variant">@area.FaqCount</td>
+                            <td class="px-4 py-3">
+                                @if (area.IsFeatured)
+                                {
+                                    <span class="px-3 py-1 rounded-full font-label-sm tint-success">Featured</span>
+                                }
+                                else
+                                {
+                                    <span class="px-3 py-1 rounded-full font-label-sm tint-neutral-soft">Standard</span>
+                                }
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a asp-area="" asp-route="AreaDetails" asp-route-areaSlug="@area.Slug" target="_blank" rel="noopener" class="p-2 text-on-surface-variant rounded-lg d-flex align-items-center justify-content-center dim-36 admin-btn-outline" title="View public page">
+                                        <span class="material-symbols-outlined fs-20">open_in_new</span>
+                                    </a>
+                                    <a asp-area="Administration" asp-controller="ServiceAreas" asp-action="Edit" asp-route-id="@area.Id" class="p-2 text-on-surface-variant rounded-lg d-flex align-items-center justify-content-center dim-36 admin-btn-outline" title="Edit">
+                                        <span class="material-symbols-outlined fs-20">edit</span>
+                                    </a>
+                                    <form asp-area="Administration" asp-controller="ServiceAreas" asp-action="Delete" asp-route-id="@area.Id" method="post" class="d-inline-block" onsubmit="return confirm('Permanently delete @area.Name? This also deletes its FAQs and cannot be undone.');">
+                                        <button type="submit" class="p-2 text-danger rounded-lg d-flex align-items-center justify-content-center dim-36 tint-error-soft border-error-soft" title="Delete">
+                                            <span class="material-symbols-outlined fs-20">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center p-4 text-muted">No service areas found. Add one to get started.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Workflow reminder -->
+<div class="p-4 d-flex align-items-start gap-3 help-card mt-4">
+    <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary dim-40 tint-secondary help-card-icon">
+        <span class="material-symbols-outlined">info</span>
+    </div>
+    <div>
+        <h4 class="font-headline-sm text-primary mb-1 fs-15">Adding an area takes three steps, not one</h4>
+        <p class="font-label-sm text-on-surface-variant mb-0 fs-13 lh-snug">
+            Saving here handles the database record, which auto-propagates to the Areas grid, the area page, the footer, JSON-LD and the sitemap.
+            Two manual steps remain: drop a hero image at <code>wwwroot/images/areas/{slug}-hero.webp</code>, and add a geometry entry to the coverage
+            diagram in <code>_AreaCoverageMap.cshtml</code>. See <code>docs/WORKFLOW_SERVICE_AREAS.md</code>.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('areas-search');
+            const rows = document.querySelectorAll('#areas-table-body tr');
+
+            searchInput?.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+}

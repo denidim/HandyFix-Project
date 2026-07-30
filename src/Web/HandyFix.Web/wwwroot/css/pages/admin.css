@@ -641,6 +641,24 @@
   flex-shrink: 0;
 }
 
+/* Dynamic FAQ builder on the Service Area form */
+.faq-row {
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-container-lowest);
+}
+
+.faq-row .remove-faq {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.faq-row .remove-faq:hover {
+  color: var(--error);
+}
+
 .checkbox-lg {
   width: 18px;
   height: 18px;

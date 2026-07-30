@@ -1,0 +1,136 @@
+@model HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaAdminInputModel
+@{
+    var isCreate = this.ViewData["IsCreate"] as bool? ?? false;
+    var action = isCreate ? "Create" : "Edit";
+    var submitLabel = isCreate ? "Create Service Area" : "Update Service Area";
+}
+
+<div class="rounded-xl shadow-sm p-5 p-md-5 admin-card" id="service-area-form-root" data-autofill-slug="@(isCreate ? "true" : "false")">
+    <form asp-area="Administration" asp-controller="ServiceAreas" asp-action="@action" method="post" class="d-flex flex-column gap-5">
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label asp-for="Name" class="form-label font-label-sm text-on-surface-variant mb-2">Area Name</label>
+                <input asp-for="Name" id="area-name" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 form-group">
+                <label asp-for="Slug" class="form-label font-label-sm text-on-surface-variant mb-2">URL Slug</label>
+                <input asp-for="Slug" id="area-slug" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">
+                    Used for <code>/Areas/{slug}</code>, the hero image filename, and the coverage-diagram key.
+                    @if (!isCreate)
+                    {
+                        <strong>Changing this breaks the existing image and map entry until both are renamed.</strong>
+                    }
+                </span>
+                <span asp-validation-for="Slug" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 form-group">
+                <label asp-for="Region" class="form-label font-label-sm text-on-surface-variant mb-2">Region</label>
+                <input asp-for="Region" class="form-control py-3 admin-form-control form-pad-standard" list="region-suggestions" maxlength="100" required />
+                <datalist id="region-suggestions">
+                    <option value="Home Turf"></option>
+                    <option value="Surrey Borders"></option>
+                </datalist>
+                <span asp-validation-for="Region" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4 form-group">
+                <label asp-for="DriveTimeMinutes" class="form-label font-label-sm text-on-surface-variant mb-2">Drive Time (Minutes)</label>
+                <div class="position-relative">
+                    <input asp-for="DriveTimeMinutes" class="form-control py-3 admin-form-control form-control-duration-affix" type="number" min="0" max="180" step="1" required />
+                    <span class="position-absolute font-label-sm text-on-surface-variant admin-form-affix admin-form-affix-right">min</span>
+                </div>
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Drives the coverage diagram's ring placement and the "nearby areas" ordering.</span>
+                <span asp-validation-for="DriveTimeMinutes" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4 form-group">
+                <label asp-for="DisplayOrder" class="form-label font-label-sm text-on-surface-variant mb-2">Display Order</label>
+                <input asp-for="DisplayOrder" class="form-control py-3 admin-form-control form-pad-standard" type="number" min="0" max="999" step="1" required />
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Lower numbers appear first in the areas grid.</span>
+                <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="IntroCopy" class="form-label font-label-sm text-on-surface-variant mb-2">Intro Copy</label>
+            <textarea asp-for="IntroCopy" class="form-control admin-form-control form-pad-standard resize-none" rows="3" maxlength="2000" required></textarea>
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Opening paragraph on the area page. Write something specific and true about working in this town.</span>
+            <span asp-validation-for="IntroCopy" class="text-danger small"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="LocalNeighbourhoodsCopy" class="form-label font-label-sm text-on-surface-variant mb-2">Local Neighbourhoods Copy</label>
+            <textarea asp-for="LocalNeighbourhoodsCopy" class="form-control admin-form-control form-pad-standard resize-none" rows="3" maxlength="2000" required></textarea>
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Name real streets, estates or landmarks. This is what makes the page rank locally.</span>
+            <span asp-validation-for="LocalNeighbourhoodsCopy" class="text-danger small"></span>
+        </div>
+
+        <div class="form-group form-check d-flex align-items-center gap-2 m-0 ps-0">
+            <input asp-for="IsFeatured" class="form-check-input checkbox-lg" type="checkbox" />
+            <label asp-for="IsFeatured" class="form-check-label font-label-sm text-on-surface font-bold label-clickable">Featured area (shown in the "Featured Areas" section and highlighted on the coverage diagram)</label>
+        </div>
+
+        <!-- FAQ builder -->
+        <div class="form-group">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <label class="form-label font-label-sm text-on-surface-variant mb-0">Frequently Asked Questions</label>
+                    <span class="font-label-sm text-on-surface-variant d-block fs-11">Rendered on the area page and emitted as FAQPage JSON-LD. Leave a row blank to discard it.</span>
+                </div>
+                <button type="button" id="add-faq" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
+                    <span class="material-symbols-outlined fs-18">add</span>
+                    <span>Add FAQ</span>
+                </button>
+            </div>
+
+            <div id="faq-rows" class="d-flex flex-column gap-3">
+                @for (var i = 0; i < Model.Faqs.Count; i++)
+                {
+                    <div class="p-3 rounded-lg faq-row" data-faq-row>
+                        <div class="d-flex align-items-start justify-content-between gap-3 mb-2">
+                            <span class="font-label-sm text-on-surface-variant faq-row-number">FAQ @(i + 1)</span>
+                            <button type="button" class="p-1 text-danger rounded-lg d-flex align-items-center justify-content-center remove-faq" title="Remove this FAQ">
+                                <span class="material-symbols-outlined fs-20">close</span>
+                            </button>
+                        </div>
+                        <input asp-for="@Model.Faqs[i].Question" class="form-control py-2 admin-form-control form-pad-standard mb-2" placeholder="Question" maxlength="300" />
+                        <span asp-validation-for="@Model.Faqs[i].Question" class="text-danger small d-block mb-2"></span>
+                        <textarea asp-for="@Model.Faqs[i].Answer" class="form-control admin-form-control form-pad-standard resize-none" rows="2" placeholder="Answer" maxlength="1000"></textarea>
+                        <span asp-validation-for="@Model.Faqs[i].Answer" class="text-danger small"></span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="pt-4 d-flex flex-column flex-md-row align-items-center justify-content-end gap-3 form-actions-row">
+            <a asp-area="Administration" asp-controller="ServiceAreas" asp-action="Index" class="btn btn-outline font-button-text admin-btn-outline btn-py3-px8">Cancel</a>
+            <button class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg btn-py3-px8" type="submit">
+                <span class="material-symbols-outlined">save</span>
+                <span>@submitLabel</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<template id="faq-template">
+    <div class="p-3 rounded-lg faq-row" data-faq-row>
+        <div class="d-flex align-items-start justify-content-between gap-3 mb-2">
+            <span class="font-label-sm text-on-surface-variant faq-row-number">FAQ</span>
+            <button type="button" class="p-1 text-danger rounded-lg d-flex align-items-center justify-content-center remove-faq" title="Remove this FAQ">
+                <span class="material-symbols-outlined fs-20">close</span>
+            </button>
+        </div>
+        <input type="text" name="__PREFIX__.Question" class="form-control py-2 admin-form-control form-pad-standard mb-2" placeholder="Question" maxlength="300" />
+        <span class="text-danger small d-block mb-2"></span>
+        <textarea name="__PREFIX__.Answer" class="form-control admin-form-control form-pad-standard resize-none" rows="2" placeholder="Answer" maxlength="1000"></textarea>
+        <span class="text-danger small"></span>
+    </div>
+</template>
+

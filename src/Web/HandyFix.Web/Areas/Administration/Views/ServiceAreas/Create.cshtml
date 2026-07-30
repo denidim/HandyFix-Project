@@ -1,0 +1,57 @@
+@model HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaAdminInputModel
+@{
+    this.ViewData["Title"] = "Add Service Area";
+    this.ViewData["IsCreate"] = true;
+}
+
+<nav class="breadcrumb-nav mb-4 admin-header-row" aria-label="breadcrumb">
+    <a asp-area="Administration" asp-controller="Dashboard" asp-action="Index">Admin</a>
+    <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+    <a asp-area="Administration" asp-controller="ServiceAreas" asp-action="Index">Service Areas</a>
+    <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+    <span class="breadcrumb-current">Add Area</span>
+</nav>
+
+<div class="mb-5">
+    <h2 class="admin-page-title">Add Service Area</h2>
+    <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Create a new coverage area. It appears on the public site as soon as you save.</p>
+</div>
+
+<div class="mx-auto admin-form-container">
+    <partial name="_ServiceAreaForm" model="Model" />
+
+    <div class="row pt-2">
+        <div class="col-md-6 mb-3">
+            <div class="p-4 d-flex align-items-start gap-3 h-100 help-card">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary dim-40 tint-secondary help-card-icon">
+                    <span class="material-symbols-outlined">image</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-primary mb-1 fs-15">Step 2: Hero Image</h4>
+                    <p class="font-label-sm text-on-surface-variant mb-0 fs-13 lh-snug">
+                        After saving, add <code>wwwroot/images/areas/{slug}-hero.webp</code> at 1600&times;700.
+                        Until it exists the page falls back to the generic hero image.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="p-4 d-flex align-items-start gap-3 h-100 help-card">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-on-tertiary-container dim-40 tint-success help-card-icon">
+                    <span class="material-symbols-outlined">map</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-primary mb-1 fs-15">Step 3: Coverage Diagram</h4>
+                    <p class="font-label-sm text-on-surface-variant mb-0 fs-13 lh-snug">
+                        Add a geometry entry keyed by slug in <code>_AreaCoverageMap.cshtml</code>, then check the
+                        rendered diagram for label collisions. Skipping this just omits the town from the diagram.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin-service-area-form.js" asp-append-version="true"></script>
+}
