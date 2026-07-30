@@ -444,3 +444,6 @@ src/TextUi/
 
 # Ignore test images in wwwroot
 **/wwwroot/images/**/test*
+
+# Private working notes - business/client context, never committed
+docs/private/
