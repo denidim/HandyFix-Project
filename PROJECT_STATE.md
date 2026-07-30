@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-25 (Pre-Sprint 4 TODOs section added and three of its ten items shipped: hero image migrated to WebP at 6.6 MB → 90 KB (§3j), image cache-busting completed (item 6), and the Areas coverage map rebuilt as an inline interactive SVG (§3l). The boot-time JPG sweep was removed as completed migration code carrying a data-loss bug (§3k), and Service Areas gained full admin CRUD, ending their seed-only lifecycle (§3m))
+> **Last updated**: 2026-07-30 — Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` §5). Added a Hosting & Infrastructure subsection to §1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. (Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration §3j, cache-busting, and the Areas SVG coverage map §3l — plus the boot-time JPG sweep removed as unsafe §3k and Service Areas admin CRUD added §3m.)
 
 ---
 
@@ -34,6 +34,19 @@
 ### Testing
 - **xUnit + Moq**, service-layer focus (no controller-level mock test harness exists yet — that's a Sprint 4 gap).
 - Tests run against **EF Core InMemory** for simple CRUD-style assertions, and **EF Core Sqlite (`:memory:`)** for anything that depends on real transactions or concurrency-token enforcement — InMemory silently no-ops both `BeginTransaction`/`Commit`/`Rollback` and optimistic-concurrency checks, so it cannot verify rollback or race-condition behavior. This distinction is load-bearing; don't "simplify" a Sqlite-backed test back to InMemory without checking why it was Sqlite first.
+
+### Hosting & Infrastructure (provisioned 2026-07-30, not yet wired up)
+
+> Real IPs are deliberately not in this file — see `docs/private/INFRASTRUCTURE.md` (gitignored) for the actual values behind the placeholders below.
+
+- **Provider**: Hetzner Cloud, Helsinki region. **Three isolated VPS instances** (CX23 — 2 vCPU / 4 GB RAM / 40 GB NVMe each), one per tier, all attached to a private network (`handyfix-internal`, `10.0.0.0/16` — see the private file for real octets):
+  - Database host (`<DB_PUBLIC_IP>` / `<DB_PRIVATE_IP>`) — Dockerized MS SQL Server 2022 (container `handyfix-sql`), memory-capped at 3 GB (`MSSQL_MEMORY_LIMIT_MB=3072`) to prevent OS starvation on a 4 GB host. Two empty databases already created via local SSMS: `handyfix_prod`, `handyfix_staging`.
+  - Staging web host (`<STAGING_PUBLIC_IP>` / `<STAGING_PRIVATE_IP>`).
+  - Production web host (`<PROD_PUBLIC_IP>` / `<PROD_PRIVATE_IP>`).
+  - Both web servers have Docker + Docker Compose installed with auto-start on boot.
+- **Network isolation, deliberately**: web apps reach SQL Server exclusively over the private interface (`<DB_PRIVATE_IP>`) — database traffic never touches the public internet. Root password login is disabled fleet-wide; SSH access is public-key only.
+- **Not yet done** — tracked as §4 Tier 4: app-level connection strings for `appsettings.Staging.json`/`appsettings.Production.json` against `<DB_PRIVATE_IP>`, `Database.Migrate()`/seeding running automatically on startup (already the pattern for local dev — just needs pointing at the new hosts), and the GitHub Actions deploy pipelines (`deploy-dev.yml` on push to `dev`, `deploy-prod.yml` on push to `main`), including a dedicated Actions SSH keypair and repo secrets (real IPs and credentials live in GitHub encrypted secrets at that point, never in a committed file).
+- **Domain**: not yet wired up, and entangled with the pending rebrand decision — see `docs/private/VISION_AND_CONTEXT.md` §5.3/§5.6 and §4 Tier 3 item 14 below. Staging (and initial production, if needed) can run on Hetzner's free reverse-DNS hostname in the meantime, so this does not block standing up staging.
 
 ---
 
@@ -269,69 +282,99 @@ Areas were seed-only: `ServiceAreasSeeder` inserts by slug but **never updates**
 
 ## 4. Current Standing & Remaining Roadmap
 
-### Pre-Sprint 4 TODOs — agreed decisions, not yet implemented (logged 2026-07-25)
+### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
 
-A planning pass on visual assets and pre-launch trust content. **Nothing below has been built yet** — this section exists so the decisions and their reasoning survive until the work is picked up. Items 3 and 7–10 are launch blockers; items 1–2 and 4–6 are quality/perf.
+> Supersedes the original chronological ordering (items 1–10, first logged 2026-07-25). The business decisions behind every item below — and the full reasoning — live in `docs/private/VISION_AND_CONTEXT.md` §5–6; this section tracks only what's left to *build*. Target launch is aggressive: roughly 4 weeks out from 2026-07-30. Ordering follows one rule now — **what's actually on the critical path to launch, not the order things were discovered in.**
 
-**Audit findings that drove these decisions** (all verified against the code on 2026-07-25):
+**Audit findings that drove these decisions** (verified against the code on 2026-07-25, still accurate):
 - `wwwroot/images/services/` holds 23 files but only **16 unique images** — the original Gemini run hit a rate limit and left 7 byte-identical duplicates across four groups: `door-repairs`/`furniture-assembly`/`minor-home-repairs`; `curtain-and-blind-fitting`/`handyman-category`/`painting-touch-ups`/`property-maintenance`; `tv-mounting`/`wall-mounting`; `minor-electrical-tasks`/`shelf-installation`. Plus one junk file, `test-image-from-admin-edit-hero.webp` (670×458, gitignored by `**/wwwroot/images/**/test*`).
-- **Every existing image has a garbled, inconsistent "HandyFix" logo rendered on the technician's polo** — an AI text artifact that differs in every frame. The business name may still change, so all future artwork must be logo-free and text-free.
-- The plumbing/handyman two-tone is currently **baked into the artwork pixels**. There is no division-scoped image tint anywhere in `wwwroot/css/` — every existing overlay (`.hero-bg-overlay`, `.bento-card-overlay`, `.service-hero-overlay`) is chromatically neutral. This is what motivates decision 1's move to CSS.
-- `wwwroot/images/areas/` does not exist; all 16 of its paths are already wired into the Areas feature with graceful `onerror` fallback to `/images/hero.webp` (was `hero.png` until §3j).
-- **There is no `aggregateRating` / `Review` structured data anywhere in the repo.** Section 3's Sprint 2 SEO note describes the fabricated content as "JSON-LD" — that is imprecise. The invented technicians, £5M insurance claim, and job counts are all in ordinary HTML markup on `Home/Index.cshtml` and `Services/Details.cshtml`. The JSON-LD's actual problem is fake NAP data (item 10).
-
-**1. Image generation strategy.** Bulk-generate and download images via a terminal script kept **outside the repo** — no committed generator project. The plumbing/handyman two-tone gets applied **via CSS later**, not baked into the generated artwork, so the tone can be retuned without regenerating anything.
-
-  **The agreed workflow, end to end:** generate outside the repo → **convert to WebP outside the repo** (quality 80, to match what the app's own pipeline produces) → **name each file exactly per the conventions below** → copy the finished `.webp` files straight into `wwwroot/images/`. The app is not involved at any step: no admin upload needed, no startup conversion, and no database changes, because `ServicesSeeder.cs:79` already created `ServiceImage` rows pointing at the convention path `/images/services/{slug}-hero.webp`.
-  - **Do not copy `.jpg` or `.png` into `wwwroot/images/`.** Nothing converts them any more (see §3k) — they will simply sit there while the views, which expect `.webp`, fall through to their `onerror` fallback. Failure is visible and harmless, but it wastes time.
-  - No resize is needed on your side for service images: at 1024×1024 they are under the app pipeline's 1920px threshold, so it would not have resized them either. Only area heroes (1600×700) and any large marketing images need attention to dimensions.
-  - The admin upload form remains available as an alternative for one-off replacements — it still does resize + WebP + correct naming automatically, and it is the path that produced `hero.webp` in §3j. It is just not the efficient route for a 40-image batch.
-  - Filename conventions are fixed and must be matched exactly: services `/images/services/{slug}-hero.webp` (hardcoded in four independent places — `ImageStorageService`, `ServicesSeeder.cs:79`, admin `ServicesController.cs:168`, and the `ServiceViewModel`/`ServiceDetailsViewModel` Mapster fallback); areas `/images/areas/{slug}-hero.webp` (resolved by convention at the view layer — `ServiceArea` deliberately has no image column). Note the two category tiles break the pattern: `{slug}-category-hero.webp`.
-  - Target dimensions the markup already declares: service/category 1024×1024, area heroes 1600×700. (The coverage map is no longer an image asset — see §3l.)
-
-**2. Hero image handling.** ~~Keep `hero.png`; re-upload it manually through the admin panel so the existing SkiaSharp pipeline compresses it and converts it to WebP, rather than adding a new pipeline for it.~~ **Done 2026-07-25 — see §3j.** Shipped as `hero.webp` (90 KB, 1920×1072, down from 6.6 MB), converted through the existing admin upload path after raising the upload cap to 20 MB. All 8 references repointed and the stale declared dimensions corrected.
-
-**3. Reviews strategy.** **Remove local review submission entirely.** Point users at the Google Business Profile instead, and pull reviews back via the Google API later. **Do not add `Source`, `ExternalId`, or `BookingId` columns to `Review` yet** — deferred until the import is actually built.
-  - Immediate cleanup this implies: delete the 5 seeded fake reviews (`ReviewSeeder`, unregistered at `ApplicationDbContextSeeder.cs:36`; the `if (dbContext.Reviews.Any()) return;` guard means the rows must also be removed from the live DB). They are generic e-commerce filler — *"delivery took a little longer than expected"*, *"fits the description perfectly"* — on a plumbing site, all seeded `IsApproved = true`, all sharing one `CreatedOn` timestamp, averaging 4.2 against the "4.9/5" claimed elsewhere.
-  - Also remove the **"Verified Client" badges** (`Home/Index.cshtml:306`, `Home/Reviews.cshtml:160-163`, `Areas/Details.cshtml:160-163`) and the sidebar claim *"Every review is manually verified by our support team"* (`Home/Reviews.cshtml:84`) — submission requires no booking, no account and no email, so the site asserts verification it does not perform.
-  - All three display surfaces already degrade gracefully with zero reviews (Home and Reviews show a "be the first" prompt; Areas hides its section), so removal needs no layout work.
-  - Constraints for the future import: Google's structured-data policy **forbids marking up third-party reviews as your own `aggregateRating`**, and the Places API terms restrict caching review content. The correct route — since we will be managing the client's profile — is the **Business Profile API with owner OAuth**, not Places.
-  - Sequencing note: real reviews should be collected on the Google Business Profile *first*, since that is where they compound for local SEO and what the map pack ranks on.
-
-**4. Area map.** ~~Replace the static `overview-coverage-map.webp` with an inline interactive SVG map.~~ **Done 2026-07-25 — see §3l.** Shipped as `Views/Shared/_AreaCoverageMap.cshtml`: a radial drive-time diagram with all 15 towns as real links, plus a grouped-pill fallback below 768px. The `onerror`-hides-the-section hack is gone, and `overview-coverage-map.webp` is no longer needed — the image backlog drops to 15 area heroes.
-
-**5. Broken links & metadata.** Fix `handyfix-proof.jpg` (`Views/Services/Index.cshtml:105`) — the file has never existed on disk, so it always falls through to an external gstatic placeholder SVG. Remove the missing `logo.png` from the JSON-LD (`Views/Home/Index.cshtml:351`, `"image": "https://handyfix.co.uk/images/logo.png"`) rather than generating one, since the business name may change. When branding does settle, build the wordmark as SVG from the existing Outfit font and the navbar's cyan accent dot — not as AI output, which cannot render text reliably.
-
-**6. Caching.** ~~Add `asp-append-version="true"` to the image tags that lack it.~~ **Done 2026-07-25.** Added to all six: the three `hero.webp` usages (`Home/Index.cshtml:11,248`, `Home/About.cshtml:31`), the two hardcoded category tiles (`Home/Index.cshtml:101,126`), and the dynamic area hero (`Areas/Details.cshtml:18`). Service images already had it.
-  - **Deliberately skipped three tags.** `Areas/Index.cshtml:37` is being replaced wholesale by the inline SVG in item 4, so cache-busting a doomed tag is pointless churn. `Services/Index.cshtml:105` (`handyfix-proof.jpg`) and `Services/Details.cshtml:161` (the external gstatic placeholder) are both handled by items 5 and 9 — and the tag helper does not apply to absolute external URLs anyway.
-  - The `hero.png` → `hero.webp` rename in §3j was self-busting because the URL itself changed. That will *not* be true of the bulk image drop in item 1, which overwrites files in place at unchanged paths — which is exactly why this was worth doing first.
-  - Safe on files that do not exist yet: ASP.NET Core's `FileVersionProvider` returns the path unchanged when the file is missing rather than throwing, so the 15 not-yet-created area heroes render fine and pick up their version hash once the files land and the app restarts.
-
-**7. Controller bug — review submission errors are invisible.** `ReviewsController` sets `TempData["ErrorMessage"]` on validation failure, but `Views/Home/Reviews.cshtml:22` only renders `TempData["SuccessMessage"]`. Because it is a redirect, the `asp-validation-for` spans are empty too — so a failed submission looks to the user like nothing happened at all. (Scope depends on item 3: if local submission is removed, this may disappear with it.)
-
-**8. Fake statistics.** Replace fabricated figures with real, verifiable facts across six files — `Home/Index`, `Home/Reviews`, `Home/About`, `Services/Index`, `Services/Details`, `Services/Category`:
-  - `12k+ Jobs Completed`, `4.9/5 Rating`, `Based on 2,500 reviews` (`Home/Index.cshtml:251,262,263`); `4.9` + `2.4k Verified Reviews` (`Home/Reviews.cshtml:96,109-113`); `4.9/5 Rating` + `Over 1,200 services completed` (`Services/Details.cshtml:170,173`); `4.9/5 Average Rating` (`Services/Index.cshtml:95`); `5,000+ Successful Fixes`, `15+ Specialist Techs`, `Crafting Quality Since 2018` (`Home/About.cshtml:14,48-53`); `3 Active Technicians Nearby` (`Services/Category.cshtml:140`).
-  - The counts contradict each other (12k+ vs 5,000+ vs 1,200 jobs; 2,500 vs 2.4k reviews vs 5 rows in the database).
-  - `Up to £5M Public Liability insurance` (`Home/Index.cshtml:238`, `Services/Details.cshtml:153,217`) — insurance is probably genuine, just likely not £5M.
-  - Each removal needs honest replacement copy, not just deletion: a site showing zero reviews under "Based on 2,500 reviews" is worse than one with five bad ones. Defensible substitutes available from real data: *"Direct to your technician — no call centre"*, *"Covering 15 areas from Chessington"* (real `ServiceArea` rows), *"Fixed hourly rates, quoted upfront"* (real `BasePrice`), *"Pay securely online — deposit only"* (real Stripe integration).
-  - **Blocked on client input:** real public liability figure + certificate, real years in business, real phone number, real trading address.
-  - Worth noting on the upside: no Gas Safe, NICEIC, TrustMark, Which? or Checkatrade badges appear anywhere — the highest-severity category (Gas Safe numbers are legally regulated) is clean.
-
-**9. Technicians.** Remove the hardcoded `"David"` / `"Mark"` Razor variables at `Views/Services/Details.cshtml:29-34` — invented names, roles, boroughs and first-person bios (*"I've spent 15 years servicing homes across Sutton, Croydon, and Epsom…"*), rendered with an external gstatic placeholder avatar. Bind the block dynamically to the real `Technician` entity instead (`TechniciansSeeder` already exists, currently seeding a placeholder `John Doe / 07123456789`), seeded with the owner's actual name, real experience and a real photo. This is also the platform-aligned fix — the long-term vision has many vetted technicians, so this block should have been data-driven from the start. Do **not** AI-generate a face here.
-
-**10. NAP consistency.** The site must state one identity before the Google Business Profile is claimed. Currently: phone `07123456789` (fake/sequential) appears in three JSON-LD blocks (`Home/Index.cshtml`, `Services/Details.cshtml`, `Areas/Details.cshtml`); `addressLocality` is `Croydon` on Home but `Chessington` on Area pages; `streetAddress` is the non-address `"South London Dispatch Office"` with invalid partial postcode `"CR0 1XX"`; and `sameAs` points at two probably-nonexistent social profiles. Chessington is correct per the seeded drive-time data (0 minutes, "Home Turf"). Remove `sameAs` until real profiles exist. Bad NAP/social data actively harms local SEO and will conflict with the real profile once claimed.
+- **Every existing image has a garbled, inconsistent "HandyFix" logo rendered on the technician's polo** — an AI text artifact that differs in every frame. The business is now confirmed rebranding (name TBD, see `VISION_AND_CONTEXT.md` §5.3), so the logo-free/text-free constraint on future artwork is a certainty now, not a hedge.
+- The plumbing/handyman two-tone is currently **baked into the artwork pixels**. There is no division-scoped image tint anywhere in `wwwroot/css/` — every existing overlay (`.hero-bg-overlay`, `.bento-card-overlay`, `.service-hero-overlay`) is chromatically neutral. This is what motivates item 1's move to CSS.
+- `wwwroot/images/areas/` does not exist; all 15 of its paths are already wired into the Areas feature with graceful `onerror` fallback to `/images/hero.webp` (was `hero.png` until §3j).
+- **There is no `aggregateRating` / `Review` structured data anywhere in the repo.** The invented technicians, £5M insurance claim, and job counts are all in ordinary HTML markup on `Home/Index.cshtml` and `Services/Details.cshtml`. The JSON-LD's actual problem is fake NAP data (Tier 3 item 18).
 
 ---
 
-### Images — **IN PROGRESS** (carried over from Sprint 2 — blocked on real assets, not more engineering)
+#### Tier 0 — unlocks everything else (this week)
 
-> Superseded in part by the Pre-Sprint 4 TODOs above — items 1, 2 and 5 cover the strategy for closing this gap. The asset inventory below remains accurate.
-- Only 24 images exist (all under `wwwroot/images/services/`), not the ~50 originally assumed. More area/marketing images need sourcing before the site can lean on real photography site-wide.
-- ~~`hero.png` (6.6MB PNG) should be re-encoded to WebP and brought into a resize pipeline the way `images/services/` already is.~~ **Done 2026-07-25 — see §3j.** Now `hero.webp`, 90 KB / 1920×1072.
-- `wwwroot/images/handyfix-proof.jpg`, referenced by `Services/Index.cshtml`, doesn't exist and needs to be sourced or the reference removed.
-- Real business input still needed for the JSON-LD structured data (see Sprint 2 SEO notes above) before launch.
-- `wwwroot/images/areas/` needs **15** new assets: one hero per area (`{slug}-hero.webp` — see Section 3h). All 15 paths are already wired into the Area pages' markup with graceful `onerror` fallback to `/images/hero.webp` in the meantime. `overview-coverage-map.webp` is no longer required — the Areas index now renders an inline SVG diagram instead (§3l).
-- **Not yet resolved** — pending the user supplying the physical asset files. Do not mark this item done until the files actually exist on disk.
+**0. The client call.** A single structured session with Zaprqn collecting everything Tier 2/3 below is blocked on. Confirmed happening this week (week of 2026-07-30). See `VISION_AND_CONTEXT.md` §6 for the canonical checklist. **Do not start Tier 2/3 work before this happens** — guessing at any of it means redoing it.
+
+---
+
+#### Tier 1 — no client input needed, start immediately in parallel
+
+**1. Image generation batch.** Bulk-generate and download images via a terminal script kept **outside the repo** — no committed generator project. The plumbing/handyman two-tone gets applied **via CSS later**, not baked into the generated artwork, so the tone can be retuned without regenerating anything.
+  - **Provider: Google Gemini API** (2.5 Flash Image / "Nano Banana"), decided 2026-07-30 — real API access rather than the rate-limited consumer app that produced the original 16 keepers. Same model family, so new output should match their style without a visible seam.
+  - **Budget: $30** (raised 2026-07-30 from the original $10–15 estimate), comfortably covers 30–60+ images at Gemini's per-image pricing with room for retries — and now also covers whatever the Custom Projects category (Tier 2 item 12) turns out to need.
+  - **Prompting strategy**: structured/JSON-style prompts (a fixed schema per shot — subject, style, lighting, camera angle, palette, negative prompt) to keep a large batch visually consistent, using the 16 existing keeper images and 4–5 client-supplied background photos as style anchors once shared. Full prompt-schema design is implementation-session work, not designed yet.
+  - **The agreed workflow, end to end:** generate outside the repo → **convert to WebP outside the repo** (quality 80, to match what the app's own pipeline produces) → **name each file exactly per the conventions below** → copy the finished `.webp` files straight into `wwwroot/images/`. The app is not involved at any step: no admin upload needed, no startup conversion, and no database changes, because `ServicesSeeder.cs:79` already created `ServiceImage` rows pointing at the convention path `/images/services/{slug}-hero.webp`.
+  - **Do not copy `.jpg` or `.png` into `wwwroot/images/`.** Nothing converts them any more (see §3k) — they will simply sit there while the views, which expect `.webp`, fall through to their `onerror` fallback. Failure is visible and harmless, but it wastes time.
+  - No resize is needed on your side for service images: at 1024×1024 they are under the app pipeline's 1920px threshold, so it would not have resized them either. Only area heroes (1600×700) and any large marketing images need attention to dimensions.
+  - The admin upload form remains available as an alternative for one-off replacements — it still does resize + WebP + correct naming automatically, and it is the path that produced `hero.webp` in §3j. It is just not the efficient route for a 40+ image batch.
+  - Filename conventions are fixed and must be matched exactly: services `/images/services/{slug}-hero.webp` (hardcoded in four independent places — `ImageStorageService`, `ServicesSeeder.cs:79`, admin `ServicesController.cs:168`, and the `ServiceViewModel`/`ServiceDetailsViewModel` Mapster fallback); areas `/images/areas/{slug}-hero.webp` (resolved by convention at the view layer — `ServiceArea` deliberately has no image column). Note the two category tiles break the pattern: `{slug}-category-hero.webp`.
+  - Target dimensions the markup already declares: service/category 1024×1024, area heroes 1600×700. (The coverage map is no longer an image asset — see §3l.)
+  - **New scope, folded into the same batch rather than a second round**: whatever the Custom Projects category (Tier 2 item 12) needs once scoped with Zaprqn — likely one category/service hero for full bathroom installs and one for full kitchen installs.
+
+**2. Hero image handling.** ~~Done — see §3j.~~
+
+**3. Reviews cleanup.** Confirmed strategy (`VISION_AND_CONTEXT.md` §4, §5.12): **no on-site Google review import at launch.** Two separate lead times stack before an API import could even start — Business Profile verification (commonly postcard-based, 1–2+ weeks) and separate API project access approval — and both only start once the rebrand name lands, putting a real import well outside the ~4-week launch window. The Reviews page becomes a **"Read our reviews on Google" link/CTA** instead, pointed at the Business Profile once it exists.
+  - Delete the 5 seeded fake reviews (`ReviewSeeder`, unregistered at `ApplicationDbContextSeeder.cs:36`; the `if (dbContext.Reviews.Any()) return;` guard means the rows must also be removed from the live DB). Generic e-commerce filler on a plumbing site, all seeded `IsApproved = true`, all sharing one `CreatedOn` timestamp, averaging 4.2 against the "4.9/5" claimed elsewhere.
+  - Remove local review **submission** entirely, not just the seeded rows — the form, controller action, and validation.
+  - Remove the **"Verified Client" badges** (`Home/Index.cshtml:306`, `Home/Reviews.cshtml:160-163`, `Areas/Details.cshtml:160-163`) and the sidebar claim *"Every review is manually verified by our support team"* (`Home/Reviews.cshtml:84`) — submission required no booking, no account and no email, so the site was asserting verification it never performed.
+  - All three display surfaces already degrade gracefully with zero reviews (Home and Reviews show a "be the first" prompt; Areas hides its section), so removal needs no layout work beyond swapping in the Google CTA.
+  - **The old item-7 bug (review submission errors invisible on failure) is now moot** — it lived entirely in the submission flow being deleted here, not worth fixing separately.
+  - Do **not** add `Source`, `ExternalId`, or `BookingId` columns to `Review` yet — deferred until the import is actually built, post-launch.
+  - Constraints for that future import, already researched: Google's structured-data policy forbids marking up third-party reviews as first-party `aggregateRating`; the Places API restricts caching review text; the correct route (since we manage the client's profile) is the **Business Profile API with owner OAuth**, not Places.
+
+**4. Area map.** ~~Done — see §3l.~~
+
+**5. Broken links & metadata.** Fix `handyfix-proof.jpg` (`Views/Services/Index.cshtml:105`) — the file has never existed on disk, so it always falls through to an external gstatic placeholder SVG. Remove the missing `logo.png` from the JSON-LD (`Views/Home/Index.cshtml:351`) rather than generating one now — the wordmark itself is blocked on the rebrand name (Tier 3 item 15). When the name lands, build the wordmark as SVG from the existing Outfit font and the navbar's cyan accent dot — not as AI output, which cannot render text reliably.
+
+**6. Caching.** ~~Done.~~
+
+**7. Email provider swap — SendGrid → Brevo.** New, decided 2026-07-30. Twilio retired SendGrid's permanent free tier on 27 May 2025; new accounts now get a 60-day trial then a **$19.95/month minimum** (50,000 emails) — far more capacity than HandyFix's real volume (roughly two emails per booking, low hundreds per month even once busy) will ever use. **Brevo's free tier is 300 emails/day (~9,000/month), permanent, no credit card**, and comfortably covers HandyFix indefinitely. The existing `IEmailSender` abstraction (§1, "fail loud outside development" pattern) already isolates the provider — this is a contained new `BrevoEmailSender` implementation behind the same interface, not a redesign. Low urgency relative to Tiers 0–2, but cheap to do now.
+
+**8. Manual per-slot technician assignment.** New, decided 2026-07-30 — **bigger scope than the original item 9 assumed.** `AvailabilityService.GenerateSlotsForRangeAsync` currently auto-assigns every generated slot to `technicianRepository.All().FirstOrDefaultAsync(x => x.IsActive)` — correct and safe with exactly one technician, but **not deterministic** once a second technician (Zaprqn's worker) is also active, since the query has no ordering. Confirmed at launch there will be more than one active technician, and the agreed model is **admin manually picks the technician per slot** — not automatic round-robin, which is real scheduling logic and out of scope for a 4-week launch. Needs: a technician dropdown/selector added to the admin Calendar's slot-generation flow, replacing the `FirstOrDefaultAsync` auto-pick. Independent of the real technician data itself (Tier 2 item 11), so the UI/logic can be built now against the seeded placeholder technician and re-pointed once real names land.
+
+---
+
+#### Tier 2 — blocked on the client call (Tier 0)
+
+**9. Real business facts.** Insurance certificate (coverage itself confirmed real by Zaprqn 2026-07-30 — see item 16 — exact figure/certificate still needed), real years trading, real phone number, real trading address, his photo and name. Feeds directly into Tier 3's NAP/stats work — nothing there can be finalized before this lands.
+
+**10. Rebrand — the business name itself.** Confirmed happening at this week's call. The single highest-leverage fact in this tier: it unblocks Tier 3's Google Business Profile creation, domain decision, wordmark/logo (item 15), and final JSON-LD/NAP values (item 18) all at once — nothing in Tier 3 can start before it lands.
+
+**11. Real technician roster.** Names and phone numbers for Zaprqn and his worker(s) — however many are actually going active at launch. Feeds `TechniciansSeeder.cs` (currently seeded `John Doe / 07123456789`) and the admin picker built in Tier 1 item 8.
+
+**12. Custom Projects category scope.** New service category for launch — full bathroom installation, full kitchen installation. Needs Zaprqn's input on what he's actually delivered under this banner before, and what he wants to promote/rank for, before any `ServiceCategory`/`Service` rows or copy get written. Once scoped: standard new-category engineering (seeder rows, images per Tier 1 item 1, category page wiring) — small, once the scope question is answered.
+
+---
+
+#### Tier 3 — blocked on Tier 2 outputs landing
+
+**13. Google Business Profile creation & verification.** Cannot start until the business name (item 10) is settled. Start the moment it lands — verification (commonly postcard-based, 1–2+ weeks in transit) is the single longest lead time on the whole launch-blocker list and shouldn't wait behind other Tier 3 work.
+
+**14. Domain finalization.** Depends on the rebrand decision (item 10) — no point fully recovering the existing name.com account for a name that may be retired. Recovery path, if the existing domain is still wanted: confirm whether Zaprqn can log into name.com at all. If yes, the locked mailbox is likely a separate hosted-email product, resettable from the account's own control panel. If no — and the account's recovery email is itself unreachable (a common circular lock when the recovery address is hosted on the same domain) — the only path is name.com support with proof of ownership (invoice/receipt number, the payment card's last 4 digits, or ID matching the WHOIS registrant). Once back in: point the recovery email at a non-domain-hosted address (e.g. a personal Gmail) and enable 2FA with stored backup codes, so this can't recur. **Not a hard launch blocker** — staging, and initial production if needed, can run on the Hetzner-assigned hostname (§1) while this is sorted.
+
+**15. Wordmark/logo.** Blocked on item 10. Build as SVG from the existing Outfit font + navbar cyan accent dot once the name lands — not AI-generated, which cannot render text reliably (the exact problem with the current garbled-logo images, item 1).
+
+**16. Fake statistics → real or removed.** Replace fabricated figures across `Home/Index`, `Home/Reviews`, `Home/About`, `Services/Index`, `Services/Details`, `Services/Category`:
+  - **Resolved 2026-07-30, no longer blocked**: `Up to £5M Public Liability insurance` → **"Comprehensive Public Liability insurance"**, confirmed genuine coverage (exact figure still pending, item 9) — `Home/Index.cshtml:238` keeps its existing "…covering every single visit" tail unchanged; `Services/Details.cshtml:217`'s shorter sidebar line and `Services/Details.cshtml:153`'s FAQ-prose version get the equivalent swap adapted to each sentence's shape, not a literal paste. The **"100% satisfaction guarantee"** bundled into that same FAQ sentence (`Services/Details.cshtml:153`) is confirmed **not real — remove it outright**, don't reword it.
+  - **Still blocked on item 9 (real facts)**: `12k+ Jobs Completed`, `4.9/5 Rating`, `Based on 2,500 reviews` (`Home/Index.cshtml:251,262,263`); `4.9` + `2.4k Verified Reviews` (`Home/Reviews.cshtml:96,109-113`); `4.9/5 Rating` + `Over 1,200 services completed` (`Services/Details.cshtml:170,173`); `4.9/5 Average Rating` (`Services/Index.cshtml:95`); `5,000+ Successful Fixes`, `15+ Specialist Techs`, `Crafting Quality Since 2018` (`Home/About.cshtml:14,48-53`); `3 Active Technicians Nearby` (`Services/Category.cshtml:140`). The counts contradict each other (12k+ vs 5,000+ vs 1,200 jobs; 2,500 vs 2.4k reviews vs 5 rows in the database), and most are rating/review claims that no longer make sense once Reviews goes GBP-link-only (item 3) — expect most to become the honest, already-identified substitutes rather than real numbers: *"Direct to your technician — no call centre"*, *"Covering 15 areas from Chessington"* (real `ServiceArea` rows), *"Fixed hourly rates, quoted upfront"* (real `BasePrice`), *"Pay securely online — deposit only"* (real Stripe integration).
+  - Worth noting on the upside, still true: no Gas Safe, NICEIC, TrustMark, Which? or Checkatrade badges appear anywhere — the highest-severity fabrication category (Gas Safe numbers are legally regulated) is clean.
+
+**17. Technicians — public-facing bio block.** Remove the hardcoded `"David"` / `"Mark"` Razor variables at `Views/Services/Details.cshtml:29-34` — invented names, roles, boroughs, first-person bios, external placeholder avatar. Bind dynamically to the real `Technician` entity, seeded with the owner's actual name/experience once item 11 lands. Do **not** AI-generate a face here. Confirmed 2026-07-30: no public technician roster/grid UI is needed for now beyond this bind-to-real-data fix — that's a "grow into it later" feature. A small technician-detail card **in the booking confirmation email** is separate, small new work — the email already renders the technician's name as a plain list item (`PaymentsService.SendBookingConfirmationEmailsAsync`); turning that into a styled card with name/phone (photo only once item 9's photo lands) is the actual remaining task here.
+
+**18. NAP consistency.** The site must state one identity before the Google Business Profile is claimed — blocked on items 9 and 10 landing together. Currently: phone `07123456789` (fake/sequential) appears in three JSON-LD blocks (`Home/Index.cshtml`, `Services/Details.cshtml`, `Areas/Details.cshtml`); `addressLocality` is `Croydon` on Home but `Chessington` on Area pages (Chessington is correct per the seeded drive-time data — 0 minutes, "Home Turf"); `streetAddress` is the non-address `"South London Dispatch Office"` with invalid partial postcode `"CR0 1XX"`; `sameAs` points at two probably-nonexistent social profiles — remove until real profiles exist. Bad NAP/social data actively harms local SEO and will conflict with the real profile once claimed.
+
+---
+
+#### Tier 4 — deployment (content-independent, runs in parallel with Tiers 1–3)
+
+**19. Hosting & CI/CD.** Infrastructure is already provisioned — see §1 "Hosting & Infrastructure" for the full Hetzner architecture. Remaining work, none of it blocked on business facts:
+  - Configure `appsettings.Staging.json`/`appsettings.Production.json` connection strings against the private DB IP (`<DB_PRIVATE_IP>` — see `docs/private/INFRASTRUCTURE.md`), with `Database.Migrate()` and seeding running automatically on startup (already the local-dev pattern — just needs pointing at the new hosts).
+  - `.github/workflows/deploy-dev.yml` (push/merge to `dev` → staging) and `deploy-prod.yml` (push/merge to `main` → production), with a dedicated GitHub Actions SSH keypair and repo secrets (`DEV_SERVER_IP`, `PROD_SERVER_IP`, `SSH_KEY`, DB passwords).
+  - **Staging should be reachable before real business facts exist.** Confirmed goal (2026-07-30): filling in Zaprqn's real data should be a 5-minute edit at the end, not a blocker for standing up staging and demoing on an actual phone. Use the Hetzner-assigned reverse-DNS hostname for the staging URL if the domain (item 14) isn't settled yet — free, works over HTTPS, no dependency on name.com.
 
 ### Sprint 3 — Admin & Polish — **CLOSED** (2026-07-24)
 - ~~Admin panel list refinements (sortable/queryable "Order by" on Bookings/Enquiries/Reviews lists).~~ **Done** — Bookings in Section 3d, Enquiries in Section 3e, Reviews in Section 3f.
@@ -344,8 +387,8 @@ Next initiative after Sprint 3, not part of the original Sprint 4 plan below. Se
 ### Sprint 4 — Testing, Documentation & Deployment
 - Comprehensive unit test coverage beyond what Sprint 1 required (controller-level tests, broader service coverage).
 - Architecture documentation and a completed GitHub README (current README has "Architecture (coming soon)" placeholders and some inaccurate tech-stack claims to correct — see note in Section 1).
-- CI/CD pipeline setup (`.github/workflows/` currently exists but is empty).
-- Production deployment.
+- CI/CD pipeline setup (`.github/workflows/` currently exists but is empty) — infrastructure now provisioned (§1 Hosting & Infrastructure), remaining work tracked as §4 Tier 4 item 19.
+- Production deployment — see §4 Tier 4 item 19.
 
 ---
 
