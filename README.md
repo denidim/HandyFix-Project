@@ -85,16 +85,27 @@ dotnet ef database update --project Web/HandyFix.Web
 dotnet run --project Web/HandyFix.Web
 ```
 
-### Stripe Configuration
-To enable live payments processing, configure these settings in `appsettings.json` or as environment variables:
-```json
-"Stripe": {
-  "SecretKey": "sk_test_...",
-  "PublishableKey": "pk_test_...",
-  "WebhookSecret": "whsec_..."
-}
+### Required local secrets
+
+None of the values below live in any committed `appsettings.json` — set them locally via **.NET User Secrets** (the project already has a `UserSecretsId`, so this needs no extra setup):
+
+```bash
+cd src/Web/HandyFix.Web
+dotnet user-secrets set "Stripe:SecretKey" "sk_test_..."
+dotnet user-secrets set "Stripe:PublishableKey" "pk_test_..."
+dotnet user-secrets set "Stripe:WebhookSecret" "whsec_..."
+dotnet user-secrets set "SendGrid:ApiKey" "SG...."
+dotnet user-secrets set "Admin:SeedPassword" "<a strong password you choose>"
+dotnet user-secrets set "CloudflareR2:AccessKeyId" "..."
+dotnet user-secrets set "CloudflareR2:SecretAccessKey" "..."
+dotnet user-secrets set "CloudflareR2:ServiceUrl" "..."
+dotnet user-secrets set "CloudflareR2:PublicUrl" "..."
+dotnet user-secrets set "CloudflareR2:BucketName" "..."
 ```
-If not specified, the system automatically falls back to Mock/Sandbox transaction processing mode.
+
+In staging/production these are supplied as environment variables instead (`Admin__SeedPassword`, `CloudflareR2__AccessKeyId`, etc. — double underscore is ASP.NET Core's section separator), injected via GitHub Actions repo secrets at deploy time, never committed.
+
+If `Stripe:SecretKey` / `SendGrid:ApiKey` are unset, the app falls back to Mock/Sandbox mode (Stripe) or a no-op sender (SendGrid) **only in Development** — both throw on startup outside Development, so a missing key can't silently ship a broken (or, for Stripe, fake-successful) production flow. `Admin:SeedPassword` follows the same rule: unset outside Development throws; unset in Development seeds a fixed dev-only fallback password, never used elsewhere.
 
 ---
 
