@@ -7,6 +7,17 @@ namespace HandyFix.Data.Seeding
 
     using HandyFix.Data.Models;
 
+    /// <summary>
+    /// Seeds the initial coverage areas. Note this only ever INSERTS missing slugs - it never
+    /// updates an area that already exists, so editing the copy below has no effect on a database
+    /// that has already been seeded. Use the admin panel at /Administration/ServiceAreas for that.
+    /// <para>
+    /// Areas must be hard-deleted, never soft-deleted: IX_ServiceAreas_Slug is unique with no
+    /// IsDeleted filter, but the global query filter hides soft-deleted rows, so this seeder would
+    /// try to re-insert the slug and fail startup with a unique-index violation.
+    /// </para>
+    /// <para>See docs/WORKFLOW_SERVICE_AREAS.md for the full three-step add/update workflow.</para>
+    /// </summary>
     internal class ServiceAreasSeeder : ISeeder
     {
         private const string HomeTurf = "Home Turf";
