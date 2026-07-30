@@ -8,16 +8,21 @@ namespace HandyFix.Services.Data.ServiceAreas
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.ServiceAreas;
 
     using Microsoft.EntityFrameworkCore;
 
     public class ServiceAreasService : IServiceAreasService
     {
         private readonly IDeletableEntityRepository<ServiceArea> areasRepository;
+        private readonly IDeletableEntityRepository<ServiceAreaFaq> faqsRepository;
 
-        public ServiceAreasService(IDeletableEntityRepository<ServiceArea> areasRepository)
+        public ServiceAreasService(
+            IDeletableEntityRepository<ServiceArea> areasRepository,
+            IDeletableEntityRepository<ServiceAreaFaq> faqsRepository)
         {
             this.areasRepository = areasRepository;
+            this.faqsRepository = faqsRepository;
         }
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(bool featuredFirst = true)
@@ -35,6 +40,14 @@ namespace HandyFix.Services.Data.ServiceAreas
         {
             return await this.areasRepository.All()
                 .Where(x => x.Slug == slug.ToLower())
+                .To<T>()
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<T> GetByIdAsync<T>(Guid id)
+        {
+            return await this.areasRepository.All()
+                .Where(x => x.Id == id)
                 .To<T>()
                 .FirstOrDefaultAsync();
         }
@@ -57,6 +70,133 @@ namespace HandyFix.Services.Data.ServiceAreas
                 .Take(take)
                 .To<T>()
                 .ToListAsync();
+        }
+
+        public async Task<Guid> CreateAsync(ServiceAreaAdminInputModel model)
+        {
+            var area = new ServiceArea
+            {
+                Slug = NormalizeSlug(model.Slug),
+                Name = model.Name,
+                Region = model.Region,
+                DriveTimeMinutes = model.DriveTimeMinutes,
+                DisplayOrder = model.DisplayOrder,
+                IsFeatured = model.IsFeatured,
+                IntroCopy = model.IntroCopy,
+                LocalNeighbourhoodsCopy = model.LocalNeighbourhoodsCopy,
+            };
+
+            await this.areasRepository.AddAsync(area);
+            await this.areasRepository.SaveChangesAsync();
+
+            await this.ReplaceFaqsAsync(area.Id, model.Faqs);
+
+            return area.Id;
+        }
+
+        public async Task UpdateAsync(Guid id, ServiceAreaAdminInputModel model)
+        {
+            var area = await this.areasRepository.All().FirstOrDefaultAsync(x => x.Id == id);
+            if (area == null)
+            {
+                return;
+            }
+
+            area.Slug = NormalizeSlug(model.Slug);
+            area.Name = model.Name;
+            area.Region = model.Region;
+            area.DriveTimeMinutes = model.DriveTimeMinutes;
+            area.DisplayOrder = model.DisplayOrder;
+            area.IsFeatured = model.IsFeatured;
+            area.IntroCopy = model.IntroCopy;
+            area.LocalNeighbourhoodsCopy = model.LocalNeighbourhoodsCopy;
+
+            await this.areasRepository.SaveChangesAsync();
+
+            await this.ReplaceFaqsAsync(id, model.Faqs);
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var area = await this.areasRepository.AllWithDeleted().FirstOrDefaultAsync(x => x.Id == id);
+            if (area == null)
+            {
+                return;
+            }
+
+            // The FK from ServiceAreaFaq is ReferentialAction.Restrict, so the children have to go
+            // first or SaveChanges throws a constraint violation.
+            var faqs = await this.faqsRepository.AllWithDeleted()
+                .Where(x => x.ServiceAreaId == id)
+                .ToListAsync();
+
+            foreach (var faq in faqs)
+            {
+                this.faqsRepository.HardDelete(faq);
+            }
+
+            await this.faqsRepository.SaveChangesAsync();
+
+            this.areasRepository.HardDelete(area);
+            await this.areasRepository.SaveChangesAsync();
+        }
+
+        public async Task<bool> SlugExistsAsync(string slug, Guid? excludeAreaId = null)
+        {
+            var normalized = NormalizeSlug(slug);
+
+            // AllWithDeleted, not All: IX_ServiceAreas_Slug has no IsDeleted filter, so a
+            // soft-deleted row still reserves its slug at the database level. Checking only live
+            // rows would let the form accept a duplicate and then fail with a raw 500 on save.
+            var query = this.areasRepository.AllWithDeleted().Where(x => x.Slug == normalized);
+
+            if (excludeAreaId.HasValue)
+            {
+                query = query.Where(x => x.Id != excludeAreaId.Value);
+            }
+
+            return await query.AnyAsync();
+        }
+
+        private static string NormalizeSlug(string slug)
+        {
+            return string.IsNullOrWhiteSpace(slug) ? string.Empty : slug.Trim().ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// FAQs are replaced wholesale rather than diffed. They carry no external references and
+        /// are ordered purely by DisplayOrder, so recreating them is simpler than reconciling by id
+        /// - and hard-deleting the old rows stops soft-deleted orphans accumulating on every save.
+        /// </summary>
+        private async Task ReplaceFaqsAsync(Guid areaId, IEnumerable<ServiceAreaFaqInputModel> faqs)
+        {
+            var existing = await this.faqsRepository.AllWithDeleted()
+                .Where(x => x.ServiceAreaId == areaId)
+                .ToListAsync();
+
+            foreach (var faq in existing)
+            {
+                this.faqsRepository.HardDelete(faq);
+            }
+
+            var displayOrder = 1;
+            foreach (var faq in faqs ?? Enumerable.Empty<ServiceAreaFaqInputModel>())
+            {
+                if (string.IsNullOrWhiteSpace(faq?.Question) || string.IsNullOrWhiteSpace(faq.Answer))
+                {
+                    continue;
+                }
+
+                await this.faqsRepository.AddAsync(new ServiceAreaFaq
+                {
+                    ServiceAreaId = areaId,
+                    Question = faq.Question.Trim(),
+                    Answer = faq.Answer.Trim(),
+                    DisplayOrder = displayOrder++,
+                });
+            }
+
+            await this.faqsRepository.SaveChangesAsync();
         }
     }
 }
