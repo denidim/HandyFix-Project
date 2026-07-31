@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-07-31 — Tier 1 item 3 (Reviews cleanup) shipped while the client call is still pending; see §3n. (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` §5). Added a Hosting & Infrastructure subsection to §1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration §3j, cache-busting, and the Areas SVG coverage map §3l — plus the boot-time JPG sweep removed as unsafe §3k and Service Areas admin CRUD added §3m.)
+> **Last updated**: 2026-07-31 — Tier 1 item 8 shipped, resolved differently than planned: technicians are decoupled from capacity slots entirely, slot auto-generation is removed, and there is now admin CRUD for the technician roster; see §3r. (Earlier the same day: Tier 1 items 3, 5 and 7 shipped — Reviews cleanup §3n, broken links §3p, Brevo email swap §3q.) (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` §5). Added a Hosting & Infrastructure subsection to §1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration §3j, cache-busting, and the Areas SVG coverage map §3l — plus the boot-time JPG sweep removed as unsafe §3k and Service Areas admin CRUD added §3m.)
 
 ---
 
@@ -339,6 +339,70 @@ Closes Pre-Sprint 4 Tier 1 item 7 (see §4). Reasoning in `docs/private/VISION_A
 
 ---
 
+## 3r. Technicians Decoupled from Capacity Slots; Admin Technician Roster (2026-07-31)
+
+Closes Pre-Sprint 4 Tier 1 item 8 (see §4) — but with a **larger and different scope than that item described**, decided with the user this session. The item as written asked for a technician picker on the Calendar's slot-generation form. That was rejected in favour of removing technicians from slots altogether: technicians are fluid (largely self-employed contractors) and must not dictate booking capacity. A slot is business capacity; the technician enters the picture only once there is a real `Booking`.
+
+### The model change: `AvailabilitySlot.TechnicianId` is gone
+
+- **Column, FK, index and nav property all dropped** (migration `20260731200235_RemoveTechnicianFromAvailabilitySlot`, with a working `Down`). `TechnicianId` now lives on `Booking` and nowhere else.
+- **This removes a whole class of bug rather than patching it.** Two nullable columns held one fact, and they were already drifting: `BookingsService.AssignTechnicianAsync` wrote only `Booking.TechnicianId`, leaving the slot's copy stale. The originally-planned fix was to sync them; deleting the duplicate makes the sync structurally unnecessary. Same reasoning as §3k — delete rather than repair, once the purpose is gone.
+- **It also defused a live footgun.** `RescheduleBookingAsync` did `booking.TechnicianId = newSlot.TechnicianId`. Had the column been kept but left unpopulated, every reschedule would have **silently wiped the admin's technician assignment**. That line is gone and the assignment is now explicitly preserved across a reschedule, covered by `RescheduleBookingAsyncShouldReleaseOldSlotAndClaimNewOne`.
+- `CreateBookingAsync` no longer copies a technician off the slot — bookings are created unassigned by design, since assignment happens after the customer books and pays.
+- **The Calendar's `Tech: …` line was deleted, not rebuilt.** It had never rendered a real value: `CalendarController.Index` has no `.Include(x => x.Technician)` and the project has no lazy-loading proxies, so every slot row had always read "Unassigned" regardless of the data.
+- **Counter-argument, acknowledged and rejected:** per-technician capacity ("A works Mondays, B works Tuesdays") would need exactly this column back. It is explicitly out of scope, and re-adding a nullable column is a one-line migration if the model ever changes.
+
+### Auto-generation of slots is dead
+
+- `GetAvailableDatesAsync`, `GetAvailableSlotsForDateAsync` and `GetAllSlotsForDateAsync` no longer call `GenerateSlotsForRangeAsync`. **Browsing the public booking page used to create 30 days of capacity as a side effect** — which also meant the admin picker the original Tier 1 item asked for would have been near-useless, since slots for the next 30 days always already existed by the time an admin looked.
+- `CalendarController.Index` no longer generates either: viewing a day must not create capacity for it. The view's existing "No slots generated for this date. Use the range generator tool." empty state now does real work.
+- `GenerateSlotsForRangeAsync` keeps its `(startDate, endDate)` signature and **lost its technician lookup entirely** — including the early `return` when no active technician existed, which used to make generation a silent no-op on a database with no technicians.
+- The customer-facing empty state was reworded from the admin-speak "No slots generated for this date" to "No availability on this date."
+- Regression tests: `GetAvailableDatesAsyncShouldNotGenerateCapacityWhenNoneExists`, `GetAllSlotsForDateAsyncShouldNotGenerateCapacityWhenNoneExists`, `GenerateSlotsForRangeAsyncShouldCreateBusinessHoursWithNoTechniciansInTheDatabase`.
+
+### `DevelopmentCapacitySeeder` — capacity out of the box, outside production
+
+- New `Web/HandyFix.Web/Services/DevelopmentCapacitySeeder.cs`, called from `Program.Configure` inside the existing seeding scope. Seeds **14 days** of standard capacity so a fresh clone or a newly stood-up staging box has a working booking flow without an admin opening the Calendar first (this matters for the Tier 4 staging stand-up).
+- **Gated on `IWebHostEnvironment.IsProduction()`** — in production, capacity stays strictly a business decision.
+- **Only fires when there is no future capacity at all** (`StartTime >= today`). That keeps it quiet once an admin has generated (or deliberately blocked — blocked slots are still rows) capacity of their own, while still topping up a long-lived staging database whose original window has fallen into the past.
+- **Deliberately in the Web layer, not with the `ISeeder` implementations.** It delegates to `IAvailabilityService` rather than restating the "9–17, no Sundays" rule; `HandyFix.Data` has no reference to the services layer, so a seeder there would have meant a second copy of the same business rule.
+
+### Admin Technician CRUD
+
+Technicians were seed-only, and `TechniciansSeeder` inserts only when the table is **empty** — so adding a second technician later would not have worked by editing the seeder at all. That made this a hard prerequisite for Tier 2 item 11, not a nice-to-have.
+
+- `ITechniciansService`/`TechniciansService` + `TechniciansController` + Index/Create/Edit views and a `_TechnicianForm` partial, following the §3m Service Areas pattern throughout. Sidebar entry added.
+- **Soft delete here, the opposite of §3m's hard delete, for the opposite reason.** A technician squats on no unique index, but `Booking.TechnicianId` is a live FK pointing at real job history. `DeleteAsync` therefore **refuses when any booking references the technician** and returns `false`, and the admin is told to deactivate instead; the Index hides the delete button entirely for anyone with bookings. Deleting is only for a row created in error.
+- `IsActive` is the intended retire path. `GetAssignableAsync` returns active technicians **plus the one currently assigned to this booking even if since deactivated** (rendered "(inactive)") — without that, opening such a booking would render a picker that omits the assignee and quietly unassign them on the next save.
+- `PhoneNumber` is `[Required]` in the input model although the column is nullable: the number is what the customer receives on confirmation, so a roster entry without one is not useful. Tightening the form needed no migration.
+
+### Booking assignment is now the only assignment path — three fixes
+
+- **`Guid` → `Guid?` end to end** (`IBookingsService.AssignTechnicianAsync`, `BookingsController.AssignTechnician`). The picker's blank option posted an empty value that bound to `Guid.Empty` and then **failed the `TechnicianId` foreign key at `SaveChanges`** — a raw 500. It now clears the assignment, which is what the option claims to do. `AssignTechnicianAsync` also verifies a non-null id resolves to a real technician before writing.
+- **Selected-option detection was `Model.TechnicianName.Contains(tech.FirstName)`** — a string match that breaks on two technicians sharing a first name. Now bound on a new `BookingDetailsViewModel.TechnicianId`.
+- `BookingDetailsViewModel.Technicians` was `IEnumerable<Technician>` (a raw entity in a view model); it is now `IEnumerable<TechnicianOptionViewModel>`, and `BookingsController` takes `ITechniciansService` instead of a bare `IDeletableEntityRepository<Technician>`.
+
+### Email: technician detail moved to the right message
+
+- **Removed from the deposit confirmation** (`PaymentsService`). Assignment now happens after payment, so that email would have always read "Technician: Not yet assigned" — unfinished-looking to the customer. It now says "We'll confirm your assigned technician shortly", and the wasted `.ThenInclude(b => b.Technician)` join went with it.
+- **Added to the admin-approval "CONFIRMED" email** (`BookingsService.UpdateStatusAsync`), which fires when an admin approves and therefore has a real assignment to report: name plus a `tel:` link, falling back to the previous generic sentence when unassigned. This is the increment of Tier 3 item 17's technician card that does not need real business data.
+- `PaymentsServiceTests.ProcessPaymentSuccessAsyncShouldSendClientConfirmationAndAdminNotificationEmails` now asserts the technician name is **absent** from the client email, on a booking that has one assigned specifically to prove it stays out.
+
+### Docs
+
+- **`docs/WORKFLOW_BOOKINGS.md`** documents the whole pipeline end to end — generate capacity → customer books and pays → admin assigns a technician → admin approves — written for both admin users and developers, with a troubleshooting table. Named to sit alongside the existing `docs/WORKFLOW_SERVICE_AREAS.md` rather than the generic `WORKFLOW.md`, since it covers one workflow among several.
+
+### Verified
+
+- `dotnet build src/HandyFix.sln` — 0 errors. Full suite green: **57 service-layer** (up from 47: +4 availability, +6 new `TechniciansServiceTests`) **+ 9 web-integration**.
+- **Live authenticated round-trip** against the running app: created a technician; validation correctly rejected a 1-character name and a blank phone; assignment picker rendered both technicians with the assigned one selected; assigned a different technician and confirmed the selection moved; **unassigned via the blank option and got a 302, not the old FK 500**; deleting a technician with 7 bookings was refused while one with 0 was deleted; deactivating the assigned technician kept them in that booking's picker labelled "(inactive)".
+- **Auto-generation confirmed dead**: a far-future date shows no slots in the admin Calendar, `/Booking/GetSlots` returns `[]` for it, and hitting the public endpoint does not create anything. Public pages (`/`, `/Booking`, `/Pricing`, `/Areas`) all still 200.
+- **The dev seeder was exercised against a throwaway database** (`HandyFix_SeedCheck`, created and dropped for the purpose, dev database untouched): it logged "Seeded 14 days of booking capacity", the public booking flow returned 8 slots/day with zero admin action, Sunday correctly returned 0, and day 15 correctly returned 0. On the real dev database it correctly stayed silent, since future capacity already existed there.
+- **Not verified visually** — the admin pages are auth-gated and this session drove them over authenticated HTTP rather than a browser, same as §3m. Layout risk is low: the new views reuse existing admin classes throughout, with no new CSS.
+- **Leftover to clean up**: live verification left a soft-deleted `Zapryan Petrov` test row in the local dev `Technicians` table. It is invisible to the app (global query filter) and harmless; removing it needs a manual `DELETE` against the dev database.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
@@ -386,7 +450,7 @@ Closes Pre-Sprint 4 Tier 1 item 7 (see §4). Reasoning in `docs/private/VISION_A
 
 **7. Email provider swap — SendGrid → Brevo.** ~~Done — see §3q.~~
 
-**8. Manual per-slot technician assignment.** New, decided 2026-07-30 — **bigger scope than the original item 9 assumed.** `AvailabilityService.GenerateSlotsForRangeAsync` currently auto-assigns every generated slot to `technicianRepository.All().FirstOrDefaultAsync(x => x.IsActive)` — correct and safe with exactly one technician, but **not deterministic** once a second technician (Zaprqn's worker) is also active, since the query has no ordering. Confirmed at launch there will be more than one active technician, and the agreed model is **admin manually picks the technician per slot** — not automatic round-robin, which is real scheduling logic and out of scope for a 4-week launch. Needs: a technician dropdown/selector added to the admin Calendar's slot-generation flow, replacing the `FirstOrDefaultAsync` auto-pick. Independent of the real technician data itself (Tier 2 item 11), so the UI/logic can be built now against the seeded placeholder technician and re-pointed once real names land.
+**8. Manual per-slot technician assignment.** ~~Done — see §3r.~~ **Resolved differently than this item proposed**: rather than adding a technician picker to slot generation, technicians were removed from `AvailabilitySlot` entirely. Slots are pure capacity; assignment happens on the `Booking` after the customer has booked and paid. Auto-generation of slots from the public booking page was removed in the same pass, and a non-production-only capacity seeder added so fresh clones and staging still have a working booking flow.
 
 ---
 
@@ -396,7 +460,7 @@ Closes Pre-Sprint 4 Tier 1 item 7 (see §4). Reasoning in `docs/private/VISION_A
 
 **10. Rebrand — the business name itself.** Confirmed happening at this week's call. The single highest-leverage fact in this tier: it unblocks Tier 3's Google Business Profile creation, domain decision, wordmark/logo (item 15), and final JSON-LD/NAP values (item 18) all at once — nothing in Tier 3 can start before it lands.
 
-**11. Real technician roster.** Names and phone numbers for Zaprqn and his worker(s) — however many are actually going active at launch. Feeds `TechniciansSeeder.cs` (currently seeded `John Doe / 07123456789`) and the admin picker built in Tier 1 item 8.
+**11. Real technician roster.** Names and phone numbers for Zaprqn and his worker(s) — however many are actually going active at launch. **No longer a code change**: since §3r there is full admin CRUD at `/Administration/Technicians`, so this is now data entry through the UI. Note this was a hard prerequisite, not a convenience — `TechniciansSeeder` only inserts when the table is empty, so adding a second technician by editing the seeder would never have worked. The seeded placeholder (`John Doe / 07123456789`) should be edited into a real person or deactivated once real names land; it can't be deleted once it has bookings, by design.
 
 **12. Custom Projects category scope.** New service category for launch — full bathroom installation, full kitchen installation. Needs Zaprqn's input on what he's actually delivered under this banner before, and what he wants to promote/rank for, before any `ServiceCategory`/`Service` rows or copy get written. Once scoped: standard new-category engineering (seeder rows, images per Tier 1 item 1, category page wiring) — small, once the scope question is answered.
 
@@ -448,7 +512,9 @@ Next initiative after Sprint 3, not part of the original Sprint 4 plan below. Se
 
 - **Optimistic concurrency needs a provider that actually enforces it.** EF Core's InMemory provider silently ignores both transactions and `RowVersion` concurrency checks — tests that need to prove rollback or double-booking rejection use Sqlite in-memory (`Microsoft.Data.Sqlite`, `DataSource=:memory:`, open connection kept alive for the test's duration), not InMemory.
 - **`IDbQueryRunner.BeginTransactionAsync`** is the standard way to wrap multi-repository mutations atomically; nested `SaveChangesAsync` calls from different repositories sharing the same scoped `DbContext` automatically join the ambient transaction — no need to pass a transaction object around explicitly.
-- **The "fail loud outside development, fall back safely inside it" pattern** is now used twice (Stripe key, SendGrid key) and should be the default template for any future third-party integration key: never let a missing production secret silently degrade to mock/no-op behavior.
+- **The "fail loud outside development, fall back safely inside it" pattern** is now used twice (Stripe key, Brevo key) and should be the default template for any future third-party integration key: never let a missing production secret silently degrade to mock/no-op behavior.
+- **Capacity and assignment are separate concerns, and only one of them is a slot.** `AvailabilitySlot` is business capacity and carries no technician; `Booking.TechnicianId` is the single home of "who does this job", set by an admin after payment (§3r). Don't reintroduce a technician (or any other assignment-shaped field) onto the slot to make a query convenient — that duplication is exactly what caused the stale-copy and wiped-on-reschedule bugs §3r removed.
+- **Read paths must not write.** `GetAvailableDatesAsync` used to generate 30 days of slots as a side effect of being read, so merely browsing the public booking page created capacity nobody had decided to offer. Generation is now only ever triggered deliberately — by an admin, or by the non-production capacity seeder. Treat any "get" that mutates as a bug, not a convenience.
 - **`SlotUnavailableException`** exists specifically so controllers can distinguish "the resource you wanted is gone" from generic `InvalidOperationException` validation failures — reuse this pattern rather than string-matching exception messages.
 - **`wwwroot/css/base/utilities.css`** (added in Sprint 2) holds the small, generic spacing/typography/opacity/radius classes shared across every page (`mb-*`, `fs-*`, `lh-*`, `opacity-*`, `rounded-*`, `icon-fill`, etc.) — check here before inventing a new one-off class or reaching for an inline `style=`. Anything page-specific still belongs in that page's own `pages/*.css` file.
 - **The sitemap is generated, not static** — `SeoController.Sitemap()` queries categories/services live via `ICategoriesService`/`IServicesService` rather than hardcoding URLs, specifically so it can't go stale as services are added or removed through the admin panel. Follow the same approach for any future sitemap-like listing.
