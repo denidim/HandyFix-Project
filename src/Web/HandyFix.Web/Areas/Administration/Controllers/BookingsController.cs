@@ -7,6 +7,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.Technicians;
+    using HandyFix.Web.ViewModels.Administration.Technicians;
     using HandyFix.Web.ViewModels.Booking;
 
     using Microsoft.AspNetCore.Mvc;
@@ -15,16 +17,16 @@ namespace HandyFix.Web.Areas.Administration.Controllers
     public class BookingsController : AdministrationController
     {
         private readonly IBookingsService bookingsService;
-        private readonly IDeletableEntityRepository<Technician> technicianRepository;
+        private readonly ITechniciansService techniciansService;
         private readonly IDeletableEntityRepository<BookingStatus> statusRepository;
 
         public BookingsController(
             IBookingsService bookingsService,
-            IDeletableEntityRepository<Technician> technicianRepository,
+            ITechniciansService techniciansService,
             IDeletableEntityRepository<BookingStatus> statusRepository)
         {
             this.bookingsService = bookingsService;
-            this.technicianRepository = technicianRepository;
+            this.techniciansService = techniciansService;
             this.statusRepository = statusRepository;
         }
 
@@ -67,8 +69,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.NotFound();
             }
 
-            var technicians = await this.technicianRepository.All().ToListAsync();
-            booking.Technicians = technicians;
+            booking.Technicians = await this.techniciansService
+                .GetAssignableAsync<TechnicianOptionViewModel>(booking.TechnicianId);
 
             return this.View(booking);
         }
@@ -95,8 +97,11 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AssignTechnician(Guid id, Guid technicianId)
+        public async Task<IActionResult> AssignTechnician(Guid id, Guid? technicianId)
         {
+            // Nullable on purpose: the picker's blank "-- Unassigned --" option posts an empty
+            // value, which used to bind to Guid.Empty and then fail the TechnicianId foreign key
+            // at SaveChanges. It now clears the assignment, which is what the option says it does.
             await this.bookingsService.AssignTechnicianAsync(id, technicianId);
             return this.RedirectToAction(nameof(this.Details), new { id });
         }

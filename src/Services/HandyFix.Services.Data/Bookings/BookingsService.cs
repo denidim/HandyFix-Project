@@ -25,6 +25,7 @@ namespace HandyFix.Services.Data.Bookings
         private readonly IDeletableEntityRepository<AvailabilitySlot> slotRepository;
         private readonly IDeletableEntityRepository<BookingStatus> statusRepository;
         private readonly IDeletableEntityRepository<BookingImage> imageRepository;
+        private readonly IDeletableEntityRepository<Technician> technicianRepository;
         private readonly IAvailabilityService availabilityService;
         private readonly IPaymentsService paymentsService;
         private readonly IDbQueryRunner dbQueryRunner;
@@ -36,6 +37,7 @@ namespace HandyFix.Services.Data.Bookings
             IDeletableEntityRepository<AvailabilitySlot> slotRepository,
             IDeletableEntityRepository<BookingStatus> statusRepository,
             IDeletableEntityRepository<BookingImage> imageRepository,
+            IDeletableEntityRepository<Technician> technicianRepository,
             IAvailabilityService availabilityService,
             IPaymentsService paymentsService,
             IDbQueryRunner dbQueryRunner,
@@ -46,6 +48,7 @@ namespace HandyFix.Services.Data.Bookings
             this.slotRepository = slotRepository;
             this.statusRepository = statusRepository;
             this.imageRepository = imageRepository;
+            this.technicianRepository = technicianRepository;
             this.availabilityService = availabilityService;
             this.paymentsService = paymentsService;
             this.dbQueryRunner = dbQueryRunner;
@@ -245,14 +248,30 @@ namespace HandyFix.Services.Data.Bookings
             }
         }
 
-        public async Task AssignTechnicianAsync(Guid bookingId, Guid technicianId)
+        public async Task AssignTechnicianAsync(Guid bookingId, Guid? technicianId)
         {
             var booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
-            if (booking != null)
+            if (booking == null)
             {
-                booking.TechnicianId = technicianId;
-                await this.bookingRepository.SaveChangesAsync();
+                return;
             }
+
+            // A null id is the "-- Unassigned --" option and clears the assignment. Anything
+            // else has to resolve to a real Technician row first: TechnicianId is a live FK,
+            // so writing an unknown id (Guid.Empty being the easy way to get one from a form
+            // post) fails at the database with a raw constraint violation, not a 400.
+            if (technicianId.HasValue)
+            {
+                var exists = await this.technicianRepository.All()
+                    .AnyAsync(x => x.Id == technicianId.Value);
+                if (!exists)
+                {
+                    return;
+                }
+            }
+
+            booking.TechnicianId = technicianId;
+            await this.bookingRepository.SaveChangesAsync();
         }
 
         public async Task CancelBookingAsync(Guid bookingId)

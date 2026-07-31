@@ -150,19 +150,21 @@
                 <div class="form-group mb-3">
                     <label for="technicianId" class="form-label font-label-sm text-on-surface-variant mb-2">Assign Technician</label>
                     <select name="technicianId" id="technicianId" class="form-control py-3 admin-form-control">
-                        <option value="">-- Choose Technician --</option>
+                        <option value="">-- Unassigned --</option>
                         @foreach (var tech in technicians)
                         {
-                            if (Model.TechnicianName != null && Model.TechnicianName.Contains(tech.FirstName))
-                            {
-                                <option value="@tech.Id" selected>@tech.FirstName @tech.LastName</option>
-                            }
-                            else
-                            {
-                                <option value="@tech.Id">@tech.FirstName @tech.LastName</option>
-                            }
+                            <option value="@tech.Id" selected="@(tech.Id == Model.TechnicianId)">
+                                @tech.FullName@(tech.IsActive ? string.Empty : " (inactive)")
+                            </option>
                         }
                     </select>
+                    @if (!technicians.Any())
+                    {
+                        <span class="font-label-sm text-on-surface-variant mt-2 d-block fs-11">
+                            No active technicians yet &mdash; add one under
+                            <a asp-area="Administration" asp-controller="Technicians" asp-action="Index">Technicians</a>.
+                        </span>
+                    }
                 </div>
                 <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
                     <span class="material-symbols-outlined fs-20">save</span>

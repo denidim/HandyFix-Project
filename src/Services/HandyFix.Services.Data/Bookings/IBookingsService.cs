@@ -25,7 +25,7 @@ namespace HandyFix.Services.Data.Bookings
 
         Task UpdateStatusAsync(Guid bookingId, string statusName);
 
-        Task AssignTechnicianAsync(Guid bookingId, Guid technicianId);
+        Task AssignTechnicianAsync(Guid bookingId, Guid? technicianId);
 
         Task CancelBookingAsync(Guid bookingId);
 

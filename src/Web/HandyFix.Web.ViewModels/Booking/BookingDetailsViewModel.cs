@@ -6,6 +6,7 @@ namespace HandyFix.Web.ViewModels.Booking
 
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.Administration.Technicians;
 
     using Mapster;
 
@@ -41,13 +42,18 @@ namespace HandyFix.Web.ViewModels.Booking
 
         public string TechnicianName { get; set; }
 
+        public Guid? TechnicianId { get; set; }
+
         public string PaymentStatus { get; set; }
 
         public IEnumerable<string> Services { get; set; }
 
         public IEnumerable<string> ImageUrls { get; set; }
 
-        public IEnumerable<Technician> Technicians { get; set; } = new List<Technician>();
+        /// <summary>
+        /// Populated by the controller, not mapped: the assignment picker's options.
+        /// </summary>
+        public IEnumerable<TechnicianOptionViewModel> Technicians { get; set; } = new List<TechnicianOptionViewModel>();
 
         public void CreateMappings(TypeAdapterConfig config)
         {
