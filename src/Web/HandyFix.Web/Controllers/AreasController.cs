@@ -11,21 +11,25 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Configuration;
 
     public class AreasController : BaseController
     {
         private readonly IServiceAreasService areasService;
         private readonly IServicesService servicesService;
         private readonly IReviewsService reviewsService;
+        private readonly IConfiguration configuration;
 
         public AreasController(
             IServiceAreasService areasService,
             IServicesService servicesService,
-            IReviewsService reviewsService)
+            IReviewsService reviewsService,
+            IConfiguration configuration)
         {
             this.areasService = areasService;
             this.servicesService = servicesService;
             this.reviewsService = reviewsService;
+            this.configuration = configuration;
         }
 
         [Route("Areas", Name = "Areas")]
@@ -57,13 +61,19 @@ namespace HandyFix.Web.Controllers
             var handymanServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman");
             var relatedServices = plumbingServices.Take(2).Concat(handymanServices.Take(2)).ToList();
 
-            var reviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(3);
+            // Hidden on-site until the Google Business Profile import ships, see
+            // Business:ShowOnSiteReviews.
+            var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
+            var reviews = showOnSiteReviews
+                ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(3)
+                : Enumerable.Empty<ReviewViewModel>();
 
             var model = new ServiceAreaDetailsPageViewModel
             {
                 Area = area,
                 RelatedServices = relatedServices,
                 Reviews = reviews,
+                ShowOnSiteReviews = showOnSiteReviews,
             };
 
             this.ViewData["Title"] = $"Handyman & Plumbing in {area.Name} - HandyFix";

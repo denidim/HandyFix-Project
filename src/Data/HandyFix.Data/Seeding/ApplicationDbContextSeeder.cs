@@ -33,7 +33,6 @@ namespace HandyFix.Data.Seeding
                               new ServicesSeeder(),
                               new ServiceAreasSeeder(),
                               new TechniciansSeeder(),
-                              new ReviewSeeder(),
                               new SettingsSeeder(),
                           };
 

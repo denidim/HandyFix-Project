@@ -21,24 +21,9 @@ namespace HandyFix.Services.Data.Reviews
             this.reviewRepository = reviewRepository;
         }
 
-        public async Task AddReviewAsync(string customerName, string comment, int rating, string userId = null)
-        {
-            var review = new Review
-            {
-                CustomerName = customerName,
-                Comment = comment,
-                Rating = rating,
-                UserId = userId,
-                IsApproved = false,
-            };
-
-            await this.reviewRepository.AddAsync(review);
-            await this.reviewRepository.SaveChangesAsync();
-        }
-
         public async Task ApproveReviewAsync(Guid id)
         {
-            var review = await this.reviewRepository.AllWithDeleted().FirstOrDefaultAsync(x => x.Id == id);
+            var review = await this.reviewRepository.All().FirstOrDefaultAsync(x => x.Id == id);
             if (review != null)
             {
                 review.IsApproved = true;
@@ -71,7 +56,7 @@ namespace HandyFix.Services.Data.Reviews
             bool descending = true,
             string statusFilter = null)
         {
-            var query = this.reviewRepository.AllWithDeleted();
+            var query = this.reviewRepository.All();
 
             if (string.Equals(statusFilter, "Approved", StringComparison.OrdinalIgnoreCase))
             {

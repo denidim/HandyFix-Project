@@ -6,6 +6,8 @@ namespace HandyFix.Web.ViewModels.Reviews
     {
         public IEnumerable<ReviewViewModel> Reviews { get; set; }
 
-        public ReviewInputModel NewReview { get; set; }
+        public string GoogleReviewsUrl { get; set; }
+
+        public bool ShowOnSiteReviews { get; set; }
     }
 }

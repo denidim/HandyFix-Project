@@ -15,5 +15,7 @@ namespace HandyFix.Web.ViewModels.Home
         public IEnumerable<CategoryViewModel> Categories { get; set; }
 
         public IEnumerable<ReviewViewModel> SliderReviews { get; set; }
+
+        public bool ShowOnSiteReviews { get; set; }
     }
 }

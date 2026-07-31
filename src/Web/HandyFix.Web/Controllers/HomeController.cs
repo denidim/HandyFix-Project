@@ -17,6 +17,7 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Configuration;
 
     public class HomeController : BaseController
     {
@@ -25,19 +26,22 @@ namespace HandyFix.Web.Controllers
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
         private readonly IImageService imageService;
+        private readonly IConfiguration configuration;
 
         public HomeController(
             IReviewsService reviewsService,
             IInquiriesService inquiriesService,
             IServicesService servicesService,
             ICategoriesService categoriesService,
-            IImageService imageService)
+            IImageService imageService,
+            IConfiguration configuration)
         {
             this.reviewsService = reviewsService;
             this.inquiriesService = inquiriesService;
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
             this.imageService = imageService;
+            this.configuration = configuration;
         }
 
         public async Task<IActionResult> Index()
@@ -46,14 +50,19 @@ namespace HandyFix.Web.Controllers
             var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
             var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
 
-            // Approved Reviews for slider
-            var sliderReviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6);
+            // Approved Reviews for slider — hidden on-site until the Google Business Profile
+            // import ships, see Business:ShowOnSiteReviews.
+            var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
+            var sliderReviews = showOnSiteReviews
+                ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6)
+                : Enumerable.Empty<ReviewViewModel>();
 
             var model = new HomeIndexViewModel
             {
                 Services = services,
                 Categories = categories,
                 SliderReviews = sliderReviews,
+                ShowOnSiteReviews = showOnSiteReviews,
                 PopularServices = services.Take(4).ToList(),
             };
 
@@ -92,11 +101,16 @@ namespace HandyFix.Web.Controllers
         [Route("Reviews")]
         public async Task<IActionResult> Reviews()
         {
-            var approvedReviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(50);
+            var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
+            var approvedReviews = showOnSiteReviews
+                ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(50)
+                : Enumerable.Empty<ReviewViewModel>();
+
             var model = new ReviewsListViewModel
             {
                 Reviews = approvedReviews,
-                NewReview = new ReviewInputModel(),
+                GoogleReviewsUrl = this.configuration["Business:GoogleReviewsUrl"],
+                ShowOnSiteReviews = showOnSiteReviews,
             };
 
             this.ViewData["Title"] = "Customer Reviews - HandyFix London";

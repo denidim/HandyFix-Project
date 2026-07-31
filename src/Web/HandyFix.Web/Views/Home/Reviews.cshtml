@@ -19,187 +19,133 @@
         </div>
     </section>
 
-    @if (this.TempData["SuccessMessage"] != null)
+    @if (Model.ShowOnSiteReviews)
     {
-        <div class="alert alert-success p-3 rounded-lg mb-4 text-center">
-            @this.TempData["SuccessMessage"]
+        <div class="reviews-container mt-12">
+            <!-- Sidebar: Google Reviews CTA -->
+            <aside class="order-2 order-lg-1">
+                <div class="glass-card rounded-xl p-4 sticky-top reviews-sidebar-sticky text-center">
+                    <span class="material-symbols-outlined text-secondary fs-36 mb-2">rate_review</span>
+                    <h2 class="font-headline-md text-primary mb-2">Loved our work?</h2>
+                    <p class="text-muted mb-4">We'd love it if you shared your experience on Google — it's the best way to help other homeowners find us.</p>
+                    @if (!string.IsNullOrWhiteSpace(Model.GoogleReviewsUrl))
+                    {
+                        <a href="@Model.GoogleReviewsUrl" target="_blank" rel="noopener" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
+                            <span>Read Reviews on Google</span>
+                            <span class="material-symbols-outlined">open_in_new</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <p class="text-muted fs-12 mb-0">Our Google Business Profile is coming soon.</p>
+                    }
+                </div>
+            </aside>
+
+            <!-- Main Feed: Testimonials -->
+            <main class="order-1 order-lg-2">
+                <!-- Stat Overview -->
+                <div class="stat-overview-row">
+                    <div class="stat-overview-pill">
+                        <span class="num-highlight">4.9</span>
+                        <div>
+                            <div class="d-flex text-warning">
+                                <span class="material-symbols-outlined icon-fill fs-18">star</span>
+                                <span class="material-symbols-outlined icon-fill fs-18">star</span>
+                                <span class="material-symbols-outlined icon-fill fs-18">star</span>
+                                <span class="material-symbols-outlined icon-fill fs-18">star</span>
+                                <span class="material-symbols-outlined icon-fill fs-18">star</span>
+                            </div>
+                            <p class="text-muted mb-0 fs-12 fw-semibold">Global Satisfaction</p>
+                        </div>
+                    </div>
+                    <div class="stat-overview-pill">
+                        <span class="num-highlight">2.4k</span>
+                        <div>
+                            <p class="text-primary mb-0 fs-14 fw-bold">Verified Reviews</p>
+                            <p class="text-muted mb-0 fs-11">Updated today</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial List -->
+                <div class="review-feed">
+                    @if (Model.Reviews.Any())
+                    {
+                        @foreach (var review in Model.Reviews)
+                        {
+                            <!-- Card -->
+                            <article class="review-card">
+                                <div class="review-author-row">
+                                    <div class="review-author-info">
+                                        <div class="review-avatar">
+                                            @if (!string.IsNullOrEmpty(review.CustomerName) && review.CustomerName.Length >= 2)
+                                            {
+                                                <span>@review.CustomerName.Substring(0, 2).ToUpper()</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="material-symbols-outlined">person</span>
+                                            }
+                                        </div>
+                                        <div>
+                                            <h3 class="font-headline-sm text-primary mb-0 fs-16 fw-bold">@review.CustomerName</h3>
+                                            <p class="text-muted mb-0 fs-12">Client Review</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-warning d-flex">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= review.Rating)
+                                            {
+                                                <span class="material-symbols-outlined icon-fill fs-20">star</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="material-symbols-outlined icon-unfill fs-20">star</span>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                <p class="font-body-md text-on-surface mb-3">
+                                    "@review.Comment"
+                                </p>
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <small class="text-muted fs-11">@review.CreatedOn.ToString("dd MMM yyyy")</small>
+                                </div>
+                            </article>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center p-5 text-muted bg-light rounded-xl reviews-empty-state">
+                            <span class="material-symbols-outlined text-muted mb-2 fs-36">rate_review</span>
+                            <p class="mb-0">No reviews published yet. Be the first to share your experience!</p>
+                        </div>
+                    }
+                </div>
+            </main>
         </div>
     }
-
-    <div class="reviews-container mt-12">
-        <!-- Sidebar: Review Form -->
-        <aside class="order-2 order-lg-1">
-            <div class="glass-card rounded-xl p-4 sticky-top reviews-sidebar-sticky">
-                <h2 class="font-headline-md text-primary mb-4">Submit Your Review</h2>
-
-                <form asp-controller="Reviews" asp-action="Submit" method="post" class="d-flex flex-column gap-3" id="reviewForm">
-                    <div class="form-field">
-                        <label asp-for="NewReview.CustomerName" class="form-label fw-semibold">Full Name</label>
-                        <input asp-for="NewReview.CustomerName" name="CustomerName" class="form-control" placeholder="John Doe" required />
-                        <span asp-validation-for="NewReview.CustomerName" class="validation-error"></span>
-                    </div>
-
-                    <div class="form-field">
-                        <label class="form-label fw-semibold">Rating</label>
-                        <div class="rating-selector-buttons" id="ratingSelector">
-                            <button class="material-symbols-outlined star-btn" data-value="1" type="button">star</button>
-                            <button class="material-symbols-outlined star-btn" data-value="2" type="button">star</button>
-                            <button class="material-symbols-outlined star-btn" data-value="3" type="button">star</button>
-                            <button class="material-symbols-outlined star-btn" data-value="4" type="button">star</button>
-                            <button class="material-symbols-outlined star-btn" data-value="5" type="button">star</button>
-                        </div>
-                        <!-- Hidden Select to bind into Model -->
-                        <select asp-for="NewReview.Rating" name="Rating" id="hiddenRating" class="d-none" required>
-                            <option value="">Select rating</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                        </select>
-                        <span asp-validation-for="NewReview.Rating" class="validation-error"></span>
-                    </div>
-
-                    <div class="form-field">
-                        <label asp-for="NewReview.Comment" class="form-label fw-semibold">Your Experience</label>
-                        <textarea asp-for="NewReview.Comment" name="Comment" class="form-control resize-none" rows="4" placeholder="How was your booking experience or service repair?" required></textarea>
-                        <span asp-validation-for="NewReview.Comment" class="validation-error"></span>
-                    </div>
-
-                    <div class="pt-2">
-                        <button class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold" type="submit">
-                            <span>Post Review</span>
-                            <span class="material-symbols-outlined">send</span>
-                        </button>
-                    </div>
-                </form>
-
-                <div class="mt-4 pt-4 info-bottom-action">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-light p-2 rounded-circle d-flex align-items-center justify-content-center reviews-trust-icon-box">
-                            <span class="material-symbols-outlined text-secondary">verified</span>
-                        </div>
-                        <div>
-                            <p class="font-label-sm text-primary mb-0 fw-semibold">Trust &amp; Safety</p>
-                            <p class="text-muted mb-0 fs-11">Every review is manually verified by our support team.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Feed: Testimonials -->
-        <main class="order-1 order-lg-2">
-            <!-- Stat Overview -->
-            <div class="stat-overview-row">
-                <div class="stat-overview-pill">
-                    <span class="num-highlight">4.9</span>
-                    <div>
-                        <div class="d-flex text-warning">
-                            <span class="material-symbols-outlined icon-fill fs-18">star</span>
-                            <span class="material-symbols-outlined icon-fill fs-18">star</span>
-                            <span class="material-symbols-outlined icon-fill fs-18">star</span>
-                            <span class="material-symbols-outlined icon-fill fs-18">star</span>
-                            <span class="material-symbols-outlined icon-fill fs-18">star</span>
-                        </div>
-                        <p class="text-muted mb-0 fs-12 fw-semibold">Global Satisfaction</p>
-                    </div>
-                </div>
-                <div class="stat-overview-pill">
-                    <span class="num-highlight">2.4k</span>
-                    <div>
-                        <p class="text-primary mb-0 fs-14 fw-bold">Verified Reviews</p>
-                        <p class="text-muted mb-0 fs-11">Updated today</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Testimonial List -->
-            <div class="review-feed">
-                @if (Model.Reviews.Any())
+    else
+    {
+        <div class="text-center mt-12">
+            <div class="glass-card rounded-xl p-5 mx-auto max-w-2xl">
+                <span class="material-symbols-outlined text-secondary fs-36 mb-2">rate_review</span>
+                <h2 class="font-headline-md text-primary mb-2">Loved our work?</h2>
+                @if (!string.IsNullOrWhiteSpace(Model.GoogleReviewsUrl))
                 {
-                    @foreach (var review in Model.Reviews)
-                    {
-                        <!-- Card -->
-                        <article class="review-card">
-                            <div class="review-author-row">
-                                <div class="review-author-info">
-                                    <div class="review-avatar">
-                                        @if (!string.IsNullOrEmpty(review.CustomerName) && review.CustomerName.Length >= 2)
-                                        {
-                                            <span>@review.CustomerName.Substring(0, 2).ToUpper()</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="material-symbols-outlined">person</span>
-                                        }
-                                    </div>
-                                    <div>
-                                        <h3 class="font-headline-sm text-primary mb-0 fs-16 fw-bold">@review.CustomerName</h3>
-                                        <p class="text-muted mb-0 fs-12">Client Review</p>
-                                    </div>
-                                </div>
-                                <div class="text-warning d-flex">
-                                    @for (int i = 1; i <= 5; i++)
-                                    {
-                                        if (i <= review.Rating)
-                                        {
-                                            <span class="material-symbols-outlined icon-fill fs-20">star</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="material-symbols-outlined icon-unfill fs-20">star</span>
-                                        }
-                                    }
-                                </div>
-                            </div>
-                            <p class="font-body-md text-on-surface mb-3">
-                                "@review.Comment"
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="verified-badge">
-                                    <span class="material-symbols-outlined fs-14">verified_user</span>
-                                    <span>Verified Client</span>
-                                </div>
-                                <small class="text-muted fs-11">@review.CreatedOn.ToString("dd MMM yyyy")</small>
-                            </div>
-                        </article>
-                    }
+                    <p class="text-muted mb-4">We're setting up our Google Business Profile so you can read (and leave) reviews there.</p>
+                    <a href="@Model.GoogleReviewsUrl" target="_blank" rel="noopener" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold max-w-xl mx-auto">
+                        <span>Read Reviews on Google</span>
+                        <span class="material-symbols-outlined">open_in_new</span>
+                    </a>
                 }
                 else
                 {
-                    <div class="text-center p-5 text-muted bg-light rounded-xl reviews-empty-state">
-                        <span class="material-symbols-outlined text-muted mb-2 fs-36">rate_review</span>
-                        <p class="mb-0">No reviews published yet. Be the first to share your experience!</p>
-                    </div>
+                    <p class="text-muted mb-0">We're setting up our Google Business Profile so you can read (and leave) reviews there — check back soon.</p>
                 }
             </div>
-        </main>
-    </div>
+        </div>
+    }
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        const stars = document.querySelectorAll('#ratingSelector .star-btn');
-        const hiddenRating = document.getElementById('hiddenRating');
-
-        stars.forEach((star, index) => {
-            star.addEventListener('click', () => {
-                const ratingValue = index + 1;
-                hiddenRating.value = ratingValue;
-
-                // Update visual styles
-                stars.forEach((s, i) => {
-                    if (i < ratingValue) {
-                        s.classList.add('star-active');
-                        s.style.fontVariationSettings = "'FILL' 1";
-                    } else {
-                        s.classList.remove('star-active');
-                        s.style.fontVariationSettings = "'FILL' 0";
-                    }
-                });
-            });
-        });
-    </script>
-}

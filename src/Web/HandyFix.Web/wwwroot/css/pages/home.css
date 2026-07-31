@@ -478,11 +478,6 @@
   background-color: var(--secondary-container);
 }
 
-.testimonial-role-label {
-  margin: 0;
-  font-size: 12px;
-}
-
 .btn-testimonial-review {
   display: inline-flex;
   align-items: center;

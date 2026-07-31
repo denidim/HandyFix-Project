@@ -8,8 +8,6 @@ namespace HandyFix.Services.Data.Reviews
 
     public interface IReviewsService
     {
-        Task AddReviewAsync(string customerName, string comment, int rating, string userId = null);
-
         Task ApproveReviewAsync(Guid id);
 
         Task DeleteReviewAsync(Guid id);

@@ -17,26 +17,6 @@ namespace HandyFix.Services.Data.Tests
     public class ReviewsServiceTests
     {
         [Fact]
-        public async Task AddReviewAsyncShouldAddUnapprovedReview()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-            
-            using var dbContext = new ApplicationDbContext(options);
-            using var repository = new EfDeletableEntityRepository<Review>(dbContext);
-
-            var service = new ReviewsService(repository);
-            await service.AddReviewAsync("Alice Smith", "Amazing plumbing repairs!", 5);
-
-            Assert.Equal(1, dbContext.Reviews.Count());
-            var review = dbContext.Reviews.First();
-            Assert.Equal("Alice Smith", review.CustomerName);
-            Assert.Equal(5, review.Rating);
-            Assert.Equal("Amazing plumbing repairs!", review.Comment);
-            Assert.False(review.IsApproved);
-        }
-
-        [Fact]
         public async Task ApproveReviewAsyncShouldMarkAsApproved()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -54,6 +34,26 @@ namespace HandyFix.Services.Data.Tests
 
             var updated = dbContext.Reviews.First(x => x.Id == review.Id);
             Assert.True(updated.IsApproved);
+        }
+
+        [Fact]
+        public async Task DeleteReviewAsyncShouldRemoveReviewFromGetAllAsyncResults()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Review>(dbContext);
+
+            var review = new Review { CustomerName = "Test Reviewer", Rating = 5, Comment = "Delete me please." };
+            dbContext.Reviews.Add(review);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ReviewsService(repository);
+            await service.DeleteReviewAsync(review.Id);
+
+            var results = (await service.GetAllAsync<ReviewViewModel>()).ToList();
+            Assert.Empty(results);
         }
 
         [Fact]

@@ -269,55 +269,57 @@
   </div>
 </section>
 
-<!-- Testimonials -->
-<section class="section testimonials-section">
-  <div class="testimonials-section-bg"></div>
-  <div class="page-container testimonials-content-layer">
-    <div class="section-header">
-      <h2 class="font-headline-lg text-white mb-4">What Our Customers Say</h2>
-      <p class="text-on-primary-container max-w-2xl mx-auto my-0">Real experiences from homeowners across Sutton, Croydon, and Epsom.</p>
-      <div class="mt-4">
-        <a asp-controller="Home" asp-action="Reviews" class="btn-testimonial-review">
-          <span class="material-symbols-outlined testimonial-review-icon">rate_review</span>
-          <span>Leave a Review</span>
-        </a>
-      </div>
-    </div>
-    
-    <div class="testimonials-grid">
-      @if (reviews.Any())
-      {
-          @foreach (var review in reviews)
+@if (Model.ShowOnSiteReviews)
+{
+    <!-- Testimonials -->
+    <section class="section testimonials-section">
+      <div class="testimonials-section-bg"></div>
+      <div class="page-container testimonials-content-layer">
+        <div class="section-header">
+          <h2 class="font-headline-lg text-white mb-4">What Our Customers Say</h2>
+          <p class="text-on-primary-container max-w-2xl mx-auto my-0">Real experiences from homeowners across Sutton, Croydon, and Epsom.</p>
+          <div class="mt-4">
+            <a asp-controller="Home" asp-action="Reviews" class="btn-testimonial-review">
+              <span class="material-symbols-outlined testimonial-review-icon">rate_review</span>
+              <span>Read All Reviews</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="testimonials-grid">
+          @if (reviews.Any())
           {
-              <div class="testimonial-card">
-                <div>
-                  <div class="testimonial-stars">
-                    @for (int i = 0; i < review.Rating; i++)
-                    {
-                        <span class="material-symbols-filled">star</span>
-                    }
+              @foreach (var review in reviews)
+              {
+                  <div class="testimonial-card">
+                    <div>
+                      <div class="testimonial-stars">
+                        @for (int i = 0; i < review.Rating; i++)
+                        {
+                            <span class="material-symbols-filled">star</span>
+                        }
+                      </div>
+                      <p class="font-body-md text-white-90 italic mb-6 lh-relaxed">"@review.Comment"</p>
+                    </div>
+                    <div class="testimonial-author">
+                      <div class="testimonial-avatar"></div>
+                      <div>
+                        <p class="font-bold text-white m-0">@review.CustomerName</p>
+                      </div>
+                    </div>
                   </div>
-                  <p class="font-body-md text-white-90 italic mb-6 lh-relaxed">"@review.Comment"</p>
-                </div>
-                <div class="testimonial-author">
-                  <div class="testimonial-avatar"></div>
-                  <div>
-                    <p class="font-bold text-white m-0">@review.CustomerName</p>
-                    <p class="text-on-primary-container testimonial-role-label">Verified Client</p>
-                  </div>
-                </div>
+              }
+          }
+          else
+          {
+              <div class="testimonials-empty-state">
+                  No reviews yet. Be the first to leave a review!
               </div>
           }
-      }
-      else
-      {
-          <div class="testimonials-empty-state">
-              No reviews yet. Be the first to leave a review!
-          </div>
-      }
-    </div>
-  </div>
-</section>
+        </div>
+      </div>
+    </section>
+}
 
 <!-- Final CTA Section -->
 <section class="section">

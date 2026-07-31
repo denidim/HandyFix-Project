@@ -12,5 +12,7 @@ namespace HandyFix.Web.ViewModels.ServiceAreas
         public IEnumerable<ServiceViewModel> RelatedServices { get; set; }
 
         public IEnumerable<ReviewViewModel> Reviews { get; set; }
+
+        public bool ShowOnSiteReviews { get; set; }
     }
 }
