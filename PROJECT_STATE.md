@@ -326,6 +326,19 @@ Closes Pre-Sprint 4 Tier 1 item 5 (see §4).
 
 ---
 
+## 3q. Email Provider Swap: SendGrid → Brevo (2026-07-31)
+
+Closes Pre-Sprint 4 Tier 1 item 7 (see §4). Reasoning in `docs/private/VISION_AND_CONTEXT.md` §5.11 — Twilio retired SendGrid's permanent free tier, leaving a $19.95/month minimum for capacity HandyFix will never use; Brevo's free tier (300 emails/day, permanent, no card) comfortably covers the real volume (roughly two emails per booking).
+
+- **New `BrevoEmailSender`** (`HandyFix.Services.Messaging`) implements `IEmailSender` with a direct `HttpClient` POST to Brevo's transactional email API (`https://api.brevo.com/v3/smtp/email`, `api-key` header) — no new NuGet dependency, since the request/response bodies are plain JSON handled with `System.Text.Json` (already in the BCL). `SendGridEmailSender` is deleted outright, along with the `Sendgrid` package reference (`HandyFix.Services.Messaging.csproj`, `Directory.Packages.props`) — this is a swap, not a dual-provider abstraction.
+- **One correctness fix picked up along the way**: `SendGridEmailSender` only `Console.WriteLine`'d the response status/body and never checked it, so a failed send (bad recipient, suspended account, quota exceeded) was silently swallowed. `BrevoEmailSender` checks `response.IsSuccessStatusCode` and throws with the response body on failure, consistent with the "fail loud" pattern already used for Stripe and the missing-key checks (§5 below).
+- **DI registration** (`Program.cs`) now reads `Brevo:ApiKey` instead of `SendGrid:ApiKey`, same fail-loud-outside-Development fallback to `NullMessageSender`. `BookingsService`/`PaymentsService` are untouched — both already depend only on `IEmailSender`, never the concrete sender.
+- **`README.md`** updated: the documented `dotnet user-secrets set` command is now `Brevo:ApiKey` (Brevo keys are prefixed `xkeysib-`), and the fail-loud paragraph now names Brevo.
+- **Not done here, operational not engineering**: creating the actual Brevo account and verifying a sender domain — needed before `Brevo:ApiKey` can be set for real in any environment. The `bookings@handyfix.co.uk`/`no-reply@handyfix.co.uk`/`admin@handyfix.co.uk` sender addresses are unchanged and will need revisiting alongside the rebrand (Tier 3 item 10), same as they would have under SendGrid.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, no orphaned `Sendgrid` reference). Not live-tested against a real Brevo account — no API key exists yet (see above) — so this is verified by build/compile correctness, not an actual send.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
@@ -371,7 +384,7 @@ Closes Pre-Sprint 4 Tier 1 item 5 (see §4).
 
 **6. Caching.** ~~Done.~~
 
-**7. Email provider swap — SendGrid → Brevo.** New, decided 2026-07-30. Twilio retired SendGrid's permanent free tier on 27 May 2025; new accounts now get a 60-day trial then a **$19.95/month minimum** (50,000 emails) — far more capacity than HandyFix's real volume (roughly two emails per booking, low hundreds per month even once busy) will ever use. **Brevo's free tier is 300 emails/day (~9,000/month), permanent, no credit card**, and comfortably covers HandyFix indefinitely. The existing `IEmailSender` abstraction (§1, "fail loud outside development" pattern) already isolates the provider — this is a contained new `BrevoEmailSender` implementation behind the same interface, not a redesign. Low urgency relative to Tiers 0–2, but cheap to do now.
+**7. Email provider swap — SendGrid → Brevo.** ~~Done — see §3q.~~
 
 **8. Manual per-slot technician assignment.** New, decided 2026-07-30 — **bigger scope than the original item 9 assumed.** `AvailabilityService.GenerateSlotsForRangeAsync` currently auto-assigns every generated slot to `technicianRepository.All().FirstOrDefaultAsync(x => x.IsActive)` — correct and safe with exactly one technician, but **not deterministic** once a second technician (Zaprqn's worker) is also active, since the query has no ordering. Confirmed at launch there will be more than one active technician, and the agreed model is **admin manually picks the technician per slot** — not automatic round-robin, which is real scheduling logic and out of scope for a 4-week launch. Needs: a technician dropdown/selector added to the admin Calendar's slot-generation flow, replacing the `FirstOrDefaultAsync` auto-pick. Independent of the real technician data itself (Tier 2 item 11), so the UI/logic can be built now against the seeded placeholder technician and re-pointed once real names land.
 

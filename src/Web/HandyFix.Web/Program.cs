@@ -86,10 +86,10 @@ namespace HandyFix.Web
             // Application services
             services.AddTransient<IEmailSender>(sp =>
             {
-                var apiKey = configuration["SendGrid:ApiKey"];
+                var apiKey = configuration["Brevo:ApiKey"];
                 if (!string.IsNullOrWhiteSpace(apiKey))
                 {
-                    return new SendGridEmailSender(apiKey);
+                    return new BrevoEmailSender(apiKey);
                 }
 
                 var env = sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
@@ -98,7 +98,7 @@ namespace HandyFix.Web
                     return new NullMessageSender();
                 }
 
-                throw new System.InvalidOperationException("SendGrid is not configured for this environment. Set SendGrid:ApiKey before accepting real bookings.");
+                throw new System.InvalidOperationException("Brevo is not configured for this environment. Set Brevo:ApiKey before accepting real bookings.");
             });
             services.AddTransient<ISettingsService, SettingsService>();
             services.AddTransient<ICategoriesService, CategoriesService>();
