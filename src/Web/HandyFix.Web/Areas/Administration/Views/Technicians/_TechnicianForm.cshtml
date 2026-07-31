@@ -1,0 +1,49 @@
+@model HandyFix.Web.ViewModels.Administration.Technicians.TechnicianAdminInputModel
+@{
+    var isCreate = this.ViewData["IsCreate"] as bool? ?? false;
+    var action = isCreate ? "Create" : "Edit";
+    var submitLabel = isCreate ? "Add Technician" : "Update Technician";
+}
+
+<div class="rounded-xl shadow-sm p-5 p-md-5 admin-card">
+    <form asp-area="Administration" asp-controller="Technicians" asp-action="@action" method="post" class="d-flex flex-column gap-5">
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label asp-for="FirstName" class="form-label font-label-sm text-on-surface-variant mb-2">First Name</label>
+                <input asp-for="FirstName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
+                <span asp-validation-for="FirstName" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 form-group">
+                <label asp-for="LastName" class="form-label font-label-sm text-on-surface-variant mb-2">Last Name</label>
+                <input asp-for="LastName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
+                <span asp-validation-for="LastName" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label asp-for="PhoneNumber" class="form-label font-label-sm text-on-surface-variant mb-2">Phone Number</label>
+                <input asp-for="PhoneNumber" class="form-control py-3 admin-form-control form-pad-standard" type="tel" maxlength="20" required />
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Sent to the customer in the booking-confirmation email once this technician is assigned.</span>
+                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="form-group form-check d-flex align-items-center gap-2 m-0 ps-0">
+            <input asp-for="IsActive" class="form-check-input checkbox-lg" type="checkbox" />
+            <label asp-for="IsActive" class="form-check-label font-label-sm text-on-surface font-bold label-clickable">Active (can be assigned to new bookings)</label>
+        </div>
+
+        <div class="pt-4 d-flex flex-column flex-md-row align-items-center justify-content-end gap-3 form-actions-row">
+            <a asp-area="Administration" asp-controller="Technicians" asp-action="Index" class="btn btn-outline font-button-text admin-btn-outline btn-py3-px8">Cancel</a>
+            <button class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg btn-py3-px8" type="submit">
+                <span class="material-symbols-outlined">save</span>
+                <span>@submitLabel</span>
+            </button>
+        </div>
+    </form>
+</div>

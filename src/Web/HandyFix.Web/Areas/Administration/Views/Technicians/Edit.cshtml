@@ -1,0 +1,22 @@
+@model HandyFix.Web.ViewModels.Administration.Technicians.TechnicianAdminInputModel
+@{
+    this.ViewData["Title"] = "Edit Technician";
+    this.ViewData["IsCreate"] = false;
+}
+
+<nav class="breadcrumb-nav mb-4 admin-header-row" aria-label="breadcrumb">
+    <a asp-area="Administration" asp-controller="Dashboard" asp-action="Index">Admin</a>
+    <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+    <a asp-area="Administration" asp-controller="Technicians" asp-action="Index">Technicians</a>
+    <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+    <span class="breadcrumb-current">@Model.FirstName @Model.LastName</span>
+</nav>
+
+<div class="mb-5">
+    <h2 class="admin-page-title">Edit Technician</h2>
+    <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Changes apply to future confirmation emails. Bookings already assigned to this technician keep their assignment.</p>
+</div>
+
+<div class="mx-auto admin-form-container">
+    <partial name="_TechnicianForm" model="Model" />
+</div>
