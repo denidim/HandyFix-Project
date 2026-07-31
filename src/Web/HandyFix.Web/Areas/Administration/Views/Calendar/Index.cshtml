@@ -59,7 +59,7 @@
                                 @if (slot.IsBooked)
                                 {
                                     <span class="rounded slot-tag slot-tag-booked mb-1">Booked</span>
-                                    <p class="font-body-md text-primary mb-0 fs-13">Ref #@slot.BookingId.ToString().Substring(0, 8).ToUpper() | Tech: @(slot.Technician != null ? $"{slot.Technician.FirstName} {slot.Technician.LastName}" : "Unassigned")</p>
+                                    <p class="font-body-md text-primary mb-0 fs-13">Ref #@slot.BookingId.ToString().Substring(0, 8).ToUpper()</p>
                                 }
                                 else if (slot.IsBlocked)
                                 {
@@ -69,7 +69,7 @@
                                 else
                                 {
                                     <span class="rounded slot-tag slot-tag-available mb-1">Available</span>
-                                    <p class="font-body-md text-primary mb-0 fs-13">Standard Open Slot | Tech: @(slot.Technician != null ? $"{slot.Technician.FirstName} {slot.Technician.LastName}" : "Unassigned")</p>
+                                    <p class="font-body-md text-primary mb-0 fs-13">Standard Open Slot</p>
                                 }
                             </div>
                         </div>

@@ -23,13 +23,12 @@ namespace HandyFix.Services.Data.Tests
             
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
 
             var slot = new AvailabilitySlot { StartTime = DateTime.Today.AddHours(9), EndTime = DateTime.Today.AddHours(10), IsBooked = false };
             dbContext.AvailabilitySlots.Add(slot);
             await dbContext.SaveChangesAsync();
 
-            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var service = new AvailabilityService(slotRepository);
             var bookingId = Guid.NewGuid();
             var result = await service.BookSlotAsync(slot.Id, bookingId);
 
@@ -47,7 +46,6 @@ namespace HandyFix.Services.Data.Tests
             
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
 
             // Add slots on different dates
             var date1 = DateTime.Today.AddDays(1);
@@ -59,7 +57,7 @@ namespace HandyFix.Services.Data.Tests
             dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = date2.AddHours(10), EndTime = date2.AddHours(11), IsBooked = true });
             await dbContext.SaveChangesAsync();
 
-            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var service = new AvailabilityService(slotRepository);
             var dates = (await service.GetAvailableDatesAsync()).ToList();
 
             Assert.Equal(2, dates.Count);
@@ -75,7 +73,6 @@ namespace HandyFix.Services.Data.Tests
 
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
 
             var existingBookingId = Guid.NewGuid();
             var slot = new AvailabilitySlot
@@ -88,7 +85,7 @@ namespace HandyFix.Services.Data.Tests
             dbContext.AvailabilitySlots.Add(slot);
             await dbContext.SaveChangesAsync();
 
-            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var service = new AvailabilityService(slotRepository);
             var result = await service.BookSlotAsync(slot.Id, Guid.NewGuid());
 
             Assert.False(result);
@@ -104,7 +101,6 @@ namespace HandyFix.Services.Data.Tests
 
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
 
             var slot = new AvailabilitySlot
             {
@@ -116,7 +112,7 @@ namespace HandyFix.Services.Data.Tests
             dbContext.AvailabilitySlots.Add(slot);
             await dbContext.SaveChangesAsync();
 
-            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var service = new AvailabilityService(slotRepository);
             var result = await service.BookSlotAsync(slot.Id, Guid.NewGuid());
 
             Assert.False(result);
@@ -130,7 +126,6 @@ namespace HandyFix.Services.Data.Tests
 
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
 
             var slot = new AvailabilitySlot { StartTime = DateTime.Today.AddHours(9), EndTime = DateTime.Today.AddHours(10), IsBooked = false };
             dbContext.AvailabilitySlots.Add(slot);
@@ -141,7 +136,7 @@ namespace HandyFix.Services.Data.Tests
             // Server's auto-incrementing rowversion column would in production.
             dbContext.Entry(slot).Property(x => x.RowVersion).OriginalValue = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var service = new AvailabilityService(slotRepository);
             var result = await service.BookSlotAsync(slot.Id, Guid.NewGuid());
 
             Assert.False(result);
@@ -155,7 +150,6 @@ namespace HandyFix.Services.Data.Tests
 
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
 
             var slot = new AvailabilitySlot
             {
@@ -171,7 +165,7 @@ namespace HandyFix.Services.Data.Tests
             // read and our write, exactly as SQL Server's rowversion column would.
             dbContext.Entry(slot).Property(x => x.RowVersion).OriginalValue = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var service = new AvailabilityService(slotRepository);
             var result = await service.ReleaseSlotAsync(slot.Id);
 
             Assert.False(result);
@@ -185,7 +179,6 @@ namespace HandyFix.Services.Data.Tests
 
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var technicianRepository = new EfDeletableEntityRepository<Technician>(dbContext);
 
             // Today's only slot already started an hour ago; tomorrow has a normal slot.
             var pastSlot = new AvailabilitySlot
@@ -205,7 +198,7 @@ namespace HandyFix.Services.Data.Tests
             dbContext.AvailabilitySlots.Add(futureSlot);
             await dbContext.SaveChangesAsync();
 
-            var service = new AvailabilityService(slotRepository, technicianRepository);
+            var service = new AvailabilityService(slotRepository);
             var dates = (await service.GetAvailableDatesAsync()).ToList();
 
             Assert.DoesNotContain(DateTime.Today, dates);

@@ -14,14 +14,10 @@ namespace HandyFix.Services.Data.Availability
     public class AvailabilityService : IAvailabilityService
     {
         private readonly IDeletableEntityRepository<AvailabilitySlot> slotRepository;
-        private readonly IDeletableEntityRepository<Technician> technicianRepository;
 
-        public AvailabilityService(
-            IDeletableEntityRepository<AvailabilitySlot> slotRepository,
-            IDeletableEntityRepository<Technician> technicianRepository)
+        public AvailabilityService(IDeletableEntityRepository<AvailabilitySlot> slotRepository)
         {
             this.slotRepository = slotRepository;
-            this.technicianRepository = technicianRepository;
         }
 
         public async Task<IEnumerable<DateTime>> GetAvailableDatesAsync(int daysAhead = 30)
@@ -156,12 +152,6 @@ namespace HandyFix.Services.Data.Availability
             var start = startDate.Date;
             var end = endDate.Date;
 
-            var defaultTechnician = await this.technicianRepository.All().FirstOrDefaultAsync(x => x.IsActive);
-            if (defaultTechnician == null)
-            {
-                return; // Exit safely if no technician exists
-            }
-
             bool modificationsMade = false;
 
             for (var date = start; date <= end; date = date.AddDays(1))
@@ -188,7 +178,6 @@ namespace HandyFix.Services.Data.Availability
                         {
                             StartTime = slotStart,
                             EndTime = slotEnd,
-                            TechnicianId = defaultTechnician.Id,
                             IsBooked = false,
                             IsBlocked = false,
                         };

@@ -63,8 +63,8 @@ namespace HandyFix.Services.Data.Bookings
                 throw new InvalidOperationException("Booking status 'Pending' is not seeded.");
             }
 
-            // Slot must exist before we do any work; its StartTime/TechnicianId are needed
-            // below, and the actual availability check happens atomically in BookSlotAsync.
+            // Slot must exist before we do any work; its StartTime is needed below, and the
+            // actual availability check happens atomically in BookSlotAsync.
             var slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == model.SlotId);
             if (slot == null)
             {
@@ -92,7 +92,6 @@ namespace HandyFix.Services.Data.Bookings
                 UserId = userId,
                 TotalAmount = totalAmount,
                 DepositAmount = depositAmount,
-                TechnicianId = slot.TechnicianId,
                 BookingServices = new List<BookingService>(),
             };
 
@@ -350,9 +349,9 @@ namespace HandyFix.Services.Data.Bookings
                     throw new SlotUnavailableException("The selected time slot is no longer available. Please choose a different time.");
                 }
 
-                booking.TechnicianId = newSlot.TechnicianId;
-                await this.bookingRepository.SaveChangesAsync();
-
+                // The booking's own technician is deliberately left untouched. Slots carry no
+                // technician (see AvailabilitySlot) - moving a job to a different hour doesn't
+                // change who was assigned to it, so an admin's assignment survives a reschedule.
                 await transaction.CommitAsync();
             }
         }

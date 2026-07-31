@@ -139,7 +139,6 @@ namespace HandyFix.Services.Data.Tests
                 EndTime = DateTime.Today.AddHours(10),
                 IsBooked = true,
                 BookingId = booking.Id,
-                TechnicianId = technician.Id,
             };
             dbContext.AvailabilitySlots.Add(slot);
 

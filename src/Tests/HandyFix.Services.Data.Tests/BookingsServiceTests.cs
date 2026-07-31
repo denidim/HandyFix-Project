@@ -44,7 +44,7 @@ namespace HandyFix.Services.Data.Tests
             using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
-            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             var dbQueryRunner = new DbQueryRunner(dbContext);
@@ -150,7 +150,7 @@ namespace HandyFix.Services.Data.Tests
             using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
-            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             var dbQueryRunner = new DbQueryRunner(dbContext);
@@ -257,7 +257,7 @@ namespace HandyFix.Services.Data.Tests
             using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
-            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             var dbQueryRunner = new DbQueryRunner(dbContext);
@@ -277,6 +277,7 @@ namespace HandyFix.Services.Data.Tests
                 Address = "12 Main Rd, Sutton",
                 ProblemDescription = "Leaking kitchen sink pipe",
                 StatusId = pendingStatus.Id,
+                TechnicianId = technician.Id,
             };
             dbContext.Bookings.Add(booking);
 
@@ -292,7 +293,6 @@ namespace HandyFix.Services.Data.Tests
                 StartTime = DateTime.Today.AddDays(1).AddHours(11),
                 EndTime = DateTime.Today.AddDays(1).AddHours(12),
                 IsBooked = false,
-                TechnicianId = technician.Id,
             };
             dbContext.AvailabilitySlots.Add(oldSlot);
             dbContext.AvailabilitySlots.Add(newSlot);
@@ -319,6 +319,10 @@ namespace HandyFix.Services.Data.Tests
             Assert.Null(oldSlotInDb.BookingId);
             Assert.True(newSlotInDb.IsBooked);
             Assert.Equal(booking.Id, newSlotInDb.BookingId);
+
+            // Moving a job to a different hour must not disturb who was assigned to it. This
+            // used to be copied off the destination slot, which silently wiped the admin's
+            // assignment once slots stopped carrying a technician at all.
             Assert.Equal(technician.Id, bookingInDb.TechnicianId);
         }
 
@@ -346,7 +350,7 @@ namespace HandyFix.Services.Data.Tests
             using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
-            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             var dbQueryRunner = new DbQueryRunner(dbContext);
@@ -443,7 +447,7 @@ namespace HandyFix.Services.Data.Tests
             using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
-            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             var dbQueryRunner = new DbQueryRunner(dbContext);
@@ -521,7 +525,7 @@ namespace HandyFix.Services.Data.Tests
             using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
             using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
-            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             var dbQueryRunner = new DbQueryRunner(dbContext);
@@ -682,7 +686,7 @@ namespace HandyFix.Services.Data.Tests
             var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
             var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
 
-            var availabilityService = new AvailabilityService(slotRepo, technicianRepo);
+            var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
             var dbQueryRunner = new DbQueryRunner(dbContext);
