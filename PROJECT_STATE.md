@@ -291,7 +291,7 @@ Closes Pre-Sprint 4 Tier 1 item 3 (see §4) — started ahead of the client call
 - **Dead CSS removed alongside the markup**: `.reviews-trust-icon-box`, `.rating-selector-buttons`, `.star-btn`(`.star-active`), `.verified-badge`, and `.testimonial-role-label` — confirmed each had no other caller before deleting. `.info-bottom-action` was checked and kept — `Home/Terms.cshtml` still uses it.
 - **Explicitly not touched**, per the existing scope split in §4: the fabricated `4.9`/`2.4k Verified Reviews` stat pills on `Home/Reviews.cshtml` and the `12k+ Jobs Completed`/`4.9/5 Rating`/`Based on 2,500 reviews` trust-stats card on `Home/Index.cshtml` — those are Tier 3 item 16, blocked on real business facts from the client call, not this item.
 - **Verified**: `dotnet build src/HandyFix.sln` (0 errors); full suite now 46 service-layer (one test removed, `AddReviewAsyncShouldAddUnapprovedReview`, since the method it covered no longer exists) + 9 web-integration, all passing. Live local run + Playwright-driven screenshots of Home, Reviews, and an Areas details page confirmed no "Verified Client" text anywhere, the submission form is gone, the Google CTA renders its "coming soon" fallback correctly with an empty config value, and review cards still render normally.
-- **Known follow-up, deliberately not done here**: the local dev database still has the 5 old seeded rows (now orphaned from any seeder) plus at least one manually-added test row (`"test" / "TestTest"`) from earlier QA of the submission form — confirmed still visible in the live-run screenshots. Removing the seeder doesn't retroactively delete existing rows. Cleanup is a one-time admin action (`Areas/Administration/Reviews` already has working Approve/Delete per row) rather than a script — the user is deleting these rows themselves.
+- **Resolved 2026-07-31**: the local dev database had the 5 old seeded rows (orphaned once the seeder was deleted) plus a manually-added test row (`"test" / "TestTest"`) from earlier QA of the submission form. The user deleted all of them via `Areas/Administration/Reviews` once the bug in §3o was fixed — confirmed gone, no reviews remain in the local dev database.
 
 **Follow-up the same day, on-site display hidden entirely pending the Google API import**: showing a "be the first" empty state (or, worse, a stray Admin-approved row) still implied on-site reviews are a live feature, which they no longer are per the agreed strategy. Rather than rely on "zero rows happens to look empty," on-site review display is now gated behind an explicit `Business:ShowOnSiteReviews` config key (`appsettings.json`, default `false`) so it can't accidentally reappear before the Google Business Profile API import is actually built (§4 Tier 3, not started) — flipping one value turns it back on everywhere at once, same "5-minute edit later" pattern as `GoogleReviewsUrl`.
   - `HomeIndexViewModel`, `ReviewsListViewModel`, and `ServiceAreaDetailsPageViewModel` each gained a `ShowOnSiteReviews` bool; `HomeController` (`Index`, `Reviews`) and `AreasController` (`Details`, which now also takes `IConfiguration`) read the config value once and skip the `GetLatestApprovedAsync` call entirely when it's off, rather than fetching data that won't render.
@@ -312,6 +312,17 @@ Found while the user tried to delete the leftover fake/test review rows through 
 - **Fix**: both `GetAllAsync` and `ApproveReviewAsync` now query `All()` instead of `AllWithDeleted()`, so a soft-deleted review actually disappears from the admin list and can't be re-approved after deletion — consistent with how every other soft-deleted entity in the app behaves, and with the fact that this feature has no restore/undelete UI to justify reaching past the filter.
 - **Regression test added**: `DeleteReviewAsyncShouldRemoveReviewFromGetAllAsyncResults` (`ReviewsServiceTests.cs`) — deletes a review, then asserts `GetAllAsync` no longer returns it. This is the test that would have caught the original bug.
 - **Verified**: `dotnet test` on `HandyFix.Services.Data.Tests` — 47 passing (was 46, plus the new regression test). The Web test project wasn't rebuilt this pass since it has no code changes here and Visual Studio had the Web project's build output locked via a running IIS Express session at the time.
+- **Confirmed fixed by the user 2026-07-31**, live in the admin panel: Delete now actually removes a review from the list, no longer requiring a workaround.
+
+---
+
+## 3p. Broken Links & Metadata Cleanup (2026-07-31)
+
+Closes Pre-Sprint 4 Tier 1 item 5 (see §4).
+
+- **`Services/Index.cshtml`'s `quality-proof-image`** pointed at `/images/handyfix-proof.jpg`, which has never existed on disk — it always fell through to an external `gstatic.com` placeholder SVG (a third-party dependency for what's meant to be a trust-building image). Now points directly at `/images/hero.webp`, the sitewide fallback image already used the same way by `Home/Index.cshtml` and `Services/Category.cshtml`; the dead `onerror` chain was removed rather than kept pointed at a file that doesn't exist.
+- **`Home/Index.cshtml`'s `LocalBusiness` JSON-LD** carried an `"image": "https://handyfix.co.uk/images/logo.png"` entry — `logo.png` doesn't exist and won't until the rebrand name lands and the wordmark is built (Tier 3 item 15). Removed rather than guessed at; add it back when the real wordmark exists.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors).
 
 ---
 
@@ -356,7 +367,7 @@ Found while the user tried to delete the leftover fake/test review rows through 
 
 **4. Area map.** ~~Done — see §3l.~~
 
-**5. Broken links & metadata.** Fix `handyfix-proof.jpg` (`Views/Services/Index.cshtml:105`) — the file has never existed on disk, so it always falls through to an external gstatic placeholder SVG. Remove the missing `logo.png` from the JSON-LD (`Views/Home/Index.cshtml:351`) rather than generating one now — the wordmark itself is blocked on the rebrand name (Tier 3 item 15). When the name lands, build the wordmark as SVG from the existing Outfit font and the navbar's cyan accent dot — not as AI output, which cannot render text reliably.
+**5. Broken links & metadata.** ~~Done — see §3p.~~
 
 **6. Caching.** ~~Done.~~
 
