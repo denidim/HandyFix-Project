@@ -84,7 +84,6 @@ namespace HandyFix.Services.Data.Payments
             var payment = await this.paymentRepository.All()
                 .Include(x => x.Booking).ThenInclude(b => b.BookingServices).ThenInclude(bs => bs.Service)
                 .Include(x => x.Booking).ThenInclude(b => b.AvailabilitySlot)
-                .Include(x => x.Booking).ThenInclude(b => b.Technician)
                 .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
 
             if (payment == null)
@@ -136,10 +135,11 @@ namespace HandyFix.Services.Data.Payments
             var scheduledTime = booking.AvailabilitySlot != null
                 ? booking.AvailabilitySlot.StartTime.ToString("dd MMM yyyy 'at' HH:mm")
                 : "To be confirmed";
-            var technicianName = booking.Technician != null
-                ? $"{booking.Technician.FirstName} {booking.Technician.LastName}"
-                : "Not yet assigned";
 
+            // No technician line here on purpose. A technician is assigned by an admin after the
+            // deposit clears, so this email would always read "Not yet assigned" - which looks
+            // unfinished to the customer. The technician detail belongs in the admin-approval
+            // "CONFIRMED" email instead (BookingsService.UpdateStatusAsync).
             var clientSubject = "Your HandyFix Booking is Confirmed!";
             var clientBody = $@"
                 <h3>Hi {booking.CustomerFirstName},</h3>
@@ -149,8 +149,8 @@ namespace HandyFix.Services.Data.Payments
                     <li><strong>Service(s):</strong> {serviceNames}</li>
                     <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
                     <li><strong>Address:</strong> {booking.Address}</li>
-                    <li><strong>Technician:</strong> {technicianName}</li>
                 </ul>
+                <p>We'll confirm your assigned technician shortly.</p>
                 <p>We look forward to helping you. Thank you for choosing HandyFix!</p>";
 
             await this.emailSender.SendEmailAsync(

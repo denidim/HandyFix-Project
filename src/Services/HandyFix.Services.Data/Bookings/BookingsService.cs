@@ -220,7 +220,9 @@ namespace HandyFix.Services.Data.Bookings
 
         public async Task UpdateStatusAsync(Guid bookingId, string statusName)
         {
-            var booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
+            var booking = await this.bookingRepository.All()
+                .Include(x => x.Technician)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
             var status = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name.ToLower() == statusName.ToLower());
 
             if (booking != null && status != null)
@@ -230,12 +232,20 @@ namespace HandyFix.Services.Data.Bookings
 
                 if (statusName == "Approved")
                 {
+                    // This is the one customer email that names the technician - by the time an
+                    // admin approves, the assignment has been made. The deposit confirmation
+                    // deliberately says nothing about it (see PaymentsService).
+                    var technicianBlock = booking.Technician != null
+                        ? $@"<p>Your technician for this visit is <strong>{booking.Technician.FirstName} {booking.Technician.LastName}</strong>
+                             (<a href=""tel:{booking.Technician.PhoneNumber}"">{booking.Technician.PhoneNumber}</a>).</p>"
+                        : "<p>A professional technician is scheduled for your address at the selected slot.</p>";
+
                     // Send Booking Confirmed email
                     var subject = "Your HandyFix Booking is CONFIRMED!";
                     var body = $@"
                         <h3>Hi {booking.CustomerFirstName},</h3>
                         <p>We are pleased to inform you that your booking reference <strong>{booking.Id}</strong> is officially confirmed.</p>
-                        <p>A professional technician is scheduled for your address at the selected slot.</p>
+                        {technicianBlock}
                         <p>Thank you for choosing HandyFix!</p>";
 
                     await this.emailSender.SendEmailAsync(

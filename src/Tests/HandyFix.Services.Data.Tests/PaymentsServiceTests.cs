@@ -164,13 +164,16 @@ namespace HandyFix.Services.Data.Tests
 
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_email_test");
 
+            // The deposit confirmation names the service but deliberately not the technician -
+            // assignment happens after payment, so this email would usually have nothing real to
+            // say. This booking has a technician assigned precisely to prove it stays out.
             emailSenderMock.Verify(
                 x => x.SendEmailAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     "john@example.com",
                     It.IsAny<string>(),
-                    It.Is<string>(body => body.Contains("Leak Fix") && body.Contains("Alex Smith")),
+                    It.Is<string>(body => body.Contains("Leak Fix") && !body.Contains("Alex Smith")),
                     null),
                 Times.Once);
 
