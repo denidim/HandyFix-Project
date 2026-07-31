@@ -21,6 +21,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.BackgroundServices;
+    using HandyFix.Web.Services;
     using HandyFix.Web.ViewModels;
 
     using Microsoft.AspNetCore.Builder;
@@ -131,6 +132,8 @@ namespace HandyFix.Web
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 dbContext.Database.Migrate();
                 new ApplicationDbContextSeeder().SeedAsync(dbContext, serviceScope.ServiceProvider).GetAwaiter().GetResult();
+
+                DevelopmentCapacitySeeder.SeedAsync(serviceScope.ServiceProvider, app.Environment).GetAwaiter().GetResult();
             }
 
             MappingConfig.RegisterMappings(typeof(ErrorViewModel).GetTypeInfo().Assembly);

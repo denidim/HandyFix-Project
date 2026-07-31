@@ -27,8 +27,9 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         {
             var targetDate = date ?? DateTime.Today;
 
-            // Generate slots for today if not present
-            await this.availabilityService.GenerateSlotsForRangeAsync(targetDate, targetDate);
+            // Deliberately does not generate: simply viewing a day must not create capacity for
+            // it. Slots exist only when an admin generates them below (or the non-production
+            // capacity seeder does). An empty day renders the "no slots" empty state instead.
 
             // Fetch all slots for this day, whether booked, active, or blocked
             var slots = await this.slotRepository.All()

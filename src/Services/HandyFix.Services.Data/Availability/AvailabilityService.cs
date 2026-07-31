@@ -26,9 +26,6 @@ namespace HandyFix.Services.Data.Availability
             var today = DateTime.Today;
             var endDate = today.AddDays(daysAhead);
 
-            // Auto-generate default slots for the date range
-            await this.GenerateSlotsForRangeAsync(today, endDate);
-
             var dates = await this.slotRepository.All()
                 .Where(x => x.StartTime > now && x.StartTime <= endDate && !x.IsBooked && !x.IsBlocked)
                 .Select(x => x.StartTime.Date)
@@ -45,10 +42,7 @@ namespace HandyFix.Services.Data.Availability
             var nextDay = targetDate.AddDays(1);
             var now = DateTime.Now;
 
-            // 1. Ensure slots are fully generated and saved to DB before querying
-            await this.GenerateSlotsForRangeAsync(targetDate, targetDate);
-
-            // 2. Query using an index-friendly range comparison instead of .Date.
+            // Query using an index-friendly range comparison instead of .Date.
             // StartTime > now hides past hours when targetDate is today.
             return await this.slotRepository.All()
                 .Where(x => x.StartTime >= targetDate && x.StartTime < nextDay && x.StartTime > now && !x.IsBooked && !x.IsBlocked)
@@ -62,8 +56,6 @@ namespace HandyFix.Services.Data.Availability
             var targetDate = date.Date;
             var nextDay = targetDate.AddDays(1);
             var now = DateTime.Now;
-
-            await this.GenerateSlotsForRangeAsync(targetDate, targetDate);
 
             return await this.slotRepository.All()
                 .Where(x => x.StartTime >= targetDate && x.StartTime < nextDay && x.StartTime > now)
@@ -147,6 +139,12 @@ namespace HandyFix.Services.Data.Availability
             await this.slotRepository.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Creates business capacity for a date range. Only ever called deliberately - by an admin
+        /// through the Calendar, or by the non-production capacity seeder. Read paths never
+        /// generate: browsing the public booking page or the admin calendar must not silently
+        /// create capacity nobody decided to offer.
+        /// </summary>
         public async Task GenerateSlotsForRangeAsync(DateTime startDate, DateTime endDate)
         {
             var start = startDate.Date;

@@ -204,5 +204,94 @@ namespace HandyFix.Services.Data.Tests
             Assert.DoesNotContain(DateTime.Today, dates);
             Assert.Contains(tomorrow.Date, dates);
         }
+
+        [Fact]
+        public async Task GetAvailableDatesAsyncShouldNotGenerateCapacityWhenNoneExists()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+
+            var service = new AvailabilityService(slotRepository);
+            var dates = (await service.GetAvailableDatesAsync()).ToList();
+
+            // Reading availability used to generate 30 days of slots as a side effect, which meant
+            // simply browsing the public booking page created capacity nobody had decided to offer.
+            Assert.Empty(dates);
+            Assert.Empty(dbContext.AvailabilitySlots);
+        }
+
+        [Fact]
+        public async Task GetAllSlotsForDateAsyncShouldNotGenerateCapacityWhenNoneExists()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+
+            var service = new AvailabilityService(slotRepository);
+            var slots = (await service.GetAllSlotsForDateAsync<AvailabilitySlot>(DateTime.Today.AddDays(1))).ToList();
+
+            Assert.Empty(slots);
+            Assert.Empty(dbContext.AvailabilitySlots);
+        }
+
+        [Fact]
+        public async Task GenerateSlotsForRangeAsyncShouldCreateBusinessHoursWithNoTechniciansInTheDatabase()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+
+            // Deliberately no Technician rows: capacity no longer depends on anyone existing.
+            // This used to return early and silently generate nothing at all.
+            var monday = NextWeekday(DayOfWeek.Monday);
+            var service = new AvailabilityService(slotRepository);
+            await service.GenerateSlotsForRangeAsync(monday, monday);
+
+            var slots = dbContext.AvailabilitySlots.OrderBy(x => x.StartTime).ToList();
+
+            Assert.Equal(8, slots.Count);
+            Assert.Equal(monday.AddHours(9), slots.First().StartTime);
+            Assert.Equal(monday.AddHours(17), slots.Last().EndTime);
+        }
+
+        [Fact]
+        public async Task GenerateSlotsForRangeAsyncShouldSkipSundaysAndNotDuplicateExistingDays()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+
+            var sunday = NextWeekday(DayOfWeek.Sunday);
+            var monday = sunday.AddDays(1);
+
+            var service = new AvailabilityService(slotRepository);
+            await service.GenerateSlotsForRangeAsync(sunday, monday);
+            await service.GenerateSlotsForRangeAsync(sunday, monday);
+
+            var slots = dbContext.AvailabilitySlots.ToList();
+
+            Assert.Equal(8, slots.Count);
+            Assert.All(slots, slot => Assert.Equal(monday.Date, slot.StartTime.Date));
+        }
+
+        private static DateTime NextWeekday(DayOfWeek dayOfWeek)
+        {
+            var date = DateTime.Today.AddDays(1);
+            while (date.DayOfWeek != dayOfWeek)
+            {
+                date = date.AddDays(1);
+            }
+
+            return date;
+        }
     }
 }
