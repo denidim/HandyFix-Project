@@ -447,3 +447,12 @@ src/TextUi/
 
 # Private working notes - business/client context, never committed
 docs/private/
+
+# Environment-specific config - these will hold real connection strings and the private
+# database IP once deployment is wired up, so they must never be committed. Only the base
+# appsettings.json is tracked, and it carries placeholders only; appsettings.Development.json
+# is already ignored separately above.
+appsettings.Staging.json
+appsettings.Production.json
+**/appsettings.Staging.json
+**/appsettings.Production.json
