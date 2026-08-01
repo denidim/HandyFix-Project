@@ -69,7 +69,7 @@ src/Web/HandyFix.Web/wwwroot/images/areas/{slug}-hero.webp
 - **Dimensions:** 1600×700 (the `<img>` in `Areas/Details.cshtml` declares these).
 - **Format:** WebP, quality 80, to match what `ImageStorageService` produces for service images.
 - **Convert before copying it in.** Nothing in the app converts images on boot any more — the old
-  `ConvertExistingJpgServiceImages` sweep was removed (see `PROJECT_STATE.md` §3k). A `.jpg` or
+  `ConvertExistingJpgServiceImages` sweep was removed (see `PROJECT_STATE.md` Section 3k). A `.jpg` or
   `.png` dropped here is simply ignored.
 - **There is no upload UI for area images.** Unlike services, `ServiceArea` has no image column —
   the path is resolved by convention from the slug at the view layer.

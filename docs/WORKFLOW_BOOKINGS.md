@@ -179,6 +179,6 @@ Seeded statuses: `Pending`, `Approved`, `InProgress`, `Completed`, `Cancelled`, 
 
 ## Related
 
-- Architectural history and the reasoning behind these decisions: `PROJECT_STATE.md` §3r, plus §5
+- Architectural history and the reasoning behind these decisions: `PROJECT_STATE.md` Section 3r, plus Section 5
   ("Capacity and assignment are separate concerns", "Read paths must not write").
 - Adding a service area: `docs/WORKFLOW_SERVICE_AREAS.md`.
