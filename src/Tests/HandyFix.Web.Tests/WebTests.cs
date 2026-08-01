@@ -7,11 +7,11 @@
 
     using Xunit;
 
-    public class WebTests : IClassFixture<WebApplicationFactory<Program>>
+    public class WebTests : IClassFixture<SqliteWebApplicationFactory>
     {
-        private readonly WebApplicationFactory<Program> server;
+        private readonly SqliteWebApplicationFactory server;
 
-        public WebTests(WebApplicationFactory<Program> server)
+        public WebTests(SqliteWebApplicationFactory server)
         {
             this.server = server;
         }
