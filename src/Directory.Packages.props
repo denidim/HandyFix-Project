@@ -47,5 +47,7 @@
     <!-- Overrides to patch the NuGet.Packaging vulnerability -->
     <PackageVersion Include="NuGet.Packaging" Version="7.6.0" />
     <PackageVersion Include="NuGet.Protocol" Version="7.6.0" />
+    <!-- Overrides to patch the SQLitePCLRaw vulnerability (CVE-2025-6965) -->
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
   </ItemGroup>
 </Project>

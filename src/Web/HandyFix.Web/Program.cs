@@ -132,7 +132,20 @@ namespace HandyFix.Web
             using (var serviceScope = app.Services.CreateScope())
             {
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                dbContext.Database.Migrate();
+
+                // The migrations are SQL Server-specific (rowversion in particular), so they can
+                // only be replayed against SQL Server. A host running on any other provider is a
+                // test host pointed at Sqlite in-memory, which builds the schema from the model
+                // instead. Production and development both take the Migrate() branch.
+                if (dbContext.Database.IsSqlServer())
+                {
+                    dbContext.Database.Migrate();
+                }
+                else
+                {
+                    dbContext.Database.EnsureCreated();
+                }
+
                 new ApplicationDbContextSeeder().SeedAsync(dbContext, serviceScope.ServiceProvider).GetAwaiter().GetResult();
 
                 DevelopmentCapacitySeeder.SeedAsync(serviceScope.ServiceProvider, app.Environment).GetAwaiter().GetResult();
