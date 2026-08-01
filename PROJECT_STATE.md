@@ -442,10 +442,8 @@ Chosen by where bugs have genuinely shipped, not by chasing line coverage:
 - **`AdminServiceAreasControllerTests` (5)** — the §3m index-shift trap: with a blank row 0 pruned, an error on the surviving row must key to `Faqs[0]`, not `Faqs[1]`, or it renders against a row the admin cannot see.
 - **`AdminDeletionTests` (5)** — the deliberately opposite delete semantics: technicians with bookings are refused *with an explanation* (not a silent no-op, the §3o failure mode), while a service deletes its image **before** its row, since the image path is derived from the slug and becomes unfindable afterwards. Enforced with a `MockSequence`, so reordering the two lines fails the test.
 
-### Verified
-
 - `dotnet build src/HandyFix.sln` — **0 errors**. Full suite green: **57 service-layer + 61 web-integration/controller = 118**.
-- **Known, pre-existing, not introduced here**: adding `Microsoft.EntityFrameworkCore.Sqlite` to `HandyFix.Web.Tests` surfaces `NU1903` — `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 has a high-severity advisory ([GHSA-2m69-gcr7-jv3q](https://github.com/advisories/GHSA-2m69-gcr7-jv3q)). `HandyFix.Services.Data.Tests` already pulled the identical transitive package and already emitted this warning; this pass duplicated the reference into a second test project rather than introducing the risk. It is a test-only dependency and never ships. Worth resolving before CI starts failing builds on advisories.
+- **Resolved vulnerability warning**: adding `Microsoft.EntityFrameworkCore.Sqlite` originally surfaced `NU1903` — `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 had a high-severity advisory ([GHSA-2m69-gcr7-jv3q](https://github.com/advisories/GHSA-2m69-gcr7-jv3q)). This was resolved by pinning `SQLitePCLRaw.lib.e_sqlite3` to version `2.1.12` in `Directory.Packages.props` using Central Package Management (CPM) transitive pinning, resulting in a completely clean security audit.
 
 ---
 
