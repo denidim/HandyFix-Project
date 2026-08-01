@@ -3,7 +3,7 @@
 ![.NET](https://img.shields.io/badge/.NET-10.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**Professional web application** for a local plumbing and handyman business based in **South London** and operating across Kent.
+**Professional web application** for a local plumbing and handyman business based in **Chessington**, covering South West London and Surrey.
 
 **Goal**: High-conversion website with strong local SEO, online booking system and payment integration.
 
@@ -11,26 +11,29 @@
 
 ## 🚀 Features (In Progress)
 
-- [x] Clean Architecture + CQRS (MediatR)
-- [x] ASP.NET Core 10 MVC + Razor Pages
+- [x] Clean Architecture with strict layer separation
+- [x] ASP.NET Core 10 MVC + Razor Pages (Identity)
 - [x] Entity Framework Core + SQL Server
 - [x] Identity + Role-based authorization
 - [x] Central Package Management
-- [x] Booking calendar with real-time availability
+- [x] Booking calendar with concurrency-safe slot claiming
 - [x] Online payment + deposit (Stripe)
-- [x] Local SEO optimization (Google Business, schema markup)
+- [x] Structured data / schema markup for local SEO
 - [x] Admin dashboard for managing bookings
 - [x] Responsive design + mobile-first
+- [ ] Google Business Profile integration
+- [ ] CI/CD pipeline
 
 ---
 
 ## 🛠 Tech Stack
 
-- **Backend**: .NET 10, ASP.NET Core MVC, MediatR, AutoMapper
-- **Database**: SQL Server + EF Core
+- **Backend**: .NET 10, ASP.NET Core MVC + Razor Pages
+- **Database**: SQL Server + EF Core (code-first migrations)
+- **Mapping**: [Mapster](https://github.com/MapsterMapper/Mapster), via an `IMapFrom<T>` / `IMapTo<T>` convention registered at startup
 - **Frontend**: Bootstrap 5 + jQuery / vanilla JS
-- **Architecture**: Clean Architecture + Feature Folders
-- **Testing**: xUnit + Moq + FluentAssertions
+- **Architecture**: Clean Architecture — layered projects, MVC Areas for the admin panel
+- **Testing**: xUnit + Moq
 - **CI/CD**: GitHub Actions (planned)
 
 ---
@@ -39,23 +42,23 @@
 
 ```text
 src/                                 # Root source folder
-├── Common/                          # Shared constants, helpers, and cross-cutting concerns
+├── HandyFix.Common/                 # Shared constants and cross-cutting concerns
 ├── Data/                            # Data access layer (DAL)
-│   ├── HandyFix.Data/               # EF Core DbContext and database migrations
-│   ├── HandyFix.Data.Common/        # Repository interfaces and base classes
+│   ├── HandyFix.Data/               # EF Core DbContext, migrations, repositories, seeders
+│   ├── HandyFix.Data.Common/        # Repository interfaces and base model classes
 │   └── HandyFix.Data.Models/        # Database entities
 ├── Services/                        # Business logic layer (BLL)
-│   ├── HandyFix.Services/           # Core business interfaces and general services
-│   ├── HandyFix.Services.Data/      # Data-centric services and CQRS handlers
-│   ├── HandyFix.Services.Mapping/   # AutoMapper profiles and configurations
-│   └── HandyFix.Services.Messaging/ # Email and SMS notification services
+│   ├── HandyFix.Services/           # Cross-cutting services (image storage, Cloudflare R2)
+│   ├── HandyFix.Services.Data/      # Business logic services, one per domain area
+│   ├── HandyFix.Services.Mapping/   # Mapster mapping conventions and configuration
+│   └── HandyFix.Services.Messaging/ # Transactional email (Brevo)
 ├── Web/                             # Presentation layer
 │   ├── HandyFix.Web/                # Main ASP.NET Core MVC web application
 │   └── HandyFix.Web.ViewModels/     # ViewModels and Data Transfer Objects (DTOs)
-├── Tests/                           # Automated tests
-│   ├── HandyFix.Services.Data.Tests/# Unit tests for business services
-│   └── HandyFix.Web.Tests/          # Tests for web controllers and endpoints
-└── Sandbox/                         # Console apps for prototyping and database seeding
+└── Tests/                           # Automated tests
+    ├── HandyFix.Services.Data.Tests/# Unit tests for business services
+    ├── HandyFix.Web.Tests/          # Full-stack WebApplicationFactory integration tests
+    └── Sandbox/                     # Console app for prototyping against the real services
 ```
 
 ---
@@ -66,7 +69,7 @@ src/                                 # Root source folder
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- SQL Server (LocalDB or full)
+- SQL Server — development runs against a Docker container on `localhost,1433`. LocalDB or a full local instance work too; just point the connection string at them.
 
 ### Setup
 
@@ -78,12 +81,17 @@ cd HandyFix-Project/src
 # Restore packages
 dotnet restore
 
-# Update database
-dotnet ef database update --project Web/HandyFix.Web
-
 # Run the application
 dotnet run --project Web/HandyFix.Web
 ```
+
+The committed `appsettings.json` connection string is a placeholder — set your real one via User Secrets alongside the keys below:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=HandyFix;..."
+```
+
+**No manual migration step is needed.** `Program.cs` runs `dbContext.Database.Migrate()` on startup and then seeds, so a fresh clone builds its own database on first run. Outside Production it also seeds 14 days of booking capacity, so the booking flow works immediately without an admin generating slots first.
 
 ### Required local secrets
 
@@ -111,17 +119,12 @@ If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to Mock/San
 
 ## 📄 Documentation
 
-- Architecture (coming soon)
-- Database Schema (coming soon)
+- **[PROJECT_STATE.md](PROJECT_STATE.md)** — architectural memory: what the system is, what's been built and verified, what's left, and the decisions worth remembering. Start here.
+- **[DESIGN.md](DESIGN.md)** — design language: color palette, typography, spacing, animation conventions.
+- **[docs/WORKFLOW_BOOKINGS.md](docs/WORKFLOW_BOOKINGS.md)** — the booking pipeline end to end: generate capacity → customer books and pays → admin assigns a technician → admin approves.
+- **[docs/WORKFLOW_SERVICE_AREAS.md](docs/WORKFLOW_SERVICE_AREAS.md)** — how a service area is created, seeded and published.
 
----
-
-## 📞 Business Information
-
-**Handy Fix**  
-*Plumbing & Handyman Services*  
-South London & Kent  
-📍 **Serving:** Croydon, Bromley, Orpington, Dartford, Sevenoaks and surrounding areas
+> **In progress**: the remaining admin workflows are not documented yet — services & categories (including the image pipeline), technicians, reviews, enquiries, and deployment. Each gets its own `docs/WORKFLOW_*.md`, and this section becomes the complete index once they all exist.
 
 ---
 
