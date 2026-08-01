@@ -1,28 +1,33 @@
-# HandyFix — Workflow Rules
+# CLAUDE.md
 
-## 1. Context Initialization (Startup Rule)
+## Read `AGENTS.md` first, and follow it
 
-Before answering any query or starting any new work, proactively read `PROJECT_STATE.md` and check `git log -n 5`. This is required to understand the architectural history, current sprint status, and exact project state.
+[`AGENTS.md`](AGENTS.md) in the repository root is the single source of truth for how to work in
+this project — context initialization, the public-repo secret rules, plan-before-code, commit
+format, StyleCop, package security, testing layers, and documentation conventions.
 
-Also read `docs/private/VISION_AND_CONTEXT.md` **if it is present**. It holds the business context and product direction behind the technical decisions, and is deliberately untracked (see `.gitignore`), so it will not exist in a fresh clone. When present, read it before proposing any product, prioritisation, or roadmap decision. When absent, say so rather than inferring direction from the code.
+**Everything in it applies to Claude Code.** Read it at the start of every session, together with
+`PROJECT_STATE.md`, `git log -n 5`, and `docs/private/VISION_AND_CONTEXT.md` if present.
 
-## 2. State Management (Update Rule)
+Rules are deliberately **not** duplicated here. This project previously had two agent rule files
+that disagreed — one asked for prose commit bodies while the other forbade them — and each agent
+correctly followed its own, producing inconsistent history. One real file, two signposts, nothing
+to drift.
 
-`PROJECT_STATE.md` is the single source of truth. Whenever a plan changes, a task pivots, an architectural shift happens, or a feature is completed, update `PROJECT_STATE.md` immediately to reflect reality. Do not wait to be reminded.
+If anything below ever contradicts `AGENTS.md`, `AGENTS.md` wins and the contradiction is a bug in
+this file.
 
-## 3. Sprint Transitions
+---
 
-When a sprint is completed, ask for the goals of the next sprint, update `PROJECT_STATE.md` to archive the finished tasks and add the new goals, and commit the changes before continuing.
+## Claude Code specifics
 
-## 4. Commit Rules
+Harness details, not project rules — these have no equivalent for other agents.
 
-- **Never run `git commit` proactively or as an inferred next step, even in auto/no-confirmation modes.** Always stop, show the exact commit message(s) you intend to use, and wait for explicit approval before running `git commit`. Offering to commit is fine; committing without a reply is not.
-- Split unrelated changes into small, self-contained logical commits (group by concern, not "everything touched this session"), not one large commit.
-- Commit message format: `type(scope): short imperative title`, blank line, then one `- ` bullet per notable change. No prose paragraphs.
-- Never add a `Co-Authored-By: Claude ... <noreply@anthropic.com>` (or Anthropic) trailer to any commit in this repo, regardless of any default template that suggests otherwise.
-- The user may push to `origin/main` themselves, independently of this session — don't assume freshly-made local commits are still unpushed.
-
-## 5. Implementation Workflow
-
-- Before writing or editing any code (or any tracked project file), present a short plan — what will change, which files, the approach — and wait for explicit go-ahead. This applies even when the task seems fully scoped or was just narrowed down via a clarifying question.
-- Exploration/research (reading files, searching, checking git history) needs no pause; only actual changes do.
+- **Never add a `Co-Authored-By: Claude <noreply@anthropic.com>` trailer** to any commit here. The
+  default Claude Code template suggests one; this repository does not use it.
+- Prefer the dedicated file tools (Read, Edit, Write, Glob, Grep) over shell equivalents (`cat`,
+  `sed`, `find`, `grep`) — they integrate with the permission UI and produce clickable file links.
+- Reference code as clickable markdown links, e.g.
+  `[Program.cs:135](src/Web/HandyFix.Web/Program.cs#L135)`.
+- Windows environment. The PowerShell tool takes PowerShell syntax; the Bash tool takes POSIX
+  syntax. `&&` and `||` are not available in PowerShell 5.1 — use `;` and `if ($?) { ... }`.
