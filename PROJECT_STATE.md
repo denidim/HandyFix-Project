@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-08-04 — **Code cleanup, phase 1 of 4: the CSS/slug Known Issues are fixed.** `.bento-card`'s admin.css half renamed to `.dashboard-stat-card` to end a name collision with the public bento tiles; the losing, dead `.trust-card` duplicate deleted; the unused `.info-canvas.wide`/`--max-width-desktop` modifier deleted; and the `Slugify` double-hyphen bug fixed at the root via one new shared `SlugGenerator`, replacing three independent (two buggy) slug implementations across `ServicesService`, `CategoriesService`, and `CategoryViewModel` — see Section 3y. `var`→explicit-types, thin controllers, and an `[Authorize]`-by-default flip are queued as the next three phases of the same cleanup pass, each its own build-and-test-verified step. (Earlier the same day: **Documentation caught up with the code.** `DESIGN.md` fully rewritten (was last touched 2026-07-16, before most of the front-end work landed) and the five remaining `docs/WORKFLOW_*.md` gaps (services & categories, technicians, reviews, enquiries, deployment) written, closing both open Sprint 4 documentation items and the README's "in progress" note — see Section 3x. No code changed; several real discrepancies found along the way (a fifth hardcoded `{slug}-hero.webp` location, two duplicate CSS class-name pairs, one dead CSS variable) are recorded as known issues, not fixed.) (Earlier the same day: **Staging is live.** Roadmap Tier 4 item 19 (Hosting & CI/CD) is done end-to-end: `dev` branch, `.github/workflows/deploy-dev.yml` (build, test, push to GHCR, SSH deploy), Caddy reverse proxy (HTTPS via the Hetzner reverse-DNS hostname, HTTP Basic Auth, `X-Robots-Tag: noindex`), and a dedicated least-privilege SQL login all provisioned and verified working against the real `handyfix_staging` database — see Section 3w. Two real bugs only surfaced by the first live CI runs, both fixed: `SqliteWebApplicationFactory` wasn't actually forcing Development for `AdminUserSeeder` (which reads the raw `ASPNETCORE_ENVIRONMENT` process variable, not the hosting abstraction `UseEnvironment()` sets), and the deploy script silently did nothing for two runs because `docker compose` couldn't find a non-default-named compose file and the script had no `set -e` to catch it.) (Earlier the same day: Docker containerization for Tier 4 item 19 started: `Dockerfile` + `.dockerignore` added and verified end-to-end against a throwaway local SQL Server container (empty database, exactly the state `handyfix_staging` is actually in) — build, `Database.Migrate()`, seeding, and a full booking-to-confirmation flow all succeed from a cold start. Found and fixed three things the local test surfaced: a Stripe sandbox-bypass opt-in (`Stripe:AllowSandboxOutsideDevelopment`) so staging can demo bookings before a real Stripe account exists, without weakening the same guard in production; and the four hardcoded `@handyfix.co.uk` email sender addresses (a domain nobody owns yet) made configurable since Brevo — like any real provider — refuses to send from an unverified sender. See Section 3v.) (Previous update, 2026-08-01: Agent workflow unified into a single root `AGENTS.md` with `CLAUDE.md`/`GEMINI.md` as pointers, resolving a real contradiction between two rulebooks; public-repo security audit run (no credential ever committed) and the unwritten `appsettings.Staging/Production.json` files gitignored before they can leak the private DB IP — see Section 3u. Also queued: bring `DESIGN.md` back in sync with the CSS that exists. Earlier the same day: controller test coverage shipped (Section 3t): 52 mocked-service controller tests, and the integration tests moved off the real dev database onto Sqlite in-memory, making them CI-viable. Suite is now 118. The `SQLitePCLRaw.lib.e_sqlite3` advisory (CVE-2025-6965) that came with the Sqlite dependency was fixed in the same pass, pinned to 2.1.12 in `Directory.Packages.props` — the vulnerability audit is now clean across all 14 projects, including one that was already affected beforehand. Earlier the same day: README accuracy pass (Section 3s) — the template's AutoMapper/MediatR/FluentAssertions claims corrected, the wrong service-area marketing block cut, and the Documentation placeholders replaced with real links; added a Sprint 4 item to document every remaining admin workflow and complete the README index once they exist, plus a new Tier 5 in the roadmap parking the dev-database QA leftovers. (Previous update, 2026-07-31: Tier 1 item 8 shipped, resolved differently than planned: technicians are decoupled from capacity slots entirely, slot auto-generation is removed, and there is now admin CRUD for the technician roster; see Section 3r. (Earlier the same day: Tier 1 items 3, 5 and 7 shipped — Reviews cleanup Section 3n, broken links Section 3p, Brevo email swap Section 3q.) (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` Section 5). Added a Hosting & Infrastructure subsection to Section 1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration Section 3j, cache-busting, and the Areas SVG coverage map Section 3l — plus the boot-time JPG sweep removed as unsafe Section 3k and Service Areas admin CRUD added Section 3m.)))
+> **Last updated**: 2026-08-04 — **Code cleanup pass complete, all 4 phases.** Phase 1: the CSS/slug Known Issues (Section 3y). Phase 2: production code moved from `var` to explicit types, with a new `.editorconfig` to keep it that way (Section 3z). Phase 3: eight controllers thinned — business logic, raw repository queries, and (most carefully) the Stripe SDK orchestration in `PaymentController` all moved into their services, following the pattern from the user's own earlier FindATrade project (Section 3aa). Phase 4: the unauthenticated `SettingsController` template leftover deleted outright, and `BaseController` flipped to `[Authorize]`-by-default with `[AllowAnonymous]` added only to the six controllers that must stay public (Section 3ab). 13 commits total, each independently built and tested; the Phase 3/4 items were verified live as well as by the test suite, not just by a green build. (Earlier the same day: **Documentation caught up with the code.** `DESIGN.md` fully rewritten (was last touched 2026-07-16, before most of the front-end work landed) and the five remaining `docs/WORKFLOW_*.md` gaps (services & categories, technicians, reviews, enquiries, deployment) written, closing both open Sprint 4 documentation items and the README's "in progress" note — see Section 3x. No code changed; several real discrepancies found along the way (a fifth hardcoded `{slug}-hero.webp` location, two duplicate CSS class-name pairs, one dead CSS variable) are recorded as known issues, not fixed.) (Earlier the same day: **Staging is live.** Roadmap Tier 4 item 19 (Hosting & CI/CD) is done end-to-end: `dev` branch, `.github/workflows/deploy-dev.yml` (build, test, push to GHCR, SSH deploy), Caddy reverse proxy (HTTPS via the Hetzner reverse-DNS hostname, HTTP Basic Auth, `X-Robots-Tag: noindex`), and a dedicated least-privilege SQL login all provisioned and verified working against the real `handyfix_staging` database — see Section 3w. Two real bugs only surfaced by the first live CI runs, both fixed: `SqliteWebApplicationFactory` wasn't actually forcing Development for `AdminUserSeeder` (which reads the raw `ASPNETCORE_ENVIRONMENT` process variable, not the hosting abstraction `UseEnvironment()` sets), and the deploy script silently did nothing for two runs because `docker compose` couldn't find a non-default-named compose file and the script had no `set -e` to catch it.) (Earlier the same day: Docker containerization for Tier 4 item 19 started: `Dockerfile` + `.dockerignore` added and verified end-to-end against a throwaway local SQL Server container (empty database, exactly the state `handyfix_staging` is actually in) — build, `Database.Migrate()`, seeding, and a full booking-to-confirmation flow all succeed from a cold start. Found and fixed three things the local test surfaced: a Stripe sandbox-bypass opt-in (`Stripe:AllowSandboxOutsideDevelopment`) so staging can demo bookings before a real Stripe account exists, without weakening the same guard in production; and the four hardcoded `@handyfix.co.uk` email sender addresses (a domain nobody owns yet) made configurable since Brevo — like any real provider — refuses to send from an unverified sender. See Section 3v.) (Previous update, 2026-08-01: Agent workflow unified into a single root `AGENTS.md` with `CLAUDE.md`/`GEMINI.md` as pointers, resolving a real contradiction between two rulebooks; public-repo security audit run (no credential ever committed) and the unwritten `appsettings.Staging/Production.json` files gitignored before they can leak the private DB IP — see Section 3u. Also queued: bring `DESIGN.md` back in sync with the CSS that exists. Earlier the same day: controller test coverage shipped (Section 3t): 52 mocked-service controller tests, and the integration tests moved off the real dev database onto Sqlite in-memory, making them CI-viable. Suite is now 118. The `SQLitePCLRaw.lib.e_sqlite3` advisory (CVE-2025-6965) that came with the Sqlite dependency was fixed in the same pass, pinned to 2.1.12 in `Directory.Packages.props` — the vulnerability audit is now clean across all 14 projects, including one that was already affected beforehand. Earlier the same day: README accuracy pass (Section 3s) — the template's AutoMapper/MediatR/FluentAssertions claims corrected, the wrong service-area marketing block cut, and the Documentation placeholders replaced with real links; added a Sprint 4 item to document every remaining admin workflow and complete the README index once they exist, plus a new Tier 5 in the roadmap parking the dev-database QA leftovers. (Previous update, 2026-07-31: Tier 1 item 8 shipped, resolved differently than planned: technicians are decoupled from capacity slots entirely, slot auto-generation is removed, and there is now admin CRUD for the technician roster; see Section 3r. (Earlier the same day: Tier 1 items 3, 5 and 7 shipped — Reviews cleanup Section 3n, broken links Section 3p, Brevo email swap Section 3q.) (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` Section 5). Added a Hosting & Infrastructure subsection to Section 1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration Section 3j, cache-busting, and the Areas SVG coverage map Section 3l — plus the boot-time JPG sweep removed as unsafe Section 3k and Service Areas admin CRUD added Section 3m.)))
 
 ---
 
@@ -680,7 +680,105 @@ outweighs the benefit.
 - **Verified**: `dotnet build` (0 errors) and the full test suite (119) unchanged — only local
   variable declarations were rewritten, no signatures changed.
 
-Phases 3 (thin controllers) and 4 (`[Authorize]`-by-default flip) are next.
+---
+
+## 3aa. Code Cleanup Phase 3: Thin Controllers (2026-08-04)
+
+Third phase of the cleanup pass. Target pattern taken from the user's own earlier project
+([FindATrade](https://github.com/denidim/Final-CSharp-Web-Project), same course template HandyFix
+started from): a controller action calls **one** service method and translates the result —
+no inline file/stream handling, no inline third-party SDK calls, no raw repository queries, no
+hand-rolled aggregation. Eight controllers touched, each its own commit, each verified with a full
+`dotnet build` + test run before moving to the next:
+
+- **Admin `ServicesController`** — the case named explicitly. `Create`/`Edit`'s `IFormFile` stream
+  reads, `ImageStorageService` calls, and SkiaSharp-error-to-ModelState handling moved into two new
+  `ServicesService` methods, `SetServiceImageAsync`/`UpdateServiceImageAsync`; `DeleteAsync` now
+  deletes the image itself, so the controller no longer injects `IImageStorageService` at all. Also
+  added `IImageStorageService.GetServiceImagePublicUrl(slug)`, centralizing one more of the five
+  places the `{slug}-hero.webp` convention was hardcoded.
+- **`DashboardController`** — four raw `IDeletableEntityRepository<T>` injections replaced with one
+  count/sum method each on `IBookingsService`/`IInquiriesService`/`IReviewsService`/
+  `IPaymentsService`. The `PendingReviewsCount` `AllWithDeleted()` quirk was preserved exactly, not
+  quietly "fixed" while relocating it.
+- **`CalendarController`** — added `IAvailabilityService.GetAllSlotsForDayAsync`, a sibling of the
+  existing `GetAllSlotsForDateAsync` *without* its `> now` cutoff (confirmed by reading both
+  queries side by side: the admin calendar must still show a day's already-elapsed slots, unlike
+  the customer-facing method — swapping in the existing method as originally planned would have
+  been a real regression, caught before it shipped).
+- **`BookingsController`** — the status-dropdown query and the Today/Pending/Revenue card
+  arithmetic both moved to `IBookingsService` (`GetStatusOptionsAsync`, a pure
+  `GetSummaryStats(bookings)`). The controller still decides whether to re-fetch the unfiltered
+  list or reuse what it already has — that's a per-request efficiency call, not a business rule —
+  so the existing "no duplicate query when unfiltered" behavior and its test survived unchanged.
+- **`ReviewsController`** — same `GetSummaryStats(reviews)` pattern on `IReviewsService`.
+- **`SeoController`** — sitemap `XElement`/`XNamespace` construction extracted to a new static
+  `HandyFix.Web.Services.SitemapXmlBuilder`. URL *generation* (`Url.Action`/`Url.RouteUrl`) stays in
+  the controller since it's inherently `IUrlHelper`-bound, not something the service layer should
+  depend on.
+- **`ServiceAreasController`** — FAQ row pruning and the length/required validation rules moved
+  into `IServiceAreasService.PruneAndValidateFaqs`, returning `(key, message)` errors instead of
+  writing to `ModelState` directly (`ModelState` itself stays a controller concern — it's
+  MVC-specific). `EnsureAtLeastOneFaqRow` stays in the controller: guaranteeing the redisplayed form
+  has a row to type into is a view concern, not a business rule.
+- **`PaymentController`** — the highest-risk item, done last with extra care. The entire
+  sandbox-bypass-vs-real-Stripe-Checkout decision, `SessionCreateOptions` construction, and webhook
+  signature verification/event dispatch moved into two new `IPaymentsService` methods,
+  `CreateCheckoutSessionAsync` and `HandleWebhookEventAsync`. `StripeConfiguration.ApiKey`
+  assignment moved to `PaymentsService`'s constructor to match. **Found and fixed a real issue
+  along the way**: adding `Stripe.net` to `HandyFix.Services.Data` pulled in a vulnerable
+  `Newtonsoft.Json 12.0.3` transitively (GHSA-5crp-9r3c-p9vr) that had only ever been silently
+  masked in `HandyFix.Web` by an unrelated package's higher floor — pinned to `13.0.3` in
+  `Directory.Packages.props` (transitive pinning, same mechanism already used for the
+  `SQLitePCLRaw` CVE in Section 3t).
+- **Tests**: every relocated behavior got its test suite moved to where the behavior now actually
+  lives (e.g. `AdminDeletionTests`' "image deleted before the row" case → `ServicesServiceTests`;
+  `AdminBookingsControllerTests`' summary-card arithmetic → `BookingsServiceTests`;
+  `AdminServiceAreasControllerTests`' FAQ-pruning cases → a new
+  `ServiceAreasServiceTests.PruneAndValidateFaqsTests`; the entire Stripe sandbox-bypass contract →
+  `PaymentsServiceTests.CreateCheckoutSessionAsyncTests`). Controller test files kept only the
+  wiring-level checks. Net suite size after all eight: 130 (up from 119 at the start of the phase).
+- **Deliberately left as-is**: `BookingController`'s exception-to-view-redisplay try/catch (that
+  *is* the controller's job) and the Identity `Register` page's direct `ApplicationUser`
+  construction (standard scaffolding, not HandyFix business logic).
+- **Verified**: `dotnet build` (0 errors, 0 warnings after the Newtonsoft.Json fix) and the full
+  test suite after every controller, not just at the end.
+
+---
+
+## 3ab. Code Cleanup Phase 4: Remove `SettingsController`; `[Authorize]`-by-Default (2026-08-04)
+
+Final phase of the cleanup pass.
+
+- **`SettingsController` deleted entirely**, not locked down. It was public, carried **no**
+  `[Authorize]`, and its `InsertSetting` action wrote a row to the database on a bare GET with no
+  CSRF protection — leftover Nikolay Kostov template scaffolding (confirmed via grep: no link to
+  `/Settings` anywhere in the real site). Removed the controller, its view, `SettingsListViewModel`/
+  `SettingViewModel`, `ISettingsService`/`SettingsService`, their tests, the Dashboard's
+  `SettingsCount` stat (confirmed unused — computed but never actually rendered in the Dashboard
+  view), and the matching demo code in `Tests/Sandbox/Program.cs` (its only purpose was exercising
+  `ISettingsService.GetCount()`). The underlying `Setting` entity/table and its migration were left
+  alone — dropping those is a schema change out of scope here.
+- **`BaseController` now carries `[Authorize]`**, flipping the site from "open unless protected" to
+  "protected unless opened." `[AllowAnonymous]` added to the six controllers that must stay public:
+  `HomeController`, `AreasController`, `BookingController`, `PaymentController` (covers the Stripe
+  webhook too — Stripe cannot authenticate as a HandyFix user), `SeoController`, and the public
+  `ServicesController`. `AdministrationController`'s existing `[Authorize(Roles=Administrator)]`
+  stays, now redundant-but-correct on top of the base attribute. Identity Razor Pages
+  (Login/Register) are untouched — `PageModel`s don't inherit `BaseController`.
+- **Confirmed today's actual auth surface, before touching anything**: exactly one
+  `[Authorize(Roles=...)]` on `AdministrationController` and nothing else anywhere in the app — this
+  flip changes the *default*, not which routes were actually reachable by whom.
+- **Verified two ways**: the full test suite (128/128 — the integration tests hit these routes
+  anonymously via a real HTTP client and assert `EnsureSuccessStatusCode()`, so a missing
+  `[AllowAnonymous]` would have failed as a redirect instead of 200); and a live run curling every
+  public route (200), every `/Administration/*` route unauthenticated (302), and the webhook (400
+  for an invalid signature — reachable, correctly rejected, not 401/302).
+
+**Net effect of the four-phase cleanup pass**: the CSS/slug Known Issues are fixed, production code
+uses explicit types with an `.editorconfig` to keep it that way, eight controllers are thin, one
+piece of unauthenticated dead scaffolding is gone, and the site defaults to locked-down. 13 commits
+across the four phases (plus this doc pass), each independently built and tested.
 
 ---
 
