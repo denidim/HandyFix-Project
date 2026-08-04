@@ -38,7 +38,13 @@
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             // Seeding needs a Development environment: outside it, AdminUserSeeder throws rather
-            // than falling back to its dev-only password, by design.
+            // than falling back to its dev-only password, by design. UseEnvironment() alone is not
+            // enough -- AdminUserSeeder reads the raw ASPNETCORE_ENVIRONMENT process variable
+            // directly (HandyFix.Data has no ASP.NET Core hosting reference to check
+            // IWebHostEnvironment with instead), which UseEnvironment() does not touch. Both were
+            // set the same by coincidence on machines with ASPNETCORE_ENVIRONMENT=Development set
+            // globally, masking this until a clean CI runner (no such variable) exposed it.
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", Environments.Development);
             builder.UseEnvironment(Environments.Development);
 
             builder.ConfigureServices(services =>
