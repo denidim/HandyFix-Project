@@ -1,6 +1,8 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
+    using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -31,14 +33,14 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var services = await this.servicesService.GetAllAsync<ServiceViewModel>(activeOnly: false);
+            IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>(activeOnly: false);
             return this.View(services);
         }
 
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
             var model = new ServiceAdminInputModel
             {
                 Categories = new SelectList(categories, "Id", "Name"),
@@ -51,22 +53,22 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         {
             if (!this.ModelState.IsValid)
             {
-                var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+                IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
                 model.Categories = new SelectList(categories, "Id", "Name");
                 return this.View(model);
             }
 
-            var serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId);
+            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId);
 
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
-                var service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(serviceId);
+                ServiceDetailsViewModel service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(serviceId);
                 if (service != null)
                 {
                     try
                     {
                         string imageUrl;
-                        using (var stream = model.ImageFile.OpenReadStream())
+                        using (Stream stream = model.ImageFile.OpenReadStream())
                         {
                             imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, service.Slug);
                         }
@@ -79,7 +81,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                     catch (Exception ex)
                     {
                         this.ModelState.AddModelError("ImageFile", ex.Message);
-                        var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+                        IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
                         model.Categories = new SelectList(categories, "Id", "Name");
                         return this.View(model);
                     }
@@ -92,7 +94,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
-            var service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(id);
+            ServiceDetailsViewModel service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(id);
             if (service == null)
             {
                 return this.NotFound();
@@ -108,8 +110,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 Slug = service.Slug,
             };
 
-            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-            var activeCategory = categories.FirstOrDefault(c => c.Name == service.CategoryName);
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            CategoryViewModel activeCategory = categories.FirstOrDefault(c => c.Name == service.CategoryName);
             if (activeCategory != null)
             {
                 model.CategoryId = activeCategory.Id;
@@ -124,17 +126,17 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         {
             if (!this.ModelState.IsValid)
             {
-                var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+                IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
                 model.Categories = new SelectList(categories, "Id", "Name", model.CategoryId);
                 return this.View(model);
             }
 
-            var oldService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
+            ServiceDetailsViewModel oldService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
             var oldSlug = oldService?.Slug;
 
             await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId);
 
-            var newService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
+            ServiceDetailsViewModel newService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
             var newSlug = newService?.Slug;
 
             if (oldSlug != null && newSlug != null)
@@ -151,7 +153,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                         }
 
                         string imageUrl;
-                        using (var stream = model.ImageFile.OpenReadStream())
+                        using (Stream stream = model.ImageFile.OpenReadStream())
                         {
                             imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, newSlug);
                         }
@@ -172,7 +174,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 catch (Exception ex)
                 {
                     this.ModelState.AddModelError("ImageFile", ex.Message);
-                    var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+                    IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
                     model.Categories = new SelectList(categories, "Id", "Name", model.CategoryId);
                     return this.View(model);
                 }
@@ -184,7 +186,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(id);
+            ServiceDetailsViewModel service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(id);
             if (service != null)
             {
                 this.imageStorageService.DeleteServiceImage(service.Slug);

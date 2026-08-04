@@ -1,6 +1,7 @@
 namespace HandyFix.Web.ViewComponents
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -25,11 +26,11 @@ namespace HandyFix.Web.ViewComponents
             // drive-time-proximity ordering rather than the default featured/all list.
             if (excludeAreaId.HasValue)
             {
-                var nearest = await this.areasService.GetNearestAsync<ServiceAreaViewModel>(excludeAreaId.Value, take);
+                IEnumerable<ServiceAreaViewModel> nearest = await this.areasService.GetNearestAsync<ServiceAreaViewModel>(excludeAreaId.Value, take);
                 return this.View(nearest.ToList());
             }
 
-            var areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
+            IEnumerable<ServiceAreaViewModel> areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
 
             var filtered = areas
                 .Where(a => !featuredOnly || a.IsFeatured)

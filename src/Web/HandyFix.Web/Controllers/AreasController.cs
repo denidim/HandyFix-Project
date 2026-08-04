@@ -1,5 +1,6 @@
 namespace HandyFix.Web.Controllers
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -35,7 +36,7 @@ namespace HandyFix.Web.Controllers
         [Route("Areas", Name = "Areas")]
         public async Task<IActionResult> Index()
         {
-            var areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
+            IEnumerable<ServiceAreaViewModel> areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
 
             this.ViewData["Title"] = "Our Areas - HandyFix Coverage Across Surrey & South London";
             this.ViewData["MetaDescription"] = "See every town and village HandyFix covers across South London and Surrey, from Chessington and Kingston out to Guildford and Cobham. Find your area and book online.";
@@ -47,7 +48,7 @@ namespace HandyFix.Web.Controllers
         [Route("Areas/{areaSlug}", Name = "AreaDetails")]
         public async Task<IActionResult> Details(string areaSlug)
         {
-            var area = await this.areasService.GetBySlugAsync<ServiceAreaDetailsViewModel>(areaSlug);
+            ServiceAreaDetailsViewModel area = await this.areasService.GetBySlugAsync<ServiceAreaDetailsViewModel>(areaSlug);
             if (area == null)
             {
                 return this.NotFound();
@@ -57,14 +58,14 @@ namespace HandyFix.Web.Controllers
             // isn't done via a custom Mapster collection mapping.
             area.Faqs = area.Faqs.OrderBy(x => x.DisplayOrder).ToList();
 
-            var plumbingServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Plumbing");
-            var handymanServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman");
+            IEnumerable<ServiceViewModel> plumbingServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Plumbing");
+            IEnumerable<ServiceViewModel> handymanServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman");
             var relatedServices = plumbingServices.Take(2).Concat(handymanServices.Take(2)).ToList();
 
             // Hidden on-site until the Google Business Profile import ships, see
             // Business:ShowOnSiteReviews.
             var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
-            var reviews = showOnSiteReviews
+            IEnumerable<ReviewViewModel> reviews = showOnSiteReviews
                 ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(3)
                 : Enumerable.Empty<ReviewViewModel>();
 

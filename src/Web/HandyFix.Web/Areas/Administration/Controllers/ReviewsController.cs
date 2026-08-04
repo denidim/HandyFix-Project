@@ -1,6 +1,7 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -24,7 +25,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
             // Summary stats always reflect the whole business, not just whatever status
             // filter is currently applied to the table below.
-            var allReviews = string.IsNullOrWhiteSpace(status)
+            List<ReviewViewModel> allReviews = string.IsNullOrWhiteSpace(status)
                 ? reviews
                 : (await this.reviewsService.GetAllAsync<ReviewViewModel>()).ToList();
 

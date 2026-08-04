@@ -21,7 +21,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var areas = await this.serviceAreasService.GetAllAsync<ServiceAreaAdminListViewModel>(featuredFirst: false);
+            IEnumerable<ServiceAreaAdminListViewModel> areas = await this.serviceAreasService.GetAllAsync<ServiceAreaAdminListViewModel>(featuredFirst: false);
             return this.View(areas);
         }
 
@@ -59,7 +59,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
-            var model = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(id);
+            ServiceAreaAdminInputModel model = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(id);
             if (model == null)
             {
                 return this.NotFound();
@@ -94,7 +94,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
-            var existing = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value);
+            ServiceAreaAdminInputModel existing = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value);
             if (existing == null)
             {
                 return this.NotFound();
@@ -112,7 +112,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var area = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(id);
+            ServiceAreaAdminInputModel area = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(id);
             if (area == null)
             {
                 return this.NotFound();

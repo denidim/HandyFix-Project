@@ -1,6 +1,7 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -25,14 +26,14 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
         public async Task<IActionResult> Index(DateTime? date)
         {
-            var targetDate = date ?? DateTime.Today;
+            DateTime targetDate = date ?? DateTime.Today;
 
             // Deliberately does not generate: simply viewing a day must not create capacity for
             // it. Slots exist only when an admin generates them below (or the non-production
             // capacity seeder does). An empty day renders the "no slots" empty state instead.
 
             // Fetch all slots for this day, whether booked, active, or blocked
-            var slots = await this.slotRepository.All()
+            List<AvailabilitySlot> slots = await this.slotRepository.All()
                 .Where(x => x.StartTime.Date == targetDate.Date)
                 .OrderBy(x => x.StartTime)
                 .ToListAsync();

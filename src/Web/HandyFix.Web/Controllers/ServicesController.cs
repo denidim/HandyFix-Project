@@ -1,6 +1,7 @@
 namespace HandyFix.Web.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -39,7 +40,7 @@ namespace HandyFix.Web.Controllers
         [Route("Services", Name = "ServicesList")]
         public async Task<IActionResult> Index()
         {
-            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
             return this.View(categories);
         }
 
@@ -48,12 +49,12 @@ namespace HandyFix.Web.Controllers
         {
             var categories = (await this.categoriesService.GetAllAsync<CategoryViewModel>()).ToList();
 
-            var allServices = categories.SelectMany(c => c.Services);
-            var typicalJobs = TypicalJobSlugs
+            IEnumerable<ServiceViewModel> allServices = categories.SelectMany(c => c.Services);
+            IEnumerable<ServiceViewModel> typicalJobs = TypicalJobSlugs
                 .Select(slug => allServices.FirstOrDefault(s => s.Slug == slug))
                 .Where(s => s != null);
 
-            var localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
+            IEnumerable<ServiceAreaViewModel> localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
 
             var model = new PricingViewModel
             {
@@ -71,16 +72,16 @@ namespace HandyFix.Web.Controllers
         [Route("Services/{categorySlug}", Name = "ServiceCategory")]
         public async Task<IActionResult> Category(string categorySlug)
         {
-            var category = await this.categoriesService.GetBySlugAsync<CategoryViewModel>(categorySlug);
+            CategoryViewModel category = await this.categoriesService.GetBySlugAsync<CategoryViewModel>(categorySlug);
             if (category == null)
             {
                 return this.NotFound();
             }
 
-            var services = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(category.Name);
+            IEnumerable<ServiceViewModel> services = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(category.Name);
             category.Services = services.ToList();
 
-            var localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
+            IEnumerable<ServiceAreaViewModel> localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
             category.LocalAreas = localAreas.Take(12);
 
             this.ViewData["Title"] = $"{category.Name} Services in South London";
@@ -92,13 +93,13 @@ namespace HandyFix.Web.Controllers
         [Route("Services/{categorySlug}/{serviceSlug}", Name = "ServiceDetails")]
         public async Task<IActionResult> Details(string categorySlug, string serviceSlug)
         {
-            var service = await this.servicesService.GetBySlugAsync<ServiceDetailsViewModel>(serviceSlug);
+            ServiceDetailsViewModel service = await this.servicesService.GetBySlugAsync<ServiceDetailsViewModel>(serviceSlug);
             if (service == null || !service.CategorySlug.Equals(categorySlug, StringComparison.OrdinalIgnoreCase))
             {
                 return this.NotFound();
             }
 
-            var categoryServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(service.CategoryName);
+            IEnumerable<ServiceViewModel> categoryServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(service.CategoryName);
             service.RelatedServices = categoryServices
                 .Where(s => !s.Slug.Equals(service.Slug, StringComparison.OrdinalIgnoreCase))
                 .Take(3)

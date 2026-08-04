@@ -20,10 +20,10 @@ namespace HandyFix.Data.Seeding
 
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
-            var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            UserManager<ApplicationUser> userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             var adminEmail = "admin@handyfix.co.uk";
-            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            ApplicationUser adminUser = await userManager.FindByEmailAsync(adminEmail);
 
             if (adminUser == null)
             {
@@ -38,7 +38,7 @@ namespace HandyFix.Data.Seeding
 
                 var seedPassword = GetSeedPassword(serviceProvider);
 
-                var result = await userManager.CreateAsync(adminUser, seedPassword);
+                IdentityResult result = await userManager.CreateAsync(adminUser, seedPassword);
                 if (!result.Succeeded)
                 {
                     throw new Exception(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
@@ -47,7 +47,7 @@ namespace HandyFix.Data.Seeding
 
             if (!await userManager.IsInRoleAsync(adminUser, GlobalConstants.AdministratorRoleName))
             {
-                var result = await userManager.AddToRoleAsync(adminUser, GlobalConstants.AdministratorRoleName);
+                IdentityResult result = await userManager.AddToRoleAsync(adminUser, GlobalConstants.AdministratorRoleName);
                 if (!result.Succeeded)
                 {
                     throw new Exception(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
@@ -57,7 +57,7 @@ namespace HandyFix.Data.Seeding
 
         private static string GetSeedPassword(IServiceProvider serviceProvider)
         {
-            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            IConfiguration configuration = serviceProvider.GetRequiredService<IConfiguration>();
             var seedPassword = configuration["Admin:SeedPassword"];
             if (!string.IsNullOrWhiteSpace(seedPassword))
             {

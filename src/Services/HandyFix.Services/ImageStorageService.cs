@@ -64,7 +64,7 @@ namespace HandyFix.Services
                         try
                         {
                             using (var image = SKImage.FromBitmap(targetBitmap))
-                            using (var data = image.Encode(SKEncodedImageFormat.Webp, 80))
+                            using (SKData data = image.Encode(SKEncodedImageFormat.Webp, 80))
                             {
                                 var filePath = this.GetServiceImagePath(slug);
                                 var directory = Path.GetDirectoryName(filePath);

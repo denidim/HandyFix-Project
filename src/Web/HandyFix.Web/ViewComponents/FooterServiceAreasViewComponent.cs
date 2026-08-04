@@ -1,5 +1,6 @@
 namespace HandyFix.Web.ViewComponents
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -19,7 +20,7 @@ namespace HandyFix.Web.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync(int take = 8)
         {
-            var areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
+            IEnumerable<ServiceAreaViewModel> areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
             return this.View(areas.Take(take).ToList());
         }
     }

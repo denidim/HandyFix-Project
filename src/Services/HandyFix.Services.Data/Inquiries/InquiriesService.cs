@@ -59,7 +59,7 @@ namespace HandyFix.Services.Data.Inquiries
             InquirySortField sortField = InquirySortField.CreatedOn,
             bool descending = true)
         {
-            var query = this.inquiryRepository.All();
+            IQueryable<Inquiry> query = this.inquiryRepository.All();
 
             query = sortField switch
             {
@@ -84,7 +84,7 @@ namespace HandyFix.Services.Data.Inquiries
 
         public async Task DeleteAsync(Guid id)
         {
-            var inquiry = await this.inquiryRepository.All()
+            Inquiry inquiry = await this.inquiryRepository.All()
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (inquiry != null)

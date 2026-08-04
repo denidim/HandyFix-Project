@@ -23,7 +23,7 @@ namespace HandyFix.Services.Data.Reviews
 
         public async Task ApproveReviewAsync(Guid id)
         {
-            var review = await this.reviewRepository.All().FirstOrDefaultAsync(x => x.Id == id);
+            Review review = await this.reviewRepository.All().FirstOrDefaultAsync(x => x.Id == id);
             if (review != null)
             {
                 review.IsApproved = true;
@@ -33,7 +33,7 @@ namespace HandyFix.Services.Data.Reviews
 
         public async Task DeleteReviewAsync(Guid id)
         {
-            var review = await this.reviewRepository.All().FirstOrDefaultAsync(x => x.Id == id);
+            Review review = await this.reviewRepository.All().FirstOrDefaultAsync(x => x.Id == id);
             if (review != null)
             {
                 this.reviewRepository.Delete(review);
@@ -56,7 +56,7 @@ namespace HandyFix.Services.Data.Reviews
             bool descending = true,
             string statusFilter = null)
         {
-            var query = this.reviewRepository.All();
+            IQueryable<Review> query = this.reviewRepository.All();
 
             if (string.Equals(statusFilter, "Approved", StringComparison.OrdinalIgnoreCase))
             {

@@ -50,20 +50,20 @@ namespace HandyFix.Web.Controllers
                 this.Url.Action("CookiePolicy", "Home", null, protocol),
             };
 
-            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-            foreach (var category in categories)
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            foreach (CategoryViewModel category in categories)
             {
                 urls.Add(this.Url.RouteUrl("ServiceCategory", new { categorySlug = category.Slug }, protocol));
             }
 
-            var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-            foreach (var service in services)
+            IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+            foreach (ServiceViewModel service in services)
             {
                 urls.Add(this.Url.RouteUrl("ServiceDetails", new { categorySlug = service.CategorySlug, serviceSlug = service.Slug }, protocol));
             }
 
-            var areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
-            foreach (var area in areas)
+            IEnumerable<ServiceAreaViewModel> areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
+            foreach (ServiceAreaViewModel area in areas)
             {
                 urls.Add(this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, protocol));
             }

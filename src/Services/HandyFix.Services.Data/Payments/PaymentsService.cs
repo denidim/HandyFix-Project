@@ -44,7 +44,7 @@ namespace HandyFix.Services.Data.Payments
 
         public async Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId)
         {
-            var pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
             if (pendingStatus == null)
             {
                 throw new InvalidOperationException("Payment status 'Pending' is not seeded.");
@@ -53,14 +53,14 @@ namespace HandyFix.Services.Data.Payments
             // Supersede any earlier, still-pending payment attempt for this booking so a
             // customer retrying checkout doesn't pile up orphaned Pending rows pointing
             // at abandoned Stripe sessions.
-            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
             if (cancelledStatus != null)
             {
-                var existingPendingPayments = await this.paymentRepository.All()
+                List<Payment> existingPendingPayments = await this.paymentRepository.All()
                     .Where(x => x.BookingId == bookingId && x.StatusId == pendingStatus.Id)
                     .ToListAsync();
 
-                foreach (var existing in existingPendingPayments)
+                foreach (Payment existing in existingPendingPayments)
                 {
                     existing.StatusId = cancelledStatus.Id;
                 }
@@ -83,7 +83,7 @@ namespace HandyFix.Services.Data.Payments
 
         public async Task ProcessPaymentSuccessAsync(string checkoutSessionId, string transactionId)
         {
-            var payment = await this.paymentRepository.All()
+            Payment payment = await this.paymentRepository.All()
                 .Include(x => x.Booking).ThenInclude(b => b.BookingServices).ThenInclude(bs => bs.Service)
                 .Include(x => x.Booking).ThenInclude(b => b.AvailabilitySlot)
                 .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
@@ -93,7 +93,7 @@ namespace HandyFix.Services.Data.Payments
                 return;
             }
 
-            var paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
+            PaymentStatus paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
 
             // The Stripe webhook and the browser's Success redirect can both call this
             // for the same session. Only the first call — the one that actually moves
@@ -111,10 +111,10 @@ namespace HandyFix.Services.Data.Payments
             }
 
             // Update associated booking status to "Approved" (Confirmed deposit)
-            var booking = payment.Booking;
+            Booking booking = payment.Booking;
             if (booking != null)
             {
-                var approvedStatus = await this.bookingStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
+                BookingStatus approvedStatus = await this.bookingStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
                 if (approvedStatus != null)
                 {
                     booking.StatusId = approvedStatus.Id;
@@ -207,15 +207,15 @@ namespace HandyFix.Services.Data.Payments
 
         public async Task CancelPaymentAsync(string checkoutSessionId)
         {
-            var payment = await this.paymentRepository.All()
+            Payment payment = await this.paymentRepository.All()
                 .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
             if (payment == null)
             {
                 return;
             }
 
-            var pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
-            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
             if (cancelledStatus == null)
             {
                 return;
@@ -234,20 +234,20 @@ namespace HandyFix.Services.Data.Payments
 
         public async Task CancelPendingPaymentsForBookingsAsync(IEnumerable<Guid> bookingIds)
         {
-            var pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
-            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
             if (pendingStatus == null || cancelledStatus == null)
             {
                 return;
             }
 
-            var idList = bookingIds?.ToList() ?? new List<Guid>();
+            List<Guid> idList = bookingIds?.ToList() ?? new List<Guid>();
             if (idList.Count == 0)
             {
                 return;
             }
 
-            var pendingPayments = await this.paymentRepository.All()
+            List<Payment> pendingPayments = await this.paymentRepository.All()
                 .Where(x => idList.Contains(x.BookingId) && x.StatusId == pendingStatus.Id)
                 .ToListAsync();
 
@@ -256,7 +256,7 @@ namespace HandyFix.Services.Data.Payments
                 return;
             }
 
-            foreach (var payment in pendingPayments)
+            foreach (Payment payment in pendingPayments)
             {
                 payment.StatusId = cancelledStatus.Id;
             }

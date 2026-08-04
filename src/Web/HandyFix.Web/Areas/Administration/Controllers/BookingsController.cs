@@ -1,6 +1,7 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -32,15 +33,15 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
         public async Task<IActionResult> Index(BookingSortField sortField = BookingSortField.CreatedOn, bool descending = true, string status = null)
         {
-            var bookings = await this.bookingsService.GetAllBookingsAsync<BookingDetailsViewModel>(sortField, descending, status);
-            var statusOptions = await this.statusRepository.All()
+            IEnumerable<BookingDetailsViewModel> bookings = await this.bookingsService.GetAllBookingsAsync<BookingDetailsViewModel>(sortField, descending, status);
+            List<string> statusOptions = await this.statusRepository.All()
                 .Select(x => x.Name)
                 .OrderBy(x => x)
                 .ToListAsync();
 
             // Summary cards always reflect the whole business, not just whatever
             // status filter is currently applied to the table below.
-            var allBookings = string.IsNullOrWhiteSpace(status)
+            IEnumerable<BookingDetailsViewModel> allBookings = string.IsNullOrWhiteSpace(status)
                 ? bookings
                 : await this.bookingsService.GetAllBookingsAsync<BookingDetailsViewModel>();
 
@@ -63,7 +64,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
         public async Task<IActionResult> Details(Guid id)
         {
-            var booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(id);
+            BookingDetailsViewModel booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(id);
             if (booking == null)
             {
                 return this.NotFound();

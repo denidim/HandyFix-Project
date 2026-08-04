@@ -1,6 +1,7 @@
 ﻿namespace HandyFix.Web.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     using HandyFix.Data.Common.Repositories;
@@ -24,7 +25,7 @@
 
         public IActionResult Index()
         {
-            var settings = this.settingsService.GetAll<SettingViewModel>();
+            IEnumerable<SettingViewModel> settings = this.settingsService.GetAll<SettingViewModel>();
             var model = new SettingsListViewModel { Settings = settings };
             return this.View(model);
         }

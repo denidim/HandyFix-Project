@@ -1,6 +1,7 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.Inquiries;
@@ -19,7 +20,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
         public async Task<IActionResult> Index(InquirySortField sortField = InquirySortField.CreatedOn, bool descending = true)
         {
-            var inquiries = await this.inquiriesService.GetAllAsync<EnquiryViewModel>(sortField, descending);
+            IEnumerable<EnquiryViewModel> inquiries = await this.inquiriesService.GetAllAsync<EnquiryViewModel>(sortField, descending);
 
             var model = new EnquiryListViewModel
             {
@@ -33,7 +34,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
         public async Task<IActionResult> Details(Guid id)
         {
-            var inquiry = await this.inquiriesService.GetByIdAsync<EnquiryViewModel>(id);
+            EnquiryViewModel inquiry = await this.inquiriesService.GetByIdAsync<EnquiryViewModel>(id);
             if (inquiry == null)
             {
                 return this.NotFound();

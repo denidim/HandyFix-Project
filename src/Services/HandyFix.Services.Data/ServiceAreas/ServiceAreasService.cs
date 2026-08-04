@@ -27,7 +27,7 @@ namespace HandyFix.Services.Data.ServiceAreas
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(bool featuredFirst = true)
         {
-            var query = this.areasRepository.All();
+            IQueryable<ServiceArea> query = this.areasRepository.All();
 
             query = featuredFirst
                 ? query.OrderByDescending(x => x.IsFeatured).ThenBy(x => x.DisplayOrder)
@@ -96,7 +96,7 @@ namespace HandyFix.Services.Data.ServiceAreas
 
         public async Task UpdateAsync(Guid id, ServiceAreaAdminInputModel model)
         {
-            var area = await this.areasRepository.All().FirstOrDefaultAsync(x => x.Id == id);
+            ServiceArea area = await this.areasRepository.All().FirstOrDefaultAsync(x => x.Id == id);
             if (area == null)
             {
                 return;
@@ -118,7 +118,7 @@ namespace HandyFix.Services.Data.ServiceAreas
 
         public async Task DeleteAsync(Guid id)
         {
-            var area = await this.areasRepository.AllWithDeleted().FirstOrDefaultAsync(x => x.Id == id);
+            ServiceArea area = await this.areasRepository.AllWithDeleted().FirstOrDefaultAsync(x => x.Id == id);
             if (area == null)
             {
                 return;
@@ -126,11 +126,11 @@ namespace HandyFix.Services.Data.ServiceAreas
 
             // The FK from ServiceAreaFaq is ReferentialAction.Restrict, so the children have to go
             // first or SaveChanges throws a constraint violation.
-            var faqs = await this.faqsRepository.AllWithDeleted()
+            List<ServiceAreaFaq> faqs = await this.faqsRepository.AllWithDeleted()
                 .Where(x => x.ServiceAreaId == id)
                 .ToListAsync();
 
-            foreach (var faq in faqs)
+            foreach (ServiceAreaFaq faq in faqs)
             {
                 this.faqsRepository.HardDelete(faq);
             }
@@ -148,7 +148,7 @@ namespace HandyFix.Services.Data.ServiceAreas
             // AllWithDeleted, not All: IX_ServiceAreas_Slug has no IsDeleted filter, so a
             // soft-deleted row still reserves its slug at the database level. Checking only live
             // rows would let the form accept a duplicate and then fail with a raw 500 on save.
-            var query = this.areasRepository.AllWithDeleted().Where(x => x.Slug == normalized);
+            IQueryable<ServiceArea> query = this.areasRepository.AllWithDeleted().Where(x => x.Slug == normalized);
 
             if (excludeAreaId.HasValue)
             {
@@ -170,17 +170,17 @@ namespace HandyFix.Services.Data.ServiceAreas
         /// </summary>
         private async Task ReplaceFaqsAsync(Guid areaId, IEnumerable<ServiceAreaFaqInputModel> faqs)
         {
-            var existing = await this.faqsRepository.AllWithDeleted()
+            List<ServiceAreaFaq> existing = await this.faqsRepository.AllWithDeleted()
                 .Where(x => x.ServiceAreaId == areaId)
                 .ToListAsync();
 
-            foreach (var faq in existing)
+            foreach (ServiceAreaFaq faq in existing)
             {
                 this.faqsRepository.HardDelete(faq);
             }
 
             var displayOrder = 1;
-            foreach (var faq in faqs ?? Enumerable.Empty<ServiceAreaFaqInputModel>())
+            foreach (ServiceAreaFaqInputModel faq in faqs ?? Enumerable.Empty<ServiceAreaFaqInputModel>())
             {
                 if (string.IsNullOrWhiteSpace(faq?.Question) || string.IsNullOrWhiteSpace(faq.Answer))
                 {

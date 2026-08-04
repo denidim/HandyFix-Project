@@ -27,7 +27,7 @@ namespace HandyFix.Services.Data.Services
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(bool activeOnly = true)
         {
-            var query = this.servicesRepository.All();
+            IQueryable<Service> query = this.servicesRepository.All();
 
             if (activeOnly)
             {
@@ -42,7 +42,7 @@ namespace HandyFix.Services.Data.Services
 
         public async Task<IEnumerable<T>> GetByCategoryAsync<T>(string categoryName, bool activeOnly = true)
         {
-            var query = this.servicesRepository.All()
+            IQueryable<Service> query = this.servicesRepository.All()
                 .Where(x => x.Category.Name.ToLower() == categoryName.ToLower());
 
             if (activeOnly)
@@ -93,7 +93,7 @@ namespace HandyFix.Services.Data.Services
 
         public async Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId)
         {
-            var service = await this.servicesRepository.All()
+            Service service = await this.servicesRepository.All()
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (service != null)
@@ -112,7 +112,7 @@ namespace HandyFix.Services.Data.Services
 
         public async Task DeleteAsync(Guid id)
         {
-            var service = await this.servicesRepository.All()
+            Service service = await this.servicesRepository.All()
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (service != null)
@@ -129,7 +129,7 @@ namespace HandyFix.Services.Data.Services
                 return;
             }
 
-            var existingImage = await this.serviceImageRepository.All()
+            ServiceImage existingImage = await this.serviceImageRepository.All()
                 .FirstOrDefaultAsync(x => x.ServiceId == serviceId);
 
             if (existingImage != null)

@@ -38,9 +38,9 @@ namespace HandyFix.Web
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
             ConfigureServices(builder.Services, builder.Configuration);
-            var app = builder.Build();
+            WebApplication app = builder.Build();
             Configure(app);
             app.Run();
         }
@@ -94,7 +94,7 @@ namespace HandyFix.Web
                     return new BrevoEmailSender(apiKey);
                 }
 
-                var env = sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+                Microsoft.AspNetCore.Hosting.IWebHostEnvironment env = sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
                 if (env.IsDevelopment())
                 {
                     return new NullMessageSender();
@@ -129,9 +129,9 @@ namespace HandyFix.Web
         private static void Configure(WebApplication app)
         {
             // Seed data on application startup
-            using (var serviceScope = app.Services.CreateScope())
+            using (IServiceScope serviceScope = app.Services.CreateScope())
             {
-                var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                ApplicationDbContext dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
                 // The migrations are SQL Server-specific (rowversion in particular), so they can
                 // only be replayed against SQL Server. A host running on any other provider is a

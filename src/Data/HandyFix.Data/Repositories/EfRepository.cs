@@ -7,6 +7,7 @@
     using HandyFix.Data.Common.Repositories;
 
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.ChangeTracking;
 
     public class EfRepository<TEntity> : IRepository<TEntity>
         where TEntity : class
@@ -29,7 +30,7 @@
 
         public virtual void Update(TEntity entity)
         {
-            var entry = this.Context.Entry(entity);
+            EntityEntry<TEntity> entry = this.Context.Entry(entity);
             if (entry.State == EntityState.Detached)
             {
                 this.DbSet.Attach(entity);

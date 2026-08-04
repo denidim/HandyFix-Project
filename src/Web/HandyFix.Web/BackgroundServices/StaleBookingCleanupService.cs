@@ -30,8 +30,8 @@ namespace HandyFix.Web.BackgroundServices
             {
                 try
                 {
-                    using var scope = this.scopeFactory.CreateScope();
-                    var bookingsService = scope.ServiceProvider.GetRequiredService<IBookingsService>();
+                    using IServiceScope scope = this.scopeFactory.CreateScope();
+                    IBookingsService bookingsService = scope.ServiceProvider.GetRequiredService<IBookingsService>();
                     var releasedCount = await bookingsService.ReleaseAbandonedBookingsAsync(AbandonAfter);
 
                     if (releasedCount > 0)

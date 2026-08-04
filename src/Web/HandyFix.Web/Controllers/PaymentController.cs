@@ -15,7 +15,7 @@ namespace HandyFix.Web.Controllers
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
-
+    using Microsoft.Extensions.Primitives;
     using Stripe;
     using Stripe.Checkout;
 
@@ -48,7 +48,7 @@ namespace HandyFix.Web.Controllers
         [Route("Payment/Pay")]
         public async Task<IActionResult> Pay(Guid bookingId)
         {
-            var booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(bookingId);
+            BookingDetailsViewModel booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(bookingId);
             if (booking == null)
             {
                 return this.NotFound();
@@ -120,8 +120,8 @@ namespace HandyFix.Web.Controllers
             // Update status in case webhook isn't forwarded
             await this.paymentsService.ProcessPaymentSuccessAsync(session_id, $"txn_local_{Guid.NewGuid()}");
 
-            var payments = await this.paymentsService.GetAllPaymentsAsync<PaymentViewModel>();
-            var payment = payments.FirstOrDefault(x => x.CheckoutSessionId == session_id);
+            IEnumerable<PaymentViewModel> payments = await this.paymentsService.GetAllPaymentsAsync<PaymentViewModel>();
+            PaymentViewModel payment = payments.FirstOrDefault(x => x.CheckoutSessionId == session_id);
 
             if (payment != null)
             {
@@ -145,12 +145,12 @@ namespace HandyFix.Web.Controllers
         public async Task<IActionResult> Webhook()
         {
             var json = await new StreamReader(this.HttpContext.Request.Body).ReadToEndAsync();
-            var signature = this.Request.Headers["Stripe-Signature"];
+            StringValues signature = this.Request.Headers["Stripe-Signature"];
             var webhookSecret = this.configuration["Stripe:WebhookSecret"];
 
             try
             {
-                var stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
+                Event stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
 
                 if (stripeEvent.Type == Events.CheckoutSessionCompleted)
                 {
