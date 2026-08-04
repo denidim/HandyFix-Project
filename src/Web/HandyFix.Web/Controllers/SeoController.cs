@@ -1,14 +1,13 @@
 namespace HandyFix.Web.Controllers
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using System.Xml.Linq;
 
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Services;
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
@@ -16,8 +15,6 @@ namespace HandyFix.Web.Controllers
 
     public class SeoController : BaseController
     {
-        private static readonly XNamespace SitemapNamespace = "http://www.sitemaps.org/schemas/sitemap/0.9";
-
         private readonly ICategoriesService categoriesService;
         private readonly IServicesService servicesService;
         private readonly IServiceAreasService areasService;
@@ -68,14 +65,7 @@ namespace HandyFix.Web.Controllers
                 urls.Add(this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, protocol));
             }
 
-            var xml = new XElement(
-                SitemapNamespace + "urlset",
-                urls
-                    .Where(u => !string.IsNullOrEmpty(u))
-                    .Distinct()
-                    .Select(u => new XElement(SitemapNamespace + "url", new XElement(SitemapNamespace + "loc", u))));
-
-            var content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xml;
+            var content = SitemapXmlBuilder.Build(urls);
 
             return this.Content(content, "application/xml", Encoding.UTF8);
         }
