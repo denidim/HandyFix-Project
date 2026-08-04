@@ -31,5 +31,14 @@ namespace HandyFix.Services.Data.ServiceAreas
         /// Checks the slug against soft-deleted rows too, because the unique index covers them.
         /// </summary>
         Task<bool> SlugExistsAsync(string slug, Guid? excludeAreaId = null);
+
+        /// <summary>
+        /// Drops FAQ rows left entirely blank (mutating model.Faqs), then validates whatever
+        /// survives against the same limits as the ServiceAreaFaq entity, so a row that passes
+        /// here cannot fail at SaveChanges. Returns every violation found; an empty result means
+        /// the surviving rows are all valid. Pruning happens first so returned error keys always
+        /// match the index the row will actually render at.
+        /// </summary>
+        IEnumerable<ServiceAreaFaqValidationError> PruneAndValidateFaqs(ServiceAreaAdminInputModel model);
     }
 }

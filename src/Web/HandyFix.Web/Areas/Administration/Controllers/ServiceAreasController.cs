@@ -37,7 +37,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ServiceAreaAdminInputModel model)
         {
-            this.PruneAndValidateFaqs(model);
+            this.ApplyFaqValidationErrors(model);
 
             if (await this.serviceAreasService.SlugExistsAsync(model.Slug))
             {
@@ -81,7 +81,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.NotFound();
             }
 
-            this.PruneAndValidateFaqs(model);
+            this.ApplyFaqValidationErrors(model);
 
             if (await this.serviceAreasService.SlugExistsAsync(model.Slug, model.Id))
             {
@@ -125,43 +125,16 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         }
 
         /// <summary>
-        /// Drops FAQ rows left entirely blank, then validates whatever survives. Order matters:
-        /// pruning first means every error key matches the index the row will actually render at.
+        /// Pruning and the validation rules themselves live in ServiceAreasService.
         /// ServiceAreaFaqInputModel carries no DataAnnotations precisely so the binder cannot raise
-        /// errors against pre-prune indices - see the note on that class.
+        /// errors against pre-prune indices - see the note on that class - so this has to run
+        /// explicitly rather than through the usual [ApiController]/ModelState pipeline.
         /// </summary>
-        private void PruneAndValidateFaqs(ServiceAreaAdminInputModel model)
+        private void ApplyFaqValidationErrors(ServiceAreaAdminInputModel model)
         {
-            model.Faqs ??= new List<ServiceAreaFaqInputModel>();
-
-            model.Faqs = model.Faqs
-                .Where(f => !string.IsNullOrWhiteSpace(f?.Question) || !string.IsNullOrWhiteSpace(f?.Answer))
-                .ToList();
-
-            for (var i = 0; i < model.Faqs.Count; i++)
+            foreach (ServiceAreaFaqValidationError error in this.serviceAreasService.PruneAndValidateFaqs(model))
             {
-                var question = model.Faqs[i].Question?.Trim();
-                var answer = model.Faqs[i].Answer?.Trim();
-
-                // Limits mirror the ServiceAreaFaq entity, so a row that passes here cannot fail
-                // at SaveChanges.
-                if (string.IsNullOrWhiteSpace(question))
-                {
-                    this.ModelState.AddModelError($"Faqs[{i}].Question", "Question is required.");
-                }
-                else if (question.Length < 5 || question.Length > 300)
-                {
-                    this.ModelState.AddModelError($"Faqs[{i}].Question", "Question must be between 5 and 300 characters.");
-                }
-
-                if (string.IsNullOrWhiteSpace(answer))
-                {
-                    this.ModelState.AddModelError($"Faqs[{i}].Answer", "Answer is required.");
-                }
-                else if (answer.Length < 5 || answer.Length > 1000)
-                {
-                    this.ModelState.AddModelError($"Faqs[{i}].Answer", "Answer must be between 5 and 1000 characters.");
-                }
+                this.ModelState.AddModelError(error.Key, error.Message);
             }
         }
 

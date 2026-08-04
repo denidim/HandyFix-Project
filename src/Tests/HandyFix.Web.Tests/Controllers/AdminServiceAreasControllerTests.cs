@@ -1,7 +1,6 @@
-﻿namespace HandyFix.Web.Tests.Controllers
+namespace HandyFix.Web.Tests.Controllers
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.ServiceAreas;
@@ -17,74 +16,42 @@
     using Xunit;
 
     /// <summary>
-    /// The FAQ builder's contract, per PROJECT_STATE.md section 3m: blank rows are pruned before
-    /// validation, so every ModelState error key lines up with the index the row actually renders
-    /// at. ServiceAreaFaqInputModel carries no DataAnnotations precisely so the binder cannot
-    /// raise errors against pre-prune indices.
+    /// Controller-level wiring only - the FAQ pruning/validation rules themselves now live in
+    /// ServiceAreasService.PruneAndValidateFaqs and are covered in
+    /// ServiceAreasServiceTests.PruneAndValidateFaqsTests.
     /// </summary>
     public class AdminServiceAreasControllerTests
     {
         [Fact]
-        public async Task CreateShouldSilentlyDropFullyBlankFaqRows()
+        public async Task CreateShouldTranslateEveryServiceReturnedFaqErrorIntoModelState()
         {
             var controller = BuildController(out var serviceAreasService);
 
-            var model = ValidArea();
-            model.Faqs = new List<ServiceAreaFaqInputModel>
-            {
-                Faq("How quickly can you get here?", "Usually within two working days."),
-                new ServiceAreaFaqInputModel(),
-                new ServiceAreaFaqInputModel { Question = "   ", Answer = null },
-            };
+            serviceAreasService
+                .Setup(x => x.PruneAndValidateFaqs(It.IsAny<ServiceAreaAdminInputModel>()))
+                .Returns(new[]
+                {
+                    new ServiceAreaFaqValidationError { Key = "Faqs[0].Answer", Message = "Answer is required." },
+                });
 
-            var result = await controller.Create(model);
-
-            // A blank row is the admin leaving an unused slot alone, not an error.
-            Assert.True(controller.ModelState.IsValid);
-            Assert.IsType<RedirectToActionResult>(result);
-
-            serviceAreasService.Verify(
-                x => x.CreateAsync(It.Is<ServiceAreaAdminInputModel>(m => m.Faqs.Count == 1)),
-                Times.Once);
-        }
-
-        [Fact]
-        public async Task CreateShouldKeyFaqErrorsToThePostPruneIndex()
-        {
-            // The actual trap this guards. Row 0 is blank and gets pruned; row 1 is
-            // half-filled and invalid. After pruning it renders at index 0, so an error
-            // keyed Faqs[1].Answer would attach to a row the admin cannot see.
-            var controller = BuildController(out var serviceAreasService);
-
-            var model = ValidArea();
-            model.Faqs = new List<ServiceAreaFaqInputModel>
-            {
-                new ServiceAreaFaqInputModel(),
-                Faq("Do you cover weekends?", null),
-            };
-
-            var result = await controller.Create(model);
+            var result = await controller.Create(ValidArea());
 
             Assert.False(controller.ModelState.IsValid);
             Assert.True(controller.ModelState.ContainsKey("Faqs[0].Answer"));
-            Assert.False(controller.ModelState.ContainsKey("Faqs[1].Answer"));
-
             Assert.IsType<ViewResult>(result);
             serviceAreasService.Verify(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>()), Times.Never);
         }
 
         [Fact]
-        public async Task CreateShouldRejectAHalfFilledFaqRow()
+        public async Task CreateShouldProceedWhenTheServiceReportsNoFaqErrors()
         {
-            var controller = BuildController(out _);
+            var controller = BuildController(out var serviceAreasService);
 
-            var model = ValidArea();
-            model.Faqs = new List<ServiceAreaFaqInputModel> { Faq(null, "Yes, we do.") };
+            var result = await controller.Create(ValidArea());
 
-            await controller.Create(model);
-
-            Assert.False(controller.ModelState.IsValid);
-            Assert.True(controller.ModelState.ContainsKey("Faqs[0].Question"));
+            Assert.True(controller.ModelState.IsValid);
+            Assert.IsType<RedirectToActionResult>(result);
+            serviceAreasService.Verify(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>()), Times.Once);
         }
 
         [Fact]
@@ -113,13 +80,13 @@
         [Fact]
         public async Task CreateShouldGiveTheRedisplayedFormAtLeastOneFaqRowToTypeInto()
         {
-            // Pruning can empty the list entirely; handing the view back zero rows would
-            // leave the admin with a form they cannot add a FAQ to.
+            // Pruning (in ServiceAreasService) can empty the list entirely; handing the view
+            // back zero rows would leave the admin with a form they cannot add a FAQ to.
             var controller = BuildController(out _);
 
             var model = ValidArea();
             model.Slug = "NOT A VALID SLUG";
-            model.Faqs = new List<ServiceAreaFaqInputModel> { new ServiceAreaFaqInputModel() };
+            model.Faqs = new List<ServiceAreaFaqInputModel>();
             controller.ModelState.AddModelError(nameof(model.Slug), "Invalid slug.");
 
             var result = await controller.Create(model);
@@ -127,9 +94,6 @@
             var returned = Assert.IsType<ServiceAreaAdminInputModel>(Assert.IsType<ViewResult>(result).Model);
             Assert.Single(returned.Faqs);
         }
-
-        private static ServiceAreaFaqInputModel Faq(string question, string answer) =>
-            new ServiceAreaFaqInputModel { Question = question, Answer = answer };
 
         private static ServiceAreaAdminInputModel ValidArea() => new ServiceAreaAdminInputModel
         {
@@ -143,6 +107,12 @@
         private static ServiceAreasController BuildController(out Mock<IServiceAreasService> serviceAreasService)
         {
             serviceAreasService = new Mock<IServiceAreasService>();
+
+            // Safe default so tests that aren't specifically about FAQ validation don't have to
+            // set it up themselves - PruneAndValidateFaqs runs unconditionally on every POST.
+            serviceAreasService
+                .Setup(x => x.PruneAndValidateFaqs(It.IsAny<ServiceAreaAdminInputModel>()))
+                .Returns(new List<ServiceAreaFaqValidationError>());
 
             return new ServiceAreasController(serviceAreasService.Object)
             {

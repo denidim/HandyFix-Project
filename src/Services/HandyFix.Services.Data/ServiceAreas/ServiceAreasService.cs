@@ -163,6 +163,45 @@ namespace HandyFix.Services.Data.ServiceAreas
             return string.IsNullOrWhiteSpace(slug) ? string.Empty : slug.Trim().ToLowerInvariant();
         }
 
+        public IEnumerable<ServiceAreaFaqValidationError> PruneAndValidateFaqs(ServiceAreaAdminInputModel model)
+        {
+            model.Faqs ??= new List<ServiceAreaFaqInputModel>();
+
+            model.Faqs = model.Faqs
+                .Where(f => !string.IsNullOrWhiteSpace(f?.Question) || !string.IsNullOrWhiteSpace(f?.Answer))
+                .ToList();
+
+            var errors = new List<ServiceAreaFaqValidationError>();
+
+            for (var i = 0; i < model.Faqs.Count; i++)
+            {
+                var question = model.Faqs[i].Question?.Trim();
+                var answer = model.Faqs[i].Answer?.Trim();
+
+                // Limits mirror the ServiceAreaFaq entity, so a row that passes here cannot fail
+                // at SaveChanges.
+                if (string.IsNullOrWhiteSpace(question))
+                {
+                    errors.Add(new ServiceAreaFaqValidationError { Key = $"Faqs[{i}].Question", Message = "Question is required." });
+                }
+                else if (question.Length < 5 || question.Length > 300)
+                {
+                    errors.Add(new ServiceAreaFaqValidationError { Key = $"Faqs[{i}].Question", Message = "Question must be between 5 and 300 characters." });
+                }
+
+                if (string.IsNullOrWhiteSpace(answer))
+                {
+                    errors.Add(new ServiceAreaFaqValidationError { Key = $"Faqs[{i}].Answer", Message = "Answer is required." });
+                }
+                else if (answer.Length < 5 || answer.Length > 1000)
+                {
+                    errors.Add(new ServiceAreaFaqValidationError { Key = $"Faqs[{i}].Answer", Message = "Answer must be between 5 and 1000 characters." });
+                }
+            }
+
+            return errors;
+        }
+
         /// <summary>
         /// FAQs are replaced wholesale rather than diffed. They carry no external references and
         /// are ordered purely by DisplayOrder, so recreating them is simpler than reconciling by id
