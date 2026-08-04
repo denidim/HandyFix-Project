@@ -663,6 +663,27 @@ types, thin controllers, and an authorization flip are queued next as separate p
 
 ---
 
+## 3z. Code Cleanup Phase 2: `var` → Explicit Types (2026-08-04)
+
+Second phase of the same cleanup pass (Section 3y was phase 1). Production code (`Data`, `Services`,
+`Web`) now uses explicit local variable types instead of `var`; test projects are untouched by
+agreement, since `var` there is the standard convention and the volume (741 of 1101 total usages)
+outweighs the benefit.
+
+- Added a repo-root `.editorconfig` (none existed before) setting `csharp_style_var_for_built_in_types`,
+  `csharp_style_var_when_type_is_apparent`, and `csharp_style_var_elsewhere` to `false:suggestion`,
+  so the change doesn't silently erode on future PRs.
+- Applied mechanically via `dotnet format style --diagnostics IDE0008 --exclude src/Tests` rather
+  than by hand — safer than manual/regex editing since Roslyn can't produce a type mismatch, and far
+  faster across ~360 production occurrences. 42 files touched, 234 insertions / 212 deletions.
+- Anonymous-type sites (`new { ... }`) are unaffected, since `var` is required there.
+- **Verified**: `dotnet build` (0 errors) and the full test suite (119) unchanged — only local
+  variable declarations were rewritten, no signatures changed.
+
+Phases 3 (thin controllers) and 4 (`[Authorize]`-by-default flip) are next.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
