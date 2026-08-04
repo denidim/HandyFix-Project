@@ -203,6 +203,12 @@ finished work and record the new goals, and commit that before starting new work
 Two branches, deliberately simple — this is a solo project, not a team, so a heavier branching
 model (feature branches, required reviewers) would add ceremony without adding safety.
 
+- **Agents: check the current branch before starting any work**, not just before committing —
+  `git branch --show-current` (or the current-branch line in `git status`). Work is expected to
+  happen on `dev`; if the repo is somehow on `main` or anything else when a session starts, say so
+  and switch to `dev` (or ask, if it's unclear why the checkout is where it is) before touching
+  files. Catching this at the start is what prevents it from ever mattering — a commit made on the
+  wrong branch is a much bigger cleanup than a five-second check would have been.
 - **`dev` is the working branch.** Commit and push here for anything in progress. Every push
   triggers `.github/workflows/deploy-dev.yml`, which builds, tests, and deploys straight to
   staging — that's the feedback loop, use it liberally.
