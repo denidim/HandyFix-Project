@@ -17,9 +17,13 @@ namespace HandyFix.Services.Data.Bookings
     using Mapster;
 
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
 
     public class BookingsService : IBookingsService
     {
+        private const string DefaultBookingsFromAddress = "bookings@handyfix.co.uk";
+        private const string DefaultSystemFromAddress = "no-reply@handyfix.co.uk";
+
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
         private readonly IDeletableEntityRepository<Service> serviceRepository;
         private readonly IDeletableEntityRepository<AvailabilitySlot> slotRepository;
@@ -30,6 +34,7 @@ namespace HandyFix.Services.Data.Bookings
         private readonly IPaymentsService paymentsService;
         private readonly IDbQueryRunner dbQueryRunner;
         private readonly IEmailSender emailSender;
+        private readonly IConfiguration configuration;
 
         public BookingsService(
             IDeletableEntityRepository<Booking> bookingRepository,
@@ -41,7 +46,8 @@ namespace HandyFix.Services.Data.Bookings
             IAvailabilityService availabilityService,
             IPaymentsService paymentsService,
             IDbQueryRunner dbQueryRunner,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IConfiguration configuration)
         {
             this.bookingRepository = bookingRepository;
             this.serviceRepository = serviceRepository;
@@ -53,6 +59,7 @@ namespace HandyFix.Services.Data.Bookings
             this.paymentsService = paymentsService;
             this.dbQueryRunner = dbQueryRunner;
             this.emailSender = emailSender;
+            this.configuration = configuration;
         }
 
         public async Task<Booking> CreateBookingAsync(
@@ -160,8 +167,14 @@ namespace HandyFix.Services.Data.Bookings
             <br />
             <p>Best Regards,<br/><strong>HandyFix Team</strong></p>";
 
+            var systemFromAddress = this.configuration["Email:SystemFromAddress"];
+            if (string.IsNullOrWhiteSpace(systemFromAddress))
+            {
+                systemFromAddress = DefaultSystemFromAddress;
+            }
+
             await this.emailSender.SendEmailAsync(
-                "no-reply@handyfix.co.uk",
+                systemFromAddress,
                 "HandyFix Booking System",
                 model.Email,
                 subject,
@@ -248,8 +261,14 @@ namespace HandyFix.Services.Data.Bookings
                         {technicianBlock}
                         <p>Thank you for choosing HandyFix!</p>";
 
+                    var bookingsFromAddress = this.configuration["Email:BookingsFromAddress"];
+                    if (string.IsNullOrWhiteSpace(bookingsFromAddress))
+                    {
+                        bookingsFromAddress = DefaultBookingsFromAddress;
+                    }
+
                     await this.emailSender.SendEmailAsync(
-                        "bookings@handyfix.co.uk",
+                        bookingsFromAddress,
                         "HandyFix Support",
                         booking.Email,
                         subject,

@@ -83,7 +83,8 @@ namespace HandyFix.Services.Data.Tests
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object);
+                emailSenderMock.Object,
+                new ConfigurationBuilder().Build());
 
             var model = new BookingInputModel
             {
@@ -206,7 +207,8 @@ namespace HandyFix.Services.Data.Tests
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object);
+                emailSenderMock.Object,
+                new ConfigurationBuilder().Build());
 
             var model = new BookingInputModel
             {
@@ -310,7 +312,8 @@ namespace HandyFix.Services.Data.Tests
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object);
+                emailSenderMock.Object,
+                new ConfigurationBuilder().Build());
 
             await bookingsService.RescheduleBookingAsync(booking.Id, newSlot.Id);
 
@@ -413,7 +416,8 @@ namespace HandyFix.Services.Data.Tests
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object);
+                emailSenderMock.Object,
+                new ConfigurationBuilder().Build());
 
             await Assert.ThrowsAsync<SlotUnavailableException>(
                 () => bookingsService.RescheduleBookingAsync(booking.Id, newSlot.Id));
@@ -492,7 +496,8 @@ namespace HandyFix.Services.Data.Tests
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object);
+                emailSenderMock.Object,
+                new ConfigurationBuilder().Build());
 
             // Simulate a concurrent process (e.g. the stale-booking cleanup sweep)
             // having already updated this slot's row - and thereby bumped its
@@ -608,7 +613,8 @@ namespace HandyFix.Services.Data.Tests
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object);
+                emailSenderMock.Object,
+                new ConfigurationBuilder().Build());
 
             var releasedCount = await bookingsService.ReleaseAbandonedBookingsAsync(TimeSpan.FromMinutes(15));
 
@@ -753,7 +759,8 @@ namespace HandyFix.Services.Data.Tests
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object);
+                emailSenderMock.Object,
+                new ConfigurationBuilder().Build());
         }
     }
 }

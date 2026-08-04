@@ -16,6 +16,8 @@ namespace HandyFix.Services.Data.Payments
     public class PaymentsService : IPaymentsService
     {
         private const string DefaultAdminNotificationEmail = "admin@handyfix.co.uk";
+        private const string DefaultBookingsFromAddress = "bookings@handyfix.co.uk";
+        private const string DefaultSystemFromAddress = "no-reply@handyfix.co.uk";
 
         private readonly IDeletableEntityRepository<Payment> paymentRepository;
         private readonly IDeletableEntityRepository<PaymentStatus> paymentStatusRepository;
@@ -136,6 +138,22 @@ namespace HandyFix.Services.Data.Payments
                 ? booking.AvailabilitySlot.StartTime.ToString("dd MMM yyyy 'at' HH:mm")
                 : "To be confirmed";
 
+            // Both addresses default to the not-yet-real @handyfix.co.uk placeholders and are
+            // overridable via configuration -- Brevo (and any real email provider) rejects sends
+            // from an unverified sender, so staging/local testing needs to point these at an
+            // address that's actually verified in the Brevo account until the real domain lands.
+            var bookingsFromAddress = this.configuration["Email:BookingsFromAddress"];
+            if (string.IsNullOrWhiteSpace(bookingsFromAddress))
+            {
+                bookingsFromAddress = DefaultBookingsFromAddress;
+            }
+
+            var systemFromAddress = this.configuration["Email:SystemFromAddress"];
+            if (string.IsNullOrWhiteSpace(systemFromAddress))
+            {
+                systemFromAddress = DefaultSystemFromAddress;
+            }
+
             // No technician line here on purpose. A technician is assigned by an admin after the
             // deposit clears, so this email would always read "Not yet assigned" - which looks
             // unfinished to the customer. The technician detail belongs in the admin-approval
@@ -154,7 +172,7 @@ namespace HandyFix.Services.Data.Payments
                 <p>We look forward to helping you. Thank you for choosing HandyFix!</p>";
 
             await this.emailSender.SendEmailAsync(
-                "bookings@handyfix.co.uk",
+                bookingsFromAddress,
                 "HandyFix Bookings",
                 booking.Email,
                 clientSubject,
@@ -180,7 +198,7 @@ namespace HandyFix.Services.Data.Payments
                 <p>Please review and assign a technician if one isn't already set.</p>";
 
             await this.emailSender.SendEmailAsync(
-                "no-reply@handyfix.co.uk",
+                systemFromAddress,
                 "HandyFix System",
                 adminEmail,
                 adminSubject,
