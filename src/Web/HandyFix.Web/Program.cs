@@ -102,7 +102,6 @@ namespace HandyFix.Web
 
                 throw new System.InvalidOperationException("Brevo is not configured for this environment. Set Brevo:ApiKey before accepting real bookings.");
             });
-            services.AddTransient<ISettingsService, SettingsService>();
             services.AddTransient<ICategoriesService, CategoriesService>();
             services.AddTransient<IServicesService, ServicesService>();
             services.AddTransient<IServiceAreasService, ServiceAreasService>();
