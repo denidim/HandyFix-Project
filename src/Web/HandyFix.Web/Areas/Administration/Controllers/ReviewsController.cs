@@ -29,16 +29,18 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 ? reviews
                 : (await this.reviewsService.GetAllAsync<ReviewViewModel>()).ToList();
 
+            ReviewSummaryStats summary = this.reviewsService.GetSummaryStats(allReviews);
+
             var model = new ReviewListViewModel
             {
                 Reviews = reviews,
                 SortField = sortField,
                 Descending = descending,
                 StatusFilter = status,
-                PendingCount = allReviews.Count(r => !r.IsApproved),
-                AverageRating = allReviews.Any() ? allReviews.Average(r => r.Rating) : 0,
-                TotalPublished = allReviews.Count(r => r.IsApproved),
-                ApprovalRate = allReviews.Any() ? (allReviews.Count(r => r.IsApproved) * 100) / allReviews.Count() : 0,
+                PendingCount = summary.PendingCount,
+                AverageRating = summary.AverageRating,
+                TotalPublished = summary.TotalPublished,
+                ApprovalRate = summary.ApprovalRate,
             };
 
             return this.View(model);

@@ -20,5 +20,7 @@ namespace HandyFix.Services.Data.Reviews
             string statusFilter = null);
 
         Task<int> GetPendingCountAsync();
+
+        ReviewSummaryStats GetSummaryStats(IEnumerable<ReviewViewModel> reviews);
     }
 }

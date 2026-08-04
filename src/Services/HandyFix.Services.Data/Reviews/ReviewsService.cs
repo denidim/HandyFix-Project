@@ -89,5 +89,21 @@ namespace HandyFix.Services.Data.Reviews
             // that behavior here, just relocating it out of the controller.
             return await this.reviewRepository.AllWithDeleted().CountAsync(x => !x.IsApproved);
         }
+
+        public ReviewSummaryStats GetSummaryStats(IEnumerable<ReviewViewModel> reviews)
+        {
+            // Deliberately takes the list rather than fetching it - see the equivalent note on
+            // IBookingsService.GetSummaryStats: the caller decides whether it already has the
+            // right (unfiltered) list in hand or needs to fetch one.
+            List<ReviewViewModel> reviewList = reviews.ToList();
+
+            return new ReviewSummaryStats
+            {
+                PendingCount = reviewList.Count(r => !r.IsApproved),
+                AverageRating = reviewList.Any() ? reviewList.Average(r => r.Rating) : 0,
+                TotalPublished = reviewList.Count(r => r.IsApproved),
+                ApprovalRate = reviewList.Any() ? (reviewList.Count(r => r.IsApproved) * 100) / reviewList.Count : 0,
+            };
+        }
     }
 }

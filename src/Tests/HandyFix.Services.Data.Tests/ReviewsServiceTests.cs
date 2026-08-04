@@ -100,5 +100,40 @@ namespace HandyFix.Services.Data.Tests
             Assert.Single(pendingResults);
             Assert.Equal(pending.Id, pendingResults.Single().Id);
         }
+
+        [Fact]
+        public void GetSummaryStatsShouldDescribeTheGivenListRegardlessOfWhereItCameFrom()
+        {
+            // A pure computation over whatever list it's handed - no repository access needed.
+            var service = new ReviewsService(null);
+
+            var reviews = new[]
+            {
+                new ReviewViewModel { Rating = 5, IsApproved = true },
+                new ReviewViewModel { Rating = 3, IsApproved = true },
+                new ReviewViewModel { Rating = 1, IsApproved = false },
+            };
+
+            ReviewSummaryStats stats = service.GetSummaryStats(reviews);
+
+            Assert.Equal(1, stats.PendingCount);
+            Assert.Equal(3, stats.TotalPublished + stats.PendingCount);
+            Assert.Equal(2, stats.TotalPublished);
+            Assert.Equal(3, stats.AverageRating);
+            Assert.Equal(66, stats.ApprovalRate);
+        }
+
+        [Fact]
+        public void GetSummaryStatsShouldReturnZeroesForAnEmptyList()
+        {
+            var service = new ReviewsService(null);
+
+            ReviewSummaryStats stats = service.GetSummaryStats(Enumerable.Empty<ReviewViewModel>());
+
+            Assert.Equal(0, stats.PendingCount);
+            Assert.Equal(0, stats.TotalPublished);
+            Assert.Equal(0, stats.AverageRating);
+            Assert.Equal(0, stats.ApprovalRate);
+        }
     }
 }
