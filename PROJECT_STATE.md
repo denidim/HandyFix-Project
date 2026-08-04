@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-08-04 — Docker containerization for Tier 4 item 19 started: `Dockerfile` + `.dockerignore` added and verified end-to-end against a throwaway local SQL Server container (empty database, exactly the state `handyfix_staging` is actually in) — build, `Database.Migrate()`, seeding, and a full booking-to-confirmation flow all succeed from a cold start. Found and fixed three things the local test surfaced: a Stripe sandbox-bypass opt-in (`Stripe:AllowSandboxOutsideDevelopment`) so staging can demo bookings before a real Stripe account exists, without weakening the same guard in production; and the four hardcoded `@handyfix.co.uk` email sender addresses (a domain nobody owns yet) made configurable since Brevo — like any real provider — refuses to send from an unverified sender. See Section 3v. (Previous update, 2026-08-01: Agent workflow unified into a single root `AGENTS.md` with `CLAUDE.md`/`GEMINI.md` as pointers, resolving a real contradiction between two rulebooks; public-repo security audit run (no credential ever committed) and the unwritten `appsettings.Staging/Production.json` files gitignored before they can leak the private DB IP — see Section 3u. Also queued: bring `DESIGN.md` back in sync with the CSS that exists. Earlier the same day: controller test coverage shipped (Section 3t): 52 mocked-service controller tests, and the integration tests moved off the real dev database onto Sqlite in-memory, making them CI-viable. Suite is now 118. The `SQLitePCLRaw.lib.e_sqlite3` advisory (CVE-2025-6965) that came with the Sqlite dependency was fixed in the same pass, pinned to 2.1.12 in `Directory.Packages.props` — the vulnerability audit is now clean across all 14 projects, including one that was already affected beforehand. Earlier the same day: README accuracy pass (Section 3s) — the template's AutoMapper/MediatR/FluentAssertions claims corrected, the wrong service-area marketing block cut, and the Documentation placeholders replaced with real links; added a Sprint 4 item to document every remaining admin workflow and complete the README index once they exist, plus a new Tier 5 in the roadmap parking the dev-database QA leftovers. (Previous update, 2026-07-31: Tier 1 item 8 shipped, resolved differently than planned: technicians are decoupled from capacity slots entirely, slot auto-generation is removed, and there is now admin CRUD for the technician roster; see Section 3r. (Earlier the same day: Tier 1 items 3, 5 and 7 shipped — Reviews cleanup Section 3n, broken links Section 3p, Brevo email swap Section 3q.) (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` Section 5). Added a Hosting & Infrastructure subsection to Section 1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration Section 3j, cache-busting, and the Areas SVG coverage map Section 3l — plus the boot-time JPG sweep removed as unsafe Section 3k and Service Areas admin CRUD added Section 3m.)))
+> **Last updated**: 2026-08-04 — **Staging is live.** Roadmap Tier 4 item 19 (Hosting & CI/CD) is done end-to-end: `dev` branch, `.github/workflows/deploy-dev.yml` (build, test, push to GHCR, SSH deploy), Caddy reverse proxy (HTTPS via the Hetzner reverse-DNS hostname, HTTP Basic Auth, `X-Robots-Tag: noindex`), and a dedicated least-privilege SQL login all provisioned and verified working against the real `handyfix_staging` database — see Section 3w. Two real bugs only surfaced by the first live CI runs, both fixed: `SqliteWebApplicationFactory` wasn't actually forcing Development for `AdminUserSeeder` (which reads the raw `ASPNETCORE_ENVIRONMENT` process variable, not the hosting abstraction `UseEnvironment()` sets), and the deploy script silently did nothing for two runs because `docker compose` couldn't find a non-default-named compose file and the script had no `set -e` to catch it. (Earlier the same day: Docker containerization for Tier 4 item 19 started: `Dockerfile` + `.dockerignore` added and verified end-to-end against a throwaway local SQL Server container (empty database, exactly the state `handyfix_staging` is actually in) — build, `Database.Migrate()`, seeding, and a full booking-to-confirmation flow all succeed from a cold start. Found and fixed three things the local test surfaced: a Stripe sandbox-bypass opt-in (`Stripe:AllowSandboxOutsideDevelopment`) so staging can demo bookings before a real Stripe account exists, without weakening the same guard in production; and the four hardcoded `@handyfix.co.uk` email sender addresses (a domain nobody owns yet) made configurable since Brevo — like any real provider — refuses to send from an unverified sender. See Section 3v.) (Previous update, 2026-08-01: Agent workflow unified into a single root `AGENTS.md` with `CLAUDE.md`/`GEMINI.md` as pointers, resolving a real contradiction between two rulebooks; public-repo security audit run (no credential ever committed) and the unwritten `appsettings.Staging/Production.json` files gitignored before they can leak the private DB IP — see Section 3u. Also queued: bring `DESIGN.md` back in sync with the CSS that exists. Earlier the same day: controller test coverage shipped (Section 3t): 52 mocked-service controller tests, and the integration tests moved off the real dev database onto Sqlite in-memory, making them CI-viable. Suite is now 118. The `SQLitePCLRaw.lib.e_sqlite3` advisory (CVE-2025-6965) that came with the Sqlite dependency was fixed in the same pass, pinned to 2.1.12 in `Directory.Packages.props` — the vulnerability audit is now clean across all 14 projects, including one that was already affected beforehand. Earlier the same day: README accuracy pass (Section 3s) — the template's AutoMapper/MediatR/FluentAssertions claims corrected, the wrong service-area marketing block cut, and the Documentation placeholders replaced with real links; added a Sprint 4 item to document every remaining admin workflow and complete the README index once they exist, plus a new Tier 5 in the roadmap parking the dev-database QA leftovers. (Previous update, 2026-07-31: Tier 1 item 8 shipped, resolved differently than planned: technicians are decoupled from capacity slots entirely, slot auto-generation is removed, and there is now admin CRUD for the technician roster; see Section 3r. (Earlier the same day: Tier 1 items 3, 5 and 7 shipped — Reviews cleanup Section 3n, broken links Section 3p, Brevo email swap Section 3q.) (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` Section 5). Added a Hosting & Infrastructure subsection to Section 1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration Section 3j, cache-busting, and the Areas SVG coverage map Section 3l — plus the boot-time JPG sweep removed as unsafe Section 3k and Service Areas admin CRUD added Section 3m.)))
 
 ---
 
@@ -500,6 +500,63 @@ First concrete work on roadmap Tier 4 item 19 (Hosting & CI/CD). Scope deliberat
 
 ---
 
+## 3w. Staging Is Live: Tier 4 Item 19 Complete (2026-08-04)
+
+Everything Section 3v listed as "not yet done" now is. Roadmap Tier 4 item 19 (Hosting & CI/CD) is
+closed for staging — production deploy is a deliberately separate, later piece of work.
+
+- **`dev` branch created**; `.github/workflows/deploy-dev.yml` triggers on every push to it:
+  restore → build → test → build the Docker image → push to GHCR (`ghcr.io/denidim/handyfix-web`,
+  tagged `latest` and by commit SHA) using the workflow's own `GITHUB_TOKEN` (no separate registry
+  credential) → SSH into the staging host and `docker compose pull && up -d`.
+- **`deploy/docker-compose.staging.yml` + `deploy/Caddyfile`** committed to the repo (structure
+  only, no secrets — both use `${VAR}`/`{$VAR}` placeholders). Real values live in a `.env` file
+  that exists only on the staging server (`deploy/.env.example` is the tracked template,
+  `deploy/.env` is gitignored). `web` publishes no ports directly; `caddy` is the only container
+  with 80/443 published, terminating automatic HTTPS (Let's Encrypt, via the Hetzner reverse-DNS
+  hostname — the real domain, item 14, still isn't settled) and HTTP Basic Auth in front of the
+  whole site, plus an `X-Robots-Tag: noindex, nofollow` header as a second layer.
+- **Dedicated SQL login** (`handyfix_staging_app`, `db_datareader`/`db_datawriter`/`db_ddladmin` on
+  `handyfix_staging` only) created directly via `sqlcmd` inside the `handyfix-sql` container,
+  replacing the local test's use of `sa`. `db_ddladmin` rather than `db_owner` — enough for EF
+  Core's `Database.Migrate()` to create/alter schema, without the ability to drop the database or
+  manage permissions.
+- **A dedicated GitHub Actions SSH keypair**, separate from the developer's personal key, added
+  to the staging host's `authorized_keys` alongside it. Rotating it (leaked runner, compromised
+  secret) doesn't touch personal access.
+- **Two real bugs, both invisible until the very first live CI runs actually happened** — this is
+  exactly why "it works on my machine" isn't verification, and why standing up CI honestly was
+  worth doing rather than assuming the local Docker test (Section 3v) was sufficient:
+  1. **`SqliteWebApplicationFactory` didn't actually force Development for seeding purposes.**
+     `AdminUserSeeder.GetSeedPassword` reads `Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")`
+     directly — a deliberate choice (Section 5) since `HandyFix.Data` has no ASP.NET Core hosting
+     reference to check `IWebHostEnvironment` with instead — but `builder.UseEnvironment(Environments.Development)`
+     only configures the hosting abstraction, not that raw process variable. Every `WebTests.cs`
+     test failed on the first-ever GitHub Actions run with the exact `Admin:SeedPassword is not
+     configured` exception Section 3v had just finished explaining, because a clean runner has no
+     ambient `ASPNETCORE_ENVIRONMENT` to coincidentally match. Fixed by also calling
+     `Environment.SetEnvironmentVariable` in the factory, with a comment explaining why both calls
+     are necessary so the next person doesn't delete the "redundant-looking" one.
+  2. **The deploy step silently did nothing for two runs while reporting success.** The script had
+     no `-f docker-compose.staging.yml` (not a default-discovered filename) and no `set -e`, so
+     `docker compose pull`/`up -d` failed silently and the trailing `docker image prune -f` (which
+     always succeeds) determined the whole step's exit code. Caught by checking the server
+     directly (`docker compose ps`, empty) rather than trusting the green checkmark. Fixed with
+     both the explicit `-f` flag and `set -euo pipefail`.
+- **Verified live, not just "green in Actions"**: `docker compose ps` on the staging host shows
+  both containers actually running; `curl` against the real public hostname over HTTPS returns
+  `401` with no credentials and `200` with the correct Basic Auth header, the real homepage title,
+  and the `X-Robots-Tag: noindex, nofollow` header present.
+- **Real values** (SSH keys, the dedicated SQL login's password, every `deploy/.env` entry) are
+  recorded in `docs/private/INFRASTRUCTURE.md`, never in a tracked file.
+- **Deliberately still open, tracked there rather than blocking this**: `Stripe:SecretKey` (no
+  real Stripe account yet — `Stripe:AllowSandboxOutsideDevelopment=true` covers full booking-flow
+  demos in the meantime), `CloudflareR2:*` for staging (photo upload untested until a bucket
+  strategy is decided), and rotating the `sa` password on the DB host (currently follows the same
+  weak pattern already flagged once in `AGENTS.md` for the old dev seed password).
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
@@ -584,13 +641,15 @@ First concrete work on roadmap Tier 4 item 19 (Hosting & CI/CD). Scope deliberat
 
 #### Tier 4 — deployment (content-independent, runs in parallel with Tiers 1–3)
 
-**19. Hosting & CI/CD.** Infrastructure is already provisioned — see Section 1 "Hosting & Infrastructure" for the full Hetzner architecture. Containerization started 2026-08-04 (Section 3v: `Dockerfile`, verified end-to-end locally). Decisions made and remaining work:
-  - **Config is environment variables into the container, not `appsettings.Staging.json`/`appsettings.Production.json` files.** Revises the original plan — those files would still need to be hand-placed on each server outside git, which is more moving parts than passing the same values as container env vars (`ConnectionStrings__DefaultConnection` and friends), already proven to work end-to-end in the Section 3v local test. `Database.Migrate()` and seeding already run automatically on startup regardless (`Program.cs:140-149`), no change needed there.
-  - **Registry: GHCR** (`ghcr.io`), auth via the workflow's own `GITHUB_TOKEN` — no separate registry account needed, unlike Docker Hub.
-  - **Branch: new `dev`** (not yet created) → `deploy-dev.yml` builds/tests, pushes to GHCR, SSH-deploys to the staging host. `deploy-prod.yml` (push/merge to `main` → production) deferred until staging is actually proven out, rather than built in parallel. Needs a dedicated GitHub Actions SSH keypair (added to the staging host's `authorized_keys`, private half as a repo secret) — not the developer's personal key.
-  - **Staging protection: Caddy reverse proxy** in front of the app container — automatic HTTPS (Let's Encrypt, via the Hetzner reverse-DNS hostname per item 14 below), HTTP Basic Auth in front of the whole site, and an `X-Robots-Tag: noindex, nofollow` header as a second layer — so an unfinished site with fabricated content (Section 4 item 16) can't be crawled, indexed, or stumbled on. Not yet built.
-  - **Secrets now known to be needed** (Section 3v), beyond the DB connection string: `Admin:SeedPassword` (real staging admin password, not the `Admin123!` dev fallback), `Brevo:ApiKey` (already obtained — real key, free tier), `Stripe:SecretKey` (blocked until a Stripe account exists; `Stripe:AllowSandboxOutsideDevelopment=true` covers staging demos until then), `Email:BookingsFromAddress`/`Email:SystemFromAddress` (a Brevo-verified sender — `handyfix.co.uk` isn't real yet), and a **dedicated least-privilege SQL login** for `handyfix_staging` (the local test used `sa`, which must not carry over to a real server). All as GitHub Actions repo secrets, injected as container env vars at deploy time — never in a committed file.
-  - **Staging should be reachable before real business facts exist.** Confirmed goal (2026-07-30): filling in Zaprqn's real data should be a 5-minute edit at the end, not a blocker for standing up staging and demoing on an actual phone. Use the Hetzner-assigned reverse-DNS hostname for the staging URL if the domain (item 14) isn't settled yet — free, works over HTTPS, no dependency on name.com.
+~~**19. Hosting & CI/CD (staging half).**~~ **Done 2026-08-04 — see Section 3w.** `dev` branch,
+`deploy-dev.yml` (build/test/push to GHCR/SSH deploy), Caddy (HTTPS + Basic Auth + noindex), and a
+dedicated least-privilege SQL login are all live and verified against the real public staging URL.
+Config is environment variables into the container (not `appsettings.Staging.json` files — revises
+the original plan, see Section 3w). **Still open, not blocking**: `deploy-prod.yml` for production
+(deliberately deferred until staging has been used for a while, rather than built in parallel);
+`Stripe:SecretKey` (no real account yet, sandboxed via `Stripe:AllowSandboxOutsideDevelopment`);
+`CloudflareR2:*` for staging; rotating the DB host's `sa` password.
+  - **Staging should be reachable before real business facts exist.** Confirmed goal (2026-07-30): filling in Zaprqn's real data should be a 5-minute edit at the end, not a blocker for standing up staging and demoing on an actual phone. Achieved — currently running on the Hetzner-assigned reverse-DNS hostname (item 14 below still unresolved, doesn't block this).
 
 #### Tier 5 — dev-environment housekeeping (parked until just before launch)
 
@@ -629,8 +688,8 @@ Next initiative after Sprint 3, not part of the original Sprint 4 plan below. Se
 - ~~Architecture documentation and a completed GitHub README.~~ **Done — see Section 3s.** The README's inaccurate tech-stack claims are corrected and its Documentation section now links `PROJECT_STATE.md`/`DESIGN.md`/the workflow docs instead of "coming soon" placeholders. No separate architecture document was written: Section 1 of this file is that document, and the README points at it rather than duplicating it.
 - **Bring `DESIGN.md` back in sync with the CSS that actually exists.** Last touched 2026-07-16, before most of the front-end work landed, and it has drifted from documentation into a historical snapshot. It still covers only the original tokens — colour palette, typography, spacing, animations — and documents **none** of the vocabulary built since (verified 2026-08-01): `wwwroot/css/base/utilities.css` and the shared `mb-*`/`fs-*`/`rounded-*`/`opacity-*` helpers (Sprint 2); the `font-bold`/`font-medium`/`text-right` classes that were silently no-ops until Section 3a fixed them; `page-container` and the two standard page shells, Template A (hero + breadcrumb) and Template B (thin form pages), from Section 3i; `admin.css` and its `admin-card`/`status-badge`/`detail-label` family (Section 3a); `.glass-card` after the duplicate-definition fix and `.pricing-card`/`.pricing-cards-grid` (Section 3g); and the area-card and coverage-map components (Sections 3h and 3l). This matters more than a normal stale doc: the whole point of `DESIGN.md` is to stop the next person inventing a one-off class when a shared one already exists, and right now it cannot do that job. Pairs naturally with the workflow-docs item below — same "documentation caught up with reality" pass.
 - **Document every remaining workflow, then complete the README index.** Two exist so far — `docs/WORKFLOW_BOOKINGS.md` (Section 3r) and `docs/WORKFLOW_SERVICE_AREAS.md` (Section 3m). Still undocumented: **services & categories** (admin CRUD plus the `ImageStorageService` WebP pipeline and the `{slug}-hero.webp` naming convention that four independent places depend on — roadmap Tier 1 item 1), **technicians** (admin CRUD, the soft-delete/deactivate distinction, and assignment on the booking — Section 3r), **reviews** (admin approve/delete, and the `ShowOnSiteReviews`/`GoogleReviewsUrl` config gates — Section 3n), **enquiries**, and **deployment** (once Tier 4 item 19 is built). Each gets its own `docs/WORKFLOW_*.md`, following the existing two for tone and structure — written for both the admin user and a developer, with a troubleshooting table. **The README's Documentation section carries an explicit "in progress" note naming these gaps, and becomes the complete index once they all exist** — closing that note is the definition of done for this item. This matters more than usual here: per `VISION_AND_CONTEXT.md` Section 1 the client will not be maintaining the code, so anything he has to operate needs a written procedure that isn't "read the source".
-- CI/CD pipeline setup (`.github/workflows/` currently exists but is empty) — infrastructure now provisioned (Section 1 Hosting & Infrastructure), remaining work tracked in the roadmap as Tier 4 item 19.
-- Production deployment — see the roadmap Tier 4 item 19.
+- ~~CI/CD pipeline setup for staging.~~ **Done 2026-08-04 — see Section 3w.** `deploy-dev.yml` builds, tests, and deploys on every push to `dev`.
+- Production deployment — `deploy-prod.yml` deliberately not built yet, see roadmap Tier 4 item 19.
 
 ---
 
