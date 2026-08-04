@@ -51,7 +51,8 @@ jobs:
           username: root
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
+            set -euo pipefail
             cd /opt/handyfix/deploy
-            docker compose pull
-            docker compose up -d
+            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d
             docker image prune -f
