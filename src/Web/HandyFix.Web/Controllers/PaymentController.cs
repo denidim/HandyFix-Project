@@ -57,10 +57,16 @@ namespace HandyFix.Web.Controllers
             var secretKey = this.configuration["Stripe:SecretKey"];
             var keyMissing = string.IsNullOrWhiteSpace(secretKey);
 
-            if (keyMissing && this.environment.IsDevelopment())
+            // Sandbox Mode bypasses Stripe entirely so the booking flow can still be
+            // exercised without a real account. Always allowed in Development. Outside
+            // Development it requires an explicit opt-in (Stripe:AllowSandboxOutsideDevelopment)
+            // so a staging environment can demo the flow before a real Stripe account exists,
+            // while production stays protected by default -- that flag must never be set there.
+            var sandboxAllowed = this.environment.IsDevelopment()
+                || this.configuration.GetValue<bool>("Stripe:AllowSandboxOutsideDevelopment");
+
+            if (keyMissing && sandboxAllowed)
             {
-                // Sandbox Mode: no Stripe key configured locally, bypass Stripe entirely
-                // so the booking flow can still be exercised without a real account.
                 var mockSessionId = $"mock_session_{Guid.NewGuid()}";
                 await this.paymentsService.CreatePaymentRecordAsync(bookingId, booking.DepositAmount, "Stripe-Mock", mockSessionId);
                 return this.RedirectToAction("Success", new { session_id = mockSessionId });
