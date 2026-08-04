@@ -82,6 +82,37 @@ added; nothing at startup depends on it.
 
 ---
 
+## Why the app has to trust Caddy's forwarded headers
+
+Caddy terminates real HTTPS from the browser, then proxies to the `web` container over **plain
+HTTP** on the internal Docker network — there's no need for TLS on that hop, since it never leaves
+the server. Caddy tells the app what the original connection actually was via the standard
+`X-Forwarded-Proto`/`X-Forwarded-For`/`X-Forwarded-Host` headers, but nothing reads them unless the
+app explicitly says to.
+
+`Program.cs` configures and calls `UseForwardedHeaders()` as the **first** middleware in the
+pipeline, before anything else — including exception handling and HSTS. Without it,
+`Request.Scheme`/`Request.IsHttps` read `http` for every single request on staging, regardless of
+what the browser used. That's not cosmetic — anything built on those two properties reads wrong:
+
+- **Secure-flagged cookies** (including ASP.NET Core's own cookie-consent cookie) never actually
+  get the `Secure` attribute, so browsers silently discard any cookie that also requires it (e.g.
+  `SameSite=None` cookies) — this was a real, shipped bug: the cookie-consent banner reappeared on
+  every page because "Accept" never actually persisted. Fixed by trusting the forwarded headers
+  *and* by not using `SameSite=None` for a plain first-party cookie in the first place (`Lax`
+  doesn't require `Secure` at all).
+- **Absolute URLs built from `Request.Scheme`** — e.g. `PaymentController`'s Stripe Checkout
+  success/cancel URLs — would be generated as `http://` instead of `https://`.
+
+`ForwardedHeadersOptions.KnownNetworks`/`KnownProxies` are cleared rather than pinned to a fixed
+address, because Docker Compose assigns Caddy's internal IP dynamically — there's nothing fixed to
+allow-list. That's safe specifically because `web` publishes no ports of its own (see the compose
+file above): Caddy is the only thing on the internal network that can reach it at all, so nothing
+else is in a position to send a spoofed `X-Forwarded-*` header. This reasoning would need
+revisiting if `web` ever gained a directly-reachable port.
+
+---
+
 ## Startup sequence — `Program.cs`
 
 On every boot, before the app starts serving requests:
@@ -110,6 +141,7 @@ with a warning. This is the exact CI/startup failure mode covered in the trouble
 | Caddy won't start / Basic Auth rejects a known-correct password | The hash in `BASIC_AUTH_HASH` doesn't match — regenerate with `docker run --rm caddy:2-alpine caddy hash-password --plaintext '<password>'` and update `.env`. |
 | SSH deploy step fails with a key error | `STAGING_SSH_KEY` secret is missing, malformed, or the corresponding public key isn't authorized on the staging host. |
 | Photo uploads fail on staging | Expected — `CloudflareR2:*` isn't configured there yet. |
+| A `Secure`-flagged cookie won't persist, or a generated absolute URL (e.g. Stripe redirect URLs) comes back `http://` instead of `https://` | `Request.Scheme`/`IsHttps` reading wrong behind Caddy — see "Why the app has to trust Caddy's forwarded headers" above. Confirm `UseForwardedHeaders()` is still the first middleware in `Program.cs`. |
 
 For real hostnames/credentials and a step-by-step walkthrough of each failure above with actual
 values, see `docs/private/STAGING_RUNBOOK.md`.
@@ -120,5 +152,7 @@ values, see `docs/private/STAGING_RUNBOOK.md`.
 
 - Full architectural history and what's still open (production pipeline, Stripe/R2 for staging,
   DB host `sa` password rotation): `PROJECT_STATE.md` Section 3v–3w and Section 4 Tier 4.
+- The forwarded-headers/cookie-consent bug, full root-cause writeup: `PROJECT_STATE.md`
+  Section 3ac.
 - Real infrastructure values, SSH keys, and the SQL login's password:
   `docs/private/INFRASTRUCTURE.md`.
