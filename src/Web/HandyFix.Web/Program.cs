@@ -27,6 +27,7 @@ namespace HandyFix.Web
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.HttpOverrides;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -60,7 +61,35 @@ namespace HandyFix.Web
                 options =>
                 {
                     options.CheckConsentNeeded = context => true;
-                    options.MinimumSameSitePolicy = SameSiteMode.None;
+
+                    // Lax, not None: this is an ordinary first-party cookie with no cross-site
+                    // need. None would additionally require Secure, which only reads correctly
+                    // when the app knows a request arrived over HTTPS - see the
+                    // ForwardedHeadersOptions comment below for why that isn't automatic here.
+                    options.MinimumSameSitePolicy = SameSiteMode.Lax;
+                });
+
+            // Staging/production run behind Caddy, which terminates TLS and proxies to this
+            // container over plain HTTP on the internal Docker network - so without this,
+            // Request.Scheme/IsHttps reads "http" for every request regardless of what the
+            // browser actually used. That silently breaks anything that depends on knowing the
+            // real scheme: Secure-flagged cookies, and absolute URLs built from Request.Scheme
+            // (e.g. the Stripe Checkout success/cancel URLs in PaymentController).
+            //
+            // KnownNetworks/KnownProxies are cleared rather than pinned to Caddy's address
+            // because Docker Compose assigns that address dynamically - there's no fixed IP to
+            // allow-list. This is safe here specifically because the web container publishes no
+            // ports of its own (see deploy/docker-compose.staging.yml): Caddy is the only thing
+            // on the internal network that can reach it at all, so nothing else is in a position
+            // to send it a spoofed X-Forwarded-* header.
+            services.Configure<ForwardedHeadersOptions>(
+                options =>
+                {
+                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor
+                        | ForwardedHeaders.XForwardedProto
+                        | ForwardedHeaders.XForwardedHost;
+                    options.KnownNetworks.Clear();
+                    options.KnownProxies.Clear();
                 });
 
             services.AddControllersWithViews(
@@ -127,6 +156,11 @@ namespace HandyFix.Web
 
         private static void Configure(WebApplication app)
         {
+            // Must run before everything else, including exception/HSTS handling: every later
+            // middleware and every action that reads Request.Scheme/Request.Host/RemoteIpAddress
+            // depends on this having already corrected them from the forwarded headers.
+            app.UseForwardedHeaders();
+
             // Seed data on application startup
             using (IServiceScope serviceScope = app.Services.CreateScope())
             {
