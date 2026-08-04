@@ -71,5 +71,26 @@ namespace HandyFix.Services.Data.Tests
             Assert.NotNull(inDb);
             Assert.True(inDb.IsDeleted);
         }
+
+        [Fact]
+        public async Task CreateAsyncShouldCollapseMultipleHyphensInSlug()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
+
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
+            dbContext.ServiceCategories.Add(category);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServicesService(repository, null);
+            await service.CreateAsync("Walton-on-Thames & Weybridge Repairs", "A test service", 60.00m, 45, category.Id);
+
+            var created = dbContext.Services.First();
+            Assert.Equal("walton-on-thames-weybridge-repairs", created.Slug);
+            Assert.DoesNotContain("--", created.Slug);
+        }
     }
 }

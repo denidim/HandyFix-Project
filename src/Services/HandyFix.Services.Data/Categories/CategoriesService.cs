@@ -6,6 +6,7 @@ namespace HandyFix.Services.Data.Categories
 
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
+    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Mapping;
 
     using Microsoft.EntityFrameworkCore;
@@ -41,27 +42,11 @@ namespace HandyFix.Services.Data.Categories
             {
                 Name = name,
                 Description = description,
-                Slug = Slugify(name),
+                Slug = SlugGenerator.Slugify(name),
             };
 
             await this.categoriesRepository.AddAsync(category);
             await this.categoriesRepository.SaveChangesAsync();
-        }
-
-        private static string Slugify(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return string.Empty;
-            }
-
-            return name
-                .Replace(" ", "-")
-                .Replace("/", "-")
-                .Replace("&", "-")
-                .Replace("--", "-")
-                .Trim('-')
-                .ToLower();
         }
     }
 }

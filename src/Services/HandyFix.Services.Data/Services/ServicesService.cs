@@ -7,6 +7,7 @@ namespace HandyFix.Services.Data.Services
 
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
+    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Mapping;
 
     using Microsoft.EntityFrameworkCore;
@@ -81,7 +82,7 @@ namespace HandyFix.Services.Data.Services
                 EstimatedDurationMinutes = estimatedDurationMinutes,
                 CategoryId = categoryId,
                 IsActive = true,
-                Slug = Slugify(name),
+                Slug = SlugGenerator.Slugify(name),
             };
 
             await this.servicesRepository.AddAsync(service);
@@ -103,7 +104,7 @@ namespace HandyFix.Services.Data.Services
                 service.EstimatedDurationMinutes = estimatedDurationMinutes;
                 service.IsActive = isActive;
                 service.CategoryId = categoryId;
-                service.Slug = Slugify(name);
+                service.Slug = SlugGenerator.Slugify(name);
 
                 await this.servicesRepository.SaveChangesAsync();
             }
@@ -145,22 +146,6 @@ namespace HandyFix.Services.Data.Services
             }
 
             await this.serviceImageRepository.SaveChangesAsync();
-        }
-
-        private static string Slugify(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return string.Empty;
-            }
-
-            return name
-                .Replace(" ", "-")
-                .Replace("/", "-")
-                .Replace("&", "-")
-                .Replace("--", "-")
-                .Trim('-')
-                .ToLower();
         }
     }
 }
