@@ -1,0 +1,57 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/HandyFix.sln
+
+      - name: Build
+        run: dotnet build src/HandyFix.sln --no-restore -c Release
+
+      - name: Test
+        run: dotnet test src/HandyFix.sln --no-build -c Release
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/denidim/handyfix-web:latest
+            ghcr.io/denidim/handyfix-web:${{ github.sha }}
+
+      - name: Deploy to staging
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: root
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/handyfix/deploy
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
