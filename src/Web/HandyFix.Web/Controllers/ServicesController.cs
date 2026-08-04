@@ -11,8 +11,10 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
+    [AllowAnonymous]
     public class ServicesController : BaseController
     {
         // Real, existing services closest in spirit to the "typical job" examples a

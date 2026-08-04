@@ -16,9 +16,11 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.Services;
 
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
 
+    [AllowAnonymous]
     public class HomeController : BaseController
     {
         private readonly IReviewsService reviewsService;

@@ -11,9 +11,14 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Primitives;
 
+    // Covers the Stripe webhook too (api/payment/webhook) - Stripe's server can't authenticate
+    // as a logged-in HandyFix user, so this controller has to stay reachable anonymously as a
+    // whole rather than trying to carve out just that one action.
+    [AllowAnonymous]
     public class PaymentController : BaseController
     {
         private readonly IBookingsService bookingsService;

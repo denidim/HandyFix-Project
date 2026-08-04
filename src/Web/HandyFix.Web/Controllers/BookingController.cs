@@ -11,9 +11,11 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
 
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
 
+    [AllowAnonymous]
     public class BookingController : BaseController
     {
         private readonly IServicesService servicesService;
