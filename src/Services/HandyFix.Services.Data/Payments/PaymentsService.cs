@@ -9,9 +9,15 @@ namespace HandyFix.Services.Data.Payments
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
+    using HandyFix.Web.ViewModels.Payment;
 
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Hosting;
+
+    using Stripe;
+    using Stripe.Checkout;
 
     public class PaymentsService : IPaymentsService
     {
@@ -25,6 +31,7 @@ namespace HandyFix.Services.Data.Payments
         private readonly IDeletableEntityRepository<BookingStatus> bookingStatusRepository;
         private readonly IEmailSender emailSender;
         private readonly IConfiguration configuration;
+        private readonly IWebHostEnvironment environment;
 
         public PaymentsService(
             IDeletableEntityRepository<Payment> paymentRepository,
@@ -32,7 +39,8 @@ namespace HandyFix.Services.Data.Payments
             IDeletableEntityRepository<Booking> bookingRepository,
             IDeletableEntityRepository<BookingStatus> bookingStatusRepository,
             IEmailSender emailSender,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IWebHostEnvironment environment)
         {
             this.paymentRepository = paymentRepository;
             this.paymentStatusRepository = paymentStatusRepository;
@@ -40,11 +48,18 @@ namespace HandyFix.Services.Data.Payments
             this.bookingStatusRepository = bookingStatusRepository;
             this.emailSender = emailSender;
             this.configuration = configuration;
+            this.environment = environment;
+
+            var secretKey = this.configuration["Stripe:SecretKey"];
+            if (!string.IsNullOrWhiteSpace(secretKey))
+            {
+                StripeConfiguration.ApiKey = secretKey;
+            }
         }
 
         public async Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId)
         {
-            var pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
             if (pendingStatus == null)
             {
                 throw new InvalidOperationException("Payment status 'Pending' is not seeded.");
@@ -53,14 +68,14 @@ namespace HandyFix.Services.Data.Payments
             // Supersede any earlier, still-pending payment attempt for this booking so a
             // customer retrying checkout doesn't pile up orphaned Pending rows pointing
             // at abandoned Stripe sessions.
-            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
             if (cancelledStatus != null)
             {
-                var existingPendingPayments = await this.paymentRepository.All()
+                List<Payment> existingPendingPayments = await this.paymentRepository.All()
                     .Where(x => x.BookingId == bookingId && x.StatusId == pendingStatus.Id)
                     .ToListAsync();
 
-                foreach (var existing in existingPendingPayments)
+                foreach (Payment existing in existingPendingPayments)
                 {
                     existing.StatusId = cancelledStatus.Id;
                 }
@@ -83,7 +98,7 @@ namespace HandyFix.Services.Data.Payments
 
         public async Task ProcessPaymentSuccessAsync(string checkoutSessionId, string transactionId)
         {
-            var payment = await this.paymentRepository.All()
+            Payment payment = await this.paymentRepository.All()
                 .Include(x => x.Booking).ThenInclude(b => b.BookingServices).ThenInclude(bs => bs.Service)
                 .Include(x => x.Booking).ThenInclude(b => b.AvailabilitySlot)
                 .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
@@ -93,7 +108,7 @@ namespace HandyFix.Services.Data.Payments
                 return;
             }
 
-            var paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
+            PaymentStatus paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
 
             // The Stripe webhook and the browser's Success redirect can both call this
             // for the same session. Only the first call — the one that actually moves
@@ -111,10 +126,10 @@ namespace HandyFix.Services.Data.Payments
             }
 
             // Update associated booking status to "Approved" (Confirmed deposit)
-            var booking = payment.Booking;
+            Booking booking = payment.Booking;
             if (booking != null)
             {
-                var approvedStatus = await this.bookingStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
+                BookingStatus approvedStatus = await this.bookingStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
                 if (approvedStatus != null)
                 {
                     booking.StatusId = approvedStatus.Id;
@@ -207,15 +222,15 @@ namespace HandyFix.Services.Data.Payments
 
         public async Task CancelPaymentAsync(string checkoutSessionId)
         {
-            var payment = await this.paymentRepository.All()
+            Payment payment = await this.paymentRepository.All()
                 .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
             if (payment == null)
             {
                 return;
             }
 
-            var pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
-            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
             if (cancelledStatus == null)
             {
                 return;
@@ -234,20 +249,20 @@ namespace HandyFix.Services.Data.Payments
 
         public async Task CancelPendingPaymentsForBookingsAsync(IEnumerable<Guid> bookingIds)
         {
-            var pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
-            var cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
             if (pendingStatus == null || cancelledStatus == null)
             {
                 return;
             }
 
-            var idList = bookingIds?.ToList() ?? new List<Guid>();
+            List<Guid> idList = bookingIds?.ToList() ?? new List<Guid>();
             if (idList.Count == 0)
             {
                 return;
             }
 
-            var pendingPayments = await this.paymentRepository.All()
+            List<Payment> pendingPayments = await this.paymentRepository.All()
                 .Where(x => idList.Contains(x.BookingId) && x.StatusId == pendingStatus.Id)
                 .ToListAsync();
 
@@ -256,7 +271,7 @@ namespace HandyFix.Services.Data.Payments
                 return;
             }
 
-            foreach (var payment in pendingPayments)
+            foreach (Payment payment in pendingPayments)
             {
                 payment.StatusId = cancelledStatus.Id;
             }
@@ -279,6 +294,96 @@ namespace HandyFix.Services.Data.Payments
                 .OrderByDescending(x => x.CreatedOn)
                 .To<T>()
                 .ToListAsync();
+        }
+
+        public async Task<decimal> GetTotalRevenueAsync()
+        {
+            return await this.paymentRepository.All()
+                .Where(x => x.Status.Name == "DepositPaid" || x.Status.Name == "Completed")
+                .SumAsync(x => (decimal?)x.Amount) ?? 0.00m;
+        }
+
+        public async Task<PaymentCheckoutResult> CreateCheckoutSessionAsync(Guid bookingId, decimal depositAmount, string successUrl, string cancelUrl)
+        {
+            var secretKey = this.configuration["Stripe:SecretKey"];
+            var keyMissing = string.IsNullOrWhiteSpace(secretKey);
+
+            // Sandbox Mode bypasses Stripe entirely so the booking flow can still be exercised
+            // without a real account. Always allowed in Development. Outside Development it
+            // requires an explicit opt-in (Stripe:AllowSandboxOutsideDevelopment) so a staging
+            // environment can demo the flow before a real Stripe account exists, while production
+            // stays protected by default -- that flag must never be set there.
+            var sandboxAllowed = this.environment.IsDevelopment()
+                || this.configuration.GetValue<bool>("Stripe:AllowSandboxOutsideDevelopment");
+
+            if (keyMissing && sandboxAllowed)
+            {
+                var mockSessionId = $"mock_session_{Guid.NewGuid()}";
+                await this.CreatePaymentRecordAsync(bookingId, depositAmount, "Stripe-Mock", mockSessionId);
+                return new PaymentCheckoutResult { IsMock = true, SessionId = mockSessionId };
+            }
+
+            if (keyMissing)
+            {
+                // Never silently fake a payment or attempt a doomed Stripe call outside
+                // development: fail loudly so a missing production secret gets noticed.
+                throw new InvalidOperationException("Stripe is not configured for this environment. Set Stripe:SecretKey before accepting real payments.");
+            }
+
+            var options = new SessionCreateOptions
+            {
+                PaymentMethodTypes = new List<string> { "card" },
+                LineItems = new List<SessionLineItemOptions>
+                {
+                    new SessionLineItemOptions
+                    {
+                        PriceData = new SessionLineItemPriceDataOptions
+                        {
+                            UnitAmount = (long)(depositAmount * 100), // convert to cents
+                            Currency = "gbp",
+                            ProductData = new SessionLineItemPriceDataProductDataOptions
+                            {
+                                Name = $"HandyFix Booking Deposit (Ref: {bookingId})",
+                                Description = "Deposit to secure your service booking for South London.",
+                            },
+                        },
+                        Quantity = 1,
+                    },
+                },
+                Mode = "payment",
+                SuccessUrl = successUrl,
+                CancelUrl = cancelUrl,
+            };
+
+            var sessionService = new SessionService();
+            Session session = await sessionService.CreateAsync(options);
+
+            await this.CreatePaymentRecordAsync(bookingId, depositAmount, "Stripe", session.Id);
+
+            return new PaymentCheckoutResult { IsMock = false, SessionId = session.Id, RedirectUrl = session.Url };
+        }
+
+        public async Task HandleWebhookEventAsync(string json, string signature)
+        {
+            var webhookSecret = this.configuration["Stripe:WebhookSecret"];
+            Event stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
+
+            if (stripeEvent.Type == Events.CheckoutSessionCompleted)
+            {
+                var session = stripeEvent.Data.Object as Session;
+                if (session != null)
+                {
+                    await this.ProcessPaymentSuccessAsync(session.Id, session.PaymentIntentId);
+                }
+            }
+            else if (stripeEvent.Type == Events.CheckoutSessionExpired)
+            {
+                var session = stripeEvent.Data.Object as Session;
+                if (session != null)
+                {
+                    await this.CancelPaymentAsync(session.Id);
+                }
+            }
         }
     }
 }

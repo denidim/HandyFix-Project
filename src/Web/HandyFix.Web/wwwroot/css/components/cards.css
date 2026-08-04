@@ -103,18 +103,3 @@
 .testimonial-card:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-
-.trust-card {
-  display: flex;
-  gap: var(--spacing-5);
-  padding: var(--spacing-6);
-  border-radius: var(--radius-xl);
-  background-color: var(--surface-container-lowest);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-subtle);
-  transition: border-color var(--transition-fast);
-}
-
-.trust-card:hover {
-  border-color: var(--secondary);
-}

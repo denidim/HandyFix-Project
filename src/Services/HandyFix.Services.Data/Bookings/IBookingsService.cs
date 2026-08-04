@@ -34,5 +34,13 @@ namespace HandyFix.Services.Data.Bookings
         Task AddBookingImageAsync(Guid bookingId, string imageUrl);
 
         Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan);
+
+        Task<int> GetTotalCountAsync();
+
+        Task<int> GetPendingCountAsync();
+
+        BookingSummaryStats GetSummaryStats(IEnumerable<BookingDetailsViewModel> bookings);
+
+        Task<IEnumerable<string>> GetStatusOptionsAsync();
     }
 }

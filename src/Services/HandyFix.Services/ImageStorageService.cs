@@ -64,7 +64,7 @@ namespace HandyFix.Services
                         try
                         {
                             using (var image = SKImage.FromBitmap(targetBitmap))
-                            using (var data = image.Encode(SKEncodedImageFormat.Webp, 80))
+                            using (SKData data = image.Encode(SKEncodedImageFormat.Webp, 80))
                             {
                                 var filePath = this.GetServiceImagePath(slug);
                                 var directory = Path.GetDirectoryName(filePath);
@@ -97,7 +97,7 @@ namespace HandyFix.Services
                 throw;
             }
 
-            return $"/images/services/{slug}-hero.webp";
+            return this.GetServiceImagePublicUrl(slug);
         }
 
         public void DeleteServiceImage(string slug)
@@ -167,6 +167,11 @@ namespace HandyFix.Services
                 this.logger.LogWarning(ex, "Error checking existence of service image for slug: {Slug}", slug);
                 return false;
             }
+        }
+
+        public string GetServiceImagePublicUrl(string slug)
+        {
+            return $"/images/services/{slug}-hero.webp";
         }
 
         private string GetServiceImagePath(string slug)

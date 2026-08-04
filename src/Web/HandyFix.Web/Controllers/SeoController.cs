@@ -1,23 +1,22 @@
 namespace HandyFix.Web.Controllers
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using System.Xml.Linq;
 
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Services;
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
+    [AllowAnonymous]
     public class SeoController : BaseController
     {
-        private static readonly XNamespace SitemapNamespace = "http://www.sitemaps.org/schemas/sitemap/0.9";
-
         private readonly ICategoriesService categoriesService;
         private readonly IServicesService servicesService;
         private readonly IServiceAreasService areasService;
@@ -50,32 +49,25 @@ namespace HandyFix.Web.Controllers
                 this.Url.Action("CookiePolicy", "Home", null, protocol),
             };
 
-            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-            foreach (var category in categories)
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            foreach (CategoryViewModel category in categories)
             {
                 urls.Add(this.Url.RouteUrl("ServiceCategory", new { categorySlug = category.Slug }, protocol));
             }
 
-            var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-            foreach (var service in services)
+            IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+            foreach (ServiceViewModel service in services)
             {
                 urls.Add(this.Url.RouteUrl("ServiceDetails", new { categorySlug = service.CategorySlug, serviceSlug = service.Slug }, protocol));
             }
 
-            var areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
-            foreach (var area in areas)
+            IEnumerable<ServiceAreaViewModel> areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
+            foreach (ServiceAreaViewModel area in areas)
             {
                 urls.Add(this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, protocol));
             }
 
-            var xml = new XElement(
-                SitemapNamespace + "urlset",
-                urls
-                    .Where(u => !string.IsNullOrEmpty(u))
-                    .Distinct()
-                    .Select(u => new XElement(SitemapNamespace + "url", new XElement(SitemapNamespace + "loc", u))));
-
-            var content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xml;
+            var content = SitemapXmlBuilder.Build(urls);
 
             return this.Content(content, "application/xml", Encoding.UTF8);
         }

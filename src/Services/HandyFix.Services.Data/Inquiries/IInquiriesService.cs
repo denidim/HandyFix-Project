@@ -18,5 +18,7 @@ namespace HandyFix.Services.Data.Inquiries
         Task<T> GetByIdAsync<T>(Guid id);
 
         Task DeleteAsync(Guid id);
+
+        Task<int> GetTotalCountAsync();
     }
 }

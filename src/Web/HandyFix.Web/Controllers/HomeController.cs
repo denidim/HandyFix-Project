@@ -16,9 +16,11 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.Services;
 
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
 
+    [AllowAnonymous]
     public class HomeController : BaseController
     {
         private readonly IReviewsService reviewsService;
@@ -47,13 +49,13 @@ namespace HandyFix.Web.Controllers
         public async Task<IActionResult> Index()
         {
             // For Hero widget
-            var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-            var categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
 
             // Approved Reviews for slider — hidden on-site until the Google Business Profile
             // import ships, see Business:ShowOnSiteReviews.
             var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
-            var sliderReviews = showOnSiteReviews
+            IEnumerable<ReviewViewModel> sliderReviews = showOnSiteReviews
                 ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6)
                 : Enumerable.Empty<ReviewViewModel>();
 
@@ -91,7 +93,7 @@ namespace HandyFix.Web.Controllers
                 return this.View(model);
             }
 
-            var imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
+            IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
             await this.inquiriesService.CreateInquiryAsync(model, imageUrls);
             this.TempData["SuccessMessage"] = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
 
@@ -102,7 +104,7 @@ namespace HandyFix.Web.Controllers
         public async Task<IActionResult> Reviews()
         {
             var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
-            var approvedReviews = showOnSiteReviews
+            IEnumerable<ReviewViewModel> approvedReviews = showOnSiteReviews
                 ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(50)
                 : Enumerable.Empty<ReviewViewModel>();
 

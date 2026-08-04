@@ -155,9 +155,10 @@ rather than trying to force-fit one of the three existing class names.
 
 ### `.info-canvas` (`pages/pages-info.css`)
 Plain positive-margin content wrapper (`max-width:800px; margin:3rem auto`) used inside Template-A
-info pages for the body content below the hero. `.info-canvas.wide` is meant to widen this to
-`--max-width-desktop` — **that variable is never defined**, so the modifier is currently a no-op
-(see Known Issues).
+info pages for the body content below the hero. There is no `.wide` modifier — an earlier version
+referenced an undefined `--max-width-desktop` variable and had no consumer anywhere in the codebase,
+so it was removed rather than given an invented value. If a wider variant is ever needed, add it
+with a real, deliberate width value at the point something actually uses it.
 
 ---
 
@@ -185,9 +186,11 @@ apply to it.
 
 Also present: the full sidebar/topbar shell (`.admin-sidebar`, `.admin-topbar`, `.admin-nav-link`,
 mobile drawer at `≤768px`), the Calendar page's slot/legend classes, the Dashboard's
-`.bento-grid`/`.bento-card`/`.health-progress-*` family (note the `.bento-card` name collision below),
-and page-specific form/button helpers (`.admin-btn-compact`, `.form-control-price-affix`, etc.) — see
-the file directly for the full list; the table above is the reusable core worth checking first.
+`.bento-grid`/`.dashboard-stat-card`/`.health-progress-*` family (named `.dashboard-stat-card`
+specifically to avoid colliding with the public `.bento-card` in `components/cards.css` — the two
+used to share a name by coincidence), and page-specific form/button helpers (`.admin-btn-compact`,
+`.form-control-price-affix`, etc.) — see the file directly for the full list; the table above is the
+reusable core worth checking first.
 
 ---
 
@@ -207,8 +210,8 @@ otherwise, both are defined in `pages/pricing.css`. `.pricing-card` is an *opaqu
 translucent `.glass-card` treatment.
 
 Also here: `.division-card` (category tiles), `.testimonial-card` (translucent, dark-background
-contexts), and two class names that collide with a second, different definition elsewhere — see
-Known Issues.
+contexts), and `.trust-card` (the one used by `Home/Index.cshtml`'s trust section — a duplicate
+definition in `pages-info.css` that was never actually winning has since been removed).
 
 ---
 
@@ -244,18 +247,3 @@ pages/home.css → services.css → pricing.css → service-details.css → book
 equal specificity — this is exactly how the old duplicate `.glass-card` in `pages-info.css` won
 silently before it was removed, so a genuine duplicate class name in two `@import`ed files is a real
 footgun, not just untidiness.
-
----
-
-## 9. Known Issues (documented, not fixed here)
-
-- **`.bento-card` is defined twice** with different rules: `components/cards.css` (public image
-  bento tiles, hover zoom + gradient overlay) vs. `pages/admin.css` (Dashboard stat cards, plain
-  card). They don't collide in practice only because `admin.css` isn't in the `site.css` chain — if
-  that ever changes, one definition will silently win over the other.
-- **`.trust-card` is defined twice** with different rules: `components/cards.css` (flex row, icon +
-  text, opaque `surface-container-lowest`) vs. `pages-info.css` (centered column layout). Both are
-  in the `site.css` chain, so `pages-info.css` currently wins wherever both could apply, per import
-  order.
-- **`--max-width-desktop`** is referenced by `.info-canvas.wide` but never defined anywhere in
-  `variables.css` — the modifier currently has no effect.

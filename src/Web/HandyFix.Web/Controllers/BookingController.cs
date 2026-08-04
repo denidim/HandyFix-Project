@@ -1,8 +1,9 @@
 namespace HandyFix.Web.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
-
+    using HandyFix.Data.Models;
     using HandyFix.Services;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
@@ -10,9 +11,11 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
 
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
 
+    [AllowAnonymous]
     public class BookingController : BaseController
     {
         private readonly IServicesService servicesService;
@@ -38,8 +41,8 @@ namespace HandyFix.Web.Controllers
         {
             try
             {
-                var services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-                var dates = await this.availabilityService.GetAvailableDatesAsync();
+                IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+                IEnumerable<DateTime> dates = await this.availabilityService.GetAvailableDatesAsync();
 
                 var model = new BookingInputModel
                 {
@@ -64,14 +67,14 @@ namespace HandyFix.Web.Controllers
         [Route("Booking/GetSlots")]
         public async Task<IActionResult> GetSlots(string date)
         {
-            if (string.IsNullOrWhiteSpace(date) || !DateTime.TryParse(date, out var parsedDate))
+            if (string.IsNullOrWhiteSpace(date) || !DateTime.TryParse(date, out DateTime parsedDate))
             {
                 return this.BadRequest("Invalid date format.");
             }
 
             try
             {
-                var slots = await this.availabilityService.GetAllSlotsForDateAsync<AvailabilitySlotViewModel>(parsedDate);
+                IEnumerable<AvailabilitySlotViewModel> slots = await this.availabilityService.GetAllSlotsForDateAsync<AvailabilitySlotViewModel>(parsedDate);
                 return this.Json(slots);
             }
             catch (Exception)
@@ -91,8 +94,8 @@ namespace HandyFix.Web.Controllers
 
             try
             {
-                var imageUrls = await this.imageService.UploadImagesAsync(model.Images, "bookings");
-                var booking = await this.bookingsService.CreateBookingAsync(model, imageUrls);
+                IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "bookings");
+                Booking booking = await this.bookingsService.CreateBookingAsync(model, imageUrls);
 
                 // Redirect to Stripe checkout
                 return this.RedirectToAction("Pay", "Payment", new { bookingId = booking.Id });
@@ -135,7 +138,7 @@ namespace HandyFix.Web.Controllers
         {
             try
             {
-                var booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(id);
+                BookingDetailsViewModel booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(id);
                 if (booking == null)
                 {
                     return this.NotFound();

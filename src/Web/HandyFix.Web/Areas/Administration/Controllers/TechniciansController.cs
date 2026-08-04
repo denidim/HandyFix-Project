@@ -1,6 +1,7 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.Technicians;
@@ -19,7 +20,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var technicians = await this.techniciansService.GetAllAsync<TechnicianAdminListViewModel>();
+            IEnumerable<TechnicianAdminListViewModel> technicians = await this.techniciansService.GetAllAsync<TechnicianAdminListViewModel>();
             return this.View(technicians);
         }
 
@@ -46,7 +47,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
-            var model = await this.techniciansService.GetByIdAsync<TechnicianAdminInputModel>(id);
+            TechnicianAdminInputModel model = await this.techniciansService.GetByIdAsync<TechnicianAdminInputModel>(id);
             if (model == null)
             {
                 return this.NotFound();
@@ -68,7 +69,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
-            var existing = await this.techniciansService.GetByIdAsync<TechnicianAdminInputModel>(model.Id.Value);
+            TechnicianAdminInputModel existing = await this.techniciansService.GetByIdAsync<TechnicianAdminInputModel>(model.Id.Value);
             if (existing == null)
             {
                 return this.NotFound();
@@ -86,7 +87,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var technician = await this.techniciansService.GetByIdAsync<TechnicianAdminInputModel>(id);
+            TechnicianAdminInputModel technician = await this.techniciansService.GetByIdAsync<TechnicianAdminInputModel>(id);
             if (technician == null)
             {
                 return this.NotFound();

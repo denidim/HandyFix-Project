@@ -27,7 +27,7 @@ namespace HandyFix.Services.Data.Technicians
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(bool activeOnly = false)
         {
-            var query = this.techniciansRepository.All();
+            IQueryable<Technician> query = this.techniciansRepository.All();
 
             if (activeOnly)
             {
@@ -79,7 +79,7 @@ namespace HandyFix.Services.Data.Technicians
 
         public async Task UpdateAsync(Guid id, TechnicianAdminInputModel model)
         {
-            var technician = await this.techniciansRepository.All().FirstOrDefaultAsync(x => x.Id == id);
+            Technician technician = await this.techniciansRepository.All().FirstOrDefaultAsync(x => x.Id == id);
             if (technician == null)
             {
                 return;
@@ -95,7 +95,7 @@ namespace HandyFix.Services.Data.Technicians
 
         public async Task<bool> DeleteAsync(Guid id)
         {
-            var technician = await this.techniciansRepository.All().FirstOrDefaultAsync(x => x.Id == id);
+            Technician technician = await this.techniciansRepository.All().FirstOrDefaultAsync(x => x.Id == id);
             if (technician == null)
             {
                 return false;

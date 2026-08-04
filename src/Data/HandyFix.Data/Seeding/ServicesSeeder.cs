@@ -48,7 +48,7 @@ namespace HandyFix.Data.Seeding
 
             foreach (var item in services)
             {
-                var service = dbContext.Services.FirstOrDefault(x => x.Name == item.Name);
+                Service service = dbContext.Services.FirstOrDefault(x => x.Name == item.Name);
                 if (service == null)
                 {
                     service = new Service
@@ -69,7 +69,7 @@ namespace HandyFix.Data.Seeding
 
             // Sync ServiceImage entities for any service missing a ServiceImage record
             var allServices = dbContext.Services.ToList();
-            foreach (var service in allServices)
+            foreach (Service service in allServices)
             {
                 if (!dbContext.ServiceImages.Any(x => x.ServiceId == service.Id))
                 {

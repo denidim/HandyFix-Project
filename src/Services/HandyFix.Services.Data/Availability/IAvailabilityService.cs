@@ -4,6 +4,8 @@ namespace HandyFix.Services.Data.Availability
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    using HandyFix.Data.Models;
+
     public interface IAvailabilityService
     {
         Task<IEnumerable<DateTime>> GetAvailableDatesAsync(int daysAhead = 30);
@@ -11,6 +13,8 @@ namespace HandyFix.Services.Data.Availability
         Task<IEnumerable<T>> GetAvailableSlotsForDateAsync<T>(DateTime date);
 
         Task<IEnumerable<T>> GetAllSlotsForDateAsync<T>(DateTime date);
+
+        Task<IEnumerable<AvailabilitySlot>> GetAllSlotsForDayAsync(DateTime date);
 
         Task<bool> BookSlotAsync(Guid slotId, Guid bookingId);
 

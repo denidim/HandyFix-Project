@@ -1,6 +1,7 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -24,9 +25,11 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
             // Summary stats always reflect the whole business, not just whatever status
             // filter is currently applied to the table below.
-            var allReviews = string.IsNullOrWhiteSpace(status)
+            List<ReviewViewModel> allReviews = string.IsNullOrWhiteSpace(status)
                 ? reviews
                 : (await this.reviewsService.GetAllAsync<ReviewViewModel>()).ToList();
+
+            ReviewSummaryStats summary = this.reviewsService.GetSummaryStats(allReviews);
 
             var model = new ReviewListViewModel
             {
@@ -34,10 +37,10 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 SortField = sortField,
                 Descending = descending,
                 StatusFilter = status,
-                PendingCount = allReviews.Count(r => !r.IsApproved),
-                AverageRating = allReviews.Any() ? allReviews.Average(r => r.Rating) : 0,
-                TotalPublished = allReviews.Count(r => r.IsApproved),
-                ApprovalRate = allReviews.Any() ? (allReviews.Count(r => r.IsApproved) * 100) / allReviews.Count() : 0,
+                PendingCount = summary.PendingCount,
+                AverageRating = summary.AverageRating,
+                TotalPublished = summary.TotalPublished,
+                ApprovalRate = summary.ApprovalRate,
             };
 
             return this.View(model);

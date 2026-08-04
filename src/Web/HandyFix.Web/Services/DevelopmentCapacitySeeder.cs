@@ -36,8 +36,8 @@ namespace HandyFix.Web.Services
                 return;
             }
 
-            var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
-            var today = DateTime.Today;
+            ApplicationDbContext dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            DateTime today = DateTime.Today;
 
             // Only when there is no future capacity at all. This keeps the seeder quiet once a
             // real admin has generated (or deliberately blocked - blocked slots are still rows)
@@ -50,7 +50,7 @@ namespace HandyFix.Web.Services
                 return;
             }
 
-            var availabilityService = serviceProvider.GetRequiredService<IAvailabilityService>();
+            IAvailabilityService availabilityService = serviceProvider.GetRequiredService<IAvailabilityService>();
             await availabilityService.GenerateSlotsForRangeAsync(today, today.AddDays(DaysOfCapacity));
 
             serviceProvider.GetRequiredService<ILoggerFactory>()

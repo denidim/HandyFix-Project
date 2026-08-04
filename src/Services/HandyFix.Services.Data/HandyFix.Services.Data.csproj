@@ -6,10 +6,15 @@
     <ProjectReference Include="..\..\Web\HandyFix.Web.ViewModels\HandyFix.Web.ViewModels.csproj" />
     <ProjectReference Include="..\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
     <ProjectReference Include="..\HandyFix.Services.Messaging\HandyFix.Services.Messaging.csproj" />
+    <ProjectReference Include="..\HandyFix.Services\HandyFix.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Stripe.net" />
   </ItemGroup>
 
 </Project>

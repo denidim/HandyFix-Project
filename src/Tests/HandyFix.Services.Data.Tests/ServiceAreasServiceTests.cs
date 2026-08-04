@@ -308,5 +308,77 @@ namespace HandyFix.Services.Data.Tests
                 DisplayOrder = displayOrder,
             };
         }
+
+        /// <summary>
+        /// The FAQ builder's contract, per PROJECT_STATE.md section 3m: blank rows are pruned
+        /// before validation, so every returned error key lines up with the index the row will
+        /// actually render at. ServiceAreaFaqInputModel carries no DataAnnotations precisely so
+        /// the binder cannot raise errors against pre-prune indices.
+        /// </summary>
+        public class PruneAndValidateFaqsTests
+        {
+            [Fact]
+            public void ShouldSilentlyDropFullyBlankFaqRows()
+            {
+                var service = new ServiceAreasService(null, null);
+
+                var model = new ServiceAreaAdminInputModel
+                {
+                    Faqs = new System.Collections.Generic.List<ServiceAreaFaqInputModel>
+                    {
+                        Faq("How quickly can you get here?", "Usually within two working days."),
+                        new ServiceAreaFaqInputModel(),
+                        new ServiceAreaFaqInputModel { Question = "   ", Answer = null },
+                    },
+                };
+
+                var errors = service.PruneAndValidateFaqs(model).ToList();
+
+                // A blank row is the admin leaving an unused slot alone, not an error.
+                Assert.Empty(errors);
+                Assert.Single(model.Faqs);
+            }
+
+            [Fact]
+            public void ShouldKeyErrorsToThePostPruneIndex()
+            {
+                // The actual trap this guards. Row 0 is blank and gets pruned; row 1 is
+                // half-filled and invalid. After pruning it renders at index 0, so an error
+                // keyed Faqs[1].Answer would attach to a row the admin cannot see.
+                var service = new ServiceAreasService(null, null);
+
+                var model = new ServiceAreaAdminInputModel
+                {
+                    Faqs = new System.Collections.Generic.List<ServiceAreaFaqInputModel>
+                    {
+                        new ServiceAreaFaqInputModel(),
+                        Faq("Do you cover weekends?", null),
+                    },
+                };
+
+                var errors = service.PruneAndValidateFaqs(model).ToList();
+
+                Assert.Contains(errors, e => e.Key == "Faqs[0].Answer");
+                Assert.DoesNotContain(errors, e => e.Key == "Faqs[1].Answer");
+            }
+
+            [Fact]
+            public void ShouldRejectAHalfFilledFaqRow()
+            {
+                var service = new ServiceAreasService(null, null);
+
+                var model = new ServiceAreaAdminInputModel
+                {
+                    Faqs = new System.Collections.Generic.List<ServiceAreaFaqInputModel> { Faq(null, "Yes, we do.") },
+                };
+
+                var errors = service.PruneAndValidateFaqs(model).ToList();
+
+                Assert.Contains(errors, e => e.Key == "Faqs[0].Question");
+            }
+
+            private static ServiceAreaFaqInputModel Faq(string question, string answer) =>
+                new ServiceAreaFaqInputModel { Question = question, Answer = answer };
+        }
     }
 }

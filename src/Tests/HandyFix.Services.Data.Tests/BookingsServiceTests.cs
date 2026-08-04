@@ -14,6 +14,7 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
 
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.Data.Sqlite;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -46,7 +47,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             // Seed required statuses
@@ -154,7 +155,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -263,7 +264,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -358,7 +359,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -457,7 +458,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -537,7 +538,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -700,7 +701,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -762,5 +763,68 @@ namespace HandyFix.Services.Data.Tests
                 emailSenderMock.Object,
                 new ConfigurationBuilder().Build());
         }
+
+        [Fact]
+        public void GetSummaryStatsShouldDescribeTheGivenListRegardlessOfWhereItCameFrom()
+        {
+            // A pure computation over whatever list it's handed - no repository access - so it
+            // needs none of BookingsService's other dependencies wired up.
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
+
+            var bookings = new List<BookingDetailsViewModel>
+            {
+                new BookingDetailsViewModel { StatusName = "Pending", ScheduledTime = DateTime.Today, TotalAmount = 100m },
+                new BookingDetailsViewModel { StatusName = "Approved", ScheduledTime = DateTime.Today, TotalAmount = 250m },
+                new BookingDetailsViewModel { StatusName = "Completed", ScheduledTime = AnotherDayThisMonth(), TotalAmount = 75m },
+            };
+
+            BookingSummaryStats stats = service.GetSummaryStats(bookings);
+
+            Assert.Equal(2, stats.TodaysAppointmentsCount);
+            Assert.Equal(1, stats.PendingApprovalCount);
+            Assert.Equal(425m, stats.MonthlyRevenue);
+        }
+
+        [Fact]
+        public void GetSummaryStatsShouldReturnZeroRevenueForAnEmptyList()
+        {
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
+
+            BookingSummaryStats stats = service.GetSummaryStats(new List<BookingDetailsViewModel>());
+
+            Assert.Equal(0, stats.TodaysAppointmentsCount);
+            Assert.Equal(0, stats.PendingApprovalCount);
+            Assert.Equal(0m, stats.MonthlyRevenue);
+        }
+
+        [Fact]
+        public async Task GetStatusOptionsAsyncShouldReturnNamesAlphabetically()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
+
+            dbContext.BookingStatuses.AddRange(
+                new BookingStatus { Name = "Pending" },
+                new BookingStatus { Name = "Completed" },
+                new BookingStatus { Name = "Approved" });
+            dbContext.SaveChanges();
+
+            var service = new BookingsService(null, null, null, bookingStatusRepo, null, null, null, null, null, null, null);
+
+            IEnumerable<string> result = await service.GetStatusOptionsAsync();
+
+            Assert.Equal(new[] { "Approved", "Completed", "Pending" }, result);
+        }
+
+        /// <summary>
+        /// A day guaranteed to fall in the same calendar month as today but not be today, so the
+        /// revenue assertion cannot break depending on when the suite is run.
+        /// </summary>
+        private static DateTime AnotherDayThisMonth() =>
+            DateTime.Today.Day == 1 ? DateTime.Today.AddDays(1) : DateTime.Today.AddDays(-1);
     }
 }

@@ -21,7 +21,7 @@ namespace HandyFix.Data.Seeding
                 throw new ArgumentNullException(nameof(serviceProvider));
             }
 
-            var logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger(typeof(ApplicationDbContextSeeder));
+            ILogger logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger(typeof(ApplicationDbContextSeeder));
 
             var seeders = new List<ISeeder>
                           {
@@ -36,7 +36,7 @@ namespace HandyFix.Data.Seeding
                               new SettingsSeeder(),
                           };
 
-            foreach (var seeder in seeders)
+            foreach (ISeeder seeder in seeders)
             {
                 await seeder.SeedAsync(dbContext, serviceProvider);
                 await dbContext.SaveChangesAsync();

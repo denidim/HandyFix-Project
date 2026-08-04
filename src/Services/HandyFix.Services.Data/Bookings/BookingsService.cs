@@ -17,6 +17,8 @@ namespace HandyFix.Services.Data.Bookings
     using Mapster;
 
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.ChangeTracking;
+    using Microsoft.EntityFrameworkCore.Storage;
     using Microsoft.Extensions.Configuration;
 
     public class BookingsService : IBookingsService
@@ -67,7 +69,7 @@ namespace HandyFix.Services.Data.Bookings
             IReadOnlyList<string> imageUrls,
             string userId = null)
         {
-            var pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            BookingStatus pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
             if (pendingStatus == null)
             {
                 throw new InvalidOperationException("Booking status 'Pending' is not seeded.");
@@ -75,14 +77,14 @@ namespace HandyFix.Services.Data.Bookings
 
             // Slot must exist before we do any work; its StartTime is needed below, and the
             // actual availability check happens atomically in BookSlotAsync.
-            var slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == model.SlotId);
+            AvailabilitySlot slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == model.SlotId);
             if (slot == null)
             {
                 throw new InvalidOperationException("The selected time slot does not exist. Please choose a different time.");
             }
 
-            var serviceIds = new[] { model.ServiceId };
-            var selectedServices = await this.serviceRepository.All()
+            Guid[] serviceIds = new[] { model.ServiceId };
+            List<Service> selectedServices = await this.serviceRepository.All()
                 .Where(x => serviceIds.Contains(x.Id))
                 .ToListAsync();
 
@@ -106,7 +108,7 @@ namespace HandyFix.Services.Data.Bookings
             };
 
             // 2. Link services directly to the navigation property list before saving
-            foreach (var svc in selectedServices)
+            foreach (Service svc in selectedServices)
             {
                 var bookingService = new BookingService
                 {
@@ -120,7 +122,7 @@ namespace HandyFix.Services.Data.Bookings
             // 3. Create the booking and claim the slot atomically: if the slot was taken
             // or blocked in the meantime, roll back the booking instead of leaving an
             // orphaned booking with no appointment time.
-            await using (var transaction = await this.dbQueryRunner.BeginTransactionAsync())
+            await using (IDbContextTransaction transaction = await this.dbQueryRunner.BeginTransactionAsync())
             {
                 await this.bookingRepository.AddAsync(booking);
                 await this.bookingRepository.SaveChangesAsync();
@@ -196,7 +198,7 @@ namespace HandyFix.Services.Data.Bookings
             bool descending = true,
             string statusFilter = null)
         {
-            var query = this.bookingRepository.All();
+            IQueryable<Booking> query = this.bookingRepository.All();
 
             if (!string.IsNullOrWhiteSpace(statusFilter))
             {
@@ -233,10 +235,10 @@ namespace HandyFix.Services.Data.Bookings
 
         public async Task UpdateStatusAsync(Guid bookingId, string statusName)
         {
-            var booking = await this.bookingRepository.All()
+            Booking booking = await this.bookingRepository.All()
                 .Include(x => x.Technician)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
-            var status = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name.ToLower() == statusName.ToLower());
+            BookingStatus status = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name.ToLower() == statusName.ToLower());
 
             if (booking != null && status != null)
             {
@@ -279,7 +281,7 @@ namespace HandyFix.Services.Data.Bookings
 
         public async Task AssignTechnicianAsync(Guid bookingId, Guid? technicianId)
         {
-            var booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
+            Booking booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
             if (booking == null)
             {
                 return;
@@ -305,11 +307,11 @@ namespace HandyFix.Services.Data.Bookings
 
         public async Task CancelBookingAsync(Guid bookingId)
         {
-            var booking = await this.bookingRepository.All()
+            Booking booking = await this.bookingRepository.All()
                 .Include(x => x.AvailabilitySlot)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
 
-            var cancelledStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            BookingStatus cancelledStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
 
             if (booking == null || cancelledStatus == null)
             {
@@ -319,8 +321,8 @@ namespace HandyFix.Services.Data.Bookings
             booking.StatusId = cancelledStatus.Id;
 
             // Release slot
-            var slots = await this.slotRepository.All().Where(x => x.BookingId == bookingId).ToListAsync();
-            foreach (var slot in slots)
+            List<AvailabilitySlot> slots = await this.slotRepository.All().Where(x => x.BookingId == bookingId).ToListAsync();
+            foreach (AvailabilitySlot slot in slots)
             {
                 slot.IsBooked = false;
                 slot.BookingId = null;
@@ -340,9 +342,9 @@ namespace HandyFix.Services.Data.Bookings
                 // keeping our own intended "release this slot" values - the booking's
                 // own status change has no concurrency token, so it can't be what
                 // conflicted, and is safe to resend as-is.
-                foreach (var entry in ex.Entries)
+                foreach (EntityEntry entry in ex.Entries)
                 {
-                    var databaseValues = await entry.GetDatabaseValuesAsync();
+                    PropertyValues databaseValues = await entry.GetDatabaseValuesAsync();
                     if (databaseValues == null)
                     {
                         // The row is gone entirely (hard-deleted concurrently) - nothing
@@ -361,24 +363,24 @@ namespace HandyFix.Services.Data.Bookings
 
         public async Task RescheduleBookingAsync(Guid bookingId, Guid newSlotId)
         {
-            var booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
+            Booking booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
             if (booking == null)
             {
                 throw new InvalidOperationException("The booking does not exist.");
             }
 
-            var newSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == newSlotId);
+            AvailabilitySlot newSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == newSlotId);
             if (newSlot == null)
             {
                 throw new InvalidOperationException("The selected time slot does not exist. Please choose a different time.");
             }
 
-            var oldSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.BookingId == bookingId);
+            AvailabilitySlot oldSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.BookingId == bookingId);
 
             // Release the old slot and claim the new one atomically: if the new slot was
             // taken, blocked, or lost a concurrency race, roll back so the booking stays
             // exactly where it was instead of ending up with no appointment time at all.
-            await using (var transaction = await this.dbQueryRunner.BeginTransactionAsync())
+            await using (IDbContextTransaction transaction = await this.dbQueryRunner.BeginTransactionAsync())
             {
                 if (oldSlot != null)
                 {
@@ -406,15 +408,15 @@ namespace HandyFix.Services.Data.Bookings
 
         public async Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan)
         {
-            var pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
-            var abandonedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Abandoned");
+            BookingStatus pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            BookingStatus abandonedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Abandoned");
             if (pendingStatus == null || abandonedStatus == null)
             {
                 return 0;
             }
 
-            var cutoff = DateTime.UtcNow - olderThan;
-            var staleBookings = await this.bookingRepository.All()
+            DateTime cutoff = DateTime.UtcNow - olderThan;
+            List<Booking> staleBookings = await this.bookingRepository.All()
                 .Where(x => x.StatusId == pendingStatus.Id && x.CreatedOn < cutoff)
                 .ToListAsync();
 
@@ -424,16 +426,16 @@ namespace HandyFix.Services.Data.Bookings
             }
 
             var staleBookingIds = staleBookings.Select(x => x.Id).ToList();
-            var slotsToRelease = await this.slotRepository.All()
+            List<AvailabilitySlot> slotsToRelease = await this.slotRepository.All()
                 .Where(x => x.BookingId != null && staleBookingIds.Contains(x.BookingId.Value))
                 .ToListAsync();
 
-            foreach (var booking in staleBookings)
+            foreach (Booking booking in staleBookings)
             {
                 booking.StatusId = abandonedStatus.Id;
             }
 
-            foreach (var slot in slotsToRelease)
+            foreach (AvailabilitySlot slot in slotsToRelease)
             {
                 slot.IsBooked = false;
                 slot.BookingId = null;
@@ -441,7 +443,7 @@ namespace HandyFix.Services.Data.Bookings
 
             // Keep the booking/slot release and the payment cleanup consistent: either
             // both land together, or neither does.
-            await using (var transaction = await this.dbQueryRunner.BeginTransactionAsync())
+            await using (IDbContextTransaction transaction = await this.dbQueryRunner.BeginTransactionAsync())
             {
                 await this.bookingRepository.SaveChangesAsync();
                 await this.paymentsService.CancelPendingPaymentsForBookingsAsync(staleBookingIds);
@@ -462,6 +464,39 @@ namespace HandyFix.Services.Data.Bookings
 
             await this.imageRepository.AddAsync(image);
             await this.imageRepository.SaveChangesAsync();
+        }
+
+        public async Task<int> GetTotalCountAsync()
+        {
+            return await this.bookingRepository.All().CountAsync();
+        }
+
+        public async Task<int> GetPendingCountAsync()
+        {
+            return await this.bookingRepository.All().CountAsync(x => x.Status.Name == "Pending");
+        }
+
+        public BookingSummaryStats GetSummaryStats(IEnumerable<BookingDetailsViewModel> bookings)
+        {
+            // Deliberately takes the list rather than fetching it: the caller decides whether it
+            // already has the right (unfiltered) list in hand or needs to fetch one, so a request
+            // that isn't filtered doesn't pay for a redundant round trip.
+            return new BookingSummaryStats
+            {
+                TodaysAppointmentsCount = bookings.Count(b => b.ScheduledTime.Date == DateTime.Today),
+                PendingApprovalCount = bookings.Count(b => b.StatusName == "Pending"),
+                MonthlyRevenue = bookings.Any()
+                    ? bookings.Where(b => b.ScheduledTime.Month == DateTime.Today.Month && b.ScheduledTime.Year == DateTime.Today.Year).Sum(b => b.TotalAmount)
+                    : 0,
+            };
+        }
+
+        public async Task<IEnumerable<string>> GetStatusOptionsAsync()
+        {
+            return await this.statusRepository.All()
+                .Select(x => x.Name)
+                .OrderBy(x => x)
+                .ToListAsync();
         }
     }
 }

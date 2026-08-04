@@ -12,5 +12,7 @@ namespace HandyFix.Services
         void RenameServiceImage(string oldSlug, string newSlug);
 
         bool ServiceImageExists(string slug);
+
+        string GetServiceImagePublicUrl(string slug);
     }
 }

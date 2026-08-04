@@ -2,31 +2,38 @@ namespace HandyFix.Services.Data.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
+    using HandyFix.Services;
+    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Mapping;
 
+    using Microsoft.AspNetCore.Http;
     using Microsoft.EntityFrameworkCore;
 
     public class ServicesService : IServicesService
     {
         private readonly IDeletableEntityRepository<Service> servicesRepository;
         private readonly IDeletableEntityRepository<ServiceImage> serviceImageRepository;
+        private readonly IImageStorageService imageStorageService;
 
         public ServicesService(
             IDeletableEntityRepository<Service> servicesRepository,
-            IDeletableEntityRepository<ServiceImage> serviceImageRepository)
+            IDeletableEntityRepository<ServiceImage> serviceImageRepository,
+            IImageStorageService imageStorageService)
         {
             this.servicesRepository = servicesRepository;
             this.serviceImageRepository = serviceImageRepository;
+            this.imageStorageService = imageStorageService;
         }
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(bool activeOnly = true)
         {
-            var query = this.servicesRepository.All();
+            IQueryable<Service> query = this.servicesRepository.All();
 
             if (activeOnly)
             {
@@ -41,7 +48,7 @@ namespace HandyFix.Services.Data.Services
 
         public async Task<IEnumerable<T>> GetByCategoryAsync<T>(string categoryName, bool activeOnly = true)
         {
-            var query = this.servicesRepository.All()
+            IQueryable<Service> query = this.servicesRepository.All()
                 .Where(x => x.Category.Name.ToLower() == categoryName.ToLower());
 
             if (activeOnly)
@@ -81,7 +88,7 @@ namespace HandyFix.Services.Data.Services
                 EstimatedDurationMinutes = estimatedDurationMinutes,
                 CategoryId = categoryId,
                 IsActive = true,
-                Slug = Slugify(name),
+                Slug = SlugGenerator.Slugify(name),
             };
 
             await this.servicesRepository.AddAsync(service);
@@ -92,7 +99,7 @@ namespace HandyFix.Services.Data.Services
 
         public async Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId)
         {
-            var service = await this.servicesRepository.All()
+            Service service = await this.servicesRepository.All()
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (service != null)
@@ -103,7 +110,7 @@ namespace HandyFix.Services.Data.Services
                 service.EstimatedDurationMinutes = estimatedDurationMinutes;
                 service.IsActive = isActive;
                 service.CategoryId = categoryId;
-                service.Slug = Slugify(name);
+                service.Slug = SlugGenerator.Slugify(name);
 
                 await this.servicesRepository.SaveChangesAsync();
             }
@@ -111,11 +118,12 @@ namespace HandyFix.Services.Data.Services
 
         public async Task DeleteAsync(Guid id)
         {
-            var service = await this.servicesRepository.All()
+            Service service = await this.servicesRepository.All()
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (service != null)
             {
+                this.imageStorageService.DeleteServiceImage(service.Slug);
                 this.servicesRepository.Delete(service);
                 await this.servicesRepository.SaveChangesAsync();
             }
@@ -128,7 +136,7 @@ namespace HandyFix.Services.Data.Services
                 return;
             }
 
-            var existingImage = await this.serviceImageRepository.All()
+            ServiceImage existingImage = await this.serviceImageRepository.All()
                 .FirstOrDefaultAsync(x => x.ServiceId == serviceId);
 
             if (existingImage != null)
@@ -147,20 +155,60 @@ namespace HandyFix.Services.Data.Services
             await this.serviceImageRepository.SaveChangesAsync();
         }
 
-        private static string Slugify(string name)
+        public async Task SetServiceImageAsync(Guid serviceId, IFormFile imageFile)
         {
-            if (string.IsNullOrWhiteSpace(name))
+            if (imageFile == null || imageFile.Length == 0)
             {
-                return string.Empty;
+                return;
             }
 
-            return name
-                .Replace(" ", "-")
-                .Replace("/", "-")
-                .Replace("&", "-")
-                .Replace("--", "-")
-                .Trim('-')
-                .ToLower();
+            Service service = await this.servicesRepository.All()
+                .FirstOrDefaultAsync(x => x.Id == serviceId);
+
+            if (service == null)
+            {
+                return;
+            }
+
+            string imageUrl;
+            using (Stream stream = imageFile.OpenReadStream())
+            {
+                imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, imageFile.FileName, imageFile.ContentType, service.Slug);
+            }
+
+            if (!string.IsNullOrEmpty(imageUrl))
+            {
+                await this.AddOrUpdateServiceImageAsync(serviceId, imageUrl);
+            }
+        }
+
+        public async Task UpdateServiceImageAsync(Guid serviceId, string oldSlug, string newSlug, IFormFile imageFile)
+        {
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                this.imageStorageService.DeleteServiceImage(oldSlug);
+                if (oldSlug != newSlug)
+                {
+                    this.imageStorageService.DeleteServiceImage(newSlug);
+                }
+
+                string imageUrl;
+                using (Stream stream = imageFile.OpenReadStream())
+                {
+                    imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, imageFile.FileName, imageFile.ContentType, newSlug);
+                }
+
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    await this.AddOrUpdateServiceImageAsync(serviceId, imageUrl);
+                }
+            }
+            else if (oldSlug != newSlug)
+            {
+                this.imageStorageService.RenameServiceImage(oldSlug, newSlug);
+                string newImageUrl = this.imageStorageService.GetServiceImagePublicUrl(newSlug);
+                await this.AddOrUpdateServiceImageAsync(serviceId, newImageUrl);
+            }
         }
     }
 }

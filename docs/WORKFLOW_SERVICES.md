@@ -90,24 +90,24 @@ no image column, so category images are a pure file-drop-by-convention, same as 
 
 ---
 
-## Known issue: `Slugify` doesn't fully collapse triple hyphens
+## Slug generation is centralized in `SlugGenerator`
 
-`ServicesService.Slugify` (duplicated verbatim in `CategoriesService`):
+`ServicesService` and `CategoriesService` used to each carry their own byte-for-byte-identical
+private `Slugify` method, with a bug where `.Replace("--", "-")` ran once instead of repeatedly, so
+a name producing three or more consecutive hyphens (e.g. `"Walton-on-Thames & Weybridge"`) didn't
+fully collapse. Both now call a single shared
+`HandyFix.Services.Data.Common.SlugGenerator.Slugify(name)`, which collapses **any** run of hyphens
+via `Regex.Replace(slug, "-{2,}", "-")` instead of one non-recursive `Replace`.
 
-```csharp
-name.Replace(" ", "-").Replace("/", "-").Replace("&", "-").Replace("--", "-").Trim('-').ToLower();
-```
+`CategoryViewModel.Slug` used to be a *third*, independently-computed slug
+(`Name.Replace(" ", "-").ToLower()`, no `&`/`/` handling at all) recalculated on every access. It
+now maps straight from the entity's persisted `ServiceCategory.Slug` column instead, so there's a
+single source of truth for what a category's slug actually is.
 
-`Replace("--", "-")` runs **once**, not repeatedly, so a name that produces three or more
-consecutive hyphens after the earlier replacements doesn't fully collapse. A name shaped like
-`"Walton-on-Thames & Weybridge"` becomes `walton-on-thames--weybridge` (double hyphen survives) —
-this is exactly why `ServiceAreasService` uses an explicit, admin-typed slug field instead of
-deriving one (see `WORKFLOW_SERVICE_AREAS.md`). If you ever give a service or category a name with
-an ampersand or a multi-word hyphenated place name, check the resulting slug by hand.
-
-`CategoryViewModel.Slug` has its own, even simpler computed slug (`Name.Replace(" ", "-").ToLower()`
-— no `&`/`/` handling at all) used purely for display routing, a second independent place the same
-class of bug can show up.
+`ServiceAreasService` still deliberately does **not** use `SlugGenerator` — its slug is an explicit,
+admin-typed field rather than derived from the name at all (see `WORKFLOW_SERVICE_AREAS.md`), which
+was always the safer design for a value that also has to match a hero-image filename and a
+coverage-diagram key.
 
 ---
 
@@ -118,7 +118,7 @@ class of bug can show up.
 | "I need a new category" has no obvious button | Correct — there isn't one. Edit `ServiceCategoriesSeeder.cs` and restart. |
 | A service's image doesn't update after upload | Check the upload succeeded (`ModelState` errors re-render the form); if it did, the browser may be caching the old WebP — hard refresh. |
 | An uploaded file was rejected outright | Only `.jpg`/`.jpeg`/`.png`/`.webp` under 20MB are accepted. |
-| A service's slug looks wrong after a name edit with `&` or multiple hyphens | Known `Slugify` limitation above — fix the slug by renaming with a cleaner name, or expect a manual DB correction. |
+| A service's slug still looks wrong after a name edit | `SlugGenerator` collapses hyphen runs correctly now — if something still looks off, it's a new bug, not the old known one. |
 | Category tile image doesn't show | It's a manual file drop (`{slug}-category-hero.webp`), not an admin upload — confirm the file actually exists on disk. |
 
 ---

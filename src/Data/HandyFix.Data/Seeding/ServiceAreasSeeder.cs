@@ -271,7 +271,7 @@ namespace HandyFix.Data.Seeding
 
             foreach (var item in areas)
             {
-                var area = dbContext.ServiceAreas.FirstOrDefault(x => x.Slug == item.Slug);
+                ServiceArea area = dbContext.ServiceAreas.FirstOrDefault(x => x.Slug == item.Slug);
                 if (area == null)
                 {
                     area = new ServiceArea
@@ -293,7 +293,7 @@ namespace HandyFix.Data.Seeding
                 if (!dbContext.ServiceAreaFaqs.Any(x => x.ServiceAreaId == area.Id))
                 {
                     var displayOrder = 1;
-                    foreach (var (question, answer) in item.Faqs)
+                    foreach ((string question, string answer) in item.Faqs)
                     {
                         await dbContext.ServiceAreaFaqs.AddAsync(new ServiceAreaFaq
                         {

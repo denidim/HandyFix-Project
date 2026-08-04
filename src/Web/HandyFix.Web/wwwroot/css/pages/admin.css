@@ -732,7 +732,7 @@
   }
 }
 
-.bento-card {
+.dashboard-stat-card {
   background-color: var(--surface-container-lowest);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
@@ -744,19 +744,19 @@
   justify-content: space-between;
 }
 
-.bento-card:hover {
+.dashboard-stat-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-md);
 }
 
-.bento-card-header {
+.dashboard-stat-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-4);
 }
 
-.bento-card-icon-wrapper {
+.dashboard-stat-card-icon-wrapper {
   padding: var(--spacing-3);
   border-radius: var(--radius-lg);
   display: inline-flex;
@@ -764,14 +764,14 @@
   justify-content: center;
 }
 
-.bento-card-value {
+.dashboard-stat-card-value {
   font-size: var(--fs-headline-md);
   font-weight: 700;
   color: var(--primary);
   margin: var(--spacing-2) 0 0 0;
 }
 
-.bento-card-label {
+.dashboard-stat-card-label {
   font-size: var(--fs-label-sm);
   color: var(--on-surface-variant);
   text-transform: uppercase;

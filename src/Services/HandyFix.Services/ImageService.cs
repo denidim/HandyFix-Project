@@ -2,6 +2,7 @@ namespace HandyFix.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -53,7 +54,7 @@ namespace HandyFix.Services
 
             var urls = new List<string>(files.Count);
 
-            foreach (var file in files)
+            foreach (IFormFile file in files)
             {
                 if (file.Length > MaxFileSizeBytes)
                 {
@@ -70,7 +71,7 @@ namespace HandyFix.Services
 
                 try
                 {
-                    using (var stream = file.OpenReadStream())
+                    using (Stream stream = file.OpenReadStream())
                     {
                         var url = await this.r2Service.UploadFileAsync(stream, file.FileName, contentType, folder);
                         urls.Add(url);
