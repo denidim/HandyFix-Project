@@ -69,19 +69,21 @@ booking/enquiry customer photo uploads (`ImageService`/`ICloudflareR2Service`, c
 | Legacy cleanup | `DeleteLegacyImages` removes any leftover `{slug}-hero.jpg/.jpeg/.png` after a successful WebP write |
 | Slug validation | rejects empty slugs, `..`, or invalid filename characters before touching disk |
 
-### The `{slug}-hero.webp` convention is hardcoded in **five** places
+### The `{slug}-hero.webp` convention is hardcoded in **four** places
 
-Change the naming convention and all five need updating together:
+`ImageStorageService.GetServiceImagePublicUrl(slug)` is the one canonical, callable source —
+`SaveServiceImageAsync`'s return value and `ServicesService.UpdateServiceImageAsync`'s slug-rename
+case both call it rather than rebuilding the string (the admin controller used to hardcode this
+inline before the Phase 3 thin-controller pass moved the whole image-update flow into the service —
+see `PROJECT_STATE.md` Section 3aa). What's left, genuinely unable to reach that method:
 
-1. `ImageStorageService.GetServiceImagePath` / `SaveServiceImageAsync`'s return URL.
-2. `src/Data/HandyFix.Data/Seeding/ServicesSeeder.cs:79` — back-fills `ServiceImage` rows for seeded
-   services that don't have one yet.
-3. `Areas/Administration/Controllers/ServicesController.cs:168` — the "slug changed, no new file
-   uploaded" branch of `Edit`, which has to rebuild the URL itself since no upload triggered
-   `SaveServiceImageAsync`.
-4. `ServiceViewModel` / `ServiceDetailsViewModel`'s Mapster fallback — if a service has no
-   `ImageUrl` row at all, falls back to this path by convention.
-5. `Areas/Administration/Views/Services/Edit.cshtml` — builds the same path client-side (paired with
+1. `src/Data/HandyFix.Data/Seeding/ServicesSeeder.cs:79` — back-fills `ServiceImage` rows for seeded
+   services that don't have one yet. Can't call the helper: `HandyFix.Data` doesn't (and
+   architecturally shouldn't) depend on `HandyFix.Services`.
+2. `ServiceViewModel`'s Mapster fallback — if a service has no `ImageUrl` row at all, falls back to
+   this path by convention.
+3. `ServiceDetailsViewModel`'s Mapster fallback — same pattern, separate file.
+4. `Areas/Administration/Views/Services/Edit.cshtml` — builds the same path client-side (paired with
    `ImageStorageService.ServiceImageExists`) to decide whether to show a "current image" preview.
 
 **Category hero tiles break this pattern entirely**: they use `{slug}-category-hero.webp` (note
