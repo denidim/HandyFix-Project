@@ -23,51 +23,51 @@
 <!-- Stats Grid -->
 <div class="bento-grid bento-grid-4">
     <!-- Revenue -->
-    <div class="bento-card">
-        <div class="bento-card-header">
-            <div class="bento-card-icon-wrapper tint-secondary">
+    <div class="dashboard-stat-card">
+        <div class="dashboard-stat-card-header">
+            <div class="dashboard-stat-card-icon-wrapper tint-secondary">
                 <span class="material-symbols-outlined text-secondary">payments</span>
             </div>
             <span class="font-label-sm font-bold px-2 py-1 rounded tint-success">+12.5%</span>
         </div>
         <div>
-            <p class="bento-card-label">Total Revenue</p>
-            <h2 class="bento-card-value">£@Model.TotalRevenue.ToString("N2")</h2>
+            <p class="dashboard-stat-card-label">Total Revenue</p>
+            <h2 class="dashboard-stat-card-value">£@Model.TotalRevenue.ToString("N2")</h2>
         </div>
     </div>
 
     <!-- Bookings -->
-    <div class="bento-card">
-        <div class="bento-card-header">
-            <div class="bento-card-icon-wrapper tint-black-soft">
+    <div class="dashboard-stat-card">
+        <div class="dashboard-stat-card-header">
+            <div class="dashboard-stat-card-icon-wrapper tint-black-soft">
                 <span class="material-symbols-outlined text-primary">calendar_today</span>
             </div>
             <span class="font-label-sm font-bold px-2 py-1 rounded tint-info">@Model.PendingBookingsCount Pending</span>
         </div>
         <div>
-            <p class="bento-card-label">Total Bookings</p>
-            <h2 class="bento-card-value">@Model.TotalBookingsCount</h2>
+            <p class="dashboard-stat-card-label">Total Bookings</p>
+            <h2 class="dashboard-stat-card-value">@Model.TotalBookingsCount</h2>
         </div>
     </div>
 
     <!-- Enquiries -->
-    <div class="bento-card">
-        <div class="bento-card-header">
-            <div class="bento-card-icon-wrapper tint-secondary">
+    <div class="dashboard-stat-card">
+        <div class="dashboard-stat-card-header">
+            <div class="dashboard-stat-card-icon-wrapper tint-secondary">
                 <span class="material-symbols-outlined text-secondary">chat_bubble</span>
             </div>
             <span class="font-label-sm font-bold px-2 py-1 rounded tint-neutral-soft">New Leads</span>
         </div>
         <div>
-            <p class="bento-card-label">Total Enquiries</p>
-            <h2 class="bento-card-value">@Model.TotalEnquiriesCount</h2>
+            <p class="dashboard-stat-card-label">Total Enquiries</p>
+            <h2 class="dashboard-stat-card-value">@Model.TotalEnquiriesCount</h2>
         </div>
     </div>
 
     <!-- Unapproved Reviews -->
-    <div class="bento-card">
-        <div class="bento-card-header">
-            <div class="bento-card-icon-wrapper tint-error-soft">
+    <div class="dashboard-stat-card">
+        <div class="dashboard-stat-card-header">
+            <div class="dashboard-stat-card-icon-wrapper tint-error-soft">
                 <span class="material-symbols-outlined text-error">star_half</span>
             </div>
             <div class="d-flex align-items-center gap-1 text-error font-bold font-label-sm">
@@ -76,8 +76,8 @@
             </div>
         </div>
         <div>
-            <p class="bento-card-label">Unapproved Reviews</p>
-            <h2 class="bento-card-value">@Model.PendingReviewsCount</h2>
+            <p class="dashboard-stat-card-label">Unapproved Reviews</p>
+            <h2 class="dashboard-stat-card-value">@Model.PendingReviewsCount</h2>
         </div>
     </div>
 </div>
