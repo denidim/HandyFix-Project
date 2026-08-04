@@ -1,0 +1,13 @@
+{$STAGING_HOSTNAME} {
+	basic_auth {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+
+	# Belt and braces alongside Basic Auth: if auth is ever misconfigured or
+	# dropped, this stops the site being indexed while it still carries
+	# fabricated placeholder business content (PROJECT_STATE.md Section 4
+	# item 16).
+	header X-Robots-Tag "noindex, nofollow"
+
+	reverse_proxy web:8080
+}

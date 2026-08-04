@@ -1,0 +1,55 @@
+# Runs on the staging web host. Pulls the image built by
+# .github/workflows/deploy-dev.yml -- never built locally here.
+#
+# All secret values come from a .env file that lives next to this file on
+# the server ONLY (never committed -- see docs/private/INFRASTRUCTURE.md
+# for the real values). docker compose reads a .env file in the same
+# directory automatically, no extra flag needed.
+
+services:
+  web:
+    image: ghcr.io/denidim/handyfix-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING}
+      Admin__SeedPassword: ${ADMIN_SEED_PASSWORD}
+      Brevo__ApiKey: ${BREVO_API_KEY}
+      Email__BookingsFromAddress: ${EMAIL_BOOKINGS_FROM_ADDRESS}
+      Email__SystemFromAddress: ${EMAIL_SYSTEM_FROM_ADDRESS}
+      # No real Stripe account yet -- lets staging demo the full booking
+      # flow via the sandbox bypass. Remove this and set Stripe__SecretKey
+      # instead once a real (test-mode) Stripe account exists.
+      Stripe__AllowSandboxOutsideDevelopment: "true"
+      # CloudflareR2:* intentionally not set yet -- photo upload testing is
+      # blocked on deciding whether staging reuses the dev bucket or gets
+      # its own. Uploads simply fail until this is added; nothing else
+      # depends on it at startup.
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      STAGING_HOSTNAME: ${STAGING_HOSTNAME}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER}
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - internal
+    depends_on:
+      - web
+
+networks:
+  internal:
+
+volumes:
+  caddy_data:
+  caddy_config:

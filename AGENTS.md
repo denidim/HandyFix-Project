@@ -195,3 +195,28 @@ Three distinct layers. Putting a test in the wrong one is a real mistake, not a 
 
 When a sprint completes: ask for the next sprint's goals, update `PROJECT_STATE.md` to archive the
 finished work and record the new goals, and commit that before starting new work.
+
+---
+
+## 11. Branching and deploys
+
+Two branches, deliberately simple — this is a solo project, not a team, so a heavier branching
+model (feature branches, required reviewers) would add ceremony without adding safety.
+
+- **`dev` is the working branch.** Commit and push here for anything in progress. Every push
+  triggers `.github/workflows/deploy-dev.yml`, which builds, tests, and deploys straight to
+  staging — that's the feedback loop, use it liberally.
+- **`main` is the verified-stable branch.** Nothing lands there except through a pull request from
+  `dev`, opened once a batch of work has actually been checked on staging. `deploy-prod.yml`
+  does not exist yet, so merging to `main` currently deploys nothing — but the habit needs to
+  already be in place before it does, since at that point a `main` merge means "this goes live in
+  production."
+- **Merge `dev` into `main` often, not in one large batch.** Small, frequent merges are easy to
+  review and hard to get wrong; a large merge accumulated over weeks is the opposite. A good
+  trigger: after any change that's been verified working on staging and isn't obviously the start
+  of more related work.
+- **Agents: proactively check `git log --oneline main..dev` at natural checkpoints** (after a
+  verified staging deploy, at the start of a new session, when the user asks "what's next") and
+  say so if `dev` has drifted meaningfully ahead of `main` unmerged. Don't wait to be asked — this
+  rule exists specifically because it's easy to forget mid-work, which is exactly when it's most
+  useful to be reminded.
