@@ -120,11 +120,14 @@ If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to Mock/San
 ## 📄 Documentation
 
 - **[PROJECT_STATE.md](PROJECT_STATE.md)** — architectural memory: what the system is, what's been built and verified, what's left, and the decisions worth remembering. Start here.
-- **[DESIGN.md](DESIGN.md)** — design language: color palette, typography, spacing, animation conventions.
+- **[DESIGN.md](DESIGN.md)** — design tokens, utility classes, page-shell templates, and the admin/card/area component families.
 - **[docs/WORKFLOW_BOOKINGS.md](docs/WORKFLOW_BOOKINGS.md)** — the booking pipeline end to end: generate capacity → customer books and pays → admin assigns a technician → admin approves.
 - **[docs/WORKFLOW_SERVICE_AREAS.md](docs/WORKFLOW_SERVICE_AREAS.md)** — how a service area is created, seeded and published.
-
-> **In progress**: the remaining admin workflows are not documented yet — services & categories (including the image pipeline), technicians, reviews, enquiries, and deployment. Each gets its own `docs/WORKFLOW_*.md`, and this section becomes the complete index once they all exist.
+- **[docs/WORKFLOW_SERVICES.md](docs/WORKFLOW_SERVICES.md)** — services & categories admin CRUD and the local WebP image pipeline.
+- **[docs/WORKFLOW_TECHNICIANS.md](docs/WORKFLOW_TECHNICIANS.md)** — the technician roster: create, deactivate vs. delete, the seeded placeholder.
+- **[docs/WORKFLOW_REVIEWS.md](docs/WORKFLOW_REVIEWS.md)** — admin approve/delete and the config gate that controls public display.
+- **[docs/WORKFLOW_ENQUIRIES.md](docs/WORKFLOW_ENQUIRIES.md)** — contact-form submissions: list, view, delete.
+- **[docs/WORKFLOW_DEPLOYMENT.md](docs/WORKFLOW_DEPLOYMENT.md)** — the staging CI/CD pipeline, public-repo-safe (no real hosts/credentials).
 
 ---
 
