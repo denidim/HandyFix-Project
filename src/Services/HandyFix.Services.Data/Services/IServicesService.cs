@@ -4,6 +4,8 @@ namespace HandyFix.Services.Data.Services
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    using Microsoft.AspNetCore.Http;
+
     public interface IServicesService
     {
         Task<IEnumerable<T>> GetAllAsync<T>(bool activeOnly = true);
@@ -21,5 +23,9 @@ namespace HandyFix.Services.Data.Services
         Task DeleteAsync(Guid id);
 
         Task AddOrUpdateServiceImageAsync(Guid serviceId, string imageUrl);
+
+        Task SetServiceImageAsync(Guid serviceId, IFormFile imageFile);
+
+        Task UpdateServiceImageAsync(Guid serviceId, string oldSlug, string newSlug, IFormFile imageFile);
     }
 }

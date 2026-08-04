@@ -2,11 +2,9 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
-    using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.ViewModels.Administration.Services;
@@ -19,16 +17,13 @@ namespace HandyFix.Web.Areas.Administration.Controllers
     {
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
-        private readonly IImageStorageService imageStorageService;
 
         public ServicesController(
             IServicesService servicesService,
-            ICategoriesService categoriesService,
-            IImageStorageService imageStorageService)
+            ICategoriesService categoriesService)
         {
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
-            this.imageStorageService = imageStorageService;
         }
 
         public async Task<IActionResult> Index()
@@ -60,32 +55,16 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
             Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId);
 
-            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            try
             {
-                ServiceDetailsViewModel service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(serviceId);
-                if (service != null)
-                {
-                    try
-                    {
-                        string imageUrl;
-                        using (Stream stream = model.ImageFile.OpenReadStream())
-                        {
-                            imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, service.Slug);
-                        }
-
-                        if (!string.IsNullOrEmpty(imageUrl))
-                        {
-                            await this.servicesService.AddOrUpdateServiceImageAsync(serviceId, imageUrl);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.ModelState.AddModelError("ImageFile", ex.Message);
-                        IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-                        model.Categories = new SelectList(categories, "Id", "Name");
-                        return this.View(model);
-                    }
-                }
+                await this.servicesService.SetServiceImageAsync(serviceId, model.ImageFile);
+            }
+            catch (Exception ex)
+            {
+                this.ModelState.AddModelError("ImageFile", ex.Message);
+                IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+                model.Categories = new SelectList(categories, "Id", "Name");
+                return this.View(model);
             }
 
             return this.RedirectToAction(nameof(this.Index));
@@ -143,33 +122,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             {
                 try
                 {
-                    if (model.ImageFile != null && model.ImageFile.Length > 0)
-                    {
-                        // Delete old file if it exists, then save the new one
-                        this.imageStorageService.DeleteServiceImage(oldSlug);
-                        if (oldSlug != newSlug)
-                        {
-                            this.imageStorageService.DeleteServiceImage(newSlug);
-                        }
-
-                        string imageUrl;
-                        using (Stream stream = model.ImageFile.OpenReadStream())
-                        {
-                            imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, model.ImageFile.FileName, model.ImageFile.ContentType, newSlug);
-                        }
-
-                        if (!string.IsNullOrEmpty(imageUrl))
-                        {
-                            await this.servicesService.AddOrUpdateServiceImageAsync(model.Id.Value, imageUrl);
-                        }
-                    }
-                    else if (oldSlug != newSlug)
-                    {
-                        // Slug changed but no new file uploaded: rename the existing file
-                        this.imageStorageService.RenameServiceImage(oldSlug, newSlug);
-                        var newImageUrl = $"/images/services/{newSlug}-hero.webp";
-                        await this.servicesService.AddOrUpdateServiceImageAsync(model.Id.Value, newImageUrl);
-                    }
+                    await this.servicesService.UpdateServiceImageAsync(model.Id.Value, oldSlug, newSlug, model.ImageFile);
                 }
                 catch (Exception ex)
                 {
@@ -186,12 +139,6 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
-            ServiceDetailsViewModel service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(id);
-            if (service != null)
-            {
-                this.imageStorageService.DeleteServiceImage(service.Slug);
-            }
-
             await this.servicesService.DeleteAsync(id);
             return this.RedirectToAction(nameof(this.Index));
         }

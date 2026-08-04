@@ -6,6 +6,7 @@
     <ProjectReference Include="..\..\Web\HandyFix.Web.ViewModels\HandyFix.Web.ViewModels.csproj" />
     <ProjectReference Include="..\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
     <ProjectReference Include="..\HandyFix.Services.Messaging\HandyFix.Services.Messaging.csproj" />
+    <ProjectReference Include="..\HandyFix.Services\HandyFix.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
