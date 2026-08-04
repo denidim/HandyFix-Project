@@ -18,5 +18,7 @@ namespace HandyFix.Services.Data.Reviews
             ReviewSortField sortField = ReviewSortField.CreatedOn,
             bool descending = true,
             string statusFilter = null);
+
+        Task<int> GetPendingCountAsync();
     }
 }

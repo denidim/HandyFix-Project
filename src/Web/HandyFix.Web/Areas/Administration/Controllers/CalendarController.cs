@@ -2,26 +2,21 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
 
-    using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Web.ViewModels.Administration.Calendar;
 
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
 
     public class CalendarController : AdministrationController
     {
         private readonly IAvailabilityService availabilityService;
-        private readonly IDeletableEntityRepository<AvailabilitySlot> slotRepository;
 
-        public CalendarController(IAvailabilityService availabilityService, IDeletableEntityRepository<AvailabilitySlot> slotRepository)
+        public CalendarController(IAvailabilityService availabilityService)
         {
             this.availabilityService = availabilityService;
-            this.slotRepository = slotRepository;
         }
 
         public async Task<IActionResult> Index(DateTime? date)
@@ -31,12 +26,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             // Deliberately does not generate: simply viewing a day must not create capacity for
             // it. Slots exist only when an admin generates them below (or the non-production
             // capacity seeder does). An empty day renders the "no slots" empty state instead.
-
-            // Fetch all slots for this day, whether booked, active, or blocked
-            List<AvailabilitySlot> slots = await this.slotRepository.All()
-                .Where(x => x.StartTime.Date == targetDate.Date)
-                .OrderBy(x => x.StartTime)
-                .ToListAsync();
+            IEnumerable<AvailabilitySlot> slots = await this.availabilityService.GetAllSlotsForDayAsync(targetDate);
 
             var model = new CalendarIndexViewModel
             {

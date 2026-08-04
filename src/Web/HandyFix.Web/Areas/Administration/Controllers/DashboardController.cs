@@ -1,10 +1,12 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
-    using System.Linq;
+    using System.Threading.Tasks;
 
-    using HandyFix.Data.Common.Repositories;
-    using HandyFix.Data.Models;
     using HandyFix.Services.Data;
+    using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.Inquiries;
+    using HandyFix.Services.Data.Payments;
+    using HandyFix.Services.Data.Reviews;
     using HandyFix.Web.ViewModels.Administration.Dashboard;
 
     using Microsoft.AspNetCore.Mvc;
@@ -12,37 +14,35 @@ namespace HandyFix.Web.Areas.Administration.Controllers
     public class DashboardController : AdministrationController
     {
         private readonly ISettingsService settingsService;
-        private readonly IDeletableEntityRepository<Booking> bookingRepository;
-        private readonly IDeletableEntityRepository<Inquiry> inquiryRepository;
-        private readonly IDeletableEntityRepository<Review> reviewRepository;
-        private readonly IDeletableEntityRepository<Payment> paymentRepository;
+        private readonly IBookingsService bookingsService;
+        private readonly IInquiriesService inquiriesService;
+        private readonly IReviewsService reviewsService;
+        private readonly IPaymentsService paymentsService;
 
         public DashboardController(
             ISettingsService settingsService,
-            IDeletableEntityRepository<Booking> bookingRepository,
-            IDeletableEntityRepository<Inquiry> inquiryRepository,
-            IDeletableEntityRepository<Review> reviewRepository,
-            IDeletableEntityRepository<Payment> paymentRepository)
+            IBookingsService bookingsService,
+            IInquiriesService inquiriesService,
+            IReviewsService reviewsService,
+            IPaymentsService paymentsService)
         {
             this.settingsService = settingsService;
-            this.bookingRepository = bookingRepository;
-            this.inquiryRepository = inquiryRepository;
-            this.reviewRepository = reviewRepository;
-            this.paymentRepository = paymentRepository;
+            this.bookingsService = bookingsService;
+            this.inquiriesService = inquiriesService;
+            this.reviewsService = reviewsService;
+            this.paymentsService = paymentsService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var viewModel = new IndexViewModel
             {
                 SettingsCount = this.settingsService.GetCount(),
-                TotalBookingsCount = this.bookingRepository.All().Count(),
-                PendingBookingsCount = this.bookingRepository.All().Count(x => x.Status.Name == "Pending"),
-                TotalEnquiriesCount = this.inquiryRepository.All().Count(),
-                PendingReviewsCount = this.reviewRepository.AllWithDeleted().Count(x => !x.IsApproved),
-                TotalRevenue = this.paymentRepository.All()
-                    .Where(x => x.Status.Name == "DepositPaid" || x.Status.Name == "Completed")
-                    .Sum(x => (decimal?)x.Amount) ?? 0.00m,
+                TotalBookingsCount = await this.bookingsService.GetTotalCountAsync(),
+                PendingBookingsCount = await this.bookingsService.GetPendingCountAsync(),
+                TotalEnquiriesCount = await this.inquiriesService.GetTotalCountAsync(),
+                PendingReviewsCount = await this.reviewsService.GetPendingCountAsync(),
+                TotalRevenue = await this.paymentsService.GetTotalRevenueAsync(),
             };
 
             return this.View(viewModel);

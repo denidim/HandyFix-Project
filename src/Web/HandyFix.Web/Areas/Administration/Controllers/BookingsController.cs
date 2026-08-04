@@ -2,48 +2,40 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
 
-    using HandyFix.Data.Common.Repositories;
-    using HandyFix.Data.Models;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Technicians;
     using HandyFix.Web.ViewModels.Administration.Technicians;
     using HandyFix.Web.ViewModels.Booking;
 
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
 
     public class BookingsController : AdministrationController
     {
         private readonly IBookingsService bookingsService;
         private readonly ITechniciansService techniciansService;
-        private readonly IDeletableEntityRepository<BookingStatus> statusRepository;
 
         public BookingsController(
             IBookingsService bookingsService,
-            ITechniciansService techniciansService,
-            IDeletableEntityRepository<BookingStatus> statusRepository)
+            ITechniciansService techniciansService)
         {
             this.bookingsService = bookingsService;
             this.techniciansService = techniciansService;
-            this.statusRepository = statusRepository;
         }
 
         public async Task<IActionResult> Index(BookingSortField sortField = BookingSortField.CreatedOn, bool descending = true, string status = null)
         {
             IEnumerable<BookingDetailsViewModel> bookings = await this.bookingsService.GetAllBookingsAsync<BookingDetailsViewModel>(sortField, descending, status);
-            List<string> statusOptions = await this.statusRepository.All()
-                .Select(x => x.Name)
-                .OrderBy(x => x)
-                .ToListAsync();
+            IEnumerable<string> statusOptions = await this.bookingsService.GetStatusOptionsAsync();
 
             // Summary cards always reflect the whole business, not just whatever
             // status filter is currently applied to the table below.
             IEnumerable<BookingDetailsViewModel> allBookings = string.IsNullOrWhiteSpace(status)
                 ? bookings
                 : await this.bookingsService.GetAllBookingsAsync<BookingDetailsViewModel>();
+
+            BookingSummaryStats summary = this.bookingsService.GetSummaryStats(allBookings);
 
             var model = new BookingListViewModel
             {
@@ -52,11 +44,9 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 SortField = sortField,
                 Descending = descending,
                 StatusFilter = status,
-                TodaysAppointmentsCount = allBookings.Count(b => b.ScheduledTime.Date == DateTime.Today),
-                PendingApprovalCount = allBookings.Count(b => b.StatusName == "Pending"),
-                MonthlyRevenue = allBookings.Any()
-                    ? allBookings.Where(b => b.ScheduledTime.Month == DateTime.Today.Month && b.ScheduledTime.Year == DateTime.Today.Year).Sum(b => b.TotalAmount)
-                    : 0,
+                TodaysAppointmentsCount = summary.TodaysAppointmentsCount,
+                PendingApprovalCount = summary.PendingApprovalCount,
+                MonthlyRevenue = summary.MonthlyRevenue,
             };
 
             return this.View(model);

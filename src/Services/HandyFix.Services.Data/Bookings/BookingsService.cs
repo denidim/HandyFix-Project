@@ -465,5 +465,38 @@ namespace HandyFix.Services.Data.Bookings
             await this.imageRepository.AddAsync(image);
             await this.imageRepository.SaveChangesAsync();
         }
+
+        public async Task<int> GetTotalCountAsync()
+        {
+            return await this.bookingRepository.All().CountAsync();
+        }
+
+        public async Task<int> GetPendingCountAsync()
+        {
+            return await this.bookingRepository.All().CountAsync(x => x.Status.Name == "Pending");
+        }
+
+        public BookingSummaryStats GetSummaryStats(IEnumerable<BookingDetailsViewModel> bookings)
+        {
+            // Deliberately takes the list rather than fetching it: the caller decides whether it
+            // already has the right (unfiltered) list in hand or needs to fetch one, so a request
+            // that isn't filtered doesn't pay for a redundant round trip.
+            return new BookingSummaryStats
+            {
+                TodaysAppointmentsCount = bookings.Count(b => b.ScheduledTime.Date == DateTime.Today),
+                PendingApprovalCount = bookings.Count(b => b.StatusName == "Pending"),
+                MonthlyRevenue = bookings.Any()
+                    ? bookings.Where(b => b.ScheduledTime.Month == DateTime.Today.Month && b.ScheduledTime.Year == DateTime.Today.Year).Sum(b => b.TotalAmount)
+                    : 0,
+            };
+        }
+
+        public async Task<IEnumerable<string>> GetStatusOptionsAsync()
+        {
+            return await this.statusRepository.All()
+                .Select(x => x.Name)
+                .OrderBy(x => x)
+                .ToListAsync();
+        }
     }
 }

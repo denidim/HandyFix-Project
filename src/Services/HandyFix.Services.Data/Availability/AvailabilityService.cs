@@ -64,6 +64,17 @@ namespace HandyFix.Services.Data.Availability
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<AvailabilitySlot>> GetAllSlotsForDayAsync(DateTime date)
+        {
+            // Unlike GetAllSlotsForDateAsync, deliberately no "> now" cutoff: the admin Calendar
+            // shows the whole day, including hours that have already passed, so an admin
+            // reviewing today's schedule mid-afternoon still sees this morning's slots.
+            return await this.slotRepository.All()
+                .Where(x => x.StartTime.Date == date.Date)
+                .OrderBy(x => x.StartTime)
+                .ToListAsync();
+        }
+
         public async Task<bool> BookSlotAsync(Guid slotId, Guid bookingId)
         {
             AvailabilitySlot slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == slotId);

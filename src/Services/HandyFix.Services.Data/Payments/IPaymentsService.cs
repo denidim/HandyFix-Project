@@ -17,5 +17,7 @@ namespace HandyFix.Services.Data.Payments
         Task<IEnumerable<T>> GetPaymentsForBookingAsync<T>(Guid bookingId);
 
         Task<IEnumerable<T>> GetAllPaymentsAsync<T>();
+
+        Task<decimal> GetTotalRevenueAsync();
     }
 }

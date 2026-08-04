@@ -82,5 +82,12 @@ namespace HandyFix.Services.Data.Reviews
 
             return await query.To<T>().ToListAsync();
         }
+
+        public async Task<int> GetPendingCountAsync()
+        {
+            // AllWithDeleted() to match the Dashboard's existing count exactly - not changing
+            // that behavior here, just relocating it out of the controller.
+            return await this.reviewRepository.AllWithDeleted().CountAsync(x => !x.IsApproved);
+        }
     }
 }

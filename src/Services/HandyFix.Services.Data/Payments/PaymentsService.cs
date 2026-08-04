@@ -280,5 +280,12 @@ namespace HandyFix.Services.Data.Payments
                 .To<T>()
                 .ToListAsync();
         }
+
+        public async Task<decimal> GetTotalRevenueAsync()
+        {
+            return await this.paymentRepository.All()
+                .Where(x => x.Status.Name == "DepositPaid" || x.Status.Name == "Completed")
+                .SumAsync(x => (decimal?)x.Amount) ?? 0.00m;
+        }
     }
 }

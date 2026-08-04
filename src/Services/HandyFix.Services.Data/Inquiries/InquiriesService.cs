@@ -93,5 +93,10 @@ namespace HandyFix.Services.Data.Inquiries
                 await this.inquiryRepository.SaveChangesAsync();
             }
         }
+
+        public async Task<int> GetTotalCountAsync()
+        {
+            return await this.inquiryRepository.All().CountAsync();
+        }
     }
 }
