@@ -456,3 +456,7 @@ appsettings.Staging.json
 appsettings.Production.json
 **/appsettings.Staging.json
 **/appsettings.Production.json
+
+# Deploy secrets - real values for deploy/docker-compose.staging.yml live in a
+# .env file on the server only. deploy/.env.example is the tracked template.
+deploy/.env
