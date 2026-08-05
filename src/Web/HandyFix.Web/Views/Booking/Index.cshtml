@@ -43,6 +43,7 @@
         <!-- Centre Column: Scrollable Booking Form -->
         <div class="booking-form-container">
             <form asp-controller="Booking" asp-action="Index" method="post" enctype="multipart/form-data" id="booking-form">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4 fw-bold" role="alert"></div>
                 
                 <!-- Section 1: Service & Slot -->
                 <section class="form-step-section" id="section-step-1">
@@ -201,6 +202,9 @@
 
                     <!-- Centred Submit Button (Proceed to Payment) -->
                     <div class="submit-container-centered">
+                        <p class="text-danger small text-center mb-2 d-none" id="step1-incomplete-hint">
+                            Please select a service and an available time slot above to continue.
+                        </p>
                         <button class="btn-proceed-payment" id="submit-btn" type="submit" disabled>
                             Proceed to Payment
                         </button>
@@ -267,6 +271,7 @@
             const slotsCountBadge = document.getElementById("slots-count-badge");
             const hiddenSlotInput = document.getElementById("wizard-slot-id");
             const submitBtn = document.getElementById("submit-btn");
+            const step1IncompleteHint = document.getElementById("step1-incomplete-hint");
 
             // Sidebar Elements
             const summaryService = document.getElementById("summary-service");
@@ -598,6 +603,20 @@
             window.addEventListener("scroll", updateStepperState);
 
             // Real-time Form Validity Check for Submit Button
+            //
+            // Deliberately does NOT call jQuery Unobtrusive Validation's own .valid() here.
+            // jQuery's native per-field blur/keyup handlers already show live, real error messages
+            // (Required/MinLength/EmailAddress/Phone, from BookingInputModel's own DataAnnotations)
+            // in each field's asp-validation-for span on their own, with no help needed - that part
+            // was only ever broken by jQuery 4's removal of $.parseJSON, which the bundled
+            // jquery-validation-unobtrusive still called (fixed by pinning jQuery back to 3.7.1 in
+            // libman.json). Calling $(form).valid() repeatedly from here, once per keystroke, was
+            // tried and found to corrupt jQuery Validate's own internal per-field state - even a
+            // fresh, isolated .valid() call on a single field afterwards started returning wrong
+            // results. So this keeps the original presence-based gate for the button instead, and
+            // only adds the one thing that was never covered by DataAnnotations at all: the
+            // service/slot pickers above are custom widgets, not typed inputs, so nothing would
+            // otherwise tell the user that's what's blocking "Proceed".
             function checkFormValidity() {
                 const isStep1Done = Boolean(serviceSelect.value && hiddenSlotInput.value);
                 const firstName = document.getElementById("CustomerFirstName")?.value.trim();
@@ -610,6 +629,7 @@
                 const isFormValid = isStep1Done && firstName && lastName && email && phone && address && problemDesc && problemDesc.length >= 10;
 
                 submitBtn.disabled = !isFormValid;
+                step1IncompleteHint.classList.toggle("d-none", isStep1Done);
                 updateStepperState();
             }
 

@@ -21,10 +21,12 @@ services:
       # flow via the sandbox bypass. Remove this and set Stripe__SecretKey
       # instead once a real (test-mode) Stripe account exists.
       Stripe__AllowSandboxOutsideDevelopment: "true"
-      # CloudflareR2:* intentionally not set yet -- photo upload testing is
-      # blocked on deciding whether staging reuses the dev bucket or gets
-      # its own. Uploads simply fail until this is added; nothing else
-      # depends on it at startup.
+      # CloudflareR2:* settings for photo uploads.
+      CloudflareR2__AccessKeyId: ${R2_ACCESS_KEY_ID}
+      CloudflareR2__SecretAccessKey: ${R2_SECRET_ACCESS_KEY}
+      CloudflareR2__ServiceUrl: ${R2_SERVICE_URL}
+      CloudflareR2__PublicUrl: ${R2_PUBLIC_URL}
+      CloudflareR2__BucketName: ${R2_BUCKET_NAME}
     networks:
       - internal
 

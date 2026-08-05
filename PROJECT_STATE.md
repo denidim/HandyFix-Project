@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-08-04 — **Documentation accuracy audit: `PROJECT_STATE.md` verified against the actual code, six stale cross-references found and fixed** (a corrected controller→service reference, a rewritten Hosting section still describing staging as unwired, an outdated hardcoded-image-path count in two places, an unmarked SendGrid→Brevo bullet, and the matching fix in `docs/WORKFLOW_SERVICES.md`) — nothing in the code changed, see Section 3ad. (Earlier the same day: **Fixed: cookie consent never actually persisted on staging.** Root cause was one missing piece of infrastructure config — no `UseForwardedHeaders()` — so the app behind Caddy always read requests as plain HTTP regardless of what the browser used. That silently broke two things at once: the consent cookie needed (but never got) `Secure` because it was set `SameSite=None`, so browsers discarded it every time, reshowing the banner on every page; and separately, `PaymentController`'s Stripe success/cancel URLs (built from `Request.Scheme`) would have pointed at `http://` on a real payment. Fixed both with one change — added correctly-scoped `ForwardedHeadersOptions` + `UseForwardedHeaders()` as the first middleware, and relaxed the cookie to `SameSite=Lax` so it no longer depends on Secure at all. Verified live by forging an `X-Forwarded-Proto: https` header locally and confirming the generated cookie and sitemap URLs (a stand-in for the Stripe URLs, built the same way) flip correctly — see Section 3ac.) (Earlier the same day: **Code cleanup pass complete, all 4 phases.** Phase 1: the CSS/slug Known Issues (Section 3y). Phase 2: production code moved from `var` to explicit types, with a new `.editorconfig` to keep it that way (Section 3z). Phase 3: eight controllers thinned — business logic, raw repository queries, and (most carefully) the Stripe SDK orchestration in `PaymentController` all moved into their services, following the pattern from the user's own earlier FindATrade project (Section 3aa). Phase 4: the unauthenticated `SettingsController` template leftover deleted outright, and `BaseController` flipped to `[Authorize]`-by-default with `[AllowAnonymous]` added only to the six controllers that must stay public (Section 3ab). 13 commits total, each independently built and tested; the Phase 3/4 items were verified live as well as by the test suite, not just by a green build.) (Earlier the same day: **Documentation caught up with the code.** `DESIGN.md` fully rewritten (was last touched 2026-07-16, before most of the front-end work landed) and the five remaining `docs/WORKFLOW_*.md` gaps (services & categories, technicians, reviews, enquiries, deployment) written, closing both open Sprint 4 documentation items and the README's "in progress" note — see Section 3x. No code changed; several real discrepancies found along the way (a fifth hardcoded `{slug}-hero.webp` location, two duplicate CSS class-name pairs, one dead CSS variable) are recorded as known issues, not fixed.) (Earlier the same day: **Staging is live.** Roadmap Tier 4 item 19 (Hosting & CI/CD) is done end-to-end: `dev` branch, `.github/workflows/deploy-dev.yml` (build, test, push to GHCR, SSH deploy), Caddy reverse proxy (HTTPS via the Hetzner reverse-DNS hostname, HTTP Basic Auth, `X-Robots-Tag: noindex`), and a dedicated least-privilege SQL login all provisioned and verified working against the real `handyfix_staging` database — see Section 3w. Two real bugs only surfaced by the first live CI runs, both fixed: `SqliteWebApplicationFactory` wasn't actually forcing Development for `AdminUserSeeder` (which reads the raw `ASPNETCORE_ENVIRONMENT` process variable, not the hosting abstraction `UseEnvironment()` sets), and the deploy script silently did nothing for two runs because `docker compose` couldn't find a non-default-named compose file and the script had no `set -e` to catch it.) (Earlier the same day: Docker containerization for Tier 4 item 19 started: `Dockerfile` + `.dockerignore` added and verified end-to-end against a throwaway local SQL Server container (empty database, exactly the state `handyfix_staging` is actually in) — build, `Database.Migrate()`, seeding, and a full booking-to-confirmation flow all succeed from a cold start. Found and fixed three things the local test surfaced: a Stripe sandbox-bypass opt-in (`Stripe:AllowSandboxOutsideDevelopment`) so staging can demo bookings before a real Stripe account exists, without weakening the same guard in production; and the four hardcoded `@handyfix.co.uk` email sender addresses (a domain nobody owns yet) made configurable since Brevo — like any real provider — refuses to send from an unverified sender. See Section 3v.) (Previous update, 2026-08-01: Agent workflow unified into a single root `AGENTS.md` with `CLAUDE.md`/`GEMINI.md` as pointers, resolving a real contradiction between two rulebooks; public-repo security audit run (no credential ever committed) and the unwritten `appsettings.Staging/Production.json` files gitignored before they can leak the private DB IP — see Section 3u. Also queued: bring `DESIGN.md` back in sync with the CSS that exists. Earlier the same day: controller test coverage shipped (Section 3t): 52 mocked-service controller tests, and the integration tests moved off the real dev database onto Sqlite in-memory, making them CI-viable. Suite is now 118. The `SQLitePCLRaw.lib.e_sqlite3` advisory (CVE-2025-6965) that came with the Sqlite dependency was fixed in the same pass, pinned to 2.1.12 in `Directory.Packages.props` — the vulnerability audit is now clean across all 14 projects, including one that was already affected beforehand. Earlier the same day: README accuracy pass (Section 3s) — the template's AutoMapper/MediatR/FluentAssertions claims corrected, the wrong service-area marketing block cut, and the Documentation placeholders replaced with real links; added a Sprint 4 item to document every remaining admin workflow and complete the README index once they exist, plus a new Tier 5 in the roadmap parking the dev-database QA leftovers. (Previous update, 2026-07-31: Tier 1 item 8 shipped, resolved differently than planned: technicians are decoupled from capacity slots entirely, slot auto-generation is removed, and there is now admin CRUD for the technician roster; see Section 3r. (Earlier the same day: Tier 1 items 3, 5 and 7 shipped — Reviews cleanup Section 3n, broken links Section 3p, Brevo email swap Section 3q.) (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` Section 5). Added a Hosting & Infrastructure subsection to Section 1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration Section 3j, cache-busting, and the Areas SVG coverage map Section 3l — plus the boot-time JPG sweep removed as unsafe Section 3k and Service Areas admin CRUD added Section 3m.)))
+> **Last updated**: 2026-08-05 — **Live client-side validation was silently broken app-wide, not just on Booking** — jQuery was pinned to 4.0.0, which removed `$.parseJSON`; the bundled `jquery-validation-unobtrusive` still calls it when displaying any error, so every form's validation crashed silently the moment it tried to show a message (the same "unrelated" `parseJSON` console warning already noted from the login page back in Section 3f — it wasn't unrelated). Fixed by pinning jQuery back to 3.7.1, the version the validation library is actually built against; verified live on Booking and Contact that real DataAnnotations-driven messages now render correctly as the user types/blurs. Booking also got a plain visible hint for service/time-slot selection specifically, since those are custom widgets with no typed input for a validation message to attach to. One approach was tried and reverted: routing the submit button through jQuery's own `.valid()` called on every keystroke looked more "correct" but empirically corrupted jQuery Validate's internal per-field state — kept the simpler original presence check instead. See Section 3af. (Earlier the same day: **Live mobile-testing pass on staging surfaced three real bugs, all fixed and deployed same day**: a horizontal-scroll/zoom-drift bug on mobile (Home's Trust-section decorative blur circles bled past an unclipped container; fixed by extending `overflow-x: hidden` to `html` as well as `body` in `reset.css`, verified via Playwright at 375px/320px — Booking's reported footer break could not be independently reproduced), a booking form that silently reloaded with zero feedback whenever a photo upload failed (two-layered root cause — CloudflareR2 wasn't configured on staging at all, and separately `Booking/Index.cshtml` had no `asp-validation-summary` to render *any* page-level error even once one exists — both fixed), and CloudflareR2 itself wired up for staging (reuses the existing dev bucket by decision, real credentials added to the server's `.env` over SSH with a backup taken first, recorded in `docs/private/INFRASTRUCTURE.md`, never in a tracked file). **A live retest by the user then surfaced a second, deeper bug**: the R2 error persisted because `deploy-dev.yml` never syncs `docker-compose.staging.yml`/`Caddyfile` from the repo to the server — only the app image is auto-deployed, the compose file is static, hand-placed config that silently drifted the moment it was edited in the repo. Fixed the same way as the `.env` gap (corrected file written to the server over SSH, old version backed up) and, more importantly, corrected `docs/WORKFLOW_DEPLOYMENT.md` and `docs/private/STAGING_RUNBOOK.md`, both of which shared the identical blind spot and never stated this — see Section 3ae. Deployed via the normal `dev` push, build+test+deploy all green. **Both confirmed working live on staging as of 2026-08-05**: a booking with a photo attached completes successfully end to end (the next `dev` push re-triggered the deploy automatically, no manual restart needed), and the mobile horizontal-scroll fix holds up on a real device. (Previous update, 2026-08-04: **Documentation accuracy audit: `PROJECT_STATE.md` verified against the actual code, six stale cross-references found and fixed** (a corrected controller→service reference, a rewritten Hosting section still describing staging as unwired, an outdated hardcoded-image-path count in two places, an unmarked SendGrid→Brevo bullet, and the matching fix in `docs/WORKFLOW_SERVICES.md`) — nothing in the code changed, see Section 3ad. (Earlier the same day: **Fixed: cookie consent never actually persisted on staging.** Root cause was one missing piece of infrastructure config — no `UseForwardedHeaders()` — so the app behind Caddy always read requests as plain HTTP regardless of what the browser used. That silently broke two things at once: the consent cookie needed (but never got) `Secure` because it was set `SameSite=None`, so browsers discarded it every time, reshowing the banner on every page; and separately, `PaymentController`'s Stripe success/cancel URLs (built from `Request.Scheme`) would have pointed at `http://` on a real payment. Fixed both with one change — added correctly-scoped `ForwardedHeadersOptions` + `UseForwardedHeaders()` as the first middleware, and relaxed the cookie to `SameSite=Lax` so it no longer depends on Secure at all. Verified live by forging an `X-Forwarded-Proto: https` header locally and confirming the generated cookie and sitemap URLs (a stand-in for the Stripe URLs, built the same way) flip correctly — see Section 3ac.) (Earlier the same day: **Code cleanup pass complete, all 4 phases.** Phase 1: the CSS/slug Known Issues (Section 3y). Phase 2: production code moved from `var` to explicit types, with a new `.editorconfig` to keep it that way (Section 3z). Phase 3: eight controllers thinned — business logic, raw repository queries, and (most carefully) the Stripe SDK orchestration in `PaymentController` all moved into their services, following the pattern from the user's own earlier FindATrade project (Section 3aa). Phase 4: the unauthenticated `SettingsController` template leftover deleted outright, and `BaseController` flipped to `[Authorize]`-by-default with `[AllowAnonymous]` added only to the six controllers that must stay public (Section 3ab). 13 commits total, each independently built and tested; the Phase 3/4 items were verified live as well as by the test suite, not just by a green build.) (Earlier the same day: **Documentation caught up with the code.** `DESIGN.md` fully rewritten (was last touched 2026-07-16, before most of the front-end work landed) and the five remaining `docs/WORKFLOW_*.md` gaps (services & categories, technicians, reviews, enquiries, deployment) written, closing both open Sprint 4 documentation items and the README's "in progress" note — see Section 3x. No code changed; several real discrepancies found along the way (a fifth hardcoded `{slug}-hero.webp` location, two duplicate CSS class-name pairs, one dead CSS variable) are recorded as known issues, not fixed.) (Earlier the same day: **Staging is live.** Roadmap Tier 4 item 19 (Hosting & CI/CD) is done end-to-end: `dev` branch, `.github/workflows/deploy-dev.yml` (build, test, push to GHCR, SSH deploy), Caddy reverse proxy (HTTPS via the Hetzner reverse-DNS hostname, HTTP Basic Auth, `X-Robots-Tag: noindex`), and a dedicated least-privilege SQL login all provisioned and verified working against the real `handyfix_staging` database — see Section 3w. Two real bugs only surfaced by the first live CI runs, both fixed: `SqliteWebApplicationFactory` wasn't actually forcing Development for `AdminUserSeeder` (which reads the raw `ASPNETCORE_ENVIRONMENT` process variable, not the hosting abstraction `UseEnvironment()` sets), and the deploy script silently did nothing for two runs because `docker compose` couldn't find a non-default-named compose file and the script had no `set -e` to catch it.) (Earlier the same day: Docker containerization for Tier 4 item 19 started: `Dockerfile` + `.dockerignore` added and verified end-to-end against a throwaway local SQL Server container (empty database, exactly the state `handyfix_staging` is actually in) — build, `Database.Migrate()`, seeding, and a full booking-to-confirmation flow all succeed from a cold start. Found and fixed three things the local test surfaced: a Stripe sandbox-bypass opt-in (`Stripe:AllowSandboxOutsideDevelopment`) so staging can demo bookings before a real Stripe account exists, without weakening the same guard in production; and the four hardcoded `@handyfix.co.uk` email sender addresses (a domain nobody owns yet) made configurable since Brevo — like any real provider — refuses to send from an unverified sender. See Section 3v.) (Previous update, 2026-08-01: Agent workflow unified into a single root `AGENTS.md` with `CLAUDE.md`/`GEMINI.md` as pointers, resolving a real contradiction between two rulebooks; public-repo security audit run (no credential ever committed) and the unwritten `appsettings.Staging/Production.json` files gitignored before they can leak the private DB IP — see Section 3u. Also queued: bring `DESIGN.md` back in sync with the CSS that exists. Earlier the same day: controller test coverage shipped (Section 3t): 52 mocked-service controller tests, and the integration tests moved off the real dev database onto Sqlite in-memory, making them CI-viable. Suite is now 118. The `SQLitePCLRaw.lib.e_sqlite3` advisory (CVE-2025-6965) that came with the Sqlite dependency was fixed in the same pass, pinned to 2.1.12 in `Directory.Packages.props` — the vulnerability audit is now clean across all 14 projects, including one that was already affected beforehand. Earlier the same day: README accuracy pass (Section 3s) — the template's AutoMapper/MediatR/FluentAssertions claims corrected, the wrong service-area marketing block cut, and the Documentation placeholders replaced with real links; added a Sprint 4 item to document every remaining admin workflow and complete the README index once they exist, plus a new Tier 5 in the roadmap parking the dev-database QA leftovers. (Previous update, 2026-07-31: Tier 1 item 8 shipped, resolved differently than planned: technicians are decoupled from capacity slots entirely, slot auto-generation is removed, and there is now admin CRUD for the technician roster; see Section 3r. (Earlier the same day: Tier 1 items 3, 5 and 7 shipped — Reviews cleanup Section 3n, broken links Section 3p, Brevo email swap Section 3q.) (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` Section 5). Added a Hosting & Infrastructure subsection to Section 1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration Section 3j, cache-busting, and the Areas SVG coverage map Section 3l — plus the boot-time JPG sweep removed as unsafe Section 3k and Service Areas admin CRUD added Section 3m.)))))
 
 ---
 
@@ -553,8 +553,9 @@ closed for staging — production deploy is a deliberately separate, later piece
 - **Deliberately still open, tracked there rather than blocking this**: `Stripe:SecretKey` (no
   real Stripe account yet — `Stripe:AllowSandboxOutsideDevelopment=true` covers full booking-flow
   demos in the meantime), `CloudflareR2:*` for staging (photo upload untested until a bucket
-  strategy is decided), and rotating the `sa` password on the DB host (currently follows the same
-  weak pattern already flagged once in `AGENTS.md` for the old dev seed password).
+  strategy is decided — **resolved 2026-08-05, see Section 3ae**), and rotating the `sa` password on
+  the DB host (currently follows the same weak pattern already flagged once in `AGENTS.md` for the
+  old dev seed password).
 
 ---
 
@@ -876,6 +877,130 @@ not just prose. No fix for that beyond catching it before it compounds further.
 
 ---
 
+## 3ae. Bug Fixes: Mobile Horizontal-Scroll Overflow, Silent Booking-Form Failures, CloudflareR2 Wired Up for Staging (2026-08-05)
+
+Surfaced by the user's first live mobile testing pass against staging: pages drifting/zooming
+sideways on swipe, a booking silently failing (no visible error) when a photo was attached but
+succeeding without one, and no documented way to inspect the staging database directly.
+
+**Mobile horizontal-scroll overflow, fixed:**
+- Root cause, found by reproducing locally with Playwright at 375px/320px and diffing
+  `document.documentElement.scrollWidth` against the true viewport width: Home's Trust-section
+  decorative glow elements (`.blur-circle`, `home.css`, absolutely positioned with negative
+  `top`/`right`/`left` offsets) bled 16–40px past their `.trust-image-wrapper` container, which had
+  no `overflow: hidden` of its own.
+- `body { overflow-x: hidden }` alone (pre-existing) was not sufficient to contain this on mobile —
+  `scrollWidth` still measured 391/336 against a 375/320 viewport even with it set. Fix extends the
+  rule to `html, body` in `reset.css`, which is the actual scrolling root; verified this brings
+  `scrollWidth` back to an exact match at both widths.
+- The same check (cold load and interactive, including selecting a category/service/date to render
+  the calendar/slots) found **no** overflowing element on Booking or Services locally, before or
+  after the fix, despite the user also reporting Booking's footer breaking the same way. Could not
+  independently reproduce that one — the global `html`/`body` rule should still guard against this
+  whole class of bug there regardless, but this is flagged rather than claimed fixed with evidence.
+
+**Booking form silently reloading when a photo was attached, fixed — two independent layers:**
+- Layer 1 (this section): `Booking/Index.cshtml` had no `asp-validation-summary` anywhere — every
+  existing `<span>` is `asp-validation-for`, tied to one specific field. `BookingController`'s
+  `RedisplayBookingForm` adds page-level failures (slot race, or any unhandled exception) via
+  `ModelState.AddModelError(string.Empty, ...)`, which had nowhere to render. Any generic booking
+  failure — not just the R2 one below — was therefore always invisible to the customer. Fixed by
+  adding `<div asp-validation-summary="ModelOnly">` to the top of the form.
+  - Caught and fixed before commit: the div's original `font-weight-bold` class doesn't exist in
+    this codebase (Bootstrap 5 renamed it `fw-bold`) — the same no-op-class mistake already
+    documented in Section 3a (`text-right`/`text-left`).
+  - Verified by full suite (128/128) and reading the tag-helper's `ModelOnly` scoping against
+    `RedisplayBookingForm`'s empty-key error — **not yet spot-checked live in a browser**; worth
+    doing on the next staging pass rather than assumed from code alone.
+- Layer 2, see below: the specific trigger was CloudflareR2 not being configured on staging at all,
+  which made every photo upload throw.
+
+**CloudflareR2 wired up for staging:**
+- Decision made: staging reuses the existing dev bucket (`zap-contruction`) rather than a dedicated
+  one — this was the one open question blocking Section 3w.
+- `docker-compose.staging.yml` maps `CloudflareR2:*` to five new `R2_*` env vars, same pattern as
+  Brevo/Stripe; documented in `deploy/.env.example`. `CloudflareR2Service` now throws a clear
+  `InvalidOperationException` if any are missing instead of failing inside the AWS S3 SDK with an
+  opaque error — same fail-loud pattern as Stripe/email (Section 5).
+- Real values added directly to `/opt/handyfix/deploy/.env` on the staging host over SSH (a
+  timestamped backup of the prior file, `.env.bak-*`, was left alongside it) and recorded in
+  `docs/private/INFRASTRUCTURE.md`, never in a tracked file — `deploy-dev.yml` does not regenerate
+  this file from anything on push, it only pulls the image and runs `docker compose up -d` against
+  whatever `.env` is already on the box, so this had to be a manual step.
+- Deployed via the normal `dev` push → `deploy-dev.yml` pipeline (commit `cf44489`); build, test, and
+  deploy all succeeded, confirmed via the public Actions run.
+- **A real-device check by the user surfaced a second, deeper bug**: booking with a photo on staging
+  still threw `Cloudflare R2 is not fully configured`, even after the steps above. Root cause —
+  `deploy-dev.yml`'s SSH step (`docker compose -f docker-compose.staging.yml pull && up -d`) restarts
+  containers using **whatever `docker-compose.staging.yml` is already on the server**, never the repo
+  version; it has no step that copies the compose file (or `Caddyfile`) across, ever. The `.env` fix
+  above genuinely landed on the server, but the *compose file's new env-var mappings* — the part
+  reading `.env` and turning it into `CloudflareR2:*` config keys the app can see — did not, because
+  the server's copy predated that change. This is not a one-off mistake: it's the same "config lives
+  on the server, not synced by CI" pattern already true of `.env`, just for a second file that's
+  easier to assume is kept current *because* it's git-tracked.
+  - Fixed: the corrected `docker-compose.staging.yml` was written to the server over SSH (a
+    timestamped `.bak-*` of the prior version left alongside it, same as the `.env` backup).
+  - **`docs/WORKFLOW_DEPLOYMENT.md` and `docs/private/STAGING_RUNBOOK.md` both had the identical
+    blind spot** — neither previously stated that the compose file and `Caddyfile` are static,
+    server-resident files the pipeline never re-syncs. Both corrected: a new explicit section in the
+    public doc, a new incident writeup (Случай 6) in the private runbook, plus the stale
+    "CloudflareR2 not configured"/"untested" lines in each fixed to match the current state.
+  - **Confirmed working 2026-08-05**: the next `dev` push (the docs commit above, `93e33f9`)
+    re-triggered `deploy-dev.yml`, which restarted the containers against the corrected compose file
+    without anyone needing to SSH in and run `up -d` by hand. The user then re-tested a booking with
+    a photo attached on live staging and confirmed it completes successfully — the R2 upload, and the
+    booking-to-payment flow around it, both work end to end.
+- **Mobile horizontal-scroll fix also confirmed working on a real device.**
+- **Also raised, not yet decided**: whether `deploy-dev.yml` should sync the whole `deploy/` folder
+  (compose file + `Caddyfile`) onto the server on every push, and separately whether it should
+  regenerate `.env` from GitHub Actions repo secrets instead of relying on hand-maintained files —
+  the gap that made both of today's config-drift bugs unanswerable from the repo alone in the first
+  place. Deliberately deferred as a separate follow-up, not bundled into this fix.
+
+---
+
+## 3af. Bug Fix: Live Client-Side Validation Was Silently Broken App-Wide (2026-08-05)
+
+Surfaced by a real complaint: filling in the booking form gave no indication of what was wrong when
+the submit button stayed disabled. Root cause turned out to be app-wide, not Booking-specific.
+
+- **Root cause**: `libman.json` pinned jQuery to **4.0.0**, which removed `$.parseJSON` entirely. The
+  bundled `jquery-validation-unobtrusive` still calls it internally whenever it displays an error
+  message, so every form's live validation was crashing silently the moment it tried to show
+  anything — confirmed via a `pageerror: s.parseJSON is not a function` thrown from inside
+  `.valid()`. This is the same "pre-existing, unrelated" console warning already noted from the
+  login page back in Section 3f — it wasn't unrelated, it was this.
+- **Fix**: pinned jQuery back to **3.7.1** (the last 3.x release, still current/maintained, and what
+  `jquery-validation-unobtrusive` is actually built against) — `libman.json` + the vendored
+  `wwwroot/lib/jquery/dist/*` files it restores on build via `Microsoft.Web.LibraryManager.Build`.
+  Verified live on both Booking and Contact: real `[MinLength]`/`[EmailAddress]`/`[Required]`
+  messages from `BookingInputModel`'s own DataAnnotations now render live in the
+  `asp-validation-for` spans that were already sitting unused in the markup — this fixes every form
+  in the app, not just Booking, since none of them ever needed new markup, only a working library.
+- **`Booking/Index.cshtml`**: added a plain visible hint under the submit button specifically for
+  service/time-slot selection, since those are custom JS widgets with no typed input for a
+  DataAnnotations message to attach to — nothing else would ever have told the user that's what was
+  blocking "Proceed".
+- **Tried and reverted**: routing the submit button's enabled state through `$("#booking-form").valid()`
+  as a single source of truth, called on every keystroke. This looked like the more "correct" unified
+  approach, but empirically it corrupted jQuery Validate's own internal per-field state — even a
+  fresh, isolated `.valid()` call on one field afterward started returning wrong results. Reverted to
+  the original presence-based check for button gating, left jQuery's own native per-field blur/keyup
+  handlers untouched to do the message display on their own (which they now do correctly on their
+  own, now that the library itself works).
+- **Why downgrade instead of patching `jquery-validation-unobtrusive` for jQuery 4**: there's no
+  jQuery-4-compatible release of that library to upgrade to — this isn't a "we're behind" gap, it's
+  jQuery 4.0.0 (a very recent, aggressive major release) getting ahead of its own plugin ecosystem.
+  jQuery 3.x is still actively maintained in parallel by the jQuery team for exactly this reason.
+  Forking/patching the validation library ourselves was considered and rejected as more ongoing
+  maintenance burden than pinning to the version its own author built it against.
+- **Verified**: `dotnet build`/`dotnet test` (128/128) unaffected, as expected for a client-side-only
+  change; live Playwright testing of both the failure mode (pre-fix, confirmed the crash) and the fix
+  (post-fix, confirmed correct live messages) on Booking and Contact.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
@@ -967,7 +1092,8 @@ Config is environment variables into the container (not `appsettings.Staging.jso
 the original plan, see Section 3w). **Still open, not blocking**: `deploy-prod.yml` for production
 (deliberately deferred until staging has been used for a while, rather than built in parallel);
 `Stripe:SecretKey` (no real account yet, sandboxed via `Stripe:AllowSandboxOutsideDevelopment`);
-`CloudflareR2:*` for staging; rotating the DB host's `sa` password.
+~~`CloudflareR2:*` for staging~~ **done 2026-08-05, see Section 3ae**; rotating the DB host's `sa`
+password.
   - **Staging should be reachable before real business facts exist.** Confirmed goal (2026-07-30): filling in Zaprqn's real data should be a 5-minute edit at the end, not a blocker for standing up staging and demoing on an actual phone. Achieved — currently running on the Hetzner-assigned reverse-DNS hostname (item 14 below still unresolved, doesn't block this).
 
 #### Tier 5 — dev-environment housekeeping (parked until just before launch)

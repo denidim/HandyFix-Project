@@ -25,6 +25,15 @@ namespace HandyFix.Services
             var bucketName = this.configuration["CloudflareR2:BucketName"];
             var publicUrl = this.configuration["CloudflareR2:PublicUrl"];
 
+            if (string.IsNullOrWhiteSpace(accessKey) || 
+                string.IsNullOrWhiteSpace(secretKey) || 
+                string.IsNullOrWhiteSpace(serviceUrl) || 
+                string.IsNullOrWhiteSpace(bucketName) || 
+                string.IsNullOrWhiteSpace(publicUrl))
+            {
+                throw new InvalidOperationException("Cloudflare R2 is not fully configured. Missing one or more required settings in CloudflareR2 section.");
+            }
+
             var config = new AmazonS3Config
             {
                 ServiceURL = serviceUrl,
