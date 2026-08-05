@@ -684,12 +684,20 @@ namespace HandyFix.Services.Data.Tests
 
         private static BookingsService CreateBookingsServiceWithThreeBookings(out Booking older, out Booking newer, out Booking cancelled)
         {
+            // BookingDetailsViewModel.PaymentStatus's mapping is a ternary guarded by
+            // Payments.Any(), but none of these three bookings have any Payments (same as a
+            // real booking that hasn't reached Stripe checkout yet). EF Core's InMemory
+            // provider doesn't short-circuit that ternary — it evaluates Payments.First() on
+            // the "then" branch unconditionally and throws on the empty collection — so this
+            // needs a real relational engine, same as the transaction-rollback tests above.
+            var connection = new SqliteConnection("DataSource=:memory:");
+            connection.Open();
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
+                .UseSqlite(connection)
                 .Options;
 
             var dbContext = new ApplicationDbContext(options);
+            dbContext.Database.EnsureCreated();
             var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
             var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
             var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
