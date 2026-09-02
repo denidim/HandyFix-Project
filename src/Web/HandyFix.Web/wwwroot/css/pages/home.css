@@ -1,3 +1,17 @@
+.final-cta {
+  background-image: url('/images/bg-cta-wide.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.popular-services-section {
+  background-image: url('/images/bg-cta-wide.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .hero-section {
   position: relative;
   width: 100%;
@@ -223,6 +237,13 @@
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: var(--spacing-12);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-6) var(--spacing-8);
+  box-shadow: var(--shadow-lg);
 }
 
 .bento-see-all {
@@ -504,7 +525,9 @@
 
 /* Final CTA */
 .cta-card {
-  background-color: var(--surface-container);
+  background-image: url('/images/bg-cta-wide.webp');
+  background-size: cover;
+  background-position: center;
   padding: var(--spacing-12);
   text-align: center;
   position: relative;
@@ -517,7 +540,8 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(to bottom right, rgba(0, 101, 145, 0.1), transparent);
+  background-color: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(4px);
 }
 
 .cta-card-content {
