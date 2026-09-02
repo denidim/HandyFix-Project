@@ -1104,6 +1104,77 @@ and what's still open against the roadmap.
 
 ---
 
+## 3ai. Site-Wide Visual Design Refresh: Body Texture, Glass-Morphism Consolidation, Photography Gaps Closed (2026-09-02)
+
+Started from a homepage-only background-image experiment the user had tried by hand (four generic
+low-res abstract gradient stock images, none brand-related); scope grew to a full audit-and-fix pass
+across every public page's CSS after discussing it together.
+
+- **New image-generation pipeline, built ad hoc this session, not yet a committed project asset**:
+  Gemini API (`gemini-3.1-flash-image`, confirmed current model against Google's own docs, up to
+  4K/16:9), a billed key, a PowerShell REST-call script, and a scratch Node/sharp WebP conversion step
+  — output copied straight into `wwwroot/images/`. This is the same shape of workflow Tier 1 item 1
+  above already specifies for the services-image batch; this session's images are a different set
+  (page-level hero/background photos, not per-service/per-area), so no naming collision, but the
+  pipeline itself could be reused for that batch later.
+- **Recurring Gemini gotcha, hit twice this session and worth remembering**: unprompted, the model
+  fabricated readable brand text twice — "HandyFix" signage on a generated service van, and a wholly
+  unrelated "CITY PLUMBING SERVICES" embroidered on a generated polo shirt. Matches the exact failure
+  mode already logged in Tier 1 item 1 above for the original 16 keeper images. Fix: explicit "no
+  text/no logo/no lettering of any kind" in the prompt, then visually verify before use — a milder
+  negative-prompt phrase was not enough on the first pass either time.
+- **`layout.css`'s sitewide `body` background** (attachment `fixed` dropped for performance) was the
+  single highest-leverage change: nearly every glass-card on the site (Contact form, FAQ accordions,
+  Reviews sidebar, Booking/Confirmed, auth pages) is translucent over this image, so replacing the old
+  mismatched abstract gradient with one subtle on-brand texture upgraded roughly eight pages at once.
+- **Glassmorphism consolidated onto `--glass-bg`/`--glass-border` tokens** — `navbar.css`'s
+  `.mobile-nav-dropdown` hardcoded its own `rgba(255,255,255,0.75)` instead of the token;
+  `.testimonial-card`'s distinct recipe (sits on a dark section, needs a much lighter wash) is kept but
+  now commented as deliberate, not drift.
+- **Opaque-vs-glass card rule enforced**: `pricing.css` already documented glass-card as "reserved for
+  hero/overlay contexts" (line 184) but `Services/Pricing.cshtml`'s rate cards used it anyway — fixed
+  to the opaque recipe matching `.pricing-card`/`.info-bento-card`.
+- **Auth pages (`auth.css`) brought into the system** — `.auth-card` converted from a flat opaque card
+  on a flat background to the same glass-over-texture treatment as Contact/FAQ/Reviews, per explicit
+  user confirmation.
+- **`Home/CookiePolicy.cshtml`** had zero shared chrome (bare `<div>`, no breadcrumb, no hero) — the
+  only page in the whole site like this; now uses the same `.services-header`/`.info-canvas`/
+  `.info-card` shell as Terms/Privacy.
+- **`Home/Reviews.cshtml`** hero normalized to `.text-center`, matching the other content pages
+  (Contact/FAQ/Terms/Privacy) — it had been left off that pattern with no documented reason.
+- **Homepage**: reverted the `.division-card-content` background-image experiment (dark text over a
+  busy photo — confirmed illegible before shipping), added a light glass scrim behind `.bento-header`
+  (previously had none, unlike `.cta-card` which already did), applied a new wide on-brand photo to
+  `.final-cta`/`.cta-card`/`.popular-services-section`.
+- **`Services/Index.cshtml` and `Areas/Index.cshtml`** — both had zero photography (confirmed against
+  the code, not assumed); given the `.service-hero-section` image-hero pattern already proven on
+  `Services/Details`/`Areas/Details`, both now reuse it rather than inventing a new one.
+- **Real bug fixed**: `Services/Details.cshtml:161`'s "Local Expert" avatar was hardcoding a live
+  external Google placeholder SVG (`gstatic.com/labs-code/stitch/...`) — replaced with two generated,
+  on-brand, generic professional headshots (`expert-david.webp`/`expert-mark.webp`, matched to the
+  existing `isPlumbing` persona branch), plus an `onerror` fallback matching the Category/Areas-Details
+  convention this file was missing.
+- **CSS typo fixed**: `home.css`'s `.cta-card-bg` had `rgba(255x, 255, 255, 0.65)` — an invalid value
+  silently dropped by the browser, so the white/blur scrim behind the final-CTA text was never actually
+  rendering. Now `rgba(255, 255, 255, 0.65)`.
+- **New assets** (all logo/text-free, verified — see the Gemini gotcha note above): `bg-texture-body.webp`,
+  `bg-cta-wide.webp`, `services-hero.webp`, `areas-hero.webp`, `expert-david.webp`, `expert-mark.webp`.
+  **Removed**: the four discarded `bg-image-1..4.webp` abstracts.
+- **Verified in-browser**, not just compiled: `dotnet build` clean, then Playwright screenshots
+  (headless Chromium, 1440px) of every touched page, plus a scrolled homepage capture (the site's own
+  `IntersectionObserver` fade-in otherwise makes a plain full-page screenshot look broken — a
+  screenshot artifact, not a bug). No new console/network errors introduced; one pre-existing unrelated
+  404 noted (`Contact` page's `jquery.validate.unobtrusive.min.js`), out of scope here.
+- **Not done, flagged to the user, not started unprompted**: the site's visible brand text is still
+  "HandyFix"/"Handy Fix" everywhere (navbar, footer, hero copy, JSON-LD `name`/`@id`/`url`/`sameAs`) —
+  stale as of Section 3ah's rebrand decision the day before ("Plumbing Handyman Surrey"). Out of scope
+  for this pass — a full rename touches far more than the CSS/imagery here, and Tier 2/3 items feeding
+  the correct NAP data (real phone, real address, wordmark) haven't landed yet either — but worth its
+  own pass. None of this session's new image assets carry any old wordmark, so nothing here needs
+  rework once the rename happens.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
