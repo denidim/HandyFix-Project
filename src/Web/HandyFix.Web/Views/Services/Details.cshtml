@@ -32,6 +32,7 @@
     var expertBio = isPlumbing
         ? "I've spent 15 years servicing homes across Sutton, Croydon, and Epsom. I specialize in high-end bathroom remodels and precision leak detection."
         : "I've spent over 12 years helping homeowners with carpentry, mounting, and general property maintenance in Croydon and South London.";
+    var expertAvatar = isPlumbing ? "/images/expert-david.webp" : "/images/expert-mark.webp";
 
     string GetCategoryIcon(string name)
     {
@@ -47,7 +48,7 @@
 <div class="page-container services-page">
     <!-- Hero Section -->
     <section class="service-hero-section">
-        <div class="service-hero-image" style="background-image: url('@serviceImage')"></div>
+        <div class="service-hero-image" id="service-hero-bg" style="background-image: url('@serviceImage')"></div>
         <div class="service-hero-overlay"></div>
         <div class="service-hero-content">
             <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
@@ -158,7 +159,7 @@
             <!-- Local Expert Block -->
             <section class="local-expert-block">
                 <div class="local-expert-avatar-wrapper">
-                    <img class="local-expert-avatar" alt="@expertName - @expertRole" src="https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg" width="96" height="96" loading="lazy">
+                    <img class="local-expert-avatar" alt="@expertName - @expertRole" src="@expertAvatar" onerror="this.onerror=null;this.src='/images/hero.webp';" width="96" height="96" loading="lazy">
                 </div>
                 <div>
                     <span class="local-expert-meta">Your Local Expert</span>
@@ -316,4 +317,15 @@
     }
   ]
 }
+</script>
+
+<script>
+    (function () {
+        var heroBg = document.getElementById("service-hero-bg");
+        var probe = new Image();
+        probe.onerror = function () {
+            heroBg.style.backgroundImage = "url('/images/hero.webp')";
+        };
+        probe.src = "@serviceImage";
+    })();
 </script>
