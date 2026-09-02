@@ -1191,6 +1191,12 @@ across every public page's CSS after discussing it together.
   - *Sticky Header*: Fixed mobile stickiness by moving `html, body` from `overflow-x: hidden` to `overflow-x: clip;` in `reset.css` (preventing mobile browsers from creating a scroll clipping context that kills sticky positioning), and set `.header-docked` to `position: -webkit-sticky; position: sticky; top: 0; z-index: 1020;`.
   - *Mock Phone Number*: Added interactive tap-to-call button (`07123 456789`, `tel:07123456789`) in `.navbar-actions` on the mobile header bar, plus a prominent call banner inside `.mobile-nav-dropdown`.
   - *Opaque Menu Gradient*: Replaced the low-opacity glassmorphism background (`rgba(255, 255, 255, 0.65)`) on `.mobile-nav-dropdown` with a 98% opaque branded gradient (ice blue to soft coral to clean slate) with 24px backdrop blur and `#0f172a` semibold link typography, ensuring underlying page text cannot bleed through.
+- **Desktop Popular Services Contrast Polish**:
+  - Upgraded `.bento-card-desc` on desktop from translucent `rgba(255, 255, 255, 0.85)` at `13px` to pure `#ffffff` at `14px` with `font-weight: 500` and `text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85)`.
+  - Added a dedicated vertical gradient scrim directly behind `.bento-card-content` on desktop, guaranteeing high contrast over light photo details.
+- **Specialised Divisions Card Theming**:
+  - Styled Plumbing & Heating card content with a soft, airy sky-blue gradient (`#e0f2fe` to `#f8fafc`), sky border (`#bae6fd`), and cyan hover elevation glow.
+  - Styled General Handyman card content with an elegant blush/coral gradient (`#fff1f2` to `#f8fafc`), coral border (`#fecdd3`), and themed rose icons, checkmarks, and link (`#e11d48`).
 - **Verification**: Full test suite passed (150/150 green — 95 `Services.Data.Tests` + 55 `Web.Tests`).
 
 ---
