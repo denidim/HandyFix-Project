@@ -69,7 +69,7 @@
 .bento-card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
   z-index: var(--z-index-base);
   pointer-events: none;
 }
@@ -87,6 +87,9 @@
   padding: var(--spacing-8);
 }
 
+/* Dark-glass variant: testimonials sit on a dark navy section, so this uses a much
+   lighter wash than --glass-bg (which is tuned for light backgrounds) — intentional,
+   not a drifted duplicate. */
 .testimonial-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
