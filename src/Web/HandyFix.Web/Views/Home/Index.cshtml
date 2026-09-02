@@ -167,10 +167,9 @@
             <a asp-controller="Services" asp-action="Index" class="bento-see-all">See all services</a>
         </div>
 
-        <div class="bento-grid-container">
+        <div class="bento-grid-container bento-2x2-mode">
             @foreach (var svc in Model.PopularServices)
             {
-
                 <a class="bento-card"
                      asp-route="ServiceDetails"
                      asp-route-categorySlug="@svc.CategorySlug"
@@ -186,16 +185,46 @@
 
                     <div class="bento-card-overlay"></div>
 
-                    <div class="bento-card-content">
-                        <h4 class="font-headline-md text-white">@svc.Name</h4>
+                    <div class="bento-card-top">
+                        <span class="bento-badge">@svc.CategoryName</span>
+                        @if (svc.EstimatedDurationMinutes > 0)
+                        {
+                            <span class="bento-duration-pill">
+                                <span class="material-symbols-outlined">schedule</span>
+                                @(svc.EstimatedDurationMinutes)m
+                            </span>
+                        }
+                    </div>
 
-                        <p class="text-white-80 font-body-md m-0">
-                            From £@svc.BasePrice
-                        </p>
+                    <div class="bento-card-content">
+                        <h4 class="bento-card-title text-white">@svc.Name</h4>
+
+                        @if (!string.IsNullOrWhiteSpace(svc.Description))
+                        {
+                            <p class="bento-card-desc">@svc.Description</p>
+                        }
+
+                        <div class="bento-card-footer">
+                            <div class="bento-price-wrap">
+                                <span class="bento-price-prefix">From</span>
+                                <span class="bento-price-amount">£@svc.BasePrice</span>
+                            </div>
+
+                            <span class="bento-action-pill">
+                                Book
+                                <span class="material-symbols-outlined">arrow_forward</span>
+                            </span>
+                        </div>
                     </div>
                 </a>
-
             }
+        </div>
+
+        <div class="bento-mobile-footer">
+            <a asp-controller="Services" asp-action="Index" class="btn bento-mobile-btn w-100">
+                View All Services
+                <span class="material-symbols-outlined ms-1">arrow_forward</span>
+            </a>
         </div>
     </div>
 </section>
