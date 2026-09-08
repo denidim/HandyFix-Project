@@ -1,8 +1,7 @@
 .final-cta {
-  background-image: url('/images/bg-cta-wide.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  /* No background-image here: .cta-card below renders the same photo, clipped
+     to its own border-radius. Duplicating it on this outer section made the
+     sharp, unclipped image visible right up to the card's rounded corners. */
 }
 
 .popular-services-section {

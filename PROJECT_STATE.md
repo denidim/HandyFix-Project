@@ -1284,6 +1284,67 @@ Completed Roadmap Tier 2 item 12 (`docs/private/VISION_AND_CONTEXT.md` Section 5
 
 ---
 
+## 3an. Plumbing Hourly Rate Raised to £90 (2026-09-08)
+
+- **`ServicesSeeder`**: all 15 Plumbing services moved from `Price = 80.00m` to `90.00m`, flat rate, no exceptions — same rule as Section 3al, new floor. Handyman (£60) and Small Building & Refurbishments (per-job quotes) are unaffected.
+- Because the seeder upserts by service name on every app startup (Section 3ak), this takes effect on the dev/staging DB on next run with no migration. `/Pricing`'s "Our Hourly Rates" card for Plumbing (`CategoryViewModel.BasePrice`, `Min` per category) will show £90 accordingly.
+- Not yet verified with a build, test run, or live app run.
+
+---
+
+## 3ao. Surrey-First Rebrand, Croydon/Mitcham Purge, and Small-Building Pricing/Insurance Copy Fixes (2026-09-08)
+
+Business decision: the catalog area (Section 3ak-3am's Chessington/Surrey coverage list) never included Croydon or Mitcham, but ad-hoc marketing copy, meta descriptions, and JSON-LD structured data across the site still named them alongside other non-Surrey boroughs (Bromley, Kent, generic "South London"). Reworked every visible and structured mention to lead with Surrey and feature the affluent towns already established in `ServiceAreasSeeder` (Chessington, Cobham, Esher, Weybridge, Guildford, Wimbledon, Epsom, Kingston) instead.
+
+- **Surrey now leads South London** in every hero title, `<title>`/meta description, and JSON-LD `PostalAddress`/`areaServed` block: `Home/Index.cshtml`, `Home/About.cshtml`, `Services/Index.cshtml`, `Services/Category.cshtml`, `Services/Details.cshtml`, `HomeController`, `ServicesController`. Confirmed with the user as "Surrey first" over the alternative of just appending "and Surrey" to existing South-London-first copy.
+- **Croydon/Mitcham removed everywhere** — including `About.cshtml`'s entire "Rooted in Croydon" origin narrative (now "Rooted in Chessington", matching Section 3ak's "Chessington is where it all starts for us" framing already established for the Areas feature) and the two `Details.cshtml` "Local Expert" bios (`expertBorough`/`expertBio` for David/Mark), which now reference Epsom/Cobham/Esher instead of Sutton/Croydon.
+- **Fake LocalBusiness JSON-LD address updated to Chessington**, per explicit user confirmation (previously deliberately left alone per Section 3's Sprint 2 note — this supersedes that, at least for locality/region/geo, since Croydon could no longer stand and Chessington is the one real anchor point already in the codebase): `Home/Index.cshtml`'s `PostalAddress` (`Croydon`/`CR0 1XX` → `Chessington`/`KT9 1AA`, `addressRegion` `London` → `Surrey`) and `geo` coordinates (moved from Croydon's to Chessington's). `Details.cshtml`'s `Service` schema address and `areaServed` list updated the same way. `telephone`, `sameAs`, and the invented review/job-count markup were not touched — still tracked as fake NAP under Tier 3 item 18.
+- **Insurance copy genericized**: the specific "£5M public liability insurance" figure (`Home/Index.cshtml` trust card, `Details.cshtml` FAQ answer and sidebar trust item) is now "Comprehensive public liability insurance" everywhere — the real cover is higher and the business does not want the figure public. No number is quoted anywhere now.
+- **`Bath & Shower Screen Fitting` and `Silicone & Mastic Resealing` moved from Plumbing to Handyman** in `ServicesSeeder` (`CategoryId` changed, `BasePrice` dropped from £90 to the flat £60 Handyman rate per the Section 3al/3am no-exceptions rule — confirmed with the user rather than assumed).
+- **Small Building & Refurbishments pricing display made consistent with the rest of the catalog**: `Category.cshtml`'s and `Services/Index.cshtml`'s service cards now show "Survey & Fixed Quote" with a working `See Pricing` link to the `Pricing` route for this category, instead of a bare "From £X" price with a non-clickable label. `Details.cshtml`'s "How much does X cost?" FAQ (both the visible accordion and its JSON-LD `FAQPage` twin) is now conditional on `isBuilding`: building services describe the free-survey/fixed-quote process instead of stating a per-hour base rate that never applied to them.
+- **Home page final CTA**: text now reads "Surrey and South London residents"; fixed a `.final-cta`/`.cta-card` bug in `home.css` where the outer section and the inner rounded card both rendered the identical `bg-cta-wide.webp` background — since only the card had `border-radius`/`overflow: hidden`, the sharp, un-clipped copy of the same photo was visible immediately outside the card's rounded corners. Removed the duplicate background from `.final-cta`; only the card renders the photo now.
+- **Local Expert gap for Small Building & Refurbishments**: resolved same day once the user supplied real bio/photo content — see Section 3ap.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) after this section's changes. Test suite and live app run not yet done — the user asked for the full batch first, before testing.
+
+---
+
+## 3ap. Real "Local Expert" Added for Small Building & Refurbishments: Zap (2026-09-08)
+
+Closes the gap Section 3am deliberately left open (no fabricated persona for this category) and Section 3ao's "known gap" note, now that the user supplied real content for the business's actual co-founder rather than an invented one.
+
+- **`Details.cshtml`'s "Local Expert" block now renders for all three categories.** The `!isBuilding` guard around the block was removed; `expertName`/`expertRole`/`expertBorough`/`expertBio`/`expertAvatar` gained a `isBuilding` branch (Zap: "Projects Director", "Surrey", bio and closing line supplied verbatim by the user — his own words about being in construction since 2004, personally surveying every project and working alongside the on-site teams to completion). The block's closing sentence is `isBuilding`-conditional (`expertClosingLine`) since the generic "property maintenance" wording used for David/Mark didn't fit a multi-day refurbishment project.
+- **Real photo, not a placeholder**: the user's supplied `zap-photo.avif` (AI-generated headshot, 425×650) had to be converted — GDI+ (`System.Drawing`) cannot decode AVIF at all ("Out of memory" is its generic unrecognized-format error), but Windows' WIC codec stack could (this machine has an AVIF codec extension installed), so a PowerShell script decoded it via `System.Windows.Media.Imaging.BitmapDecoder` to PNG, then a throwaway console app referencing this repo's own `SkiaSharp` 2.88.9 (already a dependency, used identically in `ImageStorageService`) resized it to 320px wide and re-encoded as WEBP at quality 80 — matching both the format and quality setting every other site image already uses. Saved as `wwwroot/images/expert-zap.webp` (42.5 KB), same naming convention as `expert-david.webp`/`expert-mark.webp`. The existing `onerror` fallback to `/images/hero.webp` was left in place unchanged.
+- **The `4.9/5 Rating` / `Over 1,200 services completed` stats line was left as-is** for all three experts — it reads as company-wide social proof rather than a personal claim, and auditing/removing it is Tier 3 item 17's job, not in scope here.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only). Test suite and live app run not yet done, per the user's "batch everything, test at the end" instruction for this whole session.
+
+---
+
+## 3aq. Navbar Rework: Category Links, Mobile Scroll Fix, Login Greeting Removed (2026-09-08)
+
+- **`_Navbar.cshtml`**: the single "Services" link (desktop and mobile) replaced with three direct category links — Plumbing, Handyman, Small Building Work — routed via `asp-route="ServiceCategory"` to `/Services/{plumbing|handyman|small-building-works}`. The `/Services` overview page itself is unchanged and still reachable from elsewhere (e.g. the homepage's "View All Services" button); it's just no longer in the top nav.
+- **Mobile menu scroll bug fixed**: `.mobile-nav-dropdown` had no `max-height`/`overflow-y`, so once its content (now longer, with 3 links instead of 1) exceeded the screen height, the extra items extended past the viewport with nothing to scroll — the page behind the menu could still scroll instead. Added `max-height: calc(100dvh - 84px - var(--spacing-4))` with `overflow-y: auto` and `overscroll-behavior: contain` (`navbar.css`), plus a `mobile-nav-open` class toggled on `<body>` from `site.js` alongside the existing `is-open` toggle, with `body.mobile-nav-open { overflow: hidden; }` locking the page behind it while the menu is open.
+- **`_LoginPartial.cshtml`**: removed the "Hello, {email}!" greeting link for signed-in users — its length scaled with the user's email and was pushing the desktop nav (now carrying 3 extra category links) to wrap onto a second row. Admin link and Logout button untouched; the account-management page itself (`/Account/Manage`) still exists, just no longer linked from the nav.
+- Not yet verified with a build/test run at the time — see Section 3ar, where both were run together.
+
+---
+
+## 3ar. Small Building & Refurbishments: Site-Wide Hardcoded-Price Audit (2026-09-08)
+
+Prompted by a user request to replace the Details-page "Starting Price: From £X" spec card for this category with a proper "Pricing Model" card, which led to auditing every other place `Service.BasePrice` gets rendered — since this category's whole pricing model is survey-then-quote, not a flat number, and the user does not want any fixed sum implied for it anywhere on the site.
+
+- **`Details.cshtml` spec-bento card**: for `isBuilding`, the "Starting Price / From £X" card is now "Pricing Model / Free Survey & Fixed Quote" with a `request_quote` icon; non-building services are unchanged.
+- **Found and fixed 7 more places quietly asserting a fixed building price**, none of which had been caught by the earlier Section 3ao pass (that pass fixed the *visible* per-service FAQ and category-card price, not these):
+  1. `Pricing.cshtml`'s "Our Hourly Rates" card showed "From £280" for the category — now "Survey & Fixed Quote" (new `.rate-card-price-quote` modifier in `pricing.css` shrinks the font, since that slot was sized for a short "£X" figure).
+  2. `_PricingCard.cshtml` (the shared partial behind "Typical Job Costs" on `Pricing.cshtml` and "You Might Also Need" on `Details.cshtml`) always rendered "From £X" and a minutes/hours duration with no awareness of category — added `PricingCardViewModel.IsQuoteBased`, set at both call sites (`related.CategorySlug`/`svc.CategorySlug == "small-building-works"`), so a building service's card now reads "Survey & Fixed Quote" / "Day Rate / Survey" instead. This is what made **a building service's own Details page show *other* building services with a hardcoded price** in "You Might Also Need" — the most visible instance of the bug.
+  3. `Details.cshtml`'s JSON-LD `Service` schema unconditionally emitted a numeric `Offer.price` — now omitted entirely for building services (no invented price for structured data/search results either), emitted as before for Plumbing/Handyman.
+  4. `Home/Index.cshtml`'s hero booking-widget category `<select>` showed "Small Building & Refurbishments (from £280/hr)" — wrong on both the number and calling a day-rate/quote job "hourly". Now shows just the category name for building.
+  5. `Home/Index.cshtml`'s "Popular Services" bento had no category guard on its "From £X" — not currently reachable (the homepage only ever surfaces the first 4 services, which are always Plumbing today) but one seed-order or admin-panel change away from showing a raw building price. Guarded defensively the same way.
+  6. `Booking/Index.cshtml`'s service `<select>` listed building services with "(from £X/hr)" even though the page's own category radio buttons only offer Plumbing/Handyman (building is quote-first per Section 3am and was never meant to reach this instant-booking wizard at all) — now filtered out of the dropdown entirely rather than just re-worded.
+  7. `ServicesController.Details()`'s meta description hardcoded "transparent pricing starting from £X. Book a slot now." for every service — now branches on category: building services get "Free on-site survey and a fixed quote before any work begins. Request your quote today." with no number. Also fixed a leftover "HandyFix London" / "in South London" in this same action that Section 3ao's rebrand pass had missed.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full suite, 95 `Services.Data.Tests` + 55 `Web.Tests`, 150/150 green — covers this section and Section 3aq together. Live app run not yet done.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)

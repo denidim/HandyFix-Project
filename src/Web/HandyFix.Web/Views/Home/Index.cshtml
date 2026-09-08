@@ -15,8 +15,8 @@
   <div class="page-container hero-content">
     <div class="hero-grid">
       <div class="hero-text-content">
-        <h1 class="font-headline-xl text-primary lh-tight mb-6">Local Plumbing & Handyman Services in South London</h1>
-        <p class="font-body-lg text-text-main lh-relaxed mb-8">Reliable, professional, and fully insured mobile service operating in Sutton, Croydon, Epsom, and beyond. Booking has never been easier.</p>
+        <h1 class="font-headline-xl text-primary lh-tight mb-6">Local Plumbing & Handyman Services in Surrey & South London</h1>
+        <p class="font-body-lg text-text-main lh-relaxed mb-8">Reliable, professional, and fully insured mobile service operating in Chessington, Cobham, Esher, and beyond. Booking has never been easier.</p>
         <div class="hero-value-props">
           <div class="value-prop-item">
             <span class="material-symbols-filled text-success font-bold">check_circle</span>
@@ -48,7 +48,8 @@
                 <option value="">-- Choose a service --</option>
                 @foreach (var cat in categories)
                 {
-                    <option value="@cat.Slug">@cat.Name (from £@cat.BasePrice/hr)</option>
+                    var catIsBuilding = cat.Slug == "small-building-works" || cat.Name.Contains("Building");
+                    <option value="@cat.Slug">@(catIsBuilding ? cat.Name : $"{cat.Name} (from £{cat.BasePrice}/hr)")</option>
                 }
               </select>
             </div>
@@ -185,7 +186,7 @@
                 </h2>
 
                 <p class="text-text-main font-body-md m-0">
-                    Most requested repairs and installations in South London
+                    Most requested repairs and installations across Surrey & South London
                 </p>
             </div>
 
@@ -195,6 +196,7 @@
         <div class="bento-grid-container bento-2x2-mode">
             @foreach (var svc in Model.PopularServices)
             {
+                var svcIsBuilding = svc.CategorySlug == "small-building-works";
                 <a class="bento-card"
                      asp-route="ServiceDetails"
                      asp-route-categorySlug="@svc.CategorySlug"
@@ -231,8 +233,15 @@
 
                         <div class="bento-card-footer">
                             <div class="bento-price-wrap">
-                                <span class="bento-price-prefix">From</span>
-                                <span class="bento-price-amount">£@svc.BasePrice</span>
+                                @if (svcIsBuilding)
+                                {
+                                    <span class="bento-price-amount">Survey &amp; Fixed Quote</span>
+                                }
+                                else
+                                {
+                                    <span class="bento-price-prefix">From</span>
+                                    <span class="bento-price-amount">£@svc.BasePrice</span>
+                                }
                             </div>
 
                             <span class="bento-action-pill">
@@ -289,7 +298,7 @@
             </div>
             <div>
               <h4 class="font-headline-sm mb-1">Fully Insured</h4>
-              <p class="text-on-surface-variant m-0">Up to £5M Public Liability insurance covering every single visit.</p>
+              <p class="text-on-surface-variant m-0">Comprehensive Public Liability insurance covering every single visit.</p>
             </div>
           </div>
         </div>
@@ -331,7 +340,7 @@
       <div class="page-container testimonials-content-layer">
         <div class="section-header">
           <h2 class="font-headline-lg text-white mb-4">What Our Customers Say</h2>
-          <p class="text-on-primary-container max-w-2xl mx-auto my-0">Real experiences from homeowners across Sutton, Croydon, and Epsom.</p>
+          <p class="text-on-primary-container max-w-2xl mx-auto my-0">Real experiences from homeowners across Cobham, Esher, and Epsom.</p>
           <div class="mt-4">
             <a asp-controller="Home" asp-action="Reviews" class="btn-testimonial-review">
               <span class="material-symbols-outlined testimonial-review-icon">rate_review</span>
@@ -383,7 +392,7 @@
       <div class="cta-card-content">
         <h2 class="font-headline-xl mb-6">Ready to cross those repairs off your list?</h2>
         <p class="font-body-lg text-text-main cta-card-text">
-          Join thousands of satisfied South London residents. Book your professional service in under 60 seconds.
+          Join thousands of satisfied Surrey and South London residents. Book your professional service in under 60 seconds.
         </p>
         <div class="cta-actions">
           <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg cta-btn-primary-shadow">Book Appointment Now</a>
@@ -410,16 +419,16 @@
       "priceRange": "$$",
       "address": {
         "@@type": "PostalAddress",
-        "streetAddress": "South London Dispatch Office",
-        "addressLocality": "Croydon",
-        "addressRegion": "London",
-        "postalCode": "CR0 1XX",
+        "streetAddress": "Chessington Dispatch Office",
+        "addressLocality": "Chessington",
+        "addressRegion": "Surrey",
+        "postalCode": "KT9 1AA",
         "addressCountry": "GB"
       },
       "geo": {
         "@@type": "GeoCoordinates",
-        "latitude": 51.3762,
-        "longitude": -0.0982
+        "latitude": 51.3579,
+        "longitude": -0.2970
       },
       "openingHoursSpecification": {
         "@@type": "OpeningHoursSpecification",

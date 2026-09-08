@@ -6,7 +6,6 @@
 
 @if (this.SignInManager.IsSignedIn(this.User))
 {
-    <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @this.User.Identity.Name!</a>
     if (this.User.IsInRole(GlobalConstants.AdministratorRoleName))
     {
         <a class="nav-link text-primary fw-bold" asp-area="Administration" asp-controller="Dashboard" asp-action="Index" title="Admin">Admin</a>

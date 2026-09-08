@@ -2,7 +2,7 @@
 @using HandyFix.Web.ViewModels.Services
 @{
     this.Layout = "_Layout";
-    this.ViewData["Title"] = $"{Model.Name} - HandyFix South London";
+    this.ViewData["Title"] = $"{Model.Name} - HandyFix Surrey & South London";
 
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == "small-building-works" || Model.CategoryName.Contains("Building");
@@ -32,14 +32,19 @@
             ? "Non-invasive thermal imaging and pressure testing to find and fix hidden leaks instantly."
             : "TV wall mounting, mirror hanging, door trimming, and general odd jobs handled by experts.");
 
-    // Local Specialist dynamic data - not shown for isBuilding, see the Local Expert Block below
-    var expertName = isPlumbing ? "David" : "Mark";
-    var expertRole = isPlumbing ? "Senior Plumber" : "Master Handyman";
-    var expertBorough = isPlumbing ? "Sutton" : "Croydon";
-    var expertBio = isPlumbing
-        ? "I've spent 15 years servicing homes across Sutton, Croydon, and Epsom. I specialize in high-end bathroom remodels and precision leak detection."
-        : "I've spent over 12 years helping homeowners with carpentry, mounting, and general property maintenance in Croydon and South London.";
-    var expertAvatar = isPlumbing ? "/images/expert-david.webp" : "/images/expert-mark.webp";
+    // Local Specialist dynamic data
+    var expertName = isBuilding ? "Zap" : (isPlumbing ? "David" : "Mark");
+    var expertRole = isBuilding ? "Projects Director" : (isPlumbing ? "Senior Plumber" : "Master Handyman");
+    var expertBorough = isBuilding ? "Surrey" : (isPlumbing ? "Epsom" : "Cobham");
+    var expertBio = isBuilding
+        ? "I've been in the construction industry since 2004, and I believe the secret to stress-free renovations is simple: turn up on time, manage the trades properly, and do the job right the first time. I personally survey every project and work alongside our teams on-site until the final checklist is complete."
+        : (isPlumbing
+            ? "I've spent 15 years servicing homes across Epsom, Cobham, and Esher. I specialize in high-end bathroom remodels and precision leak detection."
+            : "I've spent over 12 years helping homeowners with carpentry, mounting, and general property maintenance across Cobham and Surrey.");
+    var expertClosingLine = isBuilding
+        ? "You'll always have a direct line to me, and my personal guarantee that the work is finished to perfection."
+        : "I'm personally committed to making sure your property maintenance is completed to the highest standards.";
+    var expertAvatar = isBuilding ? "/images/expert-zap.webp" : (isPlumbing ? "/images/expert-david.webp" : "/images/expert-mark.webp");
 
     string GetCategoryIcon(string name)
     {
@@ -95,9 +100,18 @@
                     <span class="spec-bento-value">@Model.CategoryName</span>
                 </div>
                 <div class="spec-bento-card col-span-2">
-                    <span class="material-symbols-outlined spec-bento-icon">payments</span>
-                    <span class="spec-bento-label">Starting Price</span>
-                    <span class="spec-bento-value">From £@Model.BasePrice.ToString("F0")</span>
+                    @if (isBuilding)
+                    {
+                        <span class="material-symbols-outlined spec-bento-icon">request_quote</span>
+                        <span class="spec-bento-label">Pricing Model</span>
+                        <span class="spec-bento-value">Free Survey &amp; Fixed Quote</span>
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined spec-bento-icon">payments</span>
+                        <span class="spec-bento-label">Starting Price</span>
+                        <span class="spec-bento-value">From £@Model.BasePrice.ToString("F0")</span>
+                    }
                 </div>
             </div>
 
@@ -139,7 +153,14 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2"). The final cost depends on the complexity of the task and any additional materials or parts required. We always present transparent quotes before starting.
+                        @if (isBuilding)
+                        {
+                            <text>@Model.Name is quoted individually after a free on-site survey, so we can account for the scope, materials, and finish you want before agreeing a fixed price. There's no obligation to book once you have your quote.</text>
+                        }
+                        else
+                        {
+                            <text>Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2"). The final cost depends on the complexity of the task and any additional materials or parts required. We always present transparent quotes before starting.</text>
+                        }
                     </div>
                 </details>
 
@@ -149,7 +170,7 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        We operate throughout Sutton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, and surrounding areas in South London, Surrey, and Kent.
+                        We operate throughout Chessington, Cobham, Esher, Weybridge, Guildford, Epsom, Kingston, Wimbledon, and surrounding areas across Surrey and South London.
                     </div>
                 </details>
 
@@ -159,33 +180,30 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        Yes, absolutely. All HandyFix services, including @Model.Name, are fully backed by our £5M public liability insurance and 100% satisfaction guarantee.
+                        Yes, absolutely. All HandyFix services, including @Model.Name, are fully backed by our comprehensive public liability insurance and 100% satisfaction guarantee.
                     </div>
                 </details>
             </section>
 
-            @if (!isBuilding)
-            {
-                <!-- Local Expert Block -->
-                <section class="local-expert-block">
-                    <div class="local-expert-avatar-wrapper">
-                        <img class="local-expert-avatar" alt="@expertName - @expertRole" src="@expertAvatar" onerror="this.onerror=null;this.src='/images/hero.webp';" width="96" height="96" loading="lazy">
-                    </div>
-                    <div>
-                        <span class="local-expert-meta">Your Local Expert</span>
-                        <h3 class="local-expert-name">Hi, I'm @expertName – @expertRole in @expertBorough</h3>
-                        <p class="local-expert-bio">@expertBio I'm personally committed to making sure your property maintenance is completed to the highest standards.</p>
-                        <div class="local-expert-stats">
-                            <div class="local-expert-rating">
-                                <span class="material-symbols-outlined icon-fill">star</span>
-                                <span>4.9/5 Rating</span>
-                            </div>
-                            <span class="local-expert-divider">|</span>
-                            <span class="local-expert-completed">Over 1,200 services completed</span>
+            <!-- Local Expert Block -->
+            <section class="local-expert-block">
+                <div class="local-expert-avatar-wrapper">
+                    <img class="local-expert-avatar" alt="@expertName - @expertRole" src="@expertAvatar" onerror="this.onerror=null;this.src='/images/hero.webp';" width="96" height="96" loading="lazy">
+                </div>
+                <div>
+                    <span class="local-expert-meta">Your Local Expert</span>
+                    <h3 class="local-expert-name">Hi, I'm @expertName – @expertRole in @expertBorough</h3>
+                    <p class="local-expert-bio">@expertBio @expertClosingLine</p>
+                    <div class="local-expert-stats">
+                        <div class="local-expert-rating">
+                            <span class="material-symbols-outlined icon-fill">star</span>
+                            <span>4.9/5 Rating</span>
                         </div>
+                        <span class="local-expert-divider">|</span>
+                        <span class="local-expert-completed">Over 1,200 services completed</span>
                     </div>
-                </section>
-            }
+                </div>
+            </section>
         </main>
 
         <!-- Sidebar Area -->
@@ -255,7 +273,7 @@
                             <span class="material-symbols-outlined sidebar-trust-icon">workspace_premium</span>
                             <div>
                                 <p class="sidebar-trust-item-title">Fully Insured</p>
-                                <p class="sidebar-trust-item-desc">Up to £5M public liability insurance.</p>
+                                <p class="sidebar-trust-item-desc">Comprehensive public liability insurance.</p>
                             </div>
                         </div>
                         <div class="sidebar-trust-item">
@@ -290,6 +308,7 @@
                                                              Description = related.Description,
                                                              BasePrice = related.BasePrice,
                                                              EstimatedDurationMinutes = related.EstimatedDurationMinutes,
+                                                             IsQuoteBased = related.CategorySlug == "small-building-works",
                                                              CtaText = "View Details",
                                                              CtaUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = related.CategorySlug, serviceSlug = related.Slug }),
                                                          })" />
@@ -312,23 +331,24 @@
     "priceRange": "$$",
     "address": {
       "@@type": "PostalAddress",
-      "addressLocality": "Croydon",
-      "addressRegion": "London",
+      "addressLocality": "Chessington",
+      "addressRegion": "Surrey",
       "addressCountry": "GB"
     }
   },
   "areaServed": [
+    { "@@type": "AdministrativeArea", "name": "Surrey" },
     { "@@type": "AdministrativeArea", "name": "South London" },
-    { "@@type": "AdministrativeArea", "name": "Sutton" },
-    { "@@type": "AdministrativeArea", "name": "Croydon" },
+    { "@@type": "AdministrativeArea", "name": "Chessington" },
+    { "@@type": "AdministrativeArea", "name": "Cobham" },
+    { "@@type": "AdministrativeArea", "name": "Esher" },
+    { "@@type": "AdministrativeArea", "name": "Guildford" },
     { "@@type": "AdministrativeArea", "name": "Epsom" },
-    { "@@type": "AdministrativeArea", "name": "Kingston" },
-    { "@@type": "AdministrativeArea", "name": "Bromley" }
-  ],
-  "offers": {
-    "@@type": "Offer",
-    "price": "@Model.BasePrice.ToString("F2")",
-    "priceCurrency": "GBP"
+    { "@@type": "AdministrativeArea", "name": "Kingston" }
+  ]
+  @if (!isBuilding)
+  {
+    @:,"offers": { "@@type": "Offer", "price": "@Model.BasePrice.ToString("F2")", "priceCurrency": "GBP" }
   }
 }
 </script>
@@ -344,7 +364,7 @@
       "name": "How much does @Model.Name cost?",
       "acceptedAnswer": {
         "@@type": "Answer",
-        "text": "Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2")."
+        "text": "@(isBuilding ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}.")"
       }
     },
     {
@@ -352,7 +372,7 @@
       "name": "Do you cover my location?",
       "acceptedAnswer": {
         "@@type": "Answer",
-        "text": "We operate throughout Sutton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, and surrounding areas in South London."
+        "text": "We operate throughout Chessington, Cobham, Esher, Weybridge, Guildford, Epsom, Kingston, Wimbledon, and surrounding areas across Surrey and South London."
       }
     }
   ]

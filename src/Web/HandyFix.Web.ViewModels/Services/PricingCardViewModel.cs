@@ -12,6 +12,8 @@ namespace HandyFix.Web.ViewModels.Services
 
         public int EstimatedDurationMinutes { get; set; }
 
+        public bool IsQuoteBased { get; set; }
+
         public string CtaText { get; set; }
 
         public string CtaUrl { get; set; }

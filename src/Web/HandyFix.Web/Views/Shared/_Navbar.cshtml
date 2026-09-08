@@ -17,7 +17,9 @@
         <nav class="nav-links">
             <a class="nav-link @(IsActive("/") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
             <a class="nav-link @(IsActive("/About") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="About">About</a>
-            <a class="nav-link @(IsActive("/Services") ? "active" : "")" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
+            <a class="nav-link @(IsActive("/Services/plumbing") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="plumbing">Plumbing</a>
+            <a class="nav-link @(IsActive("/Services/handyman") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="handyman">Handyman</a>
+            <a class="nav-link @(IsActive("/Services/small-building-works") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="small-building-works">Small Building Work</a>
             <a class="nav-link @(IsActive("/Pricing") ? "active" : "")" asp-area="" asp-route="Pricing">Pricing</a>
             <a class="nav-link @(IsActive("/Contact") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
             <a class="nav-link @(IsActive("/Areas") ? "active" : "")" asp-area="" asp-route="Areas">Areas</a>
@@ -47,7 +49,9 @@
             <a class="nav-link @(IsActive("/About") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="About">About</a>
             <a class="nav-link @(IsActive("/Contact") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
             <a class="nav-link @(IsActive("/Areas") ? "active" : "")" asp-area="" asp-route="Areas">Areas</a>
-            <a class="nav-link @(IsActive("/Services") ? "active" : "")" asp-area="" asp-controller="Services" asp-action="Index">Services</a>
+            <a class="nav-link @(IsActive("/Services/plumbing") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="plumbing">Plumbing</a>
+            <a class="nav-link @(IsActive("/Services/handyman") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="handyman">Handyman</a>
+            <a class="nav-link @(IsActive("/Services/small-building-works") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="small-building-works">Small Building Work</a>
             <a class="nav-link @(IsActive("/Pricing") ? "active" : "")" asp-area="" asp-route="Pricing">Pricing</a>
             <a class="nav-link @(IsActive("/PrivacyPolicy") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
             <a class="nav-link @(IsActive("/Reviews") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Reviews">Reviews</a>

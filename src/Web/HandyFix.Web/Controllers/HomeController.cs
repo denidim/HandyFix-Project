@@ -68,8 +68,8 @@ namespace HandyFix.Web.Controllers
                 PopularServices = services.Take(4).ToList(),
             };
 
-            this.ViewData["Title"] = "Handy Fix - Plumbers & Handymen in South London";
-            this.ViewData["MetaDescription"] = "Handy Fix provides reliable local plumbing and handyman services in Sutton, Croydon, Epsom, Bromley, Kingston, Kent, and South London. Book hourly slots online.";
+            this.ViewData["Title"] = "Handy Fix - Plumbers & Handymen in Surrey & South London";
+            this.ViewData["MetaDescription"] = "Handy Fix provides reliable local plumbing and handyman services across Surrey and South London, including Chessington, Cobham, Esher, Guildford, Epsom, and Kingston. Book hourly slots online.";
 
             return this.View(model);
         }
@@ -79,7 +79,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult Contact(string service = null)
         {
             this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
-            this.ViewData["MetaDescription"] = "Get in touch with Handy Fix for a custom quote or emergency plumbing and handyman help across Sutton, Croydon, Epsom, and South London.";
+            this.ViewData["MetaDescription"] = "Get in touch with Handy Fix for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.";
             var model = new ContactInputModel();
             if (!string.IsNullOrWhiteSpace(service))
             {
@@ -122,7 +122,7 @@ namespace HandyFix.Web.Controllers
             };
 
             this.ViewData["Title"] = "Customer Reviews - HandyFix London";
-            this.ViewData["MetaDescription"] = "Read verified customer reviews for Handy Fix's plumbing and handyman services across South London, or leave your own.";
+            this.ViewData["MetaDescription"] = "Read verified customer reviews for Handy Fix's plumbing and handyman services across Surrey and South London, or leave your own.";
             return this.View(model);
         }
 
@@ -130,7 +130,7 @@ namespace HandyFix.Web.Controllers
         public IActionResult About()
         {
             this.ViewData["Title"] = "About Handy Fix - Professional Handyman Services";
-            this.ViewData["MetaDescription"] = "Learn about Handy Fix, the fully insured plumbing and handyman team serving Sutton, Croydon, Epsom, and South London.";
+            this.ViewData["MetaDescription"] = "Learn about Handy Fix, the fully insured plumbing and handyman team serving Surrey and South London, including Chessington, Cobham, and Epsom.";
             return this.View();
         }
 
