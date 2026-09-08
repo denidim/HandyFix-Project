@@ -5,29 +5,27 @@
 }
 
 <div class="page-container services-page">
-    <!-- Header & Breadcrumbs -->
-    <section class="services-header">
-        <nav class="breadcrumb-nav" aria-label="breadcrumb">
-            <a asp-controller="Home" asp-action="Index">Home</a>
-            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
-            <span class="breadcrumb-current">Our Areas</span>
-        </nav>
-        <div class="services-header-content">
-            <h1 class="services-hero-title">
-                Our <span>Areas.</span>
-            </h1>
-            <p class="services-subtitle">
+    <!-- Hero Section -->
+    <section class="service-hero-section">
+        <div class="service-hero-image" style="background-image: url('/images/areas-hero.webp')"></div>
+        <div class="service-hero-overlay"></div>
+        <div class="service-hero-content">
+            <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                <span class="text-white">Our Areas</span>
+            </nav>
+            <h1 class="service-hero-title">Our Areas.</h1>
+            <p class="text-white-80 font-body-lg mb-4" style="max-width: 640px;">
                 From our Chessington base out across South London and Surrey, our technicians already know the streets, the property types, and the postcodes. Find your town below and book online today.
             </p>
-            <div class="category-hero-badges">
-                <div class="category-hero-badge category-hero-badge-primary">
-                    <span class="material-symbols-outlined">location_on</span>
-                    <span>@Model.Count() Areas Covered</span>
-                </div>
-                <div class="category-hero-badge category-hero-badge-tertiary">
-                    <span class="material-symbols-outlined">schedule</span>
-                    <span>No Travel Charge In-Radius</span>
-                </div>
+            <div class="service-hero-badges">
+                <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined">location_on</span> @Model.Count() Areas Covered
+                </span>
+                <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined">schedule</span> No Travel Charge In-Radius
+                </span>
             </div>
         </div>
     </section>

@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-08-05 — **Test coverage thickened for `CategoriesService`/`ServicesService` (20 new tests), which surfaced and fixed a latent test-infrastructure gap**: `HandyFix.Services.Data.Tests` had never called `MappingConfig.RegisterMappings`, so every custom Mapster mapping (`IHaveCustomMappings`) had silently never run in this test project — invisible until today's first assertion on a custom-mapped property (`CategoryViewModel.BasePrice`) came back `0`. Fixed with a `[ModuleInitializer]` in a new `MappingTestSetup.cs` so the whole project now runs against the real mapping config. That fix immediately un-masked three more failures in pre-existing `BookingsServiceTests`, all from the same root cause plus a separate EF Core InMemory limitation (it doesn't short-circuit a ternary over a correlated collection, so `Payments.First()` throws on bookings with zero payments — a normal state, not a bug); fixed by moving that test helper to Sqlite in-memory, the same treatment already used elsewhere in the suite for InMemory's known gaps. **Purely test-side — no production code changed, and nothing here was ever live-reachable.** Full suite now 150/150. See Section 3ag. (Earlier the same day: **Live client-side validation was silently broken app-wide, not just on Booking** — jQuery was pinned to 4.0.0, which removed `$.parseJSON`; the bundled `jquery-validation-unobtrusive` still calls it when displaying any error, so every form's validation crashed silently the moment it tried to show a message (the same "unrelated" `parseJSON` console warning already noted from the login page back in Section 3f — it wasn't unrelated). Fixed by pinning jQuery back to 3.7.1, the version the validation library is actually built against; verified live on Booking and Contact that real DataAnnotations-driven messages now render correctly as the user types/blurs. Booking also got a plain visible hint for service/time-slot selection specifically, since those are custom widgets with no typed input for a validation message to attach to. One approach was tried and reverted: routing the submit button through jQuery's own `.valid()` called on every keystroke looked more "correct" but empirically corrupted jQuery Validate's internal per-field state — kept the simpler original presence check instead. See Section 3af. (Earlier the same day: **Live mobile-testing pass on staging surfaced three real bugs, all fixed and deployed same day**: a horizontal-scroll/zoom-drift bug on mobile (Home's Trust-section decorative blur circles bled past an unclipped container; fixed by extending `overflow-x: hidden` to `html` as well as `body` in `reset.css`, verified via Playwright at 375px/320px — Booking's reported footer break could not be independently reproduced), a booking form that silently reloaded with zero feedback whenever a photo upload failed (two-layered root cause — CloudflareR2 wasn't configured on staging at all, and separately `Booking/Index.cshtml` had no `asp-validation-summary` to render *any* page-level error even once one exists — both fixed), and CloudflareR2 itself wired up for staging (reuses the existing dev bucket by decision, real credentials added to the server's `.env` over SSH with a backup taken first, recorded in `docs/private/INFRASTRUCTURE.md`, never in a tracked file). **A live retest by the user then surfaced a second, deeper bug**: the R2 error persisted because `deploy-dev.yml` never syncs `docker-compose.staging.yml`/`Caddyfile` from the repo to the server — only the app image is auto-deployed, the compose file is static, hand-placed config that silently drifted the moment it was edited in the repo. Fixed the same way as the `.env` gap (corrected file written to the server over SSH, old version backed up) and, more importantly, corrected `docs/WORKFLOW_DEPLOYMENT.md` and `docs/private/STAGING_RUNBOOK.md`, both of which shared the identical blind spot and never stated this — see Section 3ae. Deployed via the normal `dev` push, build+test+deploy all green. **Both confirmed working live on staging as of 2026-08-05**: a booking with a photo attached completes successfully end to end (the next `dev` push re-triggered the deploy automatically, no manual restart needed), and the mobile horizontal-scroll fix holds up on a real device. (Previous update, 2026-08-04: **Documentation accuracy audit: `PROJECT_STATE.md` verified against the actual code, six stale cross-references found and fixed** (a corrected controller→service reference, a rewritten Hosting section still describing staging as unwired, an outdated hardcoded-image-path count in two places, an unmarked SendGrid→Brevo bullet, and the matching fix in `docs/WORKFLOW_SERVICES.md`) — nothing in the code changed, see Section 3ad. (Earlier the same day: **Fixed: cookie consent never actually persisted on staging.** Root cause was one missing piece of infrastructure config — no `UseForwardedHeaders()` — so the app behind Caddy always read requests as plain HTTP regardless of what the browser used. That silently broke two things at once: the consent cookie needed (but never got) `Secure` because it was set `SameSite=None`, so browsers discarded it every time, reshowing the banner on every page; and separately, `PaymentController`'s Stripe success/cancel URLs (built from `Request.Scheme`) would have pointed at `http://` on a real payment. Fixed both with one change — added correctly-scoped `ForwardedHeadersOptions` + `UseForwardedHeaders()` as the first middleware, and relaxed the cookie to `SameSite=Lax` so it no longer depends on Secure at all. Verified live by forging an `X-Forwarded-Proto: https` header locally and confirming the generated cookie and sitemap URLs (a stand-in for the Stripe URLs, built the same way) flip correctly — see Section 3ac.) (Earlier the same day: **Code cleanup pass complete, all 4 phases.** Phase 1: the CSS/slug Known Issues (Section 3y). Phase 2: production code moved from `var` to explicit types, with a new `.editorconfig` to keep it that way (Section 3z). Phase 3: eight controllers thinned — business logic, raw repository queries, and (most carefully) the Stripe SDK orchestration in `PaymentController` all moved into their services, following the pattern from the user's own earlier FindATrade project (Section 3aa). Phase 4: the unauthenticated `SettingsController` template leftover deleted outright, and `BaseController` flipped to `[Authorize]`-by-default with `[AllowAnonymous]` added only to the six controllers that must stay public (Section 3ab). 13 commits total, each independently built and tested; the Phase 3/4 items were verified live as well as by the test suite, not just by a green build.) (Earlier the same day: **Documentation caught up with the code.** `DESIGN.md` fully rewritten (was last touched 2026-07-16, before most of the front-end work landed) and the five remaining `docs/WORKFLOW_*.md` gaps (services & categories, technicians, reviews, enquiries, deployment) written, closing both open Sprint 4 documentation items and the README's "in progress" note — see Section 3x. No code changed; several real discrepancies found along the way (a fifth hardcoded `{slug}-hero.webp` location, two duplicate CSS class-name pairs, one dead CSS variable) are recorded as known issues, not fixed.) (Earlier the same day: **Staging is live.** Roadmap Tier 4 item 19 (Hosting & CI/CD) is done end-to-end: `dev` branch, `.github/workflows/deploy-dev.yml` (build, test, push to GHCR, SSH deploy), Caddy reverse proxy (HTTPS via the Hetzner reverse-DNS hostname, HTTP Basic Auth, `X-Robots-Tag: noindex`), and a dedicated least-privilege SQL login all provisioned and verified working against the real `handyfix_staging` database — see Section 3w. Two real bugs only surfaced by the first live CI runs, both fixed: `SqliteWebApplicationFactory` wasn't actually forcing Development for `AdminUserSeeder` (which reads the raw `ASPNETCORE_ENVIRONMENT` process variable, not the hosting abstraction `UseEnvironment()` sets), and the deploy script silently did nothing for two runs because `docker compose` couldn't find a non-default-named compose file and the script had no `set -e` to catch it.) (Earlier the same day: Docker containerization for Tier 4 item 19 started: `Dockerfile` + `.dockerignore` added and verified end-to-end against a throwaway local SQL Server container (empty database, exactly the state `handyfix_staging` is actually in) — build, `Database.Migrate()`, seeding, and a full booking-to-confirmation flow all succeed from a cold start. Found and fixed three things the local test surfaced: a Stripe sandbox-bypass opt-in (`Stripe:AllowSandboxOutsideDevelopment`) so staging can demo bookings before a real Stripe account exists, without weakening the same guard in production; and the four hardcoded `@handyfix.co.uk` email sender addresses (a domain nobody owns yet) made configurable since Brevo — like any real provider — refuses to send from an unverified sender. See Section 3v.) (Previous update, 2026-08-01: Agent workflow unified into a single root `AGENTS.md` with `CLAUDE.md`/`GEMINI.md` as pointers, resolving a real contradiction between two rulebooks; public-repo security audit run (no credential ever committed) and the unwritten `appsettings.Staging/Production.json` files gitignored before they can leak the private DB IP — see Section 3u. Also queued: bring `DESIGN.md` back in sync with the CSS that exists. Earlier the same day: controller test coverage shipped (Section 3t): 52 mocked-service controller tests, and the integration tests moved off the real dev database onto Sqlite in-memory, making them CI-viable. Suite is now 118. The `SQLitePCLRaw.lib.e_sqlite3` advisory (CVE-2025-6965) that came with the Sqlite dependency was fixed in the same pass, pinned to 2.1.12 in `Directory.Packages.props` — the vulnerability audit is now clean across all 14 projects, including one that was already affected beforehand. Earlier the same day: README accuracy pass (Section 3s) — the template's AutoMapper/MediatR/FluentAssertions claims corrected, the wrong service-area marketing block cut, and the Documentation placeholders replaced with real links; added a Sprint 4 item to document every remaining admin workflow and complete the README index once they exist, plus a new Tier 5 in the roadmap parking the dev-database QA leftovers. (Previous update, 2026-07-31: Tier 1 item 8 shipped, resolved differently than planned: technicians are decoupled from capacity slots entirely, slot auto-generation is removed, and there is now admin CRUD for the technician roster; see Section 3r. (Earlier the same day: Tier 1 items 3, 5 and 7 shipped — Reviews cleanup Section 3n, broken links Section 3p, Brevo email swap Section 3q.) (Previous update, 2026-07-30: Pre-Sprint 4 TODOs resequenced into launch-priority tiers after a full business-decisions session with the user (rationale logged in `docs/private/VISION_AND_CONTEXT.md` Section 5). Added a Hosting & Infrastructure subsection to Section 1 (Hetzner architecture, provisioned but not yet wired up) and three new TODO items: SendGrid→Brevo email swap, manual per-slot technician assignment, and the Custom Projects service category. Previous update, 2026-07-25: three of the original ten items had shipped — hero WebP migration Section 3j, cache-busting, and the Areas SVG coverage map Section 3l — plus the boot-time JPG sweep removed as unsafe Section 3k and Service Areas admin CRUD added Section 3m.))))))
+> **Last updated**: 2026-09-02 — **Homepage Popular Services Mobile UX Redesign: Strategy 4 (2×2 Compact Tile Grid) implemented and verified.** Replaced the single-column ~1,000px vertical scroll stack on mobile (< 768px) with a glanceable 2×2 compact tile grid (~175px tall per card) featuring category badges, duration pills, starting rates, and a full-width mobile "View All Services" button, while preserving the 3-column asymmetrical Bento grid on desktop (≥ 768px). Full suite 150/150 green. See Section 3aj. (Previous update, 2026-09-01: **First sitting of the Tier 0 client call: the rebrand name and domain are resolved.** Name is "Plumbing Handyman Surrey," domain bought fresh (`plumbing-handyman-surrey.co.uk` + `.com` backup via `names.co.uk`), and the public liability insurance figure question is closed for good. See Section 3ah.)
 
 ---
 
@@ -1049,6 +1049,171 @@ methods, `UpdateAsync`, and all three image-management methods on `ServicesServi
 
 ---
 
+## 3ah. Tier 0 Client Call (First Sitting): Rebrand Name and Domain Resolved (2026-09-01)
+
+No code changed this session — business decisions only, made live with Zaprqn on the call that
+Section 4 had been waiting on since 2026-07-30. Full reasoning logged in
+`docs/private/VISION_AND_CONTEXT.md` Sections 5.3, 5.6, 5.7, 5.9, and 6; this records what shipped
+and what's still open against the roadmap.
+
+- **Business name resolved: "Plumbing Handyman Surrey."** Two alternatives were considered and
+  dropped: "Zap Construction" (the client's existing dormant name — reads as electrical work, mismatched
+  the plumbing/handyman mix) and "HandyFixFix" (a rhyming suggestion, rejected as too close to the
+  retired "HandyFix" placeholder and non-descriptive of the actual services). The chosen name
+  literally states both service categories already in the data model (`Plumbing`, `Handyman`
+  `ServiceCategory` rows), so no marketing copy has to explain what the business does.
+- **Domain bought fresh, not recovered.** The old Zap Construction/name.com locked-mailbox situation
+  (`PROJECT_STATE.md`'s prior Tier 3 item 14, `VISION_AND_CONTEXT.md`'s prior Section 5.6) is moot now
+  that the name changed. Registered via `names.co.uk`: `plumbing-handyman-surrey.co.uk` (primary, with
+  Domain Proxy for WHOIS privacy) and `plumbing-handyman-surrey.com` (backup). Deliberately **not**
+  bought: the no-"Surrey" variants and the no-hyphen merged variants — priced and considered, cut to
+  keep the client's spend down at launch (squatting risk on an unknown local business name is low
+  right now; cheap to add later if it becomes real). Denislav manages the `names.co.uk` account,
+  Zaprqn paid on his own card — full detail, including the recovery-email/2FA responsibility this
+  arrangement carries, in `VISION_AND_CONTEXT.md` Section 5.6.
+- **Hyphen + "Surrey" were both deliberate, not defaults.** `plumbing-handyman-surrey` (hyphenated,
+  "Surrey" included) was chosen over a shorter no-hyphen/no-"Surrey" alternative that had a real
+  SEO/inclusivity argument for it (avoids implying South-West-London areas already in the 15-area
+  footprint — Kingston, Wimbledon, Sutton — are out of scope). Zaprqn's explicit call: he wants the
+  Surrey identity and accepts that trade-off. Recorded as a deliberate positioning choice so it isn't
+  mistaken for an oversight later.
+- **Insurance figure: closed, not just outstanding.** Coverage was already confirmed real
+  (2026-07-30); today's session closed the open half of that item for good — Zaprqn will not publish
+  an exact figure or certificate at all. The existing site copy ("Comprehensive Public Liability
+  insurance," no number) already matches this decision, so no code change was needed — it happened to
+  already be written the right way.
+- **New task, not on the original checklist**: Zoho Mail, not the registrar's own email add-on.
+  `names.co.uk` offered branded mailboxes at £8/month for 2 (recurring, not one-off); Zoho Mail's free
+  tier covers up to 5 branded addresses on the same domain at £0 (webmail/app access only on the free
+  tier — no IMAP/POP without upgrading to its $1/user/month Lite plan). Not yet set up: needs MX
+  records pointed at Zoho in the `names.co.uk` DNS panel, then mailbox creation.
+- **Clarified, not collected**: worker photos aren't needed per-worker, only Zaprqn's own — the only
+  public-facing destinations for a technician photo (the single-person bio block, the
+  confirmation-email card) were never a team roster, so a worker's photo would have no UI to appear
+  in. Names and phone numbers for the whole roster are still needed and were **not** collected this
+  session.
+- **Still open after this session** (see Section 4 for the full current state of every roadmap item):
+  years trading, real phone number, real trading address, his photo and name, the worker roster
+  itself, Custom Projects scope, and a rough completed-jobs count — none of these were reached in this
+  sitting of the call.
+- **Also surfaced, unrelated to the call, still unresolved**: staging currently shows "No availability"
+  on every date. Root cause diagnosed — `DevelopmentCapacitySeeder` only tops up booking capacity at
+  application startup, and the staging container hasn't restarted since the last `dev` deploy
+  (2026-08-05); its originally-seeded 14-day window ran out around 2026-08-19. Fix is a container
+  restart (re-runs the seeder) or a manual admin-panel slot generation — not yet done.
+
+---
+
+## 3ai. Site-Wide Visual Design Refresh: Body Texture, Glass-Morphism Consolidation, Photography Gaps Closed (2026-09-02)
+
+Started from a homepage-only background-image experiment the user had tried by hand (four generic
+low-res abstract gradient stock images, none brand-related); scope grew to a full audit-and-fix pass
+across every public page's CSS after discussing it together.
+
+- **New image-generation pipeline, built ad hoc this session, not yet a committed project asset**:
+  Gemini API (`gemini-3.1-flash-image`, confirmed current model against Google's own docs, up to
+  4K/16:9), a billed key, a PowerShell REST-call script, and a scratch Node/sharp WebP conversion step
+  — output copied straight into `wwwroot/images/`. This is the same shape of workflow Tier 1 item 1
+  above already specifies for the services-image batch; this session's images are a different set
+  (page-level hero/background photos, not per-service/per-area), so no naming collision, but the
+  pipeline itself could be reused for that batch later.
+- **Recurring Gemini gotcha, hit twice this session and worth remembering**: unprompted, the model
+  fabricated readable brand text twice — "HandyFix" signage on a generated service van, and a wholly
+  unrelated "CITY PLUMBING SERVICES" embroidered on a generated polo shirt. Matches the exact failure
+  mode already logged in Tier 1 item 1 above for the original 16 keeper images. Fix: explicit "no
+  text/no logo/no lettering of any kind" in the prompt, then visually verify before use — a milder
+  negative-prompt phrase was not enough on the first pass either time.
+- **`layout.css`'s sitewide `body` background** (attachment `fixed` dropped for performance) was the
+  single highest-leverage change: nearly every glass-card on the site (Contact form, FAQ accordions,
+  Reviews sidebar, Booking/Confirmed, auth pages) is translucent over this image, so replacing the old
+  mismatched abstract gradient with one subtle on-brand texture upgraded roughly eight pages at once.
+- **Glassmorphism consolidated onto `--glass-bg`/`--glass-border` tokens** — `navbar.css`'s
+  `.mobile-nav-dropdown` hardcoded its own `rgba(255,255,255,0.75)` instead of the token;
+  `.testimonial-card`'s distinct recipe (sits on a dark section, needs a much lighter wash) is kept but
+  now commented as deliberate, not drift.
+- **Opaque-vs-glass card rule enforced**: `pricing.css` already documented glass-card as "reserved for
+  hero/overlay contexts" (line 184) but `Services/Pricing.cshtml`'s rate cards used it anyway — fixed
+  to the opaque recipe matching `.pricing-card`/`.info-bento-card`.
+- **Auth pages (`auth.css`) brought into the system** — `.auth-card` converted from a flat opaque card
+  on a flat background to the same glass-over-texture treatment as Contact/FAQ/Reviews, per explicit
+  user confirmation.
+- **`Home/CookiePolicy.cshtml`** had zero shared chrome (bare `<div>`, no breadcrumb, no hero) — the
+  only page in the whole site like this; now uses the same `.services-header`/`.info-canvas`/
+  `.info-card` shell as Terms/Privacy.
+- **`Home/Reviews.cshtml`** hero normalized to `.text-center`, matching the other content pages
+  (Contact/FAQ/Terms/Privacy) — it had been left off that pattern with no documented reason.
+- **Homepage**: reverted the `.division-card-content` background-image experiment (dark text over a
+  busy photo — confirmed illegible before shipping), added a light glass scrim behind `.bento-header`
+  (previously had none, unlike `.cta-card` which already did), applied a new wide on-brand photo to
+  `.final-cta`/`.cta-card`/`.popular-services-section`.
+- **`Services/Index.cshtml` and `Areas/Index.cshtml`** — both had zero photography (confirmed against
+  the code, not assumed); given the `.service-hero-section` image-hero pattern already proven on
+  `Services/Details`/`Areas/Details`, both now reuse it rather than inventing a new one.
+- **Real bug fixed**: `Services/Details.cshtml:161`'s "Local Expert" avatar was hardcoding a live
+  external Google placeholder SVG (`gstatic.com/labs-code/stitch/...`) — replaced with two generated,
+  on-brand, generic professional headshots (`expert-david.webp`/`expert-mark.webp`, matched to the
+  existing `isPlumbing` persona branch), plus an `onerror` fallback matching the Category/Areas-Details
+  convention this file was missing.
+- **CSS typo fixed**: `home.css`'s `.cta-card-bg` had `rgba(255x, 255, 255, 0.65)` — an invalid value
+  silently dropped by the browser, so the white/blur scrim behind the final-CTA text was never actually
+  rendering. Now `rgba(255, 255, 255, 0.65)`.
+- **New assets** (all logo/text-free, verified — see the Gemini gotcha note above): `bg-texture-body.webp`,
+  `bg-cta-wide.webp`, `services-hero.webp`, `areas-hero.webp`, `expert-david.webp`, `expert-mark.webp`.
+  **Removed**: the four discarded `bg-image-1..4.webp` abstracts.
+- **Verified in-browser**, not just compiled: `dotnet build` clean, then Playwright screenshots
+  (headless Chromium, 1440px) of every touched page, plus a scrolled homepage capture (the site's own
+  `IntersectionObserver` fade-in otherwise makes a plain full-page screenshot look broken — a
+  screenshot artifact, not a bug). No new console/network errors introduced; one pre-existing unrelated
+  404 noted (`Contact` page's `jquery.validate.unobtrusive.min.js`), out of scope here.
+- **Not done, flagged to the user, not started unprompted**: the site's visible brand text is still
+  "HandyFix"/"Handy Fix" everywhere (navbar, footer, hero copy, JSON-LD `name`/`@id`/`url`/`sameAs`) —
+  stale as of Section 3ah's rebrand decision the day before ("Plumbing Handyman Surrey"). Out of scope
+  for this pass — a full rename touches far more than the CSS/imagery here, and Tier 2/3 items feeding
+  the correct NAP data (real phone, real address, wordmark) haven't landed yet either — but worth its
+  own pass. None of this session's new image assets carry any old wordmark, so nothing here needs
+  rework once the rename happens.
+
+---
+
+## 3aj. Homepage Popular Services Mobile UX Redesign: Strategy 4 (2×2 Compact Tile Grid) (2026-09-02)
+
+- **Problem identified**: On mobile view (< 768px), the Popular Services section previously collapsed from the desktop 3-column asymmetrical Bento grid into a single vertical stack of 4 massive 240px image cards. It occupied ~1,000px of scrolling space with low information density (only service name and starting price were shown), while richer properties already loaded on `ServiceViewModel` (`CategoryName`, `EstimatedDurationMinutes`, `Description`) were unused. The "See all services" link was also hidden on mobile (`display: none` below 768px).
+- **Exploration & Strategy Evaluation**: Four distinct mobile UX strategies were formulated, implemented, and reviewed live by the user:
+  1. *The Rich Bento*: Full photographic cards with category badge, duration pill, clamped 2-line description, and "Book →" action pill.
+  2. *Mobile App Split Row*: 120px horizontal split cards (photo thumbnail left, structured surface card right, TaskRabbit pattern).
+  3. *Horizontal Snap Carousel*: Native CSS touch-snap carousel (`scroll-snap-type: x mandatory`), cards sized to 82vw to peek from the edge.
+  4. *2×2 Compact Tile Grid*: Two-column by two-row compact tile grid (~175px tall per card) displaying all 4 services at a glance on a single screen without scrolling or swiping.
+- **Winner selected**: Strategy 4 ("2×2 Compact Tile Grid") was selected as the final implementation.
+  - All 4 popular services are immediately visible on a mobile viewport with category badges, duration pills, bold titles, 2-line descriptions, flat-rate pricing, and booking buttons.
+  - Added full-width `.bento-mobile-footer` button ("View All Services →") styled with high-contrast primary navy background, white text, and `.btn-outline-secondary` utility class added to `buttons.css`.
+  - Desktop view (≥ 768px) remains completely untouched as the standard 3-column asymmetrical Bento grid.
+- **Mobile Header & Navigation Polish**:
+  - *Sticky Header*: Fixed mobile stickiness by moving `html, body` from `overflow-x: hidden` to `overflow-x: clip;` in `reset.css` (preventing mobile browsers from creating a scroll clipping context that kills sticky positioning), and set `.header-docked` to `position: -webkit-sticky; position: sticky; top: 0; z-index: 1020;`.
+  - *Mock Phone Number*: Added interactive tap-to-call button (`07123 456789`, `tel:07123456789`) in `.navbar-actions` on the mobile header bar, plus a prominent call banner inside `.mobile-nav-dropdown`.
+  - *Opaque Menu Gradient*: Replaced the low-opacity glassmorphism background (`rgba(255, 255, 255, 0.65)`) on `.mobile-nav-dropdown` with a 98% opaque branded gradient (ice blue to soft coral to clean slate) with 24px backdrop blur and `#0f172a` semibold link typography, ensuring underlying page text cannot bleed through.
+- **Desktop Popular Services Contrast Polish**:
+  - Upgraded `.bento-card-desc` on desktop from translucent `rgba(255, 255, 255, 0.85)` at `13px` to pure `#ffffff` at `14px` with `font-weight: 500` and `text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85)`.
+  - Added a dedicated vertical gradient scrim directly behind `.bento-card-content` on desktop, guaranteeing high contrast over light photo details.
+- **Specialised Divisions Card Theming**:
+  - Styled Plumbing & Heating card content with a soft, airy sky-blue gradient (`#e0f2fe` to `#f8fafc`), sky border (`#bae6fd`), and cyan hover elevation glow.
+  - Styled General Handyman card content with an elegant blush/coral gradient (`#fff1f2` to `#f8fafc`), coral border (`#fecdd3`), and themed rose icons, checkmarks, and link (`#e11d48`).
+- **Verification**: Full test suite passed (150/150 green — 95 `Services.Data.Tests` + 55 `Web.Tests`).
+
+---
+
+## 3ak. Service Catalog Refresh: Flat Hourly Pricing + 8 New Services (2026-09-08)
+
+- **Context**: user-driven market research (AI-assisted, cross-checked live against Aspect.co.uk, Fantastic Handyman, Silver Saints, and Handy Squad's own published rate cards) plus a pricing decision agreed with the business's co-owner (Zapryan). Two decisions came out of it: which services were genuinely missing from the catalog vs. already covered inside a broader bundle, and a move from 20 individually-judged flat prices to a uniform hourly-rate model.
+- **Pricing model changed**: every `Service.BasePrice` now derives from **£80/hr (Plumbing) or £60/hr (Handyman), 1-hour minimum**, with a small number of deliberately-larger jobs (Pipe Repairs, Radiator & TRV Replacement, Outside Garden Tap Installation at £120; Kitchen Plumbing £150; Bathroom Plumbing £160; Shower Installation £240; Furniture Assembly £90 and Gutter Clearing £90; Painting Touch-Ups £120; Property Maintenance £180) priced above the floor by judgment, not by a minutes-based formula — `EstimatedDurationMinutes` was confirmed (by reading `ServicesService`/booking code, not assumption) to have **zero functional wiring** anywhere: not slot generation, not price calculation, purely a displayed number. Deriving price from it would have been false precision, so duration and price are now treated as fully independent.
+- **`ServicesSeeder` behavior changed from insert-only to upsert-on-price/duration.** Previously a service already found by `Name` was left untouched forever, so editing the seeder's numbers had no effect on an already-seeded database (`handyfix_staging` included). It now updates `BasePrice`/`EstimatedDurationMinutes` on every startup for a matched row, leaving `Slug`/`Name`/`Description`/`CategoryId` alone. This is intentionally scoped to pre-launch: `handyfix_prod` is still empty, so there is no live admin-made price edit yet that this could clobber. **Revisit before production go-live** — once real admin price edits can exist, an unconditional reseed-on-startup will silently overwrite them.
+- **8 new services added** (20 → 28): Plumbing gained Washing Machine & Dishwasher Install, Radiator & TRV Replacement, Outside Garden Tap Installation, Silicone & Mastic Resealing, Bath & Shower Screen Fitting; Handyman gained Door Trimming & Shaving, Lock & Handle Replacement, Gutter Clearing. Each was cross-checked against the *existing* service descriptions first — most of what first looked like a market gap (appliance hookup, radiator/valve work, resealing, lock/handle work, gutter clearing) was already promised inside a broader bundle's description text, just never sold as its own line item.
+- **Parent bundle descriptions tightened** to remove the now-duplicated wording: `kitchen-plumbing` no longer mentions washing machines/dishwashers, `general-plumbing-maintenance` no longer mentions radiator bleeding/valve replacement, `door-repairs` no longer mentions handles/locks, `minor-home-repairs` no longer mentions silicone sealant, `property-maintenance` no longer mentions gutter clearing/lock changes — otherwise two different bookable services would have claimed the same job.
+- **Side effect, not yet verified live**: `CategoryViewModel.BasePrice` (Section 5's `Min(Services.BasePrice)` mapping, shown on `/Pricing` as "Our Hourly Rates") should now resolve to exactly £80/£60 for both categories, since every service in each category has a floor at that value — this should also close the pre-existing gap where that page's "1-hour minimum, additional time billed at the same rate" copy didn't match any real per-service price. Not re-verified with a live app run this pass.
+- **Known gap**: the 8 new services have no hero image yet. `ServicesSeeder`'s `ServiceImage` back-fill (line ~90) will create a DB row pointing at `/images/services/{slug}-hero.webp` for each regardless of whether that file exists on disk — expect broken images on the new services' cards/detail pages until the AI image-generation pipeline (Section 4 Tier 1 item 1) is run for these 8 slugs.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and full test suite (95 `Services.Data.Tests` + 55 `Web.Tests`, 150/150 green) — no test hard-codes the old seeded prices. Not yet verified with a live app run against a freshly-seeded database.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
@@ -1102,11 +1267,11 @@ methods, `UpdateAsync`, and all three image-management methods on `ServicesServi
 
 #### Tier 2 — blocked on the client call (Tier 0)
 
-**9. Real business facts.** Insurance certificate (coverage itself confirmed real by Zaprqn 2026-07-30 — see item 16 — exact figure/certificate still needed), real years trading, real phone number, real trading address, his photo and name. Feeds directly into Tier 3's NAP/stats work — nothing there can be finalized before this lands.
+**9. Real business facts.** ~~Insurance certificate~~ **closed 2026-09-01, not merely still needed — Zaprqn will not publish an exact figure at all, coverage-confirmed-real is the whole story (Section 3ah).** Still open: real years trading, real phone number, real trading address, his photo and name — the client call started 2026-09-01 but didn't reach these. Feeds directly into Tier 3's NAP/stats work — nothing there can be finalized before this lands.
 
-**10. Rebrand — the business name itself.** Confirmed happening at this week's call. The single highest-leverage fact in this tier: it unblocks Tier 3's Google Business Profile creation, domain decision, wordmark/logo (item 15), and final JSON-LD/NAP values (item 18) all at once — nothing in Tier 3 can start before it lands.
+**10. Rebrand — the business name itself.** ~~Confirmed happening at this week's call.~~ **Done 2026-09-01 — see Section 3ah.** Name is "Plumbing Handyman Surrey." Unblocks Tier 3's Google Business Profile creation (item 13), domain decision (item 14, also done), wordmark/logo (item 15), and final JSON-LD/NAP values (item 18) — all now startable.
 
-**11. Real technician roster.** Names and phone numbers for Zaprqn and his worker(s) — however many are actually going active at launch. **No longer a code change**: since Section 3r there is full admin CRUD at `/Administration/Technicians`, so this is now data entry through the UI. Note this was a hard prerequisite, not a convenience — `TechniciansSeeder` only inserts when the table is empty, so adding a second technician by editing the seeder would never have worked. The seeded placeholder (`John Doe / 07123456789`) should be edited into a real person or deactivated once real names land; it can't be deleted once it has bookings, by design.
+**11. Real technician roster.** Names and phone numbers for Zaprqn and his worker(s) — however many are actually going active at launch. **Not collected at the 2026-09-01 call session** — still open. **No longer a code change**: since Section 3r there is full admin CRUD at `/Administration/Technicians`, so this is now data entry through the UI. Note this was a hard prerequisite, not a convenience — `TechniciansSeeder` only inserts when the table is empty, so adding a second technician by editing the seeder would never have worked. The seeded placeholder (`John Doe / 07123456789`) should be edited into a real person or deactivated once real names land; it can't be deleted once it has bookings, by design. **Clarified 2026-09-01**: only Zaprqn's own photo is needed, not one per worker — see item 17, no team-roster UI exists for worker photos to appear in.
 
 **12. Custom Projects category scope.** New service category for launch — full bathroom installation, full kitchen installation. Needs Zaprqn's input on what he's actually delivered under this banner before, and what he wants to promote/rank for, before any `ServiceCategory`/`Service` rows or copy get written. Once scoped: standard new-category engineering (seeder rows, images per Tier 1 item 1, category page wiring) — small, once the scope question is answered. **Booking mechanism, flagged 2026-08-03**: intended to route through an inquiry/quote-request flow rather than the standard slot-based instant-booking flow, since a multi-day install doesn't fit an hourly `AvailabilitySlot` — not yet confirmed with Zaprqn, see `docs/private/VISION_AND_CONTEXT.md` Section 5.13.
 
@@ -1114,14 +1279,14 @@ methods, `UpdateAsync`, and all three image-management methods on `ServicesServi
 
 #### Tier 3 — blocked on Tier 2 outputs landing
 
-**13. Google Business Profile creation & verification.** Cannot start until the business name (item 10) is settled. Start the moment it lands — verification (commonly postcard-based, 1–2+ weeks in transit) is the single longest lead time on the whole launch-blocker list and shouldn't wait behind other Tier 3 work.
+**13. Google Business Profile creation & verification.** ~~Cannot start until the business name (item 10) is settled.~~ **Unblocked 2026-09-01 — start now.** Verification (commonly postcard-based, 1–2+ weeks in transit) is the single longest lead time on the whole launch-blocker list and shouldn't wait behind other Tier 3 work.
 
-**14. Domain finalization.** Depends on the rebrand decision (item 10) — no point fully recovering the existing name.com account for a name that may be retired. Recovery path, if the existing domain is still wanted: confirm whether Zaprqn can log into name.com at all. If yes, the locked mailbox is likely a separate hosted-email product, resettable from the account's own control panel. If no — and the account's recovery email is itself unreachable (a common circular lock when the recovery address is hosted on the same domain) — the only path is name.com support with proof of ownership (invoice/receipt number, the payment card's last 4 digits, or ID matching the WHOIS registrant). Once back in: point the recovery email at a non-domain-hosted address (e.g. a personal Gmail) and enable 2FA with stored backup codes, so this can't recur. **Not a hard launch blocker** — staging, and initial production if needed, can run on the Hetzner-assigned hostname (Section 1) while this is sorted.
+**14. Domain finalization.** ~~Depends on the rebrand decision.~~ **Done 2026-09-01 — see Section 3ah.** The old name.com/Zap Construction recovery question is moot — a fresh domain was bought instead: `plumbing-handyman-surrey.co.uk` (primary) + `.com` (backup), via `names.co.uk`, Denislav's account, Zaprqn paid. **New follow-up, not yet done**: point the domain's DNS at the Hetzner staging box (currently reachable only via its free reverse-DNS hostname), and set up Zoho Mail (free tier, up to 5 branded addresses) — MX records + mailbox creation, chosen over the registrar's own paid email add-on.
 
 **15. Wordmark/logo.** Blocked on item 10. Build as SVG from the existing Outfit font + navbar cyan accent dot once the name lands — not AI-generated, which cannot render text reliably (the exact problem with the current garbled-logo images, item 1).
 
 **16. Fake statistics → real or removed.** Replace fabricated figures across `Home/Index`, `Home/Reviews`, `Home/About`, `Services/Index`, `Services/Details`, `Services/Category`:
-  - **Resolved 2026-07-30, no longer blocked**: `Up to £5M Public Liability insurance` → **"Comprehensive Public Liability insurance"**, confirmed genuine coverage (exact figure still pending, item 9) — `Home/Index.cshtml:238` keeps its existing "…covering every single visit" tail unchanged; `Services/Details.cshtml:217`'s shorter sidebar line and `Services/Details.cshtml:153`'s FAQ-prose version get the equivalent swap adapted to each sentence's shape, not a literal paste. The **"100% satisfaction guarantee"** bundled into that same FAQ sentence (`Services/Details.cshtml:153`) is confirmed **not real — remove it outright**, don't reword it.
+  - **Resolved 2026-07-30, closed for good 2026-09-01**: `Up to £5M Public Liability insurance` → **"Comprehensive Public Liability insurance"**, confirmed genuine coverage (exact figure will not be published at all, per Zaprqn — not merely still pending, item 9) — `Home/Index.cshtml:238` keeps its existing "…covering every single visit" tail unchanged; `Services/Details.cshtml:217`'s shorter sidebar line and `Services/Details.cshtml:153`'s FAQ-prose version get the equivalent swap adapted to each sentence's shape, not a literal paste. The **"100% satisfaction guarantee"** bundled into that same FAQ sentence (`Services/Details.cshtml:153`) is confirmed **not real — remove it outright**, don't reword it.
   - **Still blocked on item 9 (real facts)**: `12k+ Jobs Completed`, `4.9/5 Rating`, `Based on 2,500 reviews` (`Home/Index.cshtml:251,262,263`); `4.9` + `2.4k Verified Reviews` (`Home/Reviews.cshtml:96,109-113`); `4.9/5 Rating` + `Over 1,200 services completed` (`Services/Details.cshtml:170,173`); `4.9/5 Average Rating` (`Services/Index.cshtml:95`); `5,000+ Successful Fixes`, `15+ Specialist Techs`, `Crafting Quality Since 2018` (`Home/About.cshtml:14,48-53`); `3 Active Technicians Nearby` (`Services/Category.cshtml:140`). The counts contradict each other (12k+ vs 5,000+ vs 1,200 jobs; 2,500 vs 2.4k reviews vs 5 rows in the database), and most are rating/review claims that no longer make sense once Reviews goes GBP-link-only (item 3) — expect most to become the honest, already-identified substitutes rather than real numbers: *"Direct to your technician — no call centre"*, *"Covering 15 areas from Chessington"* (real `ServiceArea` rows), *"Fixed hourly rates, quoted upfront"* (real `BasePrice`), *"Pay securely online — deposit only"* (real Stripe integration).
   - Worth noting on the upside, still true: no Gas Safe, NICEIC, TrustMark, Which? or Checkatrade badges appear anywhere — the highest-severity fabrication category (Gas Safe numbers are legally regulated) is clean.
 

@@ -6,17 +6,18 @@
   align-items: center;
   min-height: calc(100vh - 200px);
   padding: var(--spacing-8) var(--spacing-4);
-  background-color: var(--background);
 }
 
 .auth-card {
   width: 100%;
   max-width: 450px;
-  background-color: var(--surface-container-lowest);
-  border: 1px solid var(--border-subtle);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: var(--spacing-8);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-2xl);
 }
 
 .auth-card.wide {

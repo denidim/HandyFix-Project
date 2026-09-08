@@ -20,18 +20,18 @@
 }
 
 <div class="page-container services-page">
-    <!-- Header & Breadcrumbs -->
-    <section class="services-header">
-        <nav class="breadcrumb-nav" aria-label="breadcrumb">
-            <a asp-controller="Home" asp-action="Index">Home</a>
-            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
-            <span class="breadcrumb-current">Services</span>
-        </nav>
-        <div class="services-header-content">
-            <h1 class="services-hero-title">
-                Professional Property Maintenance in <span>South London.</span>
-            </h1>
-            <p class="services-subtitle">
+    <!-- Hero Section -->
+    <section class="service-hero-section">
+        <div class="service-hero-image" style="background-image: url('/images/services-hero.webp')"></div>
+        <div class="service-hero-overlay"></div>
+        <div class="service-hero-content">
+            <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                <span class="text-white">Services</span>
+            </nav>
+            <h1 class="service-hero-title">Professional Property Maintenance in South London.</h1>
+            <p class="text-white-80 font-body-lg" style="max-width: 640px;">
                 Reliable plumbing and expert handyman services across Sutton, Croydon, and Epsom. We combine technical competence with a high-end service approach to keep your home or property in perfect condition.
             </p>
         </div>

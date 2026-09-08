@@ -27,7 +27,13 @@
   margin: 0 auto;
 }
 
+/* Opaque, matching .pricing-card/.info-bento-card below — glass-card is reserved
+   for hero/overlay contexts, not this direct-content-page grid. */
 .rate-card {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
   padding: var(--spacing-8);
   display: flex;
   flex-direction: column;
