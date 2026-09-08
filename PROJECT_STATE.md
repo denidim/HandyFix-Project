@@ -1308,6 +1308,17 @@ Business decision: the catalog area (Section 3ak-3am's Chessington/Surrey covera
 
 ---
 
+## 3ap. Real "Local Expert" Added for Small Building & Refurbishments: Zap (2026-09-08)
+
+Closes the gap Section 3am deliberately left open (no fabricated persona for this category) and Section 3ao's "known gap" note, now that the user supplied real content for the business's actual co-founder rather than an invented one.
+
+- **`Details.cshtml`'s "Local Expert" block now renders for all three categories.** The `!isBuilding` guard around the block was removed; `expertName`/`expertRole`/`expertBorough`/`expertBio`/`expertAvatar` gained a `isBuilding` branch (Zap: "Projects Director", "Surrey", bio and closing line supplied verbatim by the user — his own words about being in construction since 2004, personally surveying every project and working alongside the on-site teams to completion). The block's closing sentence is `isBuilding`-conditional (`expertClosingLine`) since the generic "property maintenance" wording used for David/Mark didn't fit a multi-day refurbishment project.
+- **Real photo, not a placeholder**: the user's supplied `zap-photo.avif` (AI-generated headshot, 425×650) had to be converted — GDI+ (`System.Drawing`) cannot decode AVIF at all ("Out of memory" is its generic unrecognized-format error), but Windows' WIC codec stack could (this machine has an AVIF codec extension installed), so a PowerShell script decoded it via `System.Windows.Media.Imaging.BitmapDecoder` to PNG, then a throwaway console app referencing this repo's own `SkiaSharp` 2.88.9 (already a dependency, used identically in `ImageStorageService`) resized it to 320px wide and re-encoded as WEBP at quality 80 — matching both the format and quality setting every other site image already uses. Saved as `wwwroot/images/expert-zap.webp` (42.5 KB), same naming convention as `expert-david.webp`/`expert-mark.webp`. The existing `onerror` fallback to `/images/hero.webp` was left in place unchanged.
+- **The `4.9/5 Rating` / `Over 1,200 services completed` stats line was left as-is** for all three experts — it reads as company-wide social proof rather than a personal claim, and auditing/removing it is Tier 3 item 17's job, not in scope here.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only). Test suite and live app run not yet done, per the user's "batch everything, test at the end" instruction for this whole session.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
