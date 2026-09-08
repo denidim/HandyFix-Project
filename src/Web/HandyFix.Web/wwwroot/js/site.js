@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (mobileBtn && mobileMenu) {
         mobileBtn.addEventListener('click', function () {
             mobileMenu.classList.toggle('is-open');
+            document.body.classList.toggle('mobile-nav-open', mobileMenu.classList.contains('is-open'));
         });
     }
 
