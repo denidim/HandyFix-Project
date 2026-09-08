@@ -76,11 +76,17 @@ namespace HandyFix.Web.Controllers
 
         [HttpGet]
         [Route("Contact")]
-        public IActionResult Contact()
+        public IActionResult Contact(string service = null)
         {
             this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
             this.ViewData["MetaDescription"] = "Get in touch with Handy Fix for a custom quote or emergency plumbing and handyman help across Sutton, Croydon, Epsom, and South London.";
-            return this.View(new ContactInputModel());
+            var model = new ContactInputModel();
+            if (!string.IsNullOrWhiteSpace(service))
+            {
+                model.Message = $"Hi, I would like to request a quote / survey for: {service.Trim()}.\n\nProject details:\n";
+            }
+
+            return this.View(model);
         }
 
         [HttpPost]

@@ -183,6 +183,12 @@
   }
 }
 
+@media (min-width: 1024px) {
+  .divisions-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .division-header-title {
   display: flex;
   align-items: center;
@@ -279,6 +285,37 @@
 
 .division-card-handyman .division-link:hover {
   color: #be123c;
+}
+
+.division-card-building .division-card-content {
+  background: linear-gradient(
+    155deg,
+    #fffbeb 0%,
+    #fef3c7 45%,
+    #f8fafc 100%
+  );
+}
+
+.division-card-building {
+  border: 1.5px solid #fde68a;
+}
+
+.division-card-building:hover {
+  border-color: #d97706;
+  box-shadow: 0 20px 35px -10px rgba(217, 119, 6, 0.25);
+}
+
+.division-card-building .division-header-title .division-icon-lg,
+.division-card-building .division-check-icon {
+  color: #b45309 !important;
+}
+
+.division-card-building .division-link {
+  color: #b45309;
+}
+
+.division-card-building .division-link:hover {
+  color: #92400e;
 }
 
 /* Bento Grid */

@@ -8,6 +8,7 @@
         {
             "Plumbing" => "water_drop",
             "Handyman" => "handyman",
+            "Small Building & Refurbishments" => "foundation",
             _ => "home_repair_service",
         };
     }
@@ -26,7 +27,7 @@
                 Transparent, Simple <span>Pricing.</span>
             </h1>
             <p class="services-subtitle">
-                No hidden fees or call-out charges. Every job starts with a 1-hour base rate for the service category, billed at the hourly rate shown below.
+                No hidden fees or call-out charges. Plumbing and Handyman jobs start with a 1-hour base rate, billed at the hourly rate shown below. Small Building &amp; Refurbishment work is quoted individually after a free survey.
             </p>
             <a asp-controller="Booking" asp-action="Index" class="btn btn-primary font-button-text pricing-hero-cta">
                 <span>Book Now</span>
@@ -47,16 +48,25 @@
         <div class="pricing-cards-grid">
             @foreach (var category in Model.Categories)
             {
+                var isBuilding = category.Slug == "small-building-works" || category.Name.Contains("Building");
+
                 <div class="rate-card">
                     <div class="rate-card-icon-wrapper">
                         <span class="material-symbols-outlined">@this.GetCategoryIcon(category.Name)</span>
                     </div>
                     <h3 class="font-headline-sm text-primary rate-card-title">@category.Name</h3>
                     <div class="rate-card-figure">
-                        <span class="rate-card-price">£@category.BasePrice.ToString("F0")</span>
-                        <span class="text-on-surface-variant">per hour</span>
+                        @if (isBuilding)
+                        {
+                            <span class="rate-card-price">From £@category.BasePrice.ToString("F0")</span>
+                        }
+                        else
+                        {
+                            <span class="rate-card-price">£@category.BasePrice.ToString("F0")</span>
+                            <span class="text-on-surface-variant">per hour</span>
+                        }
                     </div>
-                    <p class="rate-card-pill">Minimum charge 1 hour</p>
+                    <p class="rate-card-pill">@(isBuilding ? "Quoted after free survey" : "Minimum charge 1 hour")</p>
                 </div>
             }
         </div>
@@ -64,9 +74,11 @@
         <div class="pricing-note-box">
             <h3>How our pricing works</h3>
             <p>
-                All bookings begin with a 1-hour base rate for the selected service category. If a job takes longer, additional
-                time is billed at the same hourly rate. Any materials required beyond what our technician carries as standard
-                are quoted and agreed with you before work begins &mdash; no surprises on the invoice.
+                All Plumbing and Handyman bookings begin with a 1-hour base rate for the selected service category. If a job
+                takes longer, additional time is billed at the same hourly rate. Any materials required beyond what our
+                technician carries as standard are quoted and agreed with you before work begins &mdash; no surprises on the
+                invoice. Small Building &amp; Refurbishment work is priced differently: every job is quoted individually
+                after a free on-site survey, since scope and materials vary too much for an hourly rate.
             </p>
         </div>
     </section>

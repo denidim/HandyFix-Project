@@ -127,6 +127,11 @@
   color: var(--on-secondary-container);
 }
 
+.service-category-card[data-division="building"] .service-card-icon-wrapper {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #b45309;
+}
+
 .service-card-icon-wrapper .material-symbols-outlined {
   font-size: 40px;
 }
@@ -146,6 +151,11 @@
 .service-category-card[data-division="handyman"] .service-badge {
   background-color: var(--secondary-fixed);
   color: var(--on-secondary-fixed);
+}
+
+.service-category-card[data-division="building"] .service-badge {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #b45309;
 }
 
 .service-card-title {

@@ -14,6 +14,14 @@
             "Furniture Assembly" => "shelves",
             "TV Mounting & AV Setup" => "tv",
             "Carpentry & Door Trimming" => "carpenter",
+            "Full Bathroom Refurbishment" => "bathtub",
+            "Kitchen Fitting & Alterations" => "countertops",
+            "Partition Walls & Stud Work" => "view_column",
+            "Plastering & Ceiling Repairs" => "format_paint",
+            "Wall & Floor Tiling" => "grid_view",
+            "Flooring Installation" => "layers",
+            "External Brickwork & Paving" => "foundation",
+            "Custom Carpentry & Boxing-In" => "carpenter",
             _ => "build"
         };
     }
@@ -30,9 +38,9 @@
                 <span class="material-symbols-outlined text-xs">chevron_right</span>
                 <span class="text-white">Services</span>
             </nav>
-            <h1 class="service-hero-title">Professional Property Maintenance in South London.</h1>
+            <h1 class="service-hero-title">Professional Property Maintenance &amp; Building in South London.</h1>
             <p class="text-white-80 font-body-lg" style="max-width: 640px;">
-                Reliable plumbing and expert handyman services across Sutton, Croydon, and Epsom. We combine technical competence with a high-end service approach to keep your home or property in perfect condition.
+                Reliable plumbing, expert handyman tasks, and small building works across Sutton, Croydon, Epsom, and Surrey. Transparent pricing and guaranteed craftsmanship on every job.
             </p>
         </div>
     </section>
@@ -41,10 +49,12 @@
     <section class="services-grid">
         @foreach (var category in this.Model)
         {
-            var isPlumbing = category.Name == "Plumbing";
-            var categoryBadge = isPlumbing ? "Emergency Available" : "Multi-Skill Pros";
-            var categoryIcon = isPlumbing ? "plumbing" : "home_repair_service";
-            var divisionAttr = isPlumbing ? "plumbing" : "handyman";
+            var isPlumbing = category.Slug == "plumbing" || category.Name == "Plumbing";
+            var isBuilding = category.Slug == "small-building-works" || category.Name.Contains("Building");
+
+            var categoryBadge = isBuilding ? "Survey & Fixed Quote" : (isPlumbing ? "Emergency Available" : "Multi-Skill Pros");
+            var categoryIcon = isBuilding ? "foundation" : (isPlumbing ? "plumbing" : "home_repair_service");
+            var divisionAttr = isBuilding ? "building" : (isPlumbing ? "plumbing" : "handyman");
 
             <article class="service-category-card" data-division="@divisionAttr">
                 <div class="service-card-meta">
@@ -53,7 +63,7 @@
                     </div>
                     <span class="service-badge">@categoryBadge</span>
                 </div>
-                <h2 class="service-card-title">@category.Name Services</h2>
+                <h2 class="service-card-title">@category.Name</h2>
                 <p class="service-card-desc">@category.Description</p>
                 
                 <div class="service-popular-list">
@@ -64,7 +74,7 @@
                                 <span class="material-symbols-outlined service-subitem-icon">@GetServiceIcon(svc.Name)</span>
                                 <span class="service-subitem-title">@svc.Name</span>
                             </div>
-                            <span class="service-subitem-price">from £@svc.BasePrice.ToString("F2")</span>
+                            <span class="service-subitem-price">from £@svc.BasePrice.ToString("F0")</span>
                         </div>
                     }
                 </div>

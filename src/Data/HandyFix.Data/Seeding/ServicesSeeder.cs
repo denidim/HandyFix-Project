@@ -10,10 +10,11 @@ namespace HandyFix.Data.Seeding
     {
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
-            ServiceCategory plumbingCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Name == "Plumbing");
-            ServiceCategory handymanCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Name == "Handyman");
+            ServiceCategory plumbingCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == "plumbing" || x.Name == "Plumbing");
+            ServiceCategory handymanCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == "handyman" || x.Name == "Handyman");
+            ServiceCategory smallBuildingCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == "small-building-works" || x.Name == "Small Building & Refurbishments");
 
-            if (plumbingCategory == null || handymanCategory == null)
+            if (plumbingCategory == null || handymanCategory == null || smallBuildingCategory == null)
             {
                 // Wait for CategoriesSeeder to complete, or seed categories if not present
                 return;
@@ -52,6 +53,16 @@ namespace HandyFix.Data.Seeding
                 new { Slug = "door-trimming-shaving", Name = "Door Trimming & Shaving", Description = "Trimming or easing a door that catches on new carpet or flooring so it opens and closes freely.", Price = 60.00m, Duration = 60, CategoryId = handymanCategory.Id },
                 new { Slug = "lock-handle-replacement", Name = "Lock & Handle Replacement", Description = "Replacing worn or broken door locks, handles, and latches for security or a tenancy changeover.", Price = 60.00m, Duration = 60, CategoryId = handymanCategory.Id },
                 new { Slug = "gutter-clearing", Name = "Gutter Clearing", Description = "Clearing leaves and debris from gutters and downpipes to prevent overflow and water damage.", Price = 60.00m, Duration = 90, CategoryId = handymanCategory.Id },
+
+                // Small Building & Refurbishment Services
+                new { Slug = "full-bathroom-refurbishment", Name = "Full Bathroom Refurbishment", Description = "Complete bathroom renovation including removal of old suite, plumbing, wall and floor tiling, sanitaryware fitting, and electrical/lighting prep.", Price = 650.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
+                new { Slug = "kitchen-fitting-alterations", Name = "Kitchen Fitting & Alterations", Description = "Fitting kitchen units, worktops, sink plumbing, splashbacks, and integrated appliances for partial or complete kitchen renovations.", Price = 650.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
+                new { Slug = "partition-walls-drylining", Name = "Partition Walls & Stud Work", Description = "Constructing timber or metal stud partition walls, acoustic insulation, plasterboarding, and room reconfigurations for home offices or layouts.", Price = 320.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
+                new { Slug = "plastering-ceiling-repairs", Name = "Plastering & Ceiling Repairs", Description = "Full room skimming, plaster patching, ceiling boarding after water damage, and coving to create clean, smooth surfaces ready for painting.", Price = 280.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
+                new { Slug = "wall-floor-tiling", Name = "Wall & Floor Tiling", Description = "Professional tiling for kitchens, bathrooms, and hallways using ceramic, porcelain, natural stone, or metro tiles with clean grouting and sealing.", Price = 280.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
+                new { Slug = "flooring-installation", Name = "Flooring Installation", Description = "Supplying and fitting laminate, luxury vinyl tiles (LVT), and engineered wood flooring, complete with underlay, beading, and threshold trims.", Price = 280.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
+                new { Slug = "external-brickwork-paving", Name = "External Brickwork & Paving", Description = "Mortar repointing, garden wall repairs, patio relaying, outdoor step rebuilds, and concrete shed bases built on a manageable domestic scale.", Price = 320.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
+                new { Slug = "custom-carpentry-boxing-in", Name = "Custom Carpentry & Boxing-In", Description = "Bespoke alcove cupboards, floating shelving units, pipework boxing-in, and tailored interior woodwork crafted to suit your room dimensions.", Price = 280.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
             };
 
             foreach (var item in services)

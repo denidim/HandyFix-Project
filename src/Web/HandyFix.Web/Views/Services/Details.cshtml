@@ -5,27 +5,34 @@
     this.ViewData["Title"] = $"{Model.Name} - HandyFix South London";
 
     var isPlumbing = Model.CategoryName == "Plumbing";
-    var durationHours = Model.EstimatedDurationMinutes >= 60 
-        ? $"{(Model.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
-        : $"{Model.EstimatedDurationMinutes} Mins";
+    var isBuilding = Model.CategorySlug == "small-building-works" || Model.CategoryName.Contains("Building");
+    var durationHours = isBuilding
+        ? "Day Rate / Survey"
+        : (Model.EstimatedDurationMinutes >= 60 
+            ? $"{(Model.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
+            : $"{Model.EstimatedDurationMinutes} Mins");
 
     // Dynamic Image path
     var serviceImage = Model.ImageUrl;
 
     // Feature dynamic data
-    var feat1Icon = isPlumbing ? "faucet" : "shelves";
-    var feat1Title = isPlumbing ? "Fixture Installations" : "Furniture Assembly";
-    var feat1Desc = isPlumbing 
-        ? "Expert installation of faucets, showerheads, and designer mixer taps with seamless finishing."
-        : "Flat-pack furniture assembly, shelf mounting, and cabinets put together securely and efficiently.";
+    var feat1Icon = isBuilding ? "foundation" : (isPlumbing ? "faucet" : "shelves");
+    var feat1Title = isBuilding ? "Site Survey & Planning" : (isPlumbing ? "Fixture Installations" : "Furniture Assembly");
+    var feat1Desc = isBuilding
+        ? "Detailed on-site assessment, material specification, and transparent written quotation before work starts."
+        : (isPlumbing 
+            ? "Expert installation of faucets, showerheads, and designer mixer taps with seamless finishing."
+            : "Flat-pack furniture assembly, shelf mounting, and cabinets put together securely and efficiently.");
 
-    var feat2Icon = isPlumbing ? "plumbing" : "build";
-    var feat2Title = isPlumbing ? "Leak Detection" : "Home Repairs";
-    var feat2Desc = isPlumbing 
-        ? "Non-invasive thermal imaging and pressure testing to find and fix hidden leaks instantly."
-        : "TV wall mounting, mirror hanging, door trimming, and general odd jobs handled by experts.";
+    var feat2Icon = isBuilding ? "construction" : (isPlumbing ? "plumbing" : "build");
+    var feat2Title = isBuilding ? "Multi-Trade Execution" : (isPlumbing ? "Leak Detection" : "Home Repairs");
+    var feat2Desc = isBuilding
+        ? "Complete trade coverage including plastering, tiling, carpentry, and plumbing done to British building standards."
+        : (isPlumbing 
+            ? "Non-invasive thermal imaging and pressure testing to find and fix hidden leaks instantly."
+            : "TV wall mounting, mirror hanging, door trimming, and general odd jobs handled by experts.");
 
-    // Local Specialist dynamic data
+    // Local Specialist dynamic data - not shown for isBuilding, see the Local Expert Block below
     var expertName = isPlumbing ? "David" : "Mark";
     var expertRole = isPlumbing ? "Senior Plumber" : "Master Handyman";
     var expertBorough = isPlumbing ? "Sutton" : "Croydon";
@@ -40,6 +47,7 @@
         {
             "Plumbing" => "water_drop",
             "Handyman" => "handyman",
+            "Small Building & Refurbishments" => "foundation",
             _ => "home_repair_service",
         };
     }
@@ -156,25 +164,28 @@
                 </details>
             </section>
 
-            <!-- Local Expert Block -->
-            <section class="local-expert-block">
-                <div class="local-expert-avatar-wrapper">
-                    <img class="local-expert-avatar" alt="@expertName - @expertRole" src="@expertAvatar" onerror="this.onerror=null;this.src='/images/hero.webp';" width="96" height="96" loading="lazy">
-                </div>
-                <div>
-                    <span class="local-expert-meta">Your Local Expert</span>
-                    <h3 class="local-expert-name">Hi, I'm @expertName – @expertRole in @expertBorough</h3>
-                    <p class="local-expert-bio">@expertBio I'm personally committed to making sure your property maintenance is completed to the highest standards.</p>
-                    <div class="local-expert-stats">
-                        <div class="local-expert-rating">
-                            <span class="material-symbols-outlined icon-fill">star</span>
-                            <span>4.9/5 Rating</span>
-                        </div>
-                        <span class="local-expert-divider">|</span>
-                        <span class="local-expert-completed">Over 1,200 services completed</span>
+            @if (!isBuilding)
+            {
+                <!-- Local Expert Block -->
+                <section class="local-expert-block">
+                    <div class="local-expert-avatar-wrapper">
+                        <img class="local-expert-avatar" alt="@expertName - @expertRole" src="@expertAvatar" onerror="this.onerror=null;this.src='/images/hero.webp';" width="96" height="96" loading="lazy">
                     </div>
-                </div>
-            </section>
+                    <div>
+                        <span class="local-expert-meta">Your Local Expert</span>
+                        <h3 class="local-expert-name">Hi, I'm @expertName – @expertRole in @expertBorough</h3>
+                        <p class="local-expert-bio">@expertBio I'm personally committed to making sure your property maintenance is completed to the highest standards.</p>
+                        <div class="local-expert-stats">
+                            <div class="local-expert-rating">
+                                <span class="material-symbols-outlined icon-fill">star</span>
+                                <span>4.9/5 Rating</span>
+                            </div>
+                            <span class="local-expert-divider">|</span>
+                            <span class="local-expert-completed">Over 1,200 services completed</span>
+                        </div>
+                    </div>
+                </section>
+            }
         </main>
 
         <!-- Sidebar Area -->
@@ -182,6 +193,34 @@
             <div class="sidebar-sticky-wrapper">
                 <!-- CTA Booking Card -->
                 <div class="sidebar-booking-card">
+                @if (isBuilding)
+                {
+                    <h3 class="sidebar-booking-title">Request a Project Quote</h3>
+                    <p class="sidebar-booking-desc">Discuss your project with our multi-trade building and refurbishment team across Surrey and South London.</p>
+                    
+                    <div class="sidebar-booking-features">
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>Free site survey &amp; consultation</span>
+                        </div>
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>Written, transparent quote in advance</span>
+                        </div>
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>Fully insured multi-trade team</span>
+                        </div>
+                    </div>
+
+                    <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn">
+                        <span>Request Free Estimate</span>
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                    <p class="sidebar-booking-note">No obligation &bull; Free initial survey</p>
+                }
+                else
+                {
                     <h3 class="sidebar-booking-title">Book This Service Now</h3>
                     <p class="sidebar-booking-desc">Expert technicians available in Sutton and surrounding areas. Fast, clean, and guaranteed.</p>
                     
@@ -205,6 +244,7 @@
                         <span class="material-symbols-outlined">arrow_forward</span>
                     </a>
                     <p class="sidebar-booking-note">No upfront payment required</p>
+                }
                 </div>
 
                 <!-- Trust Card -->
