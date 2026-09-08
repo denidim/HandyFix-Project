@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-09-02 — **Homepage Popular Services Mobile UX Redesign: Strategy 4 (2×2 Compact Tile Grid) implemented and verified.** Replaced the single-column ~1,000px vertical scroll stack on mobile (< 768px) with a glanceable 2×2 compact tile grid (~175px tall per card) featuring category badges, duration pills, starting rates, and a full-width mobile "View All Services" button, while preserving the 3-column asymmetrical Bento grid on desktop (≥ 768px). Full suite 150/150 green. See Section 3aj. (Previous update, 2026-09-01: **First sitting of the Tier 0 client call: the rebrand name and domain are resolved.** Name is "Plumbing Handyman Surrey," domain bought fresh (`plumbing-handyman-surrey.co.uk` + `.com` backup via `names.co.uk`), and the public liability insurance figure question is closed for good. See Section 3ah.)
+> **Last updated**: 2026-09-08 — **Category card price label reworked, "See Pricing" link added, and flat-rate pricing finalized.** `Services/Category.cshtml`'s per-service price now reads "Base Price £X" with a link to the Pricing page (was "From £X" / inert "Fixed Rate" text), plus a CSS fix so the price never wraps regardless of service-name length. Section 3ak's tiered pricing (10 services priced above the £80/£60 floor by judgment) is superseded the same day, a user-confirmed decision — every service is now flat-rate, no exceptions. Full suite 150/150 green. See Section 3al. (Previous update, earlier the same day, 2026-09-08: **Service Catalog Refresh: Flat Hourly Pricing + 8 New Services.** 8 new services added (20 → 28); `ServicesSeeder` changed from insert-only to upsert-on-price/duration. See Section 3ak.)
 
 ---
 
@@ -1204,13 +1204,57 @@ across every public page's CSS after discussing it together.
 ## 3ak. Service Catalog Refresh: Flat Hourly Pricing + 8 New Services (2026-09-08)
 
 - **Context**: user-driven market research (AI-assisted, cross-checked live against Aspect.co.uk, Fantastic Handyman, Silver Saints, and Handy Squad's own published rate cards) plus a pricing decision agreed with the business's co-owner (Zapryan). Two decisions came out of it: which services were genuinely missing from the catalog vs. already covered inside a broader bundle, and a move from 20 individually-judged flat prices to a uniform hourly-rate model.
-- **Pricing model changed**: every `Service.BasePrice` now derives from **£80/hr (Plumbing) or £60/hr (Handyman), 1-hour minimum**, with a small number of deliberately-larger jobs (Pipe Repairs, Radiator & TRV Replacement, Outside Garden Tap Installation at £120; Kitchen Plumbing £150; Bathroom Plumbing £160; Shower Installation £240; Furniture Assembly £90 and Gutter Clearing £90; Painting Touch-Ups £120; Property Maintenance £180) priced above the floor by judgment, not by a minutes-based formula — `EstimatedDurationMinutes` was confirmed (by reading `ServicesService`/booking code, not assumption) to have **zero functional wiring** anywhere: not slot generation, not price calculation, purely a displayed number. Deriving price from it would have been false precision, so duration and price are now treated as fully independent.
+- **Pricing model changed**: every `Service.BasePrice` now derives from **£80/hr (Plumbing) or £60/hr (Handyman), 1-hour minimum**, ~~with a small number of deliberately-larger jobs (Pipe Repairs, Radiator & TRV Replacement, Outside Garden Tap Installation at £120; Kitchen Plumbing £150; Bathroom Plumbing £160; Shower Installation £240; Furniture Assembly £90 and Gutter Clearing £90; Painting Touch-Ups £120; Property Maintenance £180) priced above the floor by judgment, not by a minutes-based formula~~ — **superseded later the same day, see Section 3al: those 10 were flattened to the uniform £80/£60 rate too, so there are no exceptions left.** `EstimatedDurationMinutes` was confirmed (by reading `ServicesService`/booking code, not assumption) to have **zero functional wiring** anywhere: not slot generation, not price calculation, purely a displayed number. Deriving price from it would have been false precision, so duration and price are now treated as fully independent.
 - **`ServicesSeeder` behavior changed from insert-only to upsert-on-price/duration.** Previously a service already found by `Name` was left untouched forever, so editing the seeder's numbers had no effect on an already-seeded database (`handyfix_staging` included). It now updates `BasePrice`/`EstimatedDurationMinutes` on every startup for a matched row, leaving `Slug`/`Name`/`Description`/`CategoryId` alone. This is intentionally scoped to pre-launch: `handyfix_prod` is still empty, so there is no live admin-made price edit yet that this could clobber. **Revisit before production go-live** — once real admin price edits can exist, an unconditional reseed-on-startup will silently overwrite them.
 - **8 new services added** (20 → 28): Plumbing gained Washing Machine & Dishwasher Install, Radiator & TRV Replacement, Outside Garden Tap Installation, Silicone & Mastic Resealing, Bath & Shower Screen Fitting; Handyman gained Door Trimming & Shaving, Lock & Handle Replacement, Gutter Clearing. Each was cross-checked against the *existing* service descriptions first — most of what first looked like a market gap (appliance hookup, radiator/valve work, resealing, lock/handle work, gutter clearing) was already promised inside a broader bundle's description text, just never sold as its own line item.
 - **Parent bundle descriptions tightened** to remove the now-duplicated wording: `kitchen-plumbing` no longer mentions washing machines/dishwashers, `general-plumbing-maintenance` no longer mentions radiator bleeding/valve replacement, `door-repairs` no longer mentions handles/locks, `minor-home-repairs` no longer mentions silicone sealant, `property-maintenance` no longer mentions gutter clearing/lock changes — otherwise two different bookable services would have claimed the same job.
 - **Side effect, not yet verified live**: `CategoryViewModel.BasePrice` (Section 5's `Min(Services.BasePrice)` mapping, shown on `/Pricing` as "Our Hourly Rates") should now resolve to exactly £80/£60 for both categories, since every service in each category has a floor at that value — this should also close the pre-existing gap where that page's "1-hour minimum, additional time billed at the same rate" copy didn't match any real per-service price. Not re-verified with a live app run this pass.
 - **Known gap**: the 8 new services have no hero image yet. `ServicesSeeder`'s `ServiceImage` back-fill (line ~90) will create a DB row pointing at `/images/services/{slug}-hero.webp` for each regardless of whether that file exists on disk — expect broken images on the new services' cards/detail pages until the AI image-generation pipeline (Section 4 Tier 1 item 1) is run for these 8 slugs.
 - **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and full test suite (95 `Services.Data.Tests` + 55 `Web.Tests`, 150/150 green) — no test hard-codes the old seeded prices. Not yet verified with a live app run against a freshly-seeded database.
+
+---
+
+## 3al. Category Card Price Display Fix and Flat-Rate Pricing Finalized (2026-09-08)
+
+Same-day follow-on to Section 3ak, driven by a user request to fix the Services/Category card's
+price copy and layout, which surfaced a pricing-model question along the way.
+
+- **Category card copy**: `Services/Category.cshtml`'s per-service price changed from "From £X" /
+  a plain "Fixed Rate" label to "Base Price £X" / a "See Pricing" link to the `Pricing` route
+  (`asp-controller="Services" asp-action="Pricing"`) — the previously-inert label text is now real
+  navigation to the full rate breakdown.
+- **No-wrap layout fix**: `.service-card-price-box` now has `flex-shrink: 0` and
+  `.service-card-price` has `white-space: nowrap` (`service-category.css`), so the price stays on
+  one line regardless of service-name length instead of shrinking/wrapping alongside a long title.
+  Verified against "Washing Machine & Dishwasher Install" (the longest name in the catalog) at
+  1440px — the title wraps to two lines as expected, the price does not. Only checked at desktop
+  width this pass; headless-Chrome narrow-viewport captures are known-unreliable on this Windows
+  environment (Section 3l), so mobile wasn't independently re-verified — but the rule carries no
+  width-gating media query, so no different behavior is expected there.
+- **Flat-rate pricing finalized, superseding Section 3ak's tiered model**: the 10 services Section
+  3ak priced above the £80/£60 floor by judgment (Pipe Repairs, Radiator & TRV Replacement, Outside
+  Garden Tap Installation, Kitchen Plumbing, Bathroom Plumbing, Shower Installation, Furniture
+  Assembly, Gutter Clearing, Painting Touch-Ups, Property Maintenance) are now priced at the flat
+  category rate too — every Plumbing service is £80, every Handyman service £60, no exceptions.
+  `EstimatedDurationMinutes` is unchanged for all of them (still shown as "Approx. N Hours" on cards
+  and details) — only `Service.BasePrice` moved.
+  - **This reverses a same-day business decision made with Zapryan (Section 3ak), and was
+    explicitly confirmed with the user before proceeding** — it was not an inferred engineering
+    call. The initial request ("don't calculate the price for services over 1 hour, just leave the
+    base rate for all services") assumed the tiered prices were an accidental duration-scaling bug;
+    reading Section 3ak while drafting this entry showed every one of the 10 values matched
+    Zapryan's judgment-based figures exactly, i.e. they were intentional. Flagged back to the user
+    before editing `PROJECT_STATE.md` or committing; the user confirmed flat pricing is the current
+    intended decision, superseding the tiered one from earlier the same day.
+- **Downstream effect, no code change needed**: `CategoryViewModel.BasePrice`
+  (`Min(Services.BasePrice)` per category, Section 1) and `BookingsService.CreateBookingAsync`'s
+  `totalAmount` (`Sum` of selected services' `BasePrice`) both already read `Service.BasePrice`
+  directly, so both now consistently reflect the flat rate.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full
+  suite, 95 `Services.Data.Tests` + 55 `Web.Tests`, 150/150 green — no test hard-coded the old
+  tiered prices. Live app run (existing `dev`-branch dev server, restarted mid-session to pick up
+  the reseeded prices) + headless Chrome screenshots of `/Services/plumbing` confirming both the
+  new copy and the no-wrap fix render correctly.
 
 ---
 
