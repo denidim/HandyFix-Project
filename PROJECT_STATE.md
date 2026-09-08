@@ -1328,6 +1328,23 @@ Closes the gap Section 3am deliberately left open (no fabricated persona for thi
 
 ---
 
+## 3ar. Small Building & Refurbishments: Site-Wide Hardcoded-Price Audit (2026-09-08)
+
+Prompted by a user request to replace the Details-page "Starting Price: From £X" spec card for this category with a proper "Pricing Model" card, which led to auditing every other place `Service.BasePrice` gets rendered — since this category's whole pricing model is survey-then-quote, not a flat number, and the user does not want any fixed sum implied for it anywhere on the site.
+
+- **`Details.cshtml` spec-bento card**: for `isBuilding`, the "Starting Price / From £X" card is now "Pricing Model / Free Survey & Fixed Quote" with a `request_quote` icon; non-building services are unchanged.
+- **Found and fixed 7 more places quietly asserting a fixed building price**, none of which had been caught by the earlier Section 3ao pass (that pass fixed the *visible* per-service FAQ and category-card price, not these):
+  1. `Pricing.cshtml`'s "Our Hourly Rates" card showed "From £280" for the category — now "Survey & Fixed Quote" (new `.rate-card-price-quote` modifier in `pricing.css` shrinks the font, since that slot was sized for a short "£X" figure).
+  2. `_PricingCard.cshtml` (the shared partial behind "Typical Job Costs" on `Pricing.cshtml` and "You Might Also Need" on `Details.cshtml`) always rendered "From £X" and a minutes/hours duration with no awareness of category — added `PricingCardViewModel.IsQuoteBased`, set at both call sites (`related.CategorySlug`/`svc.CategorySlug == "small-building-works"`), so a building service's card now reads "Survey & Fixed Quote" / "Day Rate / Survey" instead. This is what made **a building service's own Details page show *other* building services with a hardcoded price** in "You Might Also Need" — the most visible instance of the bug.
+  3. `Details.cshtml`'s JSON-LD `Service` schema unconditionally emitted a numeric `Offer.price` — now omitted entirely for building services (no invented price for structured data/search results either), emitted as before for Plumbing/Handyman.
+  4. `Home/Index.cshtml`'s hero booking-widget category `<select>` showed "Small Building & Refurbishments (from £280/hr)" — wrong on both the number and calling a day-rate/quote job "hourly". Now shows just the category name for building.
+  5. `Home/Index.cshtml`'s "Popular Services" bento had no category guard on its "From £X" — not currently reachable (the homepage only ever surfaces the first 4 services, which are always Plumbing today) but one seed-order or admin-panel change away from showing a raw building price. Guarded defensively the same way.
+  6. `Booking/Index.cshtml`'s service `<select>` listed building services with "(from £X/hr)" even though the page's own category radio buttons only offer Plumbing/Handyman (building is quote-first per Section 3am and was never meant to reach this instant-booking wizard at all) — now filtered out of the dropdown entirely rather than just re-worded.
+  7. `ServicesController.Details()`'s meta description hardcoded "transparent pricing starting from £X. Book a slot now." for every service — now branches on category: building services get "Free on-site survey and a fixed quote before any work begins. Request your quote today." with no number. Also fixed a leftover "HandyFix London" / "in South London" in this same action that Section 3ao's rebrand pass had missed.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full suite, 95 `Services.Data.Tests` + 55 `Web.Tests`, 150/150 green — covers this section and Section 3aq together. Live app run not yet done.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
