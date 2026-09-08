@@ -2,7 +2,7 @@
 @using HandyFix.Web.ViewModels.Services
 @{
     this.Layout = "_Layout";
-    this.ViewData["Title"] = $"{Model.Name} - HandyFix South London";
+    this.ViewData["Title"] = $"{Model.Name} - HandyFix Surrey & South London";
 
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == "small-building-works" || Model.CategoryName.Contains("Building");
@@ -35,10 +35,10 @@
     // Local Specialist dynamic data - not shown for isBuilding, see the Local Expert Block below
     var expertName = isPlumbing ? "David" : "Mark";
     var expertRole = isPlumbing ? "Senior Plumber" : "Master Handyman";
-    var expertBorough = isPlumbing ? "Sutton" : "Croydon";
+    var expertBorough = isPlumbing ? "Epsom" : "Cobham";
     var expertBio = isPlumbing
-        ? "I've spent 15 years servicing homes across Sutton, Croydon, and Epsom. I specialize in high-end bathroom remodels and precision leak detection."
-        : "I've spent over 12 years helping homeowners with carpentry, mounting, and general property maintenance in Croydon and South London.";
+        ? "I've spent 15 years servicing homes across Epsom, Cobham, and Esher. I specialize in high-end bathroom remodels and precision leak detection."
+        : "I've spent over 12 years helping homeowners with carpentry, mounting, and general property maintenance across Cobham and Surrey.";
     var expertAvatar = isPlumbing ? "/images/expert-david.webp" : "/images/expert-mark.webp";
 
     string GetCategoryIcon(string name)
@@ -139,7 +139,14 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2"). The final cost depends on the complexity of the task and any additional materials or parts required. We always present transparent quotes before starting.
+                        @if (isBuilding)
+                        {
+                            <text>@Model.Name is quoted individually after a free on-site survey, so we can account for the scope, materials, and finish you want before agreeing a fixed price. There's no obligation to book once you have your quote.</text>
+                        }
+                        else
+                        {
+                            <text>Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2"). The final cost depends on the complexity of the task and any additional materials or parts required. We always present transparent quotes before starting.</text>
+                        }
                     </div>
                 </details>
 
@@ -149,7 +156,7 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        We operate throughout Sutton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, and surrounding areas in South London, Surrey, and Kent.
+                        We operate throughout Chessington, Cobham, Esher, Weybridge, Guildford, Epsom, Kingston, Wimbledon, and surrounding areas across Surrey and South London.
                     </div>
                 </details>
 
@@ -159,7 +166,7 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        Yes, absolutely. All HandyFix services, including @Model.Name, are fully backed by our £5M public liability insurance and 100% satisfaction guarantee.
+                        Yes, absolutely. All HandyFix services, including @Model.Name, are fully backed by our comprehensive public liability insurance and 100% satisfaction guarantee.
                     </div>
                 </details>
             </section>
@@ -255,7 +262,7 @@
                             <span class="material-symbols-outlined sidebar-trust-icon">workspace_premium</span>
                             <div>
                                 <p class="sidebar-trust-item-title">Fully Insured</p>
-                                <p class="sidebar-trust-item-desc">Up to £5M public liability insurance.</p>
+                                <p class="sidebar-trust-item-desc">Comprehensive public liability insurance.</p>
                             </div>
                         </div>
                         <div class="sidebar-trust-item">
@@ -312,18 +319,20 @@
     "priceRange": "$$",
     "address": {
       "@@type": "PostalAddress",
-      "addressLocality": "Croydon",
-      "addressRegion": "London",
+      "addressLocality": "Chessington",
+      "addressRegion": "Surrey",
       "addressCountry": "GB"
     }
   },
   "areaServed": [
+    { "@@type": "AdministrativeArea", "name": "Surrey" },
     { "@@type": "AdministrativeArea", "name": "South London" },
-    { "@@type": "AdministrativeArea", "name": "Sutton" },
-    { "@@type": "AdministrativeArea", "name": "Croydon" },
+    { "@@type": "AdministrativeArea", "name": "Chessington" },
+    { "@@type": "AdministrativeArea", "name": "Cobham" },
+    { "@@type": "AdministrativeArea", "name": "Esher" },
+    { "@@type": "AdministrativeArea", "name": "Guildford" },
     { "@@type": "AdministrativeArea", "name": "Epsom" },
-    { "@@type": "AdministrativeArea", "name": "Kingston" },
-    { "@@type": "AdministrativeArea", "name": "Bromley" }
+    { "@@type": "AdministrativeArea", "name": "Kingston" }
   ],
   "offers": {
     "@@type": "Offer",
@@ -344,7 +353,7 @@
       "name": "How much does @Model.Name cost?",
       "acceptedAnswer": {
         "@@type": "Answer",
-        "text": "Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2")."
+        "text": "@(isBuilding ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}.")"
       }
     },
     {
@@ -352,7 +361,7 @@
       "name": "Do you cover my location?",
       "acceptedAnswer": {
         "@@type": "Answer",
-        "text": "We operate throughout Sutton, Croydon, Wimbledon, Mitcham, Epsom, Kingston, Bromley, and surrounding areas in South London."
+        "text": "We operate throughout Chessington, Cobham, Esher, Weybridge, Guildford, Epsom, Kingston, Wimbledon, and surrounding areas across Surrey and South London."
       }
     }
   ]

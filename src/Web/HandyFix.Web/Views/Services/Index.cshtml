@@ -38,9 +38,9 @@
                 <span class="material-symbols-outlined text-xs">chevron_right</span>
                 <span class="text-white">Services</span>
             </nav>
-            <h1 class="service-hero-title">Professional Property Maintenance &amp; Building in South London.</h1>
+            <h1 class="service-hero-title">Professional Property Maintenance &amp; Building in Surrey &amp; South London.</h1>
             <p class="text-white-80 font-body-lg" style="max-width: 640px;">
-                Reliable plumbing, expert handyman tasks, and small building works across Sutton, Croydon, Epsom, and Surrey. Transparent pricing and guaranteed craftsmanship on every job.
+                Reliable plumbing, expert handyman tasks, and small building works across Surrey and South London, including Chessington, Cobham, and Epsom. Transparent pricing and guaranteed craftsmanship on every job.
             </p>
         </div>
     </section>
@@ -74,7 +74,7 @@
                                 <span class="material-symbols-outlined service-subitem-icon">@GetServiceIcon(svc.Name)</span>
                                 <span class="service-subitem-title">@svc.Name</span>
                             </div>
-                            <span class="service-subitem-price">from £@svc.BasePrice.ToString("F0")</span>
+                            <span class="service-subitem-price">@(isBuilding ? "Survey & Fixed Quote" : $"from £{svc.BasePrice:F0}")</span>
                         </div>
                     }
                 </div>

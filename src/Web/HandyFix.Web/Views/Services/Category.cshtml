@@ -62,8 +62,10 @@
                             <div class="service-card-price-box">
                                 @if (isBuilding)
                                 {
-                                    <span class="service-card-price">From £@svc.BasePrice.ToString("F0")</span>
-                                    <span class="service-card-price-label">Survey &amp; Fixed Quote</span>
+                                    <span class="service-card-price">Survey &amp; Fixed Quote</span>
+                                    <a asp-controller="Services"
+                                       asp-action="Pricing"
+                                       class="service-card-price-label">See Pricing</a>
                                 }
                                 else
                                 {
@@ -161,7 +163,7 @@
             <div>
                 <h2 class="seo-local-title">@Model.Name Experts in Your Local Area.</h2>
                 <p class="seo-local-desc">
-                    Handy Fix provides premium @Model.Name.ToLower() services across <strong>Sutton, Croydon, and Epsom</strong>. We are committed to local excellence, ensuring that our response times are the fastest in the region. Whether you're in the heart of the town or in a surrounding village, our local vans are equipped with the latest diagnostic tools to solve your issues on the first visit.
+                    Handy Fix provides premium @Model.Name.ToLower() services across <strong>Cobham, Esher, and Epsom</strong>. We are committed to local excellence, ensuring that our response times are the fastest in the region. Whether you're in the heart of the town or in a surrounding village, our local vans are equipped with the latest diagnostic tools to solve your issues on the first visit.
                 </p>
                 <div class="seo-local-areas">
                     @foreach (var area in Model.LocalAreas)
