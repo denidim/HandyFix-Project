@@ -1345,6 +1345,17 @@ Prompted by a user request to replace the Details-page "Starting Price: From £X
 
 ---
 
+## 3as. Mobile Sticky CTA Stripped to a Bare Floating Button (2026-09-08)
+
+Found and fixed on live staging testing: the mobile sticky CTA bar (`_MobileStickyCta.cshtml`) still showed a hardcoded "Estimated Rate £55/hr" that matched neither the current £90 Plumbing nor £60 Handyman rate, alongside the "Book Now" button.
+
+- **Rate label/value removed entirely** — not reworded, since a single flat figure can't represent two different category rates (and never should have, since it predates the flat-rate-per-category model from Section 3al).
+- **`.mobile-cta-bar`'s glass background, blur, top border, and shadow removed** per explicit user request — the bar itself is now invisible; only the "Book Now" button renders, right-aligned in the same position it always occupied (`justify-content: flex-end`, not centered or full-width).
+- **`pointer-events: none` added to `.mobile-cta-bar`, `auto` back on `.btn-mobile-cta`** — needed once the bar had no visible background, since an invisible `position: fixed` element spanning the full width would otherwise silently swallow taps across the bottom of every page.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full suite, 150/150 green.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
