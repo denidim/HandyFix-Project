@@ -56,8 +56,10 @@
                         <div class="service-card-main-header">
                             <h3 class="service-card-title">@svc.Name</h3>
                             <div class="service-card-price-box">
-                                <span class="service-card-price">From £@svc.BasePrice.ToString("F0")</span>
-                                <span class="service-card-price-label">Fixed Rate</span>
+                                <span class="service-card-price">Base Price £@svc.BasePrice.ToString("F0")</span>
+                                <a asp-controller="Services"
+                                   asp-action="Pricing"
+                                   class="service-card-price-label">See Pricing</a>
                             </div>
                         </div>
                         <p class="service-card-description">@svc.Description</p>
