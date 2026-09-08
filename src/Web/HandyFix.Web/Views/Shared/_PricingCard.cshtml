@@ -19,10 +19,17 @@
         <p class="pricing-card-desc">@Model.Description</p>
     }
     <div class="pricing-card-meta">
-        <span class="pricing-card-price">From £@Model.BasePrice.ToString("F0")</span>
+        @if (Model.IsQuoteBased)
+        {
+            <span class="pricing-card-price">Survey &amp; Fixed Quote</span>
+        }
+        else
+        {
+            <span class="pricing-card-price">From £@Model.BasePrice.ToString("F0")</span>
+        }
         <span class="pricing-card-duration">
             <span class="material-symbols-outlined">timer</span>
-            @this.FormatDuration(Model.EstimatedDurationMinutes)
+            @(Model.IsQuoteBased ? "Day Rate / Survey" : this.FormatDuration(Model.EstimatedDurationMinutes))
         </span>
     </div>
     @if (!string.IsNullOrWhiteSpace(Model.CtaText) && !string.IsNullOrWhiteSpace(Model.CtaUrl))

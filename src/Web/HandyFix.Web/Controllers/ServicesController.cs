@@ -107,8 +107,12 @@ namespace HandyFix.Web.Controllers
                 .Take(3)
                 .ToList();
 
-            this.ViewData["Title"] = $"{service.Name} - HandyFix London";
-            this.ViewData["MetaDescription"] = $"Need {service.Name.ToLower()} in South London? Certified plumbers and handymen, transparent pricing starting from £{service.BasePrice}. Book a slot now.";
+            var isBuildingService = service.CategorySlug == "small-building-works";
+
+            this.ViewData["Title"] = $"{service.Name} - HandyFix Surrey & South London";
+            this.ViewData["MetaDescription"] = isBuildingService
+                ? $"Need {service.Name.ToLower()} in Surrey or South London? Free on-site survey and a fixed quote before any work begins. Request your quote today."
+                : $"Need {service.Name.ToLower()} in Surrey or South London? Certified plumbers and handymen, transparent pricing starting from £{service.BasePrice}. Book a slot now.";
 
             return this.View(service);
         }

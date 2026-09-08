@@ -71,7 +71,7 @@
                             <label for="wizard-service" class="form-label font-weight-bold mb-2">Selected Service</label>
                             <select asp-for="ServiceId" class="form-control" id="wizard-service" required>
                                 <option value="">-- Select a Service --</option>
-                                @foreach (var svc in services)
+                                @foreach (var svc in services.Where(s => s.CategorySlug != "small-building-works"))
                                 {
                                     <option value="@svc.Id" data-category="@svc.CategorySlug" data-price="@svc.BasePrice" data-duration="@svc.EstimatedDurationMinutes">
                                         @svc.Name (from £@svc.BasePrice/hr)

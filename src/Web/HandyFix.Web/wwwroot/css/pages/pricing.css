@@ -74,6 +74,12 @@
   color: var(--primary);
 }
 
+/* "Survey & Fixed Quote" is a phrase, not a number - the headline-lg size sized
+   for a short "£X" figure wraps and overpowers the card at that length. */
+.rate-card-price-quote {
+  font-size: var(--fs-headline-sm);
+}
+
 .rate-card-pill {
   font-size: var(--fs-label-sm);
   color: var(--on-surface-variant);

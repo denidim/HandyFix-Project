@@ -48,7 +48,8 @@
                 <option value="">-- Choose a service --</option>
                 @foreach (var cat in categories)
                 {
-                    <option value="@cat.Slug">@cat.Name (from £@cat.BasePrice/hr)</option>
+                    var catIsBuilding = cat.Slug == "small-building-works" || cat.Name.Contains("Building");
+                    <option value="@cat.Slug">@(catIsBuilding ? cat.Name : $"{cat.Name} (from £{cat.BasePrice}/hr)")</option>
                 }
               </select>
             </div>
@@ -195,6 +196,7 @@
         <div class="bento-grid-container bento-2x2-mode">
             @foreach (var svc in Model.PopularServices)
             {
+                var svcIsBuilding = svc.CategorySlug == "small-building-works";
                 <a class="bento-card"
                      asp-route="ServiceDetails"
                      asp-route-categorySlug="@svc.CategorySlug"
@@ -231,8 +233,15 @@
 
                         <div class="bento-card-footer">
                             <div class="bento-price-wrap">
-                                <span class="bento-price-prefix">From</span>
-                                <span class="bento-price-amount">£@svc.BasePrice</span>
+                                @if (svcIsBuilding)
+                                {
+                                    <span class="bento-price-amount">Survey &amp; Fixed Quote</span>
+                                }
+                                else
+                                {
+                                    <span class="bento-price-prefix">From</span>
+                                    <span class="bento-price-amount">£@svc.BasePrice</span>
+                                }
                             </div>
 
                             <span class="bento-action-pill">

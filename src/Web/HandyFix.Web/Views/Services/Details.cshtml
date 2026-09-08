@@ -100,9 +100,18 @@
                     <span class="spec-bento-value">@Model.CategoryName</span>
                 </div>
                 <div class="spec-bento-card col-span-2">
-                    <span class="material-symbols-outlined spec-bento-icon">payments</span>
-                    <span class="spec-bento-label">Starting Price</span>
-                    <span class="spec-bento-value">From £@Model.BasePrice.ToString("F0")</span>
+                    @if (isBuilding)
+                    {
+                        <span class="material-symbols-outlined spec-bento-icon">request_quote</span>
+                        <span class="spec-bento-label">Pricing Model</span>
+                        <span class="spec-bento-value">Free Survey &amp; Fixed Quote</span>
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined spec-bento-icon">payments</span>
+                        <span class="spec-bento-label">Starting Price</span>
+                        <span class="spec-bento-value">From £@Model.BasePrice.ToString("F0")</span>
+                    }
                 </div>
             </div>
 
@@ -299,6 +308,7 @@
                                                              Description = related.Description,
                                                              BasePrice = related.BasePrice,
                                                              EstimatedDurationMinutes = related.EstimatedDurationMinutes,
+                                                             IsQuoteBased = related.CategorySlug == "small-building-works",
                                                              CtaText = "View Details",
                                                              CtaUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = related.CategorySlug, serviceSlug = related.Slug }),
                                                          })" />
@@ -335,11 +345,10 @@
     { "@@type": "AdministrativeArea", "name": "Guildford" },
     { "@@type": "AdministrativeArea", "name": "Epsom" },
     { "@@type": "AdministrativeArea", "name": "Kingston" }
-  ],
-  "offers": {
-    "@@type": "Offer",
-    "price": "@Model.BasePrice.ToString("F2")",
-    "priceCurrency": "GBP"
+  ]
+  @if (!isBuilding)
+  {
+    @:,"offers": { "@@type": "Offer", "price": "@Model.BasePrice.ToString("F2")", "priceCurrency": "GBP" }
   }
 }
 </script>

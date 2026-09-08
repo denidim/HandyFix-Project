@@ -58,7 +58,7 @@
                     <div class="rate-card-figure">
                         @if (isBuilding)
                         {
-                            <span class="rate-card-price">From £@category.BasePrice.ToString("F0")</span>
+                            <span class="rate-card-price rate-card-price-quote">Survey &amp; Fixed Quote</span>
                         }
                         else
                         {
@@ -153,6 +153,7 @@
                                                          Description = svc.Description,
                                                          BasePrice = svc.BasePrice,
                                                          EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
+                                                         IsQuoteBased = svc.CategorySlug == "small-building-works",
                                                          CtaText = "Book Now",
                                                          CtaUrl = this.Url.Action("Index", "Booking", new { serviceId = svc.Id }),
                                                      })" />
