@@ -1319,6 +1319,15 @@ Closes the gap Section 3am deliberately left open (no fabricated persona for thi
 
 ---
 
+## 3aq. Navbar Rework: Category Links, Mobile Scroll Fix, Login Greeting Removed (2026-09-08)
+
+- **`_Navbar.cshtml`**: the single "Services" link (desktop and mobile) replaced with three direct category links — Plumbing, Handyman, Small Building Work — routed via `asp-route="ServiceCategory"` to `/Services/{plumbing|handyman|small-building-works}`. The `/Services` overview page itself is unchanged and still reachable from elsewhere (e.g. the homepage's "View All Services" button); it's just no longer in the top nav.
+- **Mobile menu scroll bug fixed**: `.mobile-nav-dropdown` had no `max-height`/`overflow-y`, so once its content (now longer, with 3 links instead of 1) exceeded the screen height, the extra items extended past the viewport with nothing to scroll — the page behind the menu could still scroll instead. Added `max-height: calc(100dvh - 84px - var(--spacing-4))` with `overflow-y: auto` and `overscroll-behavior: contain` (`navbar.css`), plus a `mobile-nav-open` class toggled on `<body>` from `site.js` alongside the existing `is-open` toggle, with `body.mobile-nav-open { overflow: hidden; }` locking the page behind it while the menu is open.
+- **`_LoginPartial.cshtml`**: removed the "Hello, {email}!" greeting link for signed-in users — its length scaled with the user's email and was pushing the desktop nav (now carrying 3 extra category links) to wrap onto a second row. Admin link and Logout button untouched; the account-management page itself (`/Account/Manage`) still exists, just no longer linked from the nav.
+- Not yet verified with a build/test run at the time — see Section 3ar, where both were run together.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
