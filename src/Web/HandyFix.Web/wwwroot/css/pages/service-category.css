@@ -136,6 +136,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: var(--spacing-4);
   margin-bottom: var(--spacing-2);
 }
 
@@ -143,10 +144,12 @@
   font-size: var(--fs-headline-md);
   color: var(--primary);
   margin: 0;
+  min-width: 0;
 }
 
 .service-card-price-box {
   text-align: right;
+  flex-shrink: 0;
 }
 
 .service-card-price {
@@ -154,12 +157,17 @@
   color: var(--secondary);
   font-weight: 700;
   display: block;
+  white-space: nowrap;
 }
 
 .service-card-price-label {
   font-size: var(--fs-label-sm);
   color: var(--on-surface-variant);
   margin: 0;
+}
+
+.service-card-price-label:hover {
+  text-decoration: underline;
 }
 
 .service-card-description {
