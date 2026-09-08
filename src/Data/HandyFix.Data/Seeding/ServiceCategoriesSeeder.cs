@@ -14,11 +14,13 @@ namespace HandyFix.Data.Seeding
             {
                 new { Slug = "plumbing", Name = "Plumbing", Description = "Professional plumbing and heating services for London homes." },
                 new { Slug = "handyman", Name = "Handyman", Description = "Reliable home maintenance, mounting, and repair tasks." },
+                new { Slug = "small-building-works", Name = "Small Building & Refurbishments", Description = "Planned home alterations, kitchen & bathroom refurbishments, partition walls, and specialist small building works." },
             };
 
             foreach (var item in categories)
             {
-                if (!dbContext.ServiceCategories.Any(x => x.Name == item.Name))
+                var category = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == item.Slug || x.Name == item.Name);
+                if (category == null)
                 {
                     await dbContext.ServiceCategories.AddAsync(new ServiceCategory
                     {
@@ -26,6 +28,12 @@ namespace HandyFix.Data.Seeding
                         Name = item.Name,
                         Description = item.Description,
                     });
+                }
+                else
+                {
+                    category.Name = item.Name;
+                    category.Description = item.Description;
+                    category.Slug = item.Slug;
                 }
             }
         }

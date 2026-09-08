@@ -3,11 +3,13 @@
     this.Layout = "_Layout";
     this.ViewData["Title"] = $"{Model.Name} Services - HandyFix South London";
 
-    var isPlumbing = Model.Name == "Plumbing";
-    var durationText = isPlumbing ? "Approx. 1-2 Hours" : "Approx. 45-90 Mins";
-    var specBadgeText = isPlumbing ? "Licensed & Insured" : "Multi-Skill Pros";
-    var specBadgeClass = isPlumbing ? "category-hero-badge-primary" : "category-hero-badge-tertiary";
-    var specBadgeIcon = isPlumbing ? "verified" : "handyman";
+    var isPlumbing = Model.Slug == "plumbing" || Model.Name == "Plumbing";
+    var isBuilding = Model.Slug == "small-building-works" || Model.Name.Contains("Building");
+
+    var specBadgeText = isBuilding ? "Survey & Fixed Quote" : (isPlumbing ? "Licensed & Insured" : "Multi-Skill Pros");
+    var specBadgeClass = isBuilding ? "category-hero-badge-building" : (isPlumbing ? "category-hero-badge-primary" : "category-hero-badge-tertiary");
+    var specBadgeIcon = isBuilding ? "foundation" : (isPlumbing ? "verified" : "handyman");
+    var availabilityText = isBuilding ? "Planned & Quoted" : "24/7 Availability";
 }
 
 <div class="page-container services-page">
@@ -32,7 +34,7 @@
                 </div>
                 <div class="category-hero-badge category-hero-badge-primary">
                     <span class="material-symbols-outlined">schedule</span>
-                    <span>24/7 Availability</span>
+                    <span>@availabilityText</span>
                 </div>
             </div>
         </div>
@@ -44,9 +46,11 @@
         <div class="services-list-container">
             @foreach (var svc in Model.Services)
             {
-                var duration = svc.EstimatedDurationMinutes >= 60 
-                    ? $"{(svc.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
-                    : $"{svc.EstimatedDurationMinutes} Mins";
+                var duration = isBuilding 
+                    ? "Day Rate / Survey" 
+                    : (svc.EstimatedDurationMinutes >= 60 
+                        ? $"{(svc.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
+                        : $"{svc.EstimatedDurationMinutes} Mins");
 
                 <article class="service-horizontal-card group">
                     <div class="service-card-thumbnail-wrapper">
@@ -56,10 +60,18 @@
                         <div class="service-card-main-header">
                             <h3 class="service-card-title">@svc.Name</h3>
                             <div class="service-card-price-box">
-                                <span class="service-card-price">Base Price £@svc.BasePrice.ToString("F0")</span>
-                                <a asp-controller="Services"
-                                   asp-action="Pricing"
-                                   class="service-card-price-label">See Pricing</a>
+                                @if (isBuilding)
+                                {
+                                    <span class="service-card-price">From £@svc.BasePrice.ToString("F0")</span>
+                                    <span class="service-card-price-label">Survey &amp; Fixed Quote</span>
+                                }
+                                else
+                                {
+                                    <span class="service-card-price">Base Price £@svc.BasePrice.ToString("F0")</span>
+                                    <a asp-controller="Services"
+                                       asp-action="Pricing"
+                                       class="service-card-price-label">See Pricing</a>
+                                }
                             </div>
                         </div>
                         <p class="service-card-description">@svc.Description</p>
@@ -76,10 +88,20 @@
                         </div>
 
                         <div class="service-card-actions">
-                            <a asp-controller="Booking"
-                               asp-action="Index"
-                               asp-route-serviceId="@svc.Id"
-                               class="btn btn-primary service-card-btn">Book Slot</a>
+                            @if (isBuilding)
+                            {
+                                <a asp-controller="Home"
+                                   asp-action="Contact"
+                                   asp-route-service="@svc.Name"
+                                   class="btn btn-primary service-card-btn">Request Quote</a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Booking"
+                                   asp-action="Index"
+                                   asp-route-serviceId="@svc.Id"
+                                   class="btn btn-primary service-card-btn">Book Slot</a>
+                            }
 
                             <a asp-controller="Services"
                                asp-action="Details"
@@ -95,17 +117,34 @@
         <!-- Sidebar Book CTA -->
         <aside>
             <div class="sidebar-sticky-wrapper">
-                <div class="sidebar-cta-card">
-                    <h4 class="sidebar-cta-title">Need Service Today?</h4>
-                    <p class="sidebar-cta-desc">Book an hourly slot directly on our calendar. Secure payments powered by Stripe.</p>
-                    <hr class="sidebar-cta-divider" />
-                    <ul class="sidebar-cta-list">
-                        <li class="sidebar-cta-list-item">✓ Select date &amp; time</li>
-                        <li class="sidebar-cta-list-item">✓ Upload problem photos</li>
-                        <li class="sidebar-cta-list-item">✓ Guaranteed attendance</li>
-                    </ul>
-                    <a asp-controller="Booking" asp-action="Index" class="btn btn-success sidebar-cta-btn">Instant Booking Wizard</a>
-                </div>
+                @if (isBuilding)
+                {
+                    <div class="sidebar-cta-card">
+                        <h4 class="sidebar-cta-title">Planning a Project?</h4>
+                        <p class="sidebar-cta-desc">Tell us what you'd like done. We will discuss scope, arrange a site survey, and provide a clear quote in advance.</p>
+                        <hr class="sidebar-cta-divider" />
+                        <ul class="sidebar-cta-list">
+                            <li class="sidebar-cta-list-item">✓ Free initial consultation</li>
+                            <li class="sidebar-cta-list-item">✓ Upfront transparent pricing</li>
+                            <li class="sidebar-cta-list-item">✓ Fully insured multi-trade team</li>
+                        </ul>
+                        <a asp-controller="Home" asp-action="Contact" class="btn btn-primary sidebar-cta-btn">Request Free Estimate</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="sidebar-cta-card">
+                        <h4 class="sidebar-cta-title">Need Service Today?</h4>
+                        <p class="sidebar-cta-desc">Book an hourly slot directly on our calendar. Secure payments powered by Stripe.</p>
+                        <hr class="sidebar-cta-divider" />
+                        <ul class="sidebar-cta-list">
+                            <li class="sidebar-cta-list-item">✓ Select date &amp; time</li>
+                            <li class="sidebar-cta-list-item">✓ Upload problem photos</li>
+                            <li class="sidebar-cta-list-item">✓ Guaranteed attendance</li>
+                        </ul>
+                        <a asp-controller="Booking" asp-action="Index" class="btn btn-success sidebar-cta-btn">Instant Booking Wizard</a>
+                    </div>
+                }
 
                 <div class="contact-card-box p-4 border rounded-lg bg-white shadow-sm text-center">
                     <h5 class="font-weight-bold text-slate mb-2">Speak to Our Office</h5>

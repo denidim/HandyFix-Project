@@ -54,6 +54,12 @@
   border-color: rgba(78, 222, 163, 0.15);
 }
 
+.category-hero-badge-building {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
 /* Service Listing Block */
 .category-main-layout {
   display: grid;
