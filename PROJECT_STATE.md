@@ -1258,6 +1258,32 @@ price copy and layout, which surfaced a pricing-model question along the way.
 
 ---
 
+## 3am. Small Building & Refurbishments Category & Quote-Based Routing (2026-09-08)
+
+Completed Roadmap Tier 2 item 12 (`docs/private/VISION_AND_CONTEXT.md` Section 5.13): established the new "Small Building & Refurbishments" category (`small-building-works`) and 8 services, scope and pricing confirmed with Zaprqn. The booking mechanism question flagged 2026-08-03 is now resolved: quote/survey flow, not slot-based instant booking.
+
+- **8 new catalog services seeded**:
+  1. `full-bathroom-refurbishment`: Full Bathroom Refurbishment (demolition, plumbing, tanking, tiling, sanitaryware fit-out).
+  2. `kitchen-fitting-alterations`: Kitchen Fitting & Alterations (unit assembly, worktops, splashbacks, sink & appliance integration).
+  3. `partition-walls-drylining`: Partition Walls & Stud Work (timber/metal studs, acoustic insulation, drywall, room reconfigurations).
+  4. `plastering-ceiling-repairs`: Plastering & Ceiling Repairs (multi-finish skimming, water damage ceiling patches, coving).
+  5. `wall-floor-tiling`: Wall & Floor Tiling (porcelain, ceramic, natural stone, metro tiles for bathrooms, kitchens, hallways).
+  6. `flooring-installation`: Flooring Installation (LVT, laminate, engineered wood with underlay and trims).
+  7. `external-brickwork-paving`: External Brickwork & Paving (mortar repointing, garden walls, patio repairs, steps, shed bases).
+  8. `custom-carpentry-boxing-in`: Custom Carpentry & Boxing-In (bespoke alcove units, custom shelving, boiler/pipework boxing).
+  - **Deliberately priced outside the Section 3al flat-rate rule**: these are per-job estimates (£280-£650), not the £80/£60 hourly floor — the flat-rate decision applies to the two hourly-billed categories only, since a multi-day refurbishment doesn't fit a per-hour figure. `CategoryViewModel.BasePrice` (`Min` per category) is intentionally not "no exceptions" across *all* categories, only within Plumbing and Handyman.
+- **Quote-first routing**: multi-day/quoted projects bypass the standard 1-hour `AvailabilitySlot` instant booking entirely.
+  - On `Category.cshtml`, `Details.cshtml`, and `Services/Index.cshtml`, the action button switches from "Book Slot" to "Request Quote" / "Request Free Estimate", routing to `/Contact?service=@svc.Name`.
+  - `HomeController.Contact(string service = null)` pre-populates the enquiry message with the requested service name.
+  - `Pricing.cshtml`'s "Our Hourly Rates" cards show "From £X" / "Quoted after free survey" for this category instead of "£X per hour" / "Minimum charge 1 hour", and the page's intro copy and pricing-model note box both call out the split explicitly rather than implying every job is hourly.
+  - Sidebar CTA changes from instant calendar booking to project survey consultation.
+- **Home page 3-division bento**: `Home/Index.cshtml` gained a 3rd division card ("Building & Refurb"); `home.css` moved to a 3-column desktop grid (`min-width: 1024px`) with a warm amber/stone theme (`.division-card-building`).
+- **No fabricated technician bio added**: `Details.cshtml`'s "Local Expert" block (the existing hardcoded "David"/"Mark" personas already flagged for removal in Roadmap Tier 3 item 17) is not shown at all for this category — an initial draft of this feature invented a third persona ("Zap", 15 years experience) with a bio/photo mismatch bug (no avatar branch, so it rendered Mark's photo); caught in review and removed rather than fixed, since inventing a specialist here would be the same anti-pattern Tier 3 item 17 already exists to undo, not something to extend to a third category.
+- **Known gap, unchanged from Section 3ak's pattern**: the 8 new services and the new division-card hero image have no real artwork yet; `onerror` falls back to `/images/hero.webp`.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full suite, 95 `Services.Data.Tests` + 55 `Web.Tests`, 150/150 green, after both the initial category work and the technician/pricing-page fixes above. Not yet verified with a live app run.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
@@ -1317,7 +1343,7 @@ price copy and layout, which surfaced a pricing-model question along the way.
 
 **11. Real technician roster.** Names and phone numbers for Zaprqn and his worker(s) — however many are actually going active at launch. **Not collected at the 2026-09-01 call session** — still open. **No longer a code change**: since Section 3r there is full admin CRUD at `/Administration/Technicians`, so this is now data entry through the UI. Note this was a hard prerequisite, not a convenience — `TechniciansSeeder` only inserts when the table is empty, so adding a second technician by editing the seeder would never have worked. The seeded placeholder (`John Doe / 07123456789`) should be edited into a real person or deactivated once real names land; it can't be deleted once it has bookings, by design. **Clarified 2026-09-01**: only Zaprqn's own photo is needed, not one per worker — see item 17, no team-roster UI exists for worker photos to appear in.
 
-**12. Custom Projects category scope.** New service category for launch — full bathroom installation, full kitchen installation. Needs Zaprqn's input on what he's actually delivered under this banner before, and what he wants to promote/rank for, before any `ServiceCategory`/`Service` rows or copy get written. Once scoped: standard new-category engineering (seeder rows, images per Tier 1 item 1, category page wiring) — small, once the scope question is answered. **Booking mechanism, flagged 2026-08-03**: intended to route through an inquiry/quote-request flow rather than the standard slot-based instant-booking flow, since a multi-day install doesn't fit an hourly `AvailabilitySlot` — not yet confirmed with Zaprqn, see `docs/private/VISION_AND_CONTEXT.md` Section 5.13.
+**12. Custom Projects / Small Building Works category scope.** ~~New service category for launch — full bathroom installation, full kitchen installation.~~ **Done 2026-09-08 — see Section 3am.** Category created as "Small Building & Refurbishments" (`small-building-works`) with 8 tailored services (Bathroom Refurbishment, Kitchen Fitting, Partition Walls & Stud Work, Plastering & Ceiling Repairs, Wall & Floor Tiling, Flooring Installation, External Brickwork & Paving, Custom Carpentry & Boxing-In), scope and pricing confirmed with Zaprqn. Quote-first routing implemented (`/Contact?service=...`) so multi-day jobs bypass hourly slot booking, including on the `/Pricing` page. Category landing, catalog, home division cards, and pricing page fully wired.
 
 ---
 
