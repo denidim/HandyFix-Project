@@ -1284,6 +1284,14 @@ Completed Roadmap Tier 2 item 12 (`docs/private/VISION_AND_CONTEXT.md` Section 5
 
 ---
 
+## 3an. Plumbing Hourly Rate Raised to £90 (2026-09-08)
+
+- **`ServicesSeeder`**: all 15 Plumbing services moved from `Price = 80.00m` to `90.00m`, flat rate, no exceptions — same rule as Section 3al, new floor. Handyman (£60) and Small Building & Refurbishments (per-job quotes) are unaffected.
+- Because the seeder upserts by service name on every app startup (Section 3ak), this takes effect on the dev/staging DB on next run with no migration. `/Pricing`'s "Our Hourly Rates" card for Plumbing (`CategoryViewModel.BasePrice`, `Min` per category) will show £90 accordingly.
+- Not yet verified with a build, test run, or live app run.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
