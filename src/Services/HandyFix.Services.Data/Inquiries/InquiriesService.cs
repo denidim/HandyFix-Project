@@ -33,7 +33,12 @@ namespace HandyFix.Services.Data.Inquiries
                 Name = model.Name,
                 Email = model.Email,
                 PhoneNumber = model.PhoneNumber,
-                Message = model.Message,
+                // The Contact form sends its category as a separate field, validated separately
+                // from the visitor's own text; it's stored as a prefix so the admin Enquiries list
+                // reads the same as it always has. Join Our Team sends no category.
+                Message = string.IsNullOrWhiteSpace(model.Category)
+                    ? model.Message
+                    : $"[Category: {model.Category.Trim()}] {model.Message}",
             };
 
             await this.inquiryRepository.AddAsync(inquiry);

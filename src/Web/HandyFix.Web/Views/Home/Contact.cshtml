@@ -1,6 +1,7 @@
 @model HandyFix.Web.ViewModels.Home.ContactInputModel
 @{
     this.ViewData["Title"] = "Get a Custom Quote - Handy Fix";
+    var contactCategories = this.ViewData["ContactCategories"] as IEnumerable<string> ?? Enumerable.Empty<string>();
 }
 
 <div class="page-container services-page">
@@ -65,17 +66,19 @@
                         <span asp-validation-for="PhoneNumber" class="validation-error"></span>
                     </div>
                 </div>
-                <!-- Service Type (Client-only visual helper combined into message on submit) -->
+                <!-- Category: its own field, validated separately; the server adds it to the saved enquiry -->
                 <div class="col-md-6">
                     <div class="form-field">
-                        <label class="form-label fw-semibold" for="serviceCategory">Service Category</label>
-                        <select class="form-control" id="serviceCategory">
-                            <option value="Plumbing">Plumbing</option>
-                            <option value="Electrical">Electrical</option>
-                            <option value="HVAC">HVAC</option>
-                            <option value="Handyman">Handyman / Assembly</option>
-                            <option value="Custom">Other / Custom Project</option>
+                        <label class="form-label fw-semibold" asp-for="Category">Service Category</label>
+                        <select asp-for="Category" class="form-control" required>
+                            <option value="">-- Select a category --</option>
+                            @foreach (var categoryName in contactCategories)
+                            {
+                                <option value="@categoryName">@categoryName</option>
+                            }
+                            <option value="Other">Other / Not Sure</option>
                         </select>
+                        <span asp-validation-for="Category" class="validation-error"></span>
                     </div>
                 </div>
             </div>
@@ -152,22 +155,4 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/image-upload.js" asp-append-version="true"></script>
-    <script>
-        // Combine category selection into message on submit
-        const form = document.getElementById('contactForm');
-        if (form) {
-            form.addEventListener('submit', () => {
-                const categorySelect = document.getElementById('serviceCategory');
-                const messageTextarea = document.getElementById('Message');
-                if (categorySelect && messageTextarea) {
-                    const category = categorySelect.value;
-                    const originalMessage = messageTextarea.value;
-                    // Prepend category if not already prepended
-                    if (!originalMessage.startsWith(`[Category: `)) {
-                        messageTextarea.value = `[Category: ${category}] ${originalMessage}`;
-                    }
-                }
-            });
-        }
-    </script>
 }
