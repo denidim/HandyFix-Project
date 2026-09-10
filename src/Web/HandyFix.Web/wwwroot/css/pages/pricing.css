@@ -203,11 +203,54 @@
   padding: var(--spacing-6);
   display: flex;
   flex-direction: column;
-  transition: box-shadow var(--transition-fast);
+  overflow: hidden;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
 }
 
 .pricing-card:hover {
   box-shadow: var(--shadow-xl);
+  transform: translateY(-4px);
+  border-color: var(--secondary);
+}
+
+/* Full-bleed thumbnail: the negative margins cancel the card's own padding so the image
+   meets the card edges, and the card's overflow: hidden clips it to the rounded corners. */
+.pricing-card-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  margin: calc(-1 * var(--spacing-6)) calc(-1 * var(--spacing-6)) var(--spacing-5);
+  overflow: hidden;
+  background-color: var(--surface-container-high);
+}
+
+.pricing-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.pricing-card:hover .pricing-card-image {
+  transform: scale(1.05);
+}
+
+.pricing-card-media-icon {
+  position: absolute;
+  left: var(--spacing-4);
+  bottom: var(--spacing-4);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: #ffffff;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+}
+
+.pricing-card-media-icon .material-symbols-outlined {
+  font-size: 22px;
 }
 
 .pricing-card-icon-wrapper {
