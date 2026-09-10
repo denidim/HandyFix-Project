@@ -170,8 +170,3 @@
     </div>
     </div>
 </div>
-
-@* No _ValidationScriptsPartial on this page, deliberately: _Layout already loads jquery.validate and
-   the unobtrusive adapter from /dist. The partial re-loads jquery.validate on top (wiping the methods
-   the adapter registered - the "__dummy__" console errors) and points at an unobtrusive path that
-   doesn't exist. See PROJECT_STATE.md Section 3av. *@
