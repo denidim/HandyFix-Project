@@ -34,7 +34,7 @@
         <div class="row g-4">
             <!-- Pillar 1: Plumbing -->
             <div class="col-lg-4 col-md-6">
-                <div class="hub-pillar-card h-100 d-flex flex-column">
+                <div class="hub-pillar-card pillar-plumbing h-100 d-flex flex-column">
                     <div class="hub-pillar-icon plumbing-icon mb-3">
                         <span class="material-symbols-outlined">plumbing</span>
                     </div>
@@ -44,11 +44,11 @@
                         Fast diagnostics and permanent repairs for burst pipes, leaking cisterns, failed stopcocks, tap replacements, and radiator valves.
                     </p>
                     <ul class="hub-feature-list mb-4">
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> Leak isolation & diagnostics</li>
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> Tap & waste trap replacement</li>
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> Radiator valves & balancing</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Leak isolation & diagnostics</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Tap & waste trap replacement</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Radiator valves & balancing</li>
                     </ul>
-                    <a asp-controller="Services" asp-action="Category" asp-route-categorySlug="plumbing" class="btn btn-outline rounded-lg py-2 fs-14 fw-semibold mt-auto">
+                    <a asp-controller="Services" asp-action="Category" asp-route-categorySlug="plumbing" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
                         Explore Plumbing
                     </a>
                 </div>
@@ -56,7 +56,7 @@
 
             <!-- Pillar 2: Handyman -->
             <div class="col-lg-4 col-md-6">
-                <div class="hub-pillar-card h-100 d-flex flex-column">
+                <div class="hub-pillar-card pillar-handyman h-100 d-flex flex-column">
                     <div class="hub-pillar-icon handyman-icon mb-3">
                         <span class="material-symbols-outlined">handyman</span>
                     </div>
@@ -66,11 +66,11 @@
                         Meticulous household fixes, precision silicone sealing, lock adjustments, TV mounting, and bespoke carpentry repairs.
                     </p>
                     <ul class="hub-feature-list mb-4">
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> Sanitary bath & shower resealing</li>
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> TV wall mounting & shelving</li>
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> Door hinges & lock alignment</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Sanitary bath & shower resealing</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> TV wall mounting & shelving</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Door hinges & lock alignment</li>
                     </ul>
-                    <a asp-controller="Services" asp-action="Category" asp-route-categorySlug="handyman" class="btn btn-outline rounded-lg py-2 fs-14 fw-semibold mt-auto">
+                    <a asp-controller="Services" asp-action="Category" asp-route-categorySlug="handyman" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
                         Explore Handyman
                     </a>
                 </div>
@@ -78,7 +78,7 @@
 
             <!-- Pillar 3: Small Building Works -->
             <div class="col-lg-4 col-md-12">
-                <div class="hub-pillar-card h-100 d-flex flex-column featured-pillar">
+                <div class="hub-pillar-card pillar-building h-100 d-flex flex-column featured-pillar">
                     <div class="hub-pillar-icon building-icon mb-3">
                         <span class="material-symbols-outlined">construction</span>
                     </div>
@@ -88,9 +88,9 @@
                         Turnkey domestic transformations including full bathroom renovations, kitchen installs, partition walls, plastering, and floor tiling.
                     </p>
                     <ul class="hub-feature-list mb-4">
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> Bathroom suite refurbishments</li>
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> Plastering, drywall & stud walls</li>
-                        <li><span class="material-symbols-outlined text-secondary fs-16">check</span> Wall & floor tiling installations</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Bathroom suite refurbishments</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Plastering, drywall & stud walls</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Wall & floor tiling installations</li>
                     </ul>
                     <a asp-controller="Services" asp-action="Category" asp-route-categorySlug="small-building-works" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
                         Explore Refurbishments
@@ -111,7 +111,7 @@
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="guarantee-card h-100">
-                    <div class="guarantee-icon-box">
+                    <div class="guarantee-icon-box guarantee-icon-homeowner">
                         <span class="material-symbols-outlined">cottage</span>
                     </div>
                     <h3 class="fs-18 fw-bold text-primary mb-2">Private Homeowners</h3>
@@ -122,7 +122,7 @@
             </div>
             <div class="col-md-4">
                 <div class="guarantee-card h-100">
-                    <div class="guarantee-icon-box">
+                    <div class="guarantee-icon-box guarantee-icon-landlord">
                         <span class="material-symbols-outlined">key</span>
                     </div>
                     <h3 class="fs-18 fw-bold text-primary mb-2">Landlords & Buy-to-Let</h3>
@@ -133,7 +133,7 @@
             </div>
             <div class="col-md-4">
                 <div class="guarantee-card h-100">
-                    <div class="guarantee-icon-box">
+                    <div class="guarantee-icon-box guarantee-icon-manager">
                         <span class="material-symbols-outlined">apartment</span>
                     </div>
                     <h3 class="fs-18 fw-bold text-primary mb-2">Property Managers</h3>
