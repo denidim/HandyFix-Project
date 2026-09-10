@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-09-08 — **Category card price label reworked, "See Pricing" link added, and flat-rate pricing finalized.** `Services/Category.cshtml`'s per-service price now reads "Base Price £X" with a link to the Pricing page (was "From £X" / inert "Fixed Rate" text), plus a CSS fix so the price never wraps regardless of service-name length. Section 3ak's tiered pricing (10 services priced above the £80/£60 floor by judgment) is superseded the same day, a user-confirmed decision — every service is now flat-rate, no exceptions. Full suite 150/150 green. See Section 3al. (Previous update, earlier the same day, 2026-09-08: **Service Catalog Refresh: Flat Hourly Pricing + 8 New Services.** 8 new services added (20 → 28); `ServicesSeeder` changed from insert-only to upsert-on-price/duration. See Section 3ak.)
+> **Last updated**: 2026-09-10 — **About Page Redesign: Variation 3 (Property Solutions Hub) Finalized.** Evaluated three rich design variations via an interactive preview switcher; selected and locked in Variation 3 (Complete Property Solutions Hub showcasing Plumbing, Handyman, and Small Building & Refurbishments). Removed all temporary switcher scaffolding, partials, and unused CSS. Full suite 151/151 green. See Section 3au.
 
 ---
 
@@ -1356,6 +1356,14 @@ Found and fixed on live staging testing: the mobile sticky CTA bar (`_MobileStic
 
 ---
 
+## 3at. Home Page Trust Stats Card Replaced with a "Join Our Team" Invitation (2026-09-08)
+
+- **`Home/Index.cshtml`'s floating stats card** on the "Trust Your Home to Qualified Experts" section (overlaid on the hero image, `.trust-stats-card`) — previously "12k+ Jobs Completed" / a 5-star row / "4.9/5 Rating, Based on 2,500 reviews" — is now a recruitment invitation: a `groups` icon, "Join Our Team", and a one-line pitch, with the whole card now a link to `Home/Contact` (no dedicated careers page or address exists, so the general enquiry form is the only real destination today).
+- **Removes fabricated numbers, not just repurposes the slot**: those job-count/rating figures were invented and never sourced from real data — the same category of content already flagged elsewhere (Tier 3 item 17/18) as needing real business input rather than engineering. This instance is fixed by removing the number entirely rather than being left to revisit later.
+- **CSS**: `.trust-stats-rating` and `.trust-stats-stars` (both now unused) removed from `home.css`; the card gained `.join-team-card`/`.join-team-icon-col`/`.join-team-icon`/`.join-team-arrow` for the link-hover affordance (slight lift + arrow shift), reusing the existing `.trust-stats-card`/`.trust-stats-divider`/`.trust-stats-col` layout shell unchanged.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full suite, 150/150 green. No test hard-coded the old stats text.
+
+---
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
