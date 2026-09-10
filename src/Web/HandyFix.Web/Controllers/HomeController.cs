@@ -106,6 +106,32 @@ namespace HandyFix.Web.Controllers
             return this.RedirectToAction("Contact");
         }
 
+        [HttpGet]
+        [Route("JoinOurTeam")]
+        public IActionResult JoinTeam()
+        {
+            this.SetJoinTeamMetadata();
+            return this.View(new JoinTeamInputModel());
+        }
+
+        [HttpPost]
+        [Route("JoinOurTeam")]
+        public async Task<IActionResult> JoinTeam(JoinTeamInputModel model)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                this.SetJoinTeamMetadata();
+                return this.View(model);
+            }
+
+            // Saved as an enquiry with no photos, so applications reach the existing admin
+            // Enquiries list without a table of their own - see JoinTeamInputModel.
+            await this.inquiriesService.CreateInquiryAsync(model.ToContactInputModel(), Array.Empty<string>());
+            this.TempData["SuccessMessage"] = "Thanks for applying! We've received your details and will be in touch soon.";
+
+            return this.RedirectToAction("JoinTeam");
+        }
+
         [Route("Reviews")]
         public async Task<IActionResult> Reviews()
         {
@@ -180,6 +206,12 @@ namespace HandyFix.Web.Controllers
         {
             return this.View(
                 new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
+        }
+
+        private void SetJoinTeamMetadata()
+        {
+            this.ViewData["Title"] = "Join Our Team - Careers";
+            this.ViewData["MetaDescription"] = "Skilled plumber, handyman or building tradesperson in Surrey or South London? Apply to join our Chessington-based team.";
         }
     }
 }

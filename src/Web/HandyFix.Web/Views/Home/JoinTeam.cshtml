@@ -1,0 +1,177 @@
+@model HandyFix.Web.ViewModels.Home.JoinTeamInputModel
+
+<div class="page-container services-page">
+    <!-- Header & Breadcrumbs -->
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">Join Our Team</span>
+        </nav>
+        <div class="services-header-content text-center">
+            <h1 class="services-hero-title">Join Our <span>Team.</span></h1>
+            <p class="services-subtitle">
+                Skilled plumber, handyman or building tradesperson based in Surrey or South London? Tell us about yourself and your experience, and we'll be in touch.
+            </p>
+        </div>
+    </section>
+
+    <div class="info-canvas">
+    <!-- Success Alert -->
+    @if (this.TempData["SuccessMessage"] != null)
+    {
+        <div class="p-4 mb-4 text-white d-flex align-items-start gap-3 rounded-lg contact-success-alert">
+            <span class="material-symbols-outlined fs-24">check_circle</span>
+            <div>
+                <h3 class="font-headline-sm mb-1 text-white fs-16 fw-bold">Application Received!</h3>
+                <p class="mb-0 text-white fs-14 opacity-90">@this.TempData["SuccessMessage"]</p>
+            </div>
+        </div>
+    }
+
+    <!-- Application Form Container -->
+    <div class="glass-card rounded-xl p-4 p-md-5">
+        <form id="joinTeamForm" asp-controller="Home" asp-action="JoinTeam" method="post" class="d-flex flex-column gap-3">
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
+            <div class="row">
+                <!-- Name -->
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="form-field">
+                        <label class="form-label fw-semibold" asp-for="Name">Full Name</label>
+                        <input asp-for="Name" class="form-control" placeholder="John Doe" required />
+                        <span asp-validation-for="Name" class="validation-error"></span>
+                    </div>
+                </div>
+                <!-- Email -->
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label fw-semibold" asp-for="Email">Email Address</label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="john@example.com" required />
+                        <span asp-validation-for="Email" class="validation-error"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Phone -->
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="form-field">
+                        <label class="form-label fw-semibold" asp-for="PhoneNumber">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="+44 7123 456789" required />
+                        <span asp-validation-for="PhoneNumber" class="validation-error"></span>
+                    </div>
+                </div>
+                <!-- Trade -->
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label fw-semibold" asp-for="Trade">Main Trade</label>
+                        <select asp-for="Trade" class="form-control" required>
+                            <option value="">-- Select your main trade --</option>
+                            <option value="Plumbing">Plumbing</option>
+                            <option value="Handyman & Maintenance">Handyman &amp; Maintenance</option>
+                            <option value="Building & Refurbishment">Building &amp; Refurbishment</option>
+                            <option value="Multi-trade">Multi-trade</option>
+                        </select>
+                        <span asp-validation-for="Trade" class="validation-error"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Years of Experience -->
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="form-field">
+                        <label class="form-label fw-semibold" asp-for="YearsExperience">Years of Experience</label>
+                        <input asp-for="YearsExperience" class="form-control" min="0" max="60" placeholder="e.g. 5" required />
+                        <span asp-validation-for="YearsExperience" class="validation-error"></span>
+                    </div>
+                </div>
+                <!-- Availability -->
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label fw-semibold" asp-for="Availability">Availability</label>
+                        <select asp-for="Availability" class="form-control" required>
+                            <option value="">-- Select your availability --</option>
+                            <option value="Full-time">Full-time</option>
+                            <option value="Part-time">Part-time</option>
+                            <option value="Subcontract / Self-employed">Subcontract / Self-employed</option>
+                            <option value="Flexible / Ad-hoc">Flexible / Ad-hoc</option>
+                        </select>
+                        <span asp-validation-for="Availability" class="validation-error"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tools & Transport -->
+            <div class="d-flex flex-wrap gap-4">
+                <div class="form-check">
+                    <input asp-for="HasOwnTools" class="form-check-input" />
+                    <label asp-for="HasOwnTools" class="form-check-label">I have my own tools</label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="HasOwnTransport" class="form-check-input" />
+                    <label asp-for="HasOwnTransport" class="form-check-label">I have my own transport</label>
+                </div>
+            </div>
+
+            <!-- About You -->
+            <div class="form-field">
+                <label class="form-label fw-semibold" asp-for="AboutYou">About You (Optional)</label>
+                <textarea asp-for="AboutYou" class="form-control resize-none" rows="5" placeholder="Recent work, qualifications or certifications, and the areas you can cover..."></textarea>
+                <span asp-validation-for="AboutYou" class="validation-error"></span>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-2">
+                <button type="submit" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
+                    <span>Send Application</span>
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="row mt-5">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3 contact-info-tile">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white contact-info-icon-box">
+                    <span class="material-symbols-outlined">construction</span>
+                </div>
+                <div>
+                    <h4 class="font-button-text mb-0 fs-14">Three Trades</h4>
+                    <p class="text-muted mb-0 fs-12">Plumbing, handyman &amp; building</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3 contact-info-tile">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white contact-info-icon-box">
+                    <span class="material-symbols-outlined">location_on</span>
+                </div>
+                <div>
+                    <h4 class="font-button-text mb-0 fs-14">Local Work</h4>
+                    <p class="text-muted mb-0 fs-12">15 areas from our Chessington base</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 rounded-xl d-flex align-items-center gap-3 contact-info-tile">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white contact-info-icon-box">
+                    <span class="material-symbols-outlined">handshake</span>
+                </div>
+                <div>
+                    <h4 class="font-button-text mb-0 fs-14">Straight to Us</h4>
+                    <p class="text-muted mb-0 fs-12">No recruitment agency in between</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+@* No _ValidationScriptsPartial on this page, deliberately: _Layout already loads jquery.validate and
+   the unobtrusive adapter from /dist. The partial re-loads jquery.validate on top (wiping the methods
+   the adapter registered - the "__dummy__" console errors) and points at an unobtrusive path that
+   doesn't exist. See PROJECT_STATE.md Section 3av. *@
