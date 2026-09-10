@@ -6,15 +6,22 @@
         @foreach (var area in Model)
         {
             <a asp-route="AreaDetails" asp-route-areaSlug="@area.Slug" class="area-card">
-                @if (area.IsFeatured)
-                {
-                    <span class="area-card-badge">Featured</span>
-                }
-                <h3 class="area-card-title">@area.Name</h3>
-                <p class="area-card-region">@area.Region</p>
-                <div class="area-card-meta">
-                    <span class="material-symbols-outlined">directions_car</span>
-                    <span>@(area.DriveTimeMinutes == 0 ? "Home base" : $"~{area.DriveTimeMinutes} min drive")</span>
+                <div class="area-card-media">
+                    @* Per-area art resolves by the Section 3h slug convention; until it exists, onerror
+                       falls back to the generic Areas image, so real assets need no code change. *@
+                    <img class="area-card-image" src="/images/areas/@(area.Slug)-hero.webp" alt="@area.Name" width="1600" height="700" loading="lazy" onerror="this.onerror=null;this.src='/images/areas-hero.webp';">
+                    @if (area.IsFeatured)
+                    {
+                        <span class="area-card-badge">Featured</span>
+                    }
+                </div>
+                <div class="area-card-body">
+                    <h3 class="area-card-title">@area.Name</h3>
+                    <p class="area-card-region">@area.Region</p>
+                    <div class="area-card-meta">
+                        <span class="material-symbols-outlined">directions_car</span>
+                        <span>@(area.DriveTimeMinutes == 0 ? "Home base" : $"~{area.DriveTimeMinutes} min drive")</span>
+                    </div>
                 </div>
             </a>
         }

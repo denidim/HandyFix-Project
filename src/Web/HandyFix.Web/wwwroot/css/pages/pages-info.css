@@ -572,26 +572,43 @@
   border-color: var(--secondary);
 }
 
+/* Tint/accent are overridable per card (About page's "Who We Work With"); the fallbacks keep
+   the original cyan wherever no modifier is set, e.g. the Booking page sidebar. */
 .guarantee-icon-box {
   width: 56px;
   height: 56px;
-  background-color: rgba(14, 165, 233, 0.1);
+  background-color: var(--guarantee-tint, rgba(14, 165, 233, 0.1));
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--secondary);
+  color: var(--guarantee-accent, var(--secondary));
   margin-bottom: var(--spacing-6);
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .guarantee-card:hover .guarantee-icon-box {
-  background-color: var(--secondary);
+  background-color: var(--guarantee-accent, var(--secondary));
   color: #ffffff;
 }
 
 .guarantee-icon-box span {
   font-size: 28px;
+}
+
+.guarantee-icon-homeowner {
+  --guarantee-tint: rgba(2, 132, 199, 0.12);
+  --guarantee-accent: #0284c7;
+}
+
+.guarantee-icon-landlord {
+  --guarantee-tint: rgba(225, 29, 72, 0.1);
+  --guarantee-accent: #e11d48;
+}
+
+.guarantee-icon-manager {
+  --guarantee-tint: rgba(124, 58, 237, 0.1);
+  --guarantee-accent: #7c3aed;
 }
 
 .about-cta-card {
@@ -702,6 +719,23 @@
   gap: var(--spacing-2);
   font-size: 13px;
   color: var(--on-surface-variant);
+}
+
+/* Each division card's checkmarks take the same accent as its icon tile above. */
+.pillar-plumbing {
+  --pillar-accent: #0284c7;
+}
+
+.pillar-handyman {
+  --pillar-accent: #059669;
+}
+
+.pillar-building {
+  --pillar-accent: #d97706;
+}
+
+.hub-feature-list .material-symbols-outlined {
+  color: var(--pillar-accent, var(--secondary));
 }
 
 .about-areas-preview {

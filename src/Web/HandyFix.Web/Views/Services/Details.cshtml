@@ -32,19 +32,14 @@
             ? "Non-invasive thermal imaging and pressure testing to find and fix hidden leaks instantly."
             : "TV wall mounting, mirror hanging, door trimming, and general odd jobs handled by experts.");
 
-    // Local Specialist dynamic data
-    var expertName = isBuilding ? "Zap" : (isPlumbing ? "David" : "Mark");
-    var expertRole = isBuilding ? "Projects Director" : (isPlumbing ? "Senior Plumber" : "Master Handyman");
-    var expertBorough = isBuilding ? "Surrey" : (isPlumbing ? "Epsom" : "Cobham");
-    var expertBio = isBuilding
-        ? "I've been in the construction industry since 2004, and I believe the secret to stress-free renovations is simple: turn up on time, manage the trades properly, and do the job right the first time. I personally survey every project and work alongside our teams on-site until the final checklist is complete."
-        : (isPlumbing
-            ? "I've spent 15 years servicing homes across Epsom, Cobham, and Esher. I specialize in high-end bathroom remodels and precision leak detection."
-            : "I've spent over 12 years helping homeowners with carpentry, mounting, and general property maintenance across Cobham and Surrey.");
-    var expertClosingLine = isBuilding
-        ? "You'll always have a direct line to me, and my personal guarantee that the work is finished to perfection."
-        : "I'm personally committed to making sure your property maintenance is completed to the highest standards.";
-    var expertAvatar = isBuilding ? "/images/expert-zap.webp" : (isPlumbing ? "/images/expert-david.webp" : "/images/expert-mark.webp");
+    // Local Expert: the business's real co-founder on every service page. Only the role
+    // adapts per category - the bio is his own supplied wording, not written per trade.
+    var expertName = "Zapryan";
+    var expertRole = isBuilding ? "Projects Director" : (isPlumbing ? "Owner & Lead Plumber" : "Owner & Lead Handyman");
+    var expertBorough = "Surrey";
+    var expertBio = "I've been in the construction industry since 2004, and I believe the secret to stress-free renovations is simple: turn up on time, manage the trades properly, and do the job right the first time. I personally survey every project and work alongside our teams on-site until the final checklist is complete.";
+    var expertClosingLine = "You'll always have a direct line to me, and my personal guarantee that the work is finished to perfection.";
+    var expertAvatar = "/images/expert-zap.webp";
 
     string GetCategoryIcon(string name)
     {
@@ -194,14 +189,6 @@
                     <span class="local-expert-meta">Your Local Expert</span>
                     <h3 class="local-expert-name">Hi, I'm @expertName – @expertRole in @expertBorough</h3>
                     <p class="local-expert-bio">@expertBio @expertClosingLine</p>
-                    <div class="local-expert-stats">
-                        <div class="local-expert-rating">
-                            <span class="material-symbols-outlined icon-fill">star</span>
-                            <span>4.9/5 Rating</span>
-                        </div>
-                        <span class="local-expert-divider">|</span>
-                        <span class="local-expert-completed">Over 1,200 services completed</span>
-                    </div>
                 </div>
             </section>
         </main>
@@ -257,11 +244,21 @@
                         </div>
                     </div>
 
-                    <a asp-controller="Booking" asp-action="Index" asp-route-serviceId="@Model.Id" class="sidebar-booking-btn">
-                        <span>Request Your Booking</span>
-                        <span class="material-symbols-outlined">arrow_forward</span>
-                    </a>
-                    <p class="sidebar-booking-note">No upfront payment required</p>
+                    <div class="sidebar-booking-actions">
+                        <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn">
+                            <span>Request Your Booking</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        </a>
+                        <a asp-controller="Booking" asp-action="Index" asp-route-serviceId="@Model.Id" class="sidebar-booking-btn sidebar-booking-btn-outline">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            <span>Book a Slot</span>
+                        </a>
+                        <a href="tel:07123456789" class="sidebar-booking-btn sidebar-booking-btn-ghost">
+                            <span class="material-symbols-outlined">call</span>
+                            <span>Call Us: 07123 456 789</span>
+                        </a>
+                    </div>
+                    <p class="sidebar-booking-note">Requests are free &bull; Slots secured with a £50 deposit</p>
                 }
                 </div>
 
@@ -305,6 +302,7 @@
                                                          {
                                                              Name = related.Name,
                                                              IconName = GetCategoryIcon(related.CategoryName),
+                                                             ImageUrl = related.ImageUrl,
                                                              Description = related.Description,
                                                              BasePrice = related.BasePrice,
                                                              EstimatedDurationMinutes = related.EstimatedDurationMinutes,
@@ -328,7 +326,7 @@
     "@@type": "LocalBusiness",
     "name": "HandyFix",
     "telephone": "07123456789",
-    "priceRange": "$$",
+    "priceRange": "££",
     "address": {
       "@@type": "PostalAddress",
       "addressLocality": "Chessington",

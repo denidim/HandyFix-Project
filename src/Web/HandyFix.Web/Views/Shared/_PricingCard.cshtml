@@ -10,9 +10,21 @@
 }
 
 <article class="pricing-card">
-    <div class="pricing-card-icon-wrapper">
-        <span class="material-symbols-outlined">@Model.IconName</span>
-    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+    {
+        <div class="pricing-card-media">
+            <img class="pricing-card-image" src="@Model.ImageUrl" alt="@Model.Name" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
+            <span class="pricing-card-media-icon">
+                <span class="material-symbols-outlined">@Model.IconName</span>
+            </span>
+        </div>
+    }
+    else
+    {
+        <div class="pricing-card-icon-wrapper">
+            <span class="material-symbols-outlined">@Model.IconName</span>
+        </div>
+    }
     <h3 class="pricing-card-title">@Model.Name</h3>
     @if (!string.IsNullOrWhiteSpace(Model.Description))
     {

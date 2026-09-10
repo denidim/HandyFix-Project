@@ -85,7 +85,7 @@
                         <div class="reassuring-info-card">
                             <span class="material-symbols-outlined reassuring-info-icon">info</span>
                             <p class="reassuring-info-text">
-                                Base rates are applied transparently per hour depending on your chosen service category (Plumbing or Handyman). You don't need to scroll through all service types — your initial deposit covers the 1st hour base rate for your project!
+                                Base rates are applied transparently per hour depending on your chosen service category (Plumbing or Handyman). A £50 deposit secures your slot today and is deducted from your final bill once the job is complete.
                             </p>
                         </div>
                     </div>
@@ -339,12 +339,14 @@
                     summaryService.textContent = opt.text.split(" (from")[0];
                 } else {
                     summaryService.textContent = activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) + " Service";
-                    basePrice = activeCategory === "plumbing" ? 65 : 45; // Default fallback
+                    basePrice = activeCategory === "plumbing" ? 90 : 60; // Flat category rates (Plumbing £90, Handyman £60)
                 }
 
                 const formattedPrice = "£" + basePrice.toFixed(2);
                 summaryMinCharge.textContent = formattedPrice;
-                summaryDeposit.textContent = formattedPrice;
+                // The deposit is a flat £50 (BookingsService.CreateBookingAsync), not the first-hour
+                // price - showing the hourly rate here promised a different amount than Stripe charges.
+                summaryDeposit.textContent = "£50.00";
                 summaryTotalPrice.textContent = formattedPrice;
 
                 updateSummaryDateTime();

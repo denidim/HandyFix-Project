@@ -10,6 +10,16 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Publishes the header's real height as --header-height, used by navbar.css to pad
+    // the page under the fixed mobile header. Observed rather than read once, since the
+    // height shifts when web fonts load and when the phone number hides at narrow widths.
+    const siteHeader = document.querySelector('.header-docked');
+    if (siteHeader && 'ResizeObserver' in window) {
+        new ResizeObserver(function () {
+            document.documentElement.style.setProperty('--header-height', siteHeader.offsetHeight + 'px');
+        }).observe(siteHeader);
+    }
+
     // Admin Sidebar Toggle
     const adminToggleBtn = document.getElementById('admin-sidebar-btn');
     const adminSidebar = document.querySelector('.admin-sidebar');

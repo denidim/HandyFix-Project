@@ -1,2 +1,5 @@
-<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+@* Intentionally empty. _Layout already loads jquery.validate and the unobtrusive adapter on every page.
+   This partial used to load jquery.validate a second time - discarding the rules the adapter had
+   registered, hence the "__dummy__" console errors - plus an unobtrusive path that doesn't exist (a 404),
+   which broke client-side validation on every form that included it. Kept as a file rather than deleted
+   so existing <partial name="_ValidationScriptsPartial" /> references stay valid. *@

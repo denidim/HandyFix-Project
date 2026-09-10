@@ -69,6 +69,13 @@ namespace HandyFix.Web
                     options.MinimumSameSitePolicy = SameSiteMode.Lax;
                 });
 
+            // Form confirmations ("we've received your enquiry") reach the next page through the
+            // TempData cookie. With CheckConsentNeeded on, a non-essential cookie is never written
+            // until the visitor accepts the banner, so the confirmation silently vanished. It carries
+            // no tracking data and exists only to answer a request the visitor just made - the
+            // strictly-necessary category, like the antiforgery cookie.
+            services.Configure<CookieTempDataProviderOptions>(options => options.Cookie.IsEssential = true);
+
             // Staging/production run behind Caddy, which terminates TLS and proxies to this
             // container over plain HTTP on the internal Docker network - so without this,
             // Request.Scheme/IsHttps reads "http" for every request regardless of what the

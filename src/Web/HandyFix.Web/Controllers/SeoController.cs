@@ -40,6 +40,7 @@ namespace HandyFix.Web.Controllers
                 this.Url.Action("Pricing", "Services", null, protocol),
                 this.Url.Action("Index", "Booking", null, protocol),
                 this.Url.Action("Contact", "Home", null, protocol),
+                this.Url.Action("JoinTeam", "Home", null, protocol),
                 this.Url.Action("About", "Home", null, protocol),
                 this.Url.Action("FAQ", "Home", null, protocol),
                 this.Url.RouteUrl("Areas", null, protocol),

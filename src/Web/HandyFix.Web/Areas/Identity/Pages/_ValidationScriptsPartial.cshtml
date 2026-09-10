@@ -1,0 +1,5 @@
+@* Overrides the Identity UI package's own _ValidationScriptsPartial, which Identity pages (Login,
+   Register, and the package's unscaffolded pages) resolve before Views/Shared. The package version
+   loads a second copy of jquery.validate on top of the one _Layout already provides - the same
+   double-load that broke validation in Views/Shared/_ValidationScriptsPartial.cshtml. Intentionally
+   empty; see that file. *@
