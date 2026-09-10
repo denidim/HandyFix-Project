@@ -740,10 +740,6 @@
   border-radius: var(--radius-xl);
 }
 
-.trust-stats-rating {
-  font-size: 14px;
-}
-
 .trust-stats-reviews {
   font-size: 12px;
 }
@@ -788,9 +784,36 @@
   z-index: 10;
 }
 
-.trust-stats-stars {
+.join-team-card {
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.join-team-card:hover {
+  box-shadow: var(--shadow-2xl);
+  transform: translateY(-2px);
+}
+
+.join-team-icon-col {
   display: flex;
-  color: #FFB800;
+  align-items: center;
+  justify-content: center;
+}
+
+.join-team-icon {
+  font-size: 28px;
+  color: var(--secondary);
+}
+
+.join-team-arrow {
+  margin-left: auto;
+  color: var(--on-surface-variant);
+  transition: transform var(--transition-fast);
+}
+
+.join-team-card:hover .join-team-arrow {
+  transform: translateX(3px);
 }
 
 .trust-stats-divider {

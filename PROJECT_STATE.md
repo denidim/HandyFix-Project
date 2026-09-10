@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-09-08 — **Category card price label reworked, "See Pricing" link added, and flat-rate pricing finalized.** `Services/Category.cshtml`'s per-service price now reads "Base Price £X" with a link to the Pricing page (was "From £X" / inert "Fixed Rate" text), plus a CSS fix so the price never wraps regardless of service-name length. Section 3ak's tiered pricing (10 services priced above the £80/£60 floor by judgment) is superseded the same day, a user-confirmed decision — every service is now flat-rate, no exceptions. Full suite 150/150 green. See Section 3al. (Previous update, earlier the same day, 2026-09-08: **Service Catalog Refresh: Flat Hourly Pricing + 8 New Services.** 8 new services added (20 → 28); `ServicesSeeder` changed from insert-only to upsert-on-price/duration. See Section 3ak.)
+> **Last updated**: 2026-09-10 — **About Page Redesign: Variation 3 (Property Solutions Hub) Finalized.** Evaluated three rich design variations via an interactive preview switcher; selected and locked in Variation 3 (Complete Property Solutions Hub showcasing Plumbing, Handyman, and Small Building & Refurbishments). Removed all temporary switcher scaffolding, partials, and unused CSS. Full suite 151/151 green. See Section 3au.
 
 ---
 
@@ -1353,6 +1353,38 @@ Found and fixed on live staging testing: the mobile sticky CTA bar (`_MobileStic
 - **`.mobile-cta-bar`'s glass background, blur, top border, and shadow removed** per explicit user request — the bar itself is now invisible; only the "Book Now" button renders, right-aligned in the same position it always occupied (`justify-content: flex-end`, not centered or full-width).
 - **`pointer-events: none` added to `.mobile-cta-bar`, `auto` back on `.btn-mobile-cta`** — needed once the bar had no visible background, since an invisible `position: fixed` element spanning the full width would otherwise silently swallow taps across the bottom of every page.
 - **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full suite, 150/150 green.
+
+---
+
+## 3at. Home Page Trust Stats Card Replaced with a "Join Our Team" Invitation (2026-09-08)
+
+- **`Home/Index.cshtml`'s floating stats card** on the "Trust Your Home to Qualified Experts" section (overlaid on the hero image, `.trust-stats-card`) — previously "12k+ Jobs Completed" / a 5-star row / "4.9/5 Rating, Based on 2,500 reviews" — is now a recruitment invitation: a `groups` icon, "Join Our Team", and a one-line pitch, with the whole card now a link to `Home/Contact` (no dedicated careers page or address exists, so the general enquiry form is the only real destination today).
+- **Removes fabricated numbers, not just repurposes the slot**: those job-count/rating figures were invented and never sourced from real data — the same category of content already flagged elsewhere (Tier 3 item 17/18) as needing real business input rather than engineering. This instance is fixed by removing the number entirely rather than being left to revisit later.
+- **CSS**: `.trust-stats-rating` and `.trust-stats-stars` (both now unused) removed from `home.css`; the card gained `.join-team-card`/`.join-team-icon-col`/`.join-team-icon`/`.join-team-arrow` for the link-hover affordance (slight lift + arrow shift), reusing the existing `.trust-stats-card`/`.trust-stats-divider`/`.trust-stats-col` layout shell unchanged.
+- **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full suite, 150/150 green. No test hard-coded the old stats text.
+
+---
+
+## 3au. About Page Redesign: Variation 3 (Property Solutions Hub) Finalized (2026-09-10)
+
+The existing `/About` page was identified as sparse and generic (a single 1:1 image, two brief paragraphs, and legacy placeholder claims such as "5,000+ Successful Fixes" and "15+ Specialist Techs" that conflicted with honest trust signals). To determine the optimal direction, three distinct design variations were built alongside the preserved baseline and tested via an interactive preview switcher toolbar:
+
+- **Variation 1**: The Local Craftsman & Founder Story (authentic founder focus, agency-vs-direct comparison card).
+- **Variation 2**: Precision & Standards Blueprint (4-step workflow timeline, equipment & tidy finish standards).
+- **Variation 3**: Complete Property Solutions Hub (multi-trade showcase across Plumbing, Handyman, and Small Building & Refurbishments).
+
+**Resolution**: Following testing, **Variation 3 (Complete Property Solutions Hub)** was selected as the winner and finalized as the permanent About page. All temporary switcher scaffolding, experimental partials, and unused CSS rules were removed:
+- **`About.cshtml`**: Inlined with Variation 3 directly, eliminating all partial views and switcher logic. Features dedicated division cards (*Precision Plumbing* at £90/hr, *Handyman & Maintenance* at £60/hr, *Small Building & Refurbishments* with bespoke estimates), "Who We Work With" cards (Homeowners, Landlords, Property Managers), and Chessington coverage pills.
+- **`HomeController.About()`**: Reverted to clean parameterless signature with updated title (`About Us - Plumbing Handyman Surrey`) and meta description.
+- **Scaffolding cleaned up**: `_AboutOriginal.cshtml`, `_AboutSwitcher.cshtml`, `_AboutV1.cshtml`, `_AboutV2.cshtml`, and `_AboutV3.cshtml` deleted. Unused Var 1/Var 2/switcher CSS removed from `pages-info.css`.
+- **`HomeControllerTests.cs`**: Unit tests updated to verify parameterless `About()` action returns expected `ViewResult` with correct metadata.
+
+### Verified
+- `dotnet build src/HandyFix.sln` — 0 errors, clean build.
+- Full test suite: 151/151 passed (95 in `HandyFix.Services.Data.Tests` + 56 in `HandyFix.Web.Tests`).
+- Visual check: `/About` renders Variation 3 cleanly without toolbar.
+
+**Pre-commit review fixes**: the three section eyebrow labels ("Full-Service Trade Depth", "Tailored Care", "Local Geographic Base") used a `letter-spacing-1` class that doesn't exist anywhere in the codebase — a silent no-op — swapped for the existing `tracking-wide` utility. `pages-info.css` was also missing its trailing newline. Two judgment calls were surfaced to and resolved by the user rather than decided unilaterally: the new division cards' "Fixed Rate • £90/hr" / "£60/hr" badges are hardcoded text rather than pulled from `Service.BasePrice` (kept hardcoded, deliberately, as simple marketing copy — not wired live) and the page's use of "Plumbing Handyman Surrey" while the rest of the site still says "Handy Fix" (kept as-is; the full site rename is separate, later work).
 
 ---
 
