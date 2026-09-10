@@ -240,12 +240,11 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
   background-color: var(--surface-container-lowest);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
-  padding: var(--spacing-6);
+  overflow: hidden;
   text-decoration: none;
   transition: box-shadow var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
 }
@@ -257,23 +256,49 @@
   text-decoration: none;
 }
 
+.area-card-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-color: var(--surface-container-high);
+}
+
+.area-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.area-card:hover .area-card-image {
+  transform: scale(1.05);
+}
+
+.area-card-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: var(--spacing-2);
+  padding: var(--spacing-5) var(--spacing-6) var(--spacing-6);
+}
+
 .area-card-badge {
   position: absolute;
-  top: var(--spacing-4);
-  right: var(--spacing-4);
+  top: var(--spacing-3);
+  right: var(--spacing-3);
   font-size: var(--fs-label-sm);
   font-weight: 600;
   color: var(--secondary);
   background-color: var(--secondary-fixed);
   padding: 0.2rem 0.65rem;
   border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
 }
 
 .area-card-title {
   font-size: var(--fs-headline-sm);
   color: var(--primary);
   margin: 0;
-  padding-right: var(--spacing-10);
 }
 
 .area-card-region {
