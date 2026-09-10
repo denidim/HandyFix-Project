@@ -310,30 +310,8 @@
 
 .local-expert-bio {
   color: var(--on-surface-variant);
-  margin: 0 0 var(--spacing-4) 0;
+  margin: 0;
   line-height: 1.5;
-}
-
-.local-expert-stats {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-4);
-}
-
-.local-expert-rating {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  color: var(--on-tertiary-container);
-  font-weight: 700;
-}
-
-.local-expert-divider {
-  color: var(--border);
-}
-
-.local-expert-completed {
-  color: var(--on-surface-variant);
 }
 
 /* Sidebar Booking Box */
