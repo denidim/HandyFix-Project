@@ -244,11 +244,21 @@
                         </div>
                     </div>
 
-                    <a asp-controller="Booking" asp-action="Index" asp-route-serviceId="@Model.Id" class="sidebar-booking-btn">
-                        <span>Request Your Booking</span>
-                        <span class="material-symbols-outlined">arrow_forward</span>
-                    </a>
-                    <p class="sidebar-booking-note">No upfront payment required</p>
+                    <div class="sidebar-booking-actions">
+                        <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn">
+                            <span>Request Your Booking</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        </a>
+                        <a asp-controller="Booking" asp-action="Index" asp-route-serviceId="@Model.Id" class="sidebar-booking-btn sidebar-booking-btn-outline">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            <span>Book a Slot</span>
+                        </a>
+                        <a href="tel:07123456789" class="sidebar-booking-btn sidebar-booking-btn-ghost">
+                            <span class="material-symbols-outlined">call</span>
+                            <span>Call Us: 07123 456 789</span>
+                        </a>
+                    </div>
+                    <p class="sidebar-booking-note">Requests are free &bull; Slots secured with a £50 deposit</p>
                 }
                 </div>
 

@@ -402,6 +402,31 @@
   transform: translateX(4px);
 }
 
+/* Request (primary) / Book a Slot / Call Us, stacked full-width. */
+.sidebar-booking-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.sidebar-booking-btn-outline {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1.5px solid var(--secondary-container);
+}
+
+.sidebar-booking-btn-ghost {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+/* The primary button's arrow nudges right on hover; these two lead with an icon instead,
+   where the same nudge reads as the icon slipping out of place. */
+.sidebar-booking-btn-outline:hover .material-symbols-outlined,
+.sidebar-booking-btn-ghost:hover .material-symbols-outlined {
+  transform: none;
+}
+
 .sidebar-booking-note {
   text-align: center;
   color: var(--on-primary-container);
