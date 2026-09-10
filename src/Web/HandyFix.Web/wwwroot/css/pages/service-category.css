@@ -227,6 +227,96 @@
   }
 }
 
+/* Mobile: compact split row. A full-width 192px image stacked above the text made every
+   card ~430px tall, so a category's list ran to many screens. display: contents lets the
+   content wrapper's children join the card's own grid - a small thumbnail sits beside the
+   title/price/description, with the meta line and buttons full-width underneath. No markup
+   change, so the desktop row layout above is untouched. */
+@media (max-width: 767.98px) {
+  .service-horizontal-card {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    column-gap: var(--spacing-4);
+    row-gap: var(--spacing-2);
+    align-items: start;
+    padding: var(--spacing-4);
+  }
+
+  .service-card-thumbnail-wrapper {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 88px;
+    height: 88px;
+  }
+
+  .service-card-content {
+    display: contents;
+  }
+
+  .service-card-main-header,
+  .service-card-description {
+    grid-column: 2;
+  }
+
+  .service-card-main-header {
+    flex-direction: column;
+    gap: var(--spacing-1);
+    margin-bottom: 0;
+  }
+
+  .service-card-title {
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .service-card-price-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-2);
+    text-align: left;
+  }
+
+  .service-card-price {
+    font-size: 0.95rem;
+  }
+
+  .service-card-description {
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .service-card-metadata,
+  .service-card-actions {
+    grid-column: 1 / -1;
+  }
+
+  .service-card-metadata {
+    flex-wrap: nowrap;
+    gap: var(--spacing-3);
+    margin: var(--spacing-1) 0 0 0;
+    font-size: 0.8125rem;
+  }
+
+  .service-metadata-item {
+    gap: var(--spacing-1);
+    white-space: nowrap;
+  }
+
+  .service-metadata-icon {
+    font-size: 16px;
+  }
+
+  .service-card-actions {
+    gap: var(--spacing-3);
+  }
+
+  .service-card-btn {
+    padding: var(--spacing-2) var(--spacing-4);
+    font-size: 0.875rem;
+  }
+}
+
 /* Local SEO Section */
 .seo-local-section {
   border-top: 1px solid var(--outline-variant);
