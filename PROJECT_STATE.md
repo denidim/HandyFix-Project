@@ -1364,6 +1364,30 @@ Found and fixed on live staging testing: the mobile sticky CTA bar (`_MobileStic
 - **Verified**: `dotnet build src/HandyFix.sln` (0 errors, pre-existing warnings only) and the full suite, 150/150 green. No test hard-coded the old stats text.
 
 ---
+
+## 3au. About Page Redesign: Variation 3 (Property Solutions Hub) Finalized (2026-09-10)
+
+The existing `/About` page was identified as sparse and generic (a single 1:1 image, two brief paragraphs, and legacy placeholder claims such as "5,000+ Successful Fixes" and "15+ Specialist Techs" that conflicted with honest trust signals). To determine the optimal direction, three distinct design variations were built alongside the preserved baseline and tested via an interactive preview switcher toolbar:
+
+- **Variation 1**: The Local Craftsman & Founder Story (authentic founder focus, agency-vs-direct comparison card).
+- **Variation 2**: Precision & Standards Blueprint (4-step workflow timeline, equipment & tidy finish standards).
+- **Variation 3**: Complete Property Solutions Hub (multi-trade showcase across Plumbing, Handyman, and Small Building & Refurbishments).
+
+**Resolution**: Following testing, **Variation 3 (Complete Property Solutions Hub)** was selected as the winner and finalized as the permanent About page. All temporary switcher scaffolding, experimental partials, and unused CSS rules were removed:
+- **`About.cshtml`**: Inlined with Variation 3 directly, eliminating all partial views and switcher logic. Features dedicated division cards (*Precision Plumbing* at £90/hr, *Handyman & Maintenance* at £60/hr, *Small Building & Refurbishments* with bespoke estimates), "Who We Work With" cards (Homeowners, Landlords, Property Managers), and Chessington coverage pills.
+- **`HomeController.About()`**: Reverted to clean parameterless signature with updated title (`About Us - Plumbing Handyman Surrey`) and meta description.
+- **Scaffolding cleaned up**: `_AboutOriginal.cshtml`, `_AboutSwitcher.cshtml`, `_AboutV1.cshtml`, `_AboutV2.cshtml`, and `_AboutV3.cshtml` deleted. Unused Var 1/Var 2/switcher CSS removed from `pages-info.css`.
+- **`HomeControllerTests.cs`**: Unit tests updated to verify parameterless `About()` action returns expected `ViewResult` with correct metadata.
+
+### Verified
+- `dotnet build src/HandyFix.sln` — 0 errors, clean build.
+- Full test suite: 151/151 passed (95 in `HandyFix.Services.Data.Tests` + 56 in `HandyFix.Web.Tests`).
+- Visual check: `/About` renders Variation 3 cleanly without toolbar.
+
+**Pre-commit review fixes**: the three section eyebrow labels ("Full-Service Trade Depth", "Tailored Care", "Local Geographic Base") used a `letter-spacing-1` class that doesn't exist anywhere in the codebase — a silent no-op — swapped for the existing `tracking-wide` utility. `pages-info.css` was also missing its trailing newline. Two judgment calls were surfaced to and resolved by the user rather than decided unilaterally: the new division cards' "Fixed Rate • £90/hr" / "£60/hr" badges are hardcoded text rather than pulled from `Service.BasePrice` (kept hardcoded, deliberately, as simple marketing copy — not wired live) and the page's use of "Plumbing Handyman Surrey" while the rest of the site still says "Handy Fix" (kept as-is; the full site rename is separate, later work).
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
