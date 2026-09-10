@@ -12,6 +12,25 @@
   transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+/* Mobile: fixed, not sticky. Sticky pins to the nearest scroll container, and the open
+   menu's scroll lock (body.mobile-nav-open below) turns <body> into one - so a sticky
+   header snapped back to the top of the document, off-screen for anyone scrolled down.
+   Fixed pins to the viewport, which no ancestor's overflow can change. Because a fixed
+   header no longer occupies space, body is padded by its measured height (site.js). */
+@media (max-width: 767.98px) {
+  .header-docked {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  /* Scoped with :has() so only layouts that actually render the public header are padded. */
+  body:has(> .header-docked) {
+    padding-top: var(--header-height, 57px);
+  }
+}
+
 .navbar-container {
   display: flex;
   justify-content: space-between;
@@ -129,11 +148,11 @@
   top: calc(100% + var(--spacing-2));
   right: var(--spacing-4);
   width: 290px;
-  /* 84px clears the header's own height plus the gap above; the extra spacing-4
+  /* Clears the header's own height plus the spacing-2 gap above; the extra spacing-4
      keeps the dropdown from touching the very bottom edge of the viewport. Without
      a height cap the dropdown just grew past the viewport with no way to scroll
      it - only the page behind it could scroll, leaving the bottom links unreachable. */
-  max-height: calc(100dvh - 84px - var(--spacing-4));
+  max-height: calc(100dvh - var(--header-height, 57px) - var(--spacing-2) - var(--spacing-4));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
