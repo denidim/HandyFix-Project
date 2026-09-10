@@ -26,6 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Seeders are internal; this lets the data-layer tests exercise them directly. -->
+    <InternalsVisibleTo Include="HandyFix.Services.Data.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\HandyFix.Common\HandyFix.Common.csproj" />
     <ProjectReference Include="..\HandyFix.Data.Common\HandyFix.Data.Common.csproj" />
     <ProjectReference Include="..\HandyFix.Data.Models\HandyFix.Data.Models.csproj" />

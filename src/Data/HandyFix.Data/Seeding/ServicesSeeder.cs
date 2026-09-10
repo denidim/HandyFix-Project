@@ -87,6 +87,11 @@ namespace HandyFix.Data.Seeding
                 {
                     service.BasePrice = item.Price;
                     service.EstimatedDurationMinutes = item.Duration;
+
+                    // Category is synced too, not just price/duration: without it, moving a service
+                    // between categories in this file (Section 3ao) never reached an already-seeded
+                    // database. Same pre-launch caveat as the price upsert (Section 3ak).
+                    service.CategoryId = item.CategoryId;
                 }
 
                 await dbContext.SaveChangesAsync();
