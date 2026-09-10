@@ -22,10 +22,16 @@ namespace HandyFix.Web.ViewModels.Home
         [MaxLength(20, ErrorMessage = "Phone number cannot exceed 20 characters.")]
         public string PhoneNumber { get; set; }
 
+        // 2900, not the column's 3000: InquiriesService prefixes "[Category: ...] " (up to ~65
+        // characters) when saving, and the stored message still has to fit nvarchar(3000).
         [Required(ErrorMessage = "Please enter your message.")]
         [MinLength(10, ErrorMessage = "Message must be at least 10 characters long.")]
-        [MaxLength(3000, ErrorMessage = "Message cannot exceed 3000 characters.")]
+        [MaxLength(2900, ErrorMessage = "Message cannot exceed 2900 characters.")]
         public string Message { get; set; }
+
+        [Required(ErrorMessage = "Please choose what your enquiry is about.")]
+        [MaxLength(50, ErrorMessage = "Category cannot exceed 50 characters.")]
+        public string Category { get; set; }
 
         public List<IFormFile> Images { get; set; } = new List<IFormFile>();
     }

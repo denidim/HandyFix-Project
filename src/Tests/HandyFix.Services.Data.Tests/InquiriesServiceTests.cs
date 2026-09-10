@@ -52,6 +52,35 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal("/uploads/inquiries/some_image_file.jpg", inquiry.Images.First().ImageUrl);
         }
 
+        // Guards PROJECT_STATE.md Section 3ax: the Contact page used to write the category into the
+        // message in the browser before validation ran, so an empty message passed. The category is
+        // now its own field and the prefix is added here, after the visitor's own text is validated.
+        [Fact]
+        public async Task CreateInquiryAsyncShouldPrefixMessageWithCategoryWhenProvided()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var inquiryRepository = new EfDeletableEntityRepository<Inquiry>(dbContext);
+            using var imageRepository = new EfDeletableEntityRepository<InquiryImage>(dbContext);
+
+            var service = new InquiriesService(inquiryRepository, imageRepository);
+
+            await service.CreateInquiryAsync(
+                new ContactInputModel
+                {
+                    Name = "Jane Doe",
+                    Email = "jane@example.com",
+                    PhoneNumber = "07123456789",
+                    Message = "Kitchen tap is dripping.",
+                    Category = "Plumbing",
+                },
+                new List<string>());
+
+            Assert.Equal("[Category: Plumbing] Kitchen tap is dripping.", dbContext.Inquiries.Single().Message);
+        }
+
         [Fact]
         public async Task GetAllAsyncShouldDefaultToCreatedOnDescending()
         {

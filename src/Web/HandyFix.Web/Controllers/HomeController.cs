@@ -76,7 +76,7 @@ namespace HandyFix.Web.Controllers
 
         [HttpGet]
         [Route("Contact")]
-        public IActionResult Contact(string service = null)
+        public async Task<IActionResult> Contact(string service = null)
         {
             this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
             this.ViewData["MetaDescription"] = "Get in touch with Handy Fix for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.";
@@ -84,8 +84,16 @@ namespace HandyFix.Web.Controllers
             if (!string.IsNullOrWhiteSpace(service))
             {
                 model.Message = $"Hi, I would like to request a quote / survey for: {service.Trim()}.\n\nProject details:\n";
+
+                // Pre-select the category of the service the visitor came from, so a building quote
+                // request isn't filed under whichever category happens to be listed first.
+                IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+                model.Category = services
+                    .FirstOrDefault(s => string.Equals(s.Name, service.Trim(), StringComparison.OrdinalIgnoreCase))
+                    ?.CategoryName;
             }
 
+            await this.SetContactCategoriesAsync();
             return this.View(model);
         }
 
@@ -96,6 +104,7 @@ namespace HandyFix.Web.Controllers
             if (!this.ModelState.IsValid)
             {
                 this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
+                await this.SetContactCategoriesAsync();
                 return this.View(model);
             }
 
@@ -212,6 +221,14 @@ namespace HandyFix.Web.Controllers
         {
             this.ViewData["Title"] = "Join Our Team - Careers";
             this.ViewData["MetaDescription"] = "Skilled plumber, handyman or building tradesperson in Surrey or South London? Apply to join our Chessington-based team.";
+        }
+
+        // The Contact form's category options come from the real service categories, so a category
+        // added through the admin panel appears there without a code change.
+        private async Task SetContactCategoriesAsync()
+        {
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            this.ViewData["ContactCategories"] = categories.Select(c => c.Name).ToList();
         }
     }
 }

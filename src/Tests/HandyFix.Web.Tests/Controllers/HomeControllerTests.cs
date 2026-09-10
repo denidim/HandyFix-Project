@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using HandyFix.Services;
@@ -11,6 +12,7 @@
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
     using HandyFix.Web.ViewModels.Home;
+    using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -102,19 +104,56 @@
                 Times.Once);
         }
 
-        private static HomeController BuildController(Mock<IInquiriesService> inquiriesService = null)
+        [Fact]
+        public async Task ContactGetShouldPreselectTheCategoryOfTheRequestedService()
+        {
+            var servicesService = new Mock<IServicesService>();
+            servicesService
+                .Setup(s => s.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel>
+                {
+                    new ServiceViewModel { Name = "Tap Repairs", CategoryName = "Plumbing" },
+                    new ServiceViewModel { Name = "Wall & Floor Tiling", CategoryName = "Small Building & Refurbishments" },
+                });
+            var categoriesService = CategoriesMock("Handyman", "Plumbing", "Small Building & Refurbishments");
+            var controller = BuildController(servicesService: servicesService, categoriesService: categoriesService);
+
+            var result = await controller.Contact("Wall & Floor Tiling");
+
+            var model = Assert.IsType<ContactInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("Small Building & Refurbishments", model.Category);
+            Assert.StartsWith("Hi, I would like to request a quote / survey for: Wall & Floor Tiling.", model.Message);
+            Assert.Equal(
+                new[] { "Handyman", "Plumbing", "Small Building & Refurbishments" },
+                (IEnumerable<string>)controller.ViewData["ContactCategories"]);
+        }
+
+        [Fact]
+        public async Task ContactGetWithoutServiceShouldLeaveCategoryUnselected()
+        {
+            var controller = BuildController(categoriesService: CategoriesMock("Handyman", "Plumbing"));
+
+            var result = await controller.Contact();
+
+            var model = Assert.IsType<ContactInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Null(model.Category);
+            Assert.Null(model.Message);
+        }
+
+        private static HomeController BuildController(
+            Mock<IInquiriesService> inquiriesService = null,
+            Mock<IServicesService> servicesService = null,
+            Mock<ICategoriesService> categoriesService = null)
         {
             var reviewsService = new Mock<IReviewsService>();
-            var servicesService = new Mock<IServicesService>();
-            var categoriesService = new Mock<ICategoriesService>();
             var imageService = new Mock<IImageService>();
             var configuration = new Mock<IConfiguration>();
 
             var controller = new HomeController(
                 reviewsService.Object,
                 (inquiriesService ?? new Mock<IInquiriesService>()).Object,
-                servicesService.Object,
-                categoriesService.Object,
+                (servicesService ?? new Mock<IServicesService>()).Object,
+                (categoriesService ?? new Mock<ICategoriesService>()).Object,
                 imageService.Object,
                 configuration.Object);
 
@@ -126,6 +165,15 @@
             controller.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
 
             return controller;
+        }
+
+        private static Mock<ICategoriesService> CategoriesMock(params string[] names)
+        {
+            var categoriesService = new Mock<ICategoriesService>();
+            categoriesService
+                .Setup(c => c.GetAllAsync<CategoryViewModel>())
+                .ReturnsAsync(names.Select(n => new CategoryViewModel { Name = n }).ToList());
+            return categoriesService;
         }
     }
 }
