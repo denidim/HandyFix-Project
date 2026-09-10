@@ -129,8 +129,8 @@ namespace HandyFix.Web.Controllers
         [Route("About")]
         public IActionResult About()
         {
-            this.ViewData["Title"] = "About Handy Fix - Professional Handyman Services";
-            this.ViewData["MetaDescription"] = "Learn about Handy Fix, the fully insured plumbing and handyman team serving Surrey and South London, including Chessington, Cobham, and Epsom.";
+            this.ViewData["Title"] = "About Us - Plumbing Handyman Surrey";
+            this.ViewData["MetaDescription"] = "Learn about Plumbing Handyman Surrey, the dedicated plumbing, handyman and refurbishment specialists serving Surrey and South London from Chessington.";
             return this.View();
         }
 

@@ -619,4 +619,93 @@
   background-image: radial-gradient(circle at 2px 2px, var(--secondary) 1px, transparent 0);
   background-size: 24px 24px;
 }
+
+/* ==========================================================================
+   About Page: Property Solutions Hub (Divisions & Services)
+   ========================================================================== */
+
+
+/* Variation 3: Complete Property Solutions Hub */
+.hub-pillar-card {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.hub-pillar-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--secondary);
+}
+
+.hub-pillar-card.featured-pillar {
+  border: 2px solid rgba(0, 101, 145, 0.35);
+  background: linear-gradient(180deg, var(--surface-container-lowest) 0%, rgba(201, 230, 255, 0.1) 100%);
+}
+
+.hub-pillar-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hub-pillar-icon span {
+  font-size: 28px;
+}
+
+.plumbing-icon {
+  background-color: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+}
+
+.handyman-icon {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.building-icon {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+
+.hub-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--secondary);
+}
+
+.hub-badge.building-badge {
+  color: #d97706;
+}
+
+.hub-feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.hub-feature-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: 13px;
+  color: var(--on-surface-variant);
+}
+
+.about-areas-preview {
+  background-color: var(--surface-container-low);
+}
+
 
