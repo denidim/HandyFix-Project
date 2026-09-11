@@ -1449,6 +1449,23 @@ The three problems Section 3av found but kept out of its own scope, fixed the sa
 
 ---
 
+## 3ay. Services Index Redesign with Home Division Cards (2026-09-11)
+
+- **Problem:** `/Services` (`Views/Services/Index.cshtml`) previously rendered an outdated 2-column `.services-grid` with generic `.service-category-card` styling, leaving the 3rd category (Small Building & Refurbishments) sitting awkwardly on its own line and lacking the visual polish and imagery of the Home page's "Specialised Divisions" section.
+- **Redesign:**
+  - Replaced `.services-grid` with `.divisions-grid` (1-col mobile, 2-col tablet, 3-col desktop) and `.division-card` components, balancing all three categories in a responsive grid.
+  - Added category hero images with `/images/hero.webp` fallback handling.
+  - Dynamic division theming (`.division-card-plumbing`, `.division-card-handyman`, `.division-card-building`) providing cyan, rose, and amber accent glows, gradients, and borders.
+  - Curated 2-column service checkmark list (`.division-services-list`) and themed arrow CTA links (`.division-link`).
+  - Removed obsolete `@functions { GetServiceIcon }` block.
+  - Updated page title to `"All Services - Plumbing Handyman Surrey"`, Surrey-first region copy in quality proof section, and replaced fake `"4.9/5 Average Rating"` badge with `"Fixed Rates Upfront"`.
+
+### Verified
+- `dotnet build src/HandyFix.sln` — 0 errors; no new warnings from touched files.
+- Full suite 158/158 (97 `Services.Data.Tests` + 61 `Web.Tests`).
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
@@ -1522,7 +1539,7 @@ The three problems Section 3av found but kept out of its own scope, fixed the sa
 
 **16. Fake statistics → real or removed.** Replace fabricated figures across `Home/Index`, `Home/Reviews`, `Home/About`, `Services/Index`, `Services/Details`, `Services/Category`:
   - **Resolved 2026-07-30, closed for good 2026-09-01**: `Up to £5M Public Liability insurance` → **"Comprehensive Public Liability insurance"**, confirmed genuine coverage (exact figure will not be published at all, per Zaprqn — not merely still pending, item 9) — `Home/Index.cshtml:238` keeps its existing "…covering every single visit" tail unchanged; `Services/Details.cshtml:217`'s shorter sidebar line and `Services/Details.cshtml:153`'s FAQ-prose version get the equivalent swap adapted to each sentence's shape, not a literal paste. The **"100% satisfaction guarantee"** bundled into that same FAQ sentence (`Services/Details.cshtml:153`) is confirmed **not real — remove it outright**, don't reword it.
-  - **Still blocked on item 9 (real facts)**: ~~`12k+ Jobs Completed`, `4.9/5 Rating`, `Based on 2,500 reviews` (`Home/Index.cshtml:251,262,263`)~~ removed Section 3at; `4.9` + `2.4k Verified Reviews` (`Home/Reviews.cshtml:96,109-113`); ~~`4.9/5 Rating` + `Over 1,200 services completed` (`Services/Details.cshtml:170,173`)~~ removed Section 3av; `4.9/5 Average Rating` (`Services/Index.cshtml:95`); ~~`5,000+ Successful Fixes`, `15+ Specialist Techs`, `Crafting Quality Since 2018` (`Home/About.cshtml:14,48-53`)~~ removed Section 3au; `3 Active Technicians Nearby` (`Services/Category.cshtml:140`). The counts contradict each other (12k+ vs 5,000+ vs 1,200 jobs; 2,500 vs 2.4k reviews vs 5 rows in the database), and most are rating/review claims that no longer make sense once Reviews goes GBP-link-only (item 3) — expect most to become the honest, already-identified substitutes rather than real numbers: *"Direct to your technician — no call centre"*, *"Covering 15 areas from Chessington"* (real `ServiceArea` rows), *"Fixed hourly rates, quoted upfront"* (real `BasePrice`), *"Pay securely online — deposit only"* (real Stripe integration).
+  - **Still blocked on item 9 (real facts)**: ~~`12k+ Jobs Completed`, `4.9/5 Rating`, `Based on 2,500 reviews` (`Home/Index.cshtml:251,262,263`)~~ removed Section 3at; `4.9` + `2.4k Verified Reviews` (`Home/Reviews.cshtml:96,109-113`); ~~`4.9/5 Rating` + `Over 1,200 services completed` (`Services/Details.cshtml:170,173`)~~ removed Section 3av; ~~`4.9/5 Average Rating` (`Services/Index.cshtml:95`)~~ replaced Section 3ay; ~~`5,000+ Successful Fixes`, `15+ Specialist Techs`, `Crafting Quality Since 2018` (`Home/About.cshtml:14,48-53`)~~ removed Section 3au; `3 Active Technicians Nearby` (`Services/Category.cshtml:140`). The counts contradict each other (12k+ vs 5,000+ vs 1,200 jobs; 2,500 vs 2.4k reviews vs 5 rows in the database), and most are rating/review claims that no longer make sense once Reviews goes GBP-link-only (item 3) — expect most to become the honest, already-identified substitutes rather than real numbers: *"Direct to your technician — no call centre"*, *"Covering 15 areas from Chessington"* (real `ServiceArea` rows), *"Fixed hourly rates, quoted upfront"* (real `BasePrice`), *"Pay securely online — deposit only"* (real Stripe integration).
   - Worth noting on the upside, still true: no Gas Safe, NICEIC, TrustMark, Which? or Checkatrade badges appear anywhere — the highest-severity fabrication category (Gas Safe numbers are legally regulated) is clean.
 
 **17. Technicians — public-facing bio block.** ~~Remove the hardcoded `"David"` / `"Mark"` Razor variables~~ **Invented personas removed 2026-09-10 (Section 3av)** — every service page now shows Zapryan's real photo and his own supplied bio, with only the role line varying by category. Still open: the block is still hardcoded Razor variables in `Views/Services/Details.cshtml`; binding it to the real `Technician` entity once item 11 lands is the remaining work. Do **not** AI-generate a face here. Confirmed 2026-07-30: no public technician roster/grid UI is needed for now beyond this bind-to-real-data fix — that's a "grow into it later" feature. A small technician-detail card **in the booking confirmation email** is separate, small new work — the email already renders the technician's name as a plain list item (`PaymentsService.SendBookingConfirmationEmailsAsync`); turning that into a styled card with name/phone (photo only once item 9's photo lands) is the actual remaining task here.
