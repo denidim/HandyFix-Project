@@ -49,6 +49,7 @@
             <a class="nav-link @(IsActive("/About") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="About">About</a>
             <a class="nav-link @(IsActive("/Contact") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
             <a class="nav-link @(IsActive("/Areas") ? "active" : "")" asp-area="" asp-route="Areas">Areas</a>
+            <a class="nav-link @(currentPath.Equals("/Services", StringComparison.OrdinalIgnoreCase) ? "active" : "")" asp-area="" asp-controller="Services" asp-action="Index">All Services</a>
             <a class="nav-link @(IsActive("/Services/plumbing") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="plumbing">Plumbing</a>
             <a class="nav-link @(IsActive("/Services/handyman") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="handyman">Handyman</a>
             <a class="nav-link @(IsActive("/Services/small-building-works") ? "active" : "")" asp-area="" asp-route="ServiceCategory" asp-route-categorySlug="small-building-works">Small Building Work</a>

@@ -1466,6 +1466,29 @@ The three problems Section 3av found but kept out of its own scope, fixed the sa
 
 ---
 
+## 3az. Footer Emergency Link Cleanup & Mobile Menu All Services Link (2026-09-11)
+
+- **Footer cleanup:** Removed the non-functional `href="#"` "Emergency Services" link from `Views/Shared/_Footer.cshtml` Quick Links.
+- **Mobile menu navigation:** Added the "All Services" link (`asp-controller="Services" asp-action="Index"`) to `Views/Shared/_Navbar.cshtml`'s mobile menu drawer with exact-path active state matching (`/Services`), positioned directly alongside the specific category links.
+
+### Verified
+- Full suite 158/158 (97 `Services.Data.Tests` + 61 `Web.Tests`).
+
+---
+
+## 3ba. Fix Mobile Hero Text Clipping on Services Pages (2026-09-11)
+
+- **The bug:** On mobile viewports (<768px), visiting `Services/Index.cshtml` caused the top of the hero content (the breadcrumbs and the first lines of the title) to be clipped and hidden. `.service-hero-section` had a hardcoded `height: 400px` with `overflow: hidden`, while `.service-hero-content` used `justify-content: flex-end`. The 70-character title plus 215-character paragraph and breadcrumbs required ~440px of vertical space; flex-end alignment pushed the top 40px out of bounds where it was hidden.
+- **The fix (`wwwroot/css/pages/service-details.css`):**
+  - Made `.service-hero-section` flexible (`min-height: 400px; height: auto; display: flex; flex-direction: column;`).
+  - Updated `.service-hero-content` to `flex: 1 1 auto; width: 100%;` so the container naturally expands when content is long, while retaining bottom-alignment when content is short.
+  - On mobile (`@media (max-width: 768px)`), slightly relaxed horizontal padding (`var(--spacing-6) var(--spacing-5)`), tightened bottom margin to `var(--spacing-8)`, and scaled `.service-hero-title` to `1.625rem` (26px) with `line-height: 1.25` for clean, proportional mobile wrapping.
+
+### Verified
+- Full suite 158/158 (97 `Services.Data.Tests` + 61 `Web.Tests`).
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Pre-Sprint 4 TODOs — resequenced by launch-blocking priority (updated 2026-07-30)
