@@ -239,8 +239,13 @@ model (feature branches, required reviewers) would add ceremony without adding s
   review and hard to get wrong; a large merge accumulated over weeks is the opposite. A good
   trigger: after any change that's been verified working on staging and isn't obviously the start
   of more related work.
-- **Agents: proactively check `git log --oneline main..dev` at natural checkpoints** (after a
-  verified staging deploy, at the start of a new session, when the user asks "what's next") and
-  say so if `dev` has drifted meaningfully ahead of `main` unmerged. Don't wait to be asked — this
-  rule exists specifically because it's easy to forget mid-work, which is exactly when it's most
-  useful to be reminded.
+- **Agents: `git fetch origin` before checking drift, every time.** A local `main` or `dev` ref
+  only updates when something fetches it — merging a PR on GitHub itself does not touch your local
+  checkout. Compare `origin/main..origin/dev`, not the unqualified `main..dev`, which silently
+  reads whatever your local refs last happened to be. Confirmed necessary on 2026-09-11: a stale
+  local `main` made a fully-merged `dev` (already landed via PR #14) look 28 commits ahead when the
+  real number was zero.
+- **Agents: proactively check for drift at natural checkpoints** (after a verified staging deploy,
+  at the start of a new session, when the user asks "what's next") and say so if `dev` has drifted
+  meaningfully ahead of `main` unmerged. Don't wait to be asked — this rule exists specifically
+  because it's easy to forget mid-work, which is exactly when it's most useful to be reminded.

@@ -1,30 +1,6 @@
 @model IEnumerable<HandyFix.Web.ViewModels.Services.CategoryViewModel>
 @{
-    this.ViewData["Title"] = "All Services - HandyFix South London";
-}
-
-@functions {
-    public string GetServiceIcon(string name)
-    {
-        return name switch
-        {
-            "Leak Detection & Repair" => "water_damage",
-            "Tap & Shower Installation" => "bathroom",
-            "Radiator Maintenance" => "propane_tank",
-            "Furniture Assembly" => "shelves",
-            "TV Mounting & AV Setup" => "tv",
-            "Carpentry & Door Trimming" => "carpenter",
-            "Full Bathroom Refurbishment" => "bathtub",
-            "Kitchen Fitting & Alterations" => "countertops",
-            "Partition Walls & Stud Work" => "view_column",
-            "Plastering & Ceiling Repairs" => "format_paint",
-            "Wall & Floor Tiling" => "grid_view",
-            "Flooring Installation" => "layers",
-            "External Brickwork & Paving" => "foundation",
-            "Custom Carpentry & Boxing-In" => "carpenter",
-            _ => "build"
-        };
-    }
+    this.ViewData["Title"] = "All Services - Plumbing Handyman Surrey";
 }
 
 <div class="page-container services-page">
@@ -45,46 +21,55 @@
         </div>
     </section>
 
-    <!-- Division Bento Grid -->
-    <section class="services-grid">
-        @foreach (var category in this.Model)
-        {
-            var isPlumbing = category.Slug == "plumbing" || category.Name == "Plumbing";
-            var isBuilding = category.Slug == "small-building-works" || category.Name.Contains("Building");
+    <!-- Specialised Divisions Grid -->
+    <section class="section py-8">
+        <div class="divisions-grid">
+            @foreach (var category in this.Model)
+            {
+                var isPlumbing = category.Slug == "plumbing" || string.Equals(category.Name, "Plumbing", StringComparison.OrdinalIgnoreCase);
+                var isBuilding = category.Slug == "small-building-works" || category.Name.Contains("Building", StringComparison.OrdinalIgnoreCase);
 
-            var categoryBadge = isBuilding ? "Survey & Fixed Quote" : (isPlumbing ? "Emergency Available" : "Multi-Skill Pros");
-            var categoryIcon = isBuilding ? "foundation" : (isPlumbing ? "plumbing" : "home_repair_service");
-            var divisionAttr = isBuilding ? "building" : (isPlumbing ? "plumbing" : "handyman");
+                var divisionClass = isBuilding ? "division-card-building" : (isPlumbing ? "division-card-plumbing" : "division-card-handyman");
+                var categoryIcon = isBuilding ? "foundation" : (isPlumbing ? "water_drop" : "handyman");
+                var categoryTitle = isBuilding ? "Building & Refurb" : (isPlumbing ? "Plumbing & Heating" : "General Handyman");
+                var categoryHero = isBuilding ? "small-building-category-hero.webp" : (isPlumbing ? "plumbing-category-hero.webp" : "handyman-category-hero.webp");
+                var linkText = isBuilding ? "View Building Works" : (isPlumbing ? "View Plumbing Rates" : "View Handyman Rates");
 
-            <article class="service-category-card" data-division="@divisionAttr">
-                <div class="service-card-meta">
-                    <div class="service-card-icon-wrapper">
-                        <span class="material-symbols-outlined">@categoryIcon</span>
+                var sampleServices = isBuilding
+                    ? new[] { "Bathroom Refurb", "Kitchen Fitting", "Partition Walls", "Plastering & Tiling" }
+                    : (isPlumbing
+                        ? new[] { "Leak Detection", "Boiler Service", "Drainage Solutions", "Tap Replacement" }
+                        : new[] { "Furniture Assembly", "TV Mounting", "Door Repairs", "Shelf Installation" });
+
+                <div class="division-card @divisionClass">
+                    <div class="img-container">
+                        <img src="~/images/services/@categoryHero" alt="@category.Name" asp-append-version="true" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
                     </div>
-                    <span class="service-badge">@categoryBadge</span>
-                </div>
-                <h2 class="service-card-title">@category.Name</h2>
-                <p class="service-card-desc">@category.Description</p>
-                
-                <div class="service-popular-list">
-                    @foreach (var svc in category.Services.Take(3))
-                    {
-                        <div class="service-subitem">
-                            <div class="service-subitem-left">
-                                <span class="material-symbols-outlined service-subitem-icon">@GetServiceIcon(svc.Name)</span>
-                                <span class="service-subitem-title">@svc.Name</span>
-                            </div>
-                            <span class="service-subitem-price">@(isBuilding ? "Survey & Fixed Quote" : $"from £{svc.BasePrice:F0}")</span>
+                    <div class="division-card-content">
+                        <div class="division-header-title">
+                            <span class="material-symbols-outlined text-secondary division-icon-lg">@categoryIcon</span>
+                            <h3 class="font-headline-md m-0">@categoryTitle</h3>
                         </div>
-                    }
+                        <p class="text-text-main font-body-md mb-6 lh-relaxed">
+                            @category.Description
+                        </p>
+                        <ul class="division-services-list">
+                            @foreach (var item in sampleServices)
+                            {
+                                <li class="division-service-item">
+                                    <span class="material-symbols-outlined text-secondary division-check-icon">check</span>
+                                    @item
+                                </li>
+                            }
+                        </ul>
+                        <a class="division-link" asp-route="ServiceCategory" asp-route-categorySlug="@category.Slug">
+                            @linkText
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        </a>
+                    </div>
                 </div>
-
-                <a asp-route="ServiceCategory" asp-route-categorySlug="@category.Slug" class="btn btn-primary service-category-btn">
-                    <span>View All @category.Name</span>
-                    <span class="material-symbols-outlined">arrow_forward</span>
-                </a>
-            </article>
-        }
+            }
+        </div>
     </section>
 
     <!-- Local Quality Proof -->
@@ -93,7 +78,7 @@
             <div class="quality-proof-content">
                 <h2 class="quality-proof-title">Why choose Handy Fix for your property?</h2>
                 <p class="quality-proof-desc">
-                    We pride ourselves on technical mastery and absolute reliability. Our team serves the South London area with a focus on high-fidelity results and transparent communication.
+                    We pride ourselves on technical mastery and absolute reliability. Our team serves the Surrey and South London area with a focus on high-fidelity results and transparent communication.
                 </p>
                 <div class="quality-proof-badges">
                     <div class="proof-badge">
@@ -101,8 +86,8 @@
                         <span>Fully Insured</span>
                     </div>
                     <div class="proof-badge">
-                        <span class="material-symbols-outlined proof-badge-icon">star</span>
-                        <span>4.9/5 Average Rating</span>
+                        <span class="material-symbols-outlined proof-badge-icon">payments</span>
+                        <span>Fixed Rates Upfront</span>
                     </div>
                     <div class="proof-badge">
                         <span class="material-symbols-outlined proof-badge-icon">schedule</span>
@@ -112,7 +97,7 @@
             </div>
             <div class="quality-proof-image-wrapper">
                 <div class="quality-proof-image-container">
-                    <img class="quality-proof-image" alt="A professional handyman in South London" src="/images/hero.webp" width="256" height="256" loading="lazy">
+                    <img class="quality-proof-image" alt="A professional tradesperson in Surrey and South London" src="/images/hero.webp" width="256" height="256" loading="lazy">
                 </div>
             </div>
         </div>
