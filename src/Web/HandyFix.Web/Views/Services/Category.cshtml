@@ -101,7 +101,8 @@
                             {
                                 <a asp-controller="Booking"
                                    asp-action="Index"
-                                   asp-route-serviceId="@svc.Id"
+                                   asp-route-selectedServiceId="@svc.Id"
+                                   asp-route-categorySlug="@Model.Slug"
                                    class="btn btn-primary service-card-btn">Book Slot</a>
                             }
 
@@ -144,7 +145,7 @@
                             <li class="sidebar-cta-list-item">✓ Upload problem photos</li>
                             <li class="sidebar-cta-list-item">✓ Guaranteed attendance</li>
                         </ul>
-                        <a asp-controller="Booking" asp-action="Index" class="btn btn-success sidebar-cta-btn">Instant Booking Wizard</a>
+                        <a asp-controller="Booking" asp-action="Index" asp-route-categorySlug="@Model.Slug" class="btn btn-success sidebar-cta-btn">Instant Booking Wizard</a>
                     </div>
                 }
 
