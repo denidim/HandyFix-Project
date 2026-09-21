@@ -249,7 +249,7 @@
                             <span>Request Your Booking</span>
                             <span class="material-symbols-outlined">arrow_forward</span>
                         </a>
-                        <a asp-controller="Booking" asp-action="Index" asp-route-serviceId="@Model.Id" class="sidebar-booking-btn sidebar-booking-btn-outline">
+                        <a asp-controller="Booking" asp-action="Index" asp-route-selectedServiceId="@Model.Id" asp-route-categorySlug="@Model.CategorySlug" class="sidebar-booking-btn sidebar-booking-btn-outline">
                             <span class="material-symbols-outlined">calendar_month</span>
                             <span>Book a Slot</span>
                         </a>
