@@ -16,8 +16,10 @@
    menu's scroll lock (body.mobile-nav-open below) turns <body> into one - so a sticky
    header snapped back to the top of the document, off-screen for anyone scrolled down.
    Fixed pins to the viewport, which no ancestor's overflow can change. Because a fixed
-   header no longer occupies space, body is padded by its measured height (site.js). */
-@media (max-width: 767.98px) {
+   header no longer occupies space, body is padded by its measured height (site.js).
+   1280px is where the full link row starts to fit at the scaled-up font sizes (roadmap
+   L2 item 8); below it phones, tablets and small laptops all get the menu layout. */
+@media (max-width: 1279.98px) {
   .header-docked {
     position: fixed;
     top: 0;
@@ -43,7 +45,7 @@
   display: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1280px) {
   .nav-links {
     display: flex;
     gap: var(--spacing-8);
@@ -83,7 +85,7 @@
   border: 1.5px solid var(--primary);
   padding: 5px 12px;
   border-radius: var(--radius-full);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
@@ -104,7 +106,7 @@
   color: #ffffff;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1280px) {
   .navbar-mobile-call-btn {
     display: none;
   }
@@ -136,7 +138,7 @@
   display: flex;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1280px) {
   .navbar-mobile-toggle {
     display: none;
   }
@@ -182,7 +184,7 @@
   visibility: hidden;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1280px) {
   .mobile-nav-dropdown {
     display: none !important;
   }

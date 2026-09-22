@@ -39,8 +39,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .font-headline-lg {
-  font-size: 28px;
-  line-height: 36px;
+  font-size: 30px;
+  line-height: 38px;
   font-weight: var(--fw-headline-lg);
 }
 

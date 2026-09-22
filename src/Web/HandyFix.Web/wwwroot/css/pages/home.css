@@ -347,10 +347,12 @@
   }
 }
 
-/* Strategy 4: 2x2 Compact Tile Grid (Dashboard / Widget Style) */
+/* Strategy 4: 2x2 Compact Tile Grid (Dashboard / Widget Style)
+   One card per row on phones: two ~157px columns only fitted the badge, duration and
+   Book pills at 9-10px, and nothing on a public page goes under 14px (roadmap L2 item 8). */
 .bento-2x2-mode {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: var(--spacing-3);
 }
 
@@ -410,7 +412,7 @@
   background-color: var(--secondary);
   color: var(--on-secondary);
   font-weight: 700;
-  font-size: 9px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 2px 7px;
@@ -434,7 +436,7 @@
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
   padding: 2px 6px;
   border-radius: var(--radius-full);
@@ -444,7 +446,7 @@
 }
 
 .bento-duration-pill .material-symbols-outlined {
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .bento-card-content {
@@ -469,7 +471,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.85);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.35;
   margin: 0 0 5px 0;
 }
@@ -490,7 +492,7 @@
 }
 
 .bento-price-prefix {
-  font-size: 9px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.75);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -514,7 +516,7 @@
   color: #fff;
   padding: 3px 8px;
   border-radius: var(--radius-full);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
   transition: all var(--transition-fast);
 }
@@ -526,7 +528,7 @@
 }
 
 .bento-action-pill .material-symbols-outlined {
-  font-size: 12px;
+  font-size: 14px;
   transition: transform var(--transition-fast);
 }
 
@@ -587,12 +589,12 @@
   }
 
   .bento-badge {
-    font-size: 11px;
+    font-size: 14px;
     padding: 4px 10px;
   }
 
   .bento-duration-pill {
-    font-size: 11px;
+    font-size: 14px;
     padding: 4px 10px;
     gap: 4px;
   }
@@ -650,7 +652,7 @@
   }
 
   .bento-price-prefix {
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .bento-price-amount {
@@ -658,7 +660,7 @@
   }
 
   .bento-action-pill {
-    font-size: 12px;
+    font-size: 14px;
     padding: 6px 14px;
     gap: 4px;
   }
@@ -745,7 +747,7 @@
 }
 
 .trust-stats-reviews {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .trust-image-wrapper {

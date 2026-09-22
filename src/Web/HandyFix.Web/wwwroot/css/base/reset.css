@@ -12,6 +12,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-family-base);
+  /* Text with no size class of its own follows the body token, not Bootstrap's 16px. */
+  font-size: var(--fs-body-md);
   color: var(--on-background);
   background-color: var(--background);
 }
