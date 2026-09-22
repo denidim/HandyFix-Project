@@ -1,5 +1,4 @@
 @using System
-@using HandyFix.Common
 @{
     string currentPath = this.Context.Request.Path.Value ?? "/";
 
@@ -12,7 +11,7 @@
 }
 <header class="header-docked">
     <div class="page-container navbar-container">
-        <a class="font-display-brand text-primary" asp-area="" asp-controller="Home" asp-action="Index">@GlobalConstants.SystemName</a>
+        <a class="site-logo" asp-area="" asp-controller="Home" asp-action="Index"><partial name="_Logo" model="@("nav")" /></a>
 
         <nav class="nav-links">
             <a class="nav-link @(IsActive("/") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>

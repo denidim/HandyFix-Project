@@ -1,5 +1,6 @@
 ﻿namespace HandyFix.Web.Tests
 {
+    using System.Linq;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
@@ -187,6 +188,24 @@
             var title = Regex.Match(content, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value;
             Assert.EndsWith(" - Plumbing Handyman Surrey", title);
             Assert.Single(Regex.Matches(title, "Plumbing Handyman Surrey"));
+        }
+
+        [Fact]
+        public async Task HeaderAndFooterLogosUseSeparateSvgIdsAndTheTabIconIsLinked()
+        {
+            // The logo is inline SVG, rendered in both the header and the footer (PROJECT_STATE
+            // Section 3bi). With one shared set of ids the footer copy would silently reuse the
+            // header's filters and gradients, so each placement passes its own prefix.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("id=\"nav-brush\"", content);
+            Assert.Contains("id=\"footer-brush\"", content);
+            var logoIds = Regex.Matches(content, "id=\"((?:nav|footer)-[^\"]+)\"").Select(m => m.Groups[1].Value).ToList();
+            Assert.Equal(logoIds.Count, logoIds.Distinct().Count());
+            Assert.Contains("href=\"/favicon.svg\"", content);
         }
     }
 }

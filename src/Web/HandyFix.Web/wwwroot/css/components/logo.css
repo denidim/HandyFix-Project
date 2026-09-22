@@ -1,0 +1,36 @@
+/* The site logo (Views/Shared/_Logo.cshtml). Each placement sets only the height; the width
+   follows the artwork's 880x640 proportions. */
+.site-logo {
+  display: inline-block;
+  line-height: 0;
+  text-decoration: none;
+}
+
+.site-logo-svg {
+  display: block;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 880 / 640;
+}
+
+/* Header: 100px, the smallest height at which "SURREY" still reads comfortably. */
+.navbar-container .site-logo {
+  height: 100px;
+}
+
+/* Footer: the artwork's pale brush strokes need a light ground on the dark footer. */
+.footer-main .site-logo {
+  height: 120px;
+  background: #faf5f1;
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-3) var(--spacing-4);
+  box-sizing: content-box;
+}
+
+.auth-header .site-logo {
+  height: 130px;
+}
+
+.admin-sidebar-header .site-logo {
+  height: 60px;
+}

@@ -1,0 +1,76 @@
+@using HandyFix.Common
+@model string
+@*
+    The site logo, drawn as inline SVG from the logo-1 artwork (PROJECT_STATE Section 3bi).
+    Inline rather than an <img>: the words are real text in the page's own Outfit font, which
+    an SVG loaded as an image can't use. The model is an id prefix, because the header and
+    footer both render this on one page and the filter/gradient ids must stay unique.
+*@
+@{
+    string p = this.Model;
+}
+<svg class="site-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 640" role="img" aria-label="@GlobalConstants.SystemName">
+    <defs>
+        @* Brush stroke: ragged edges (displacement), cloudy pigment (alpha noise), soft rim (blur). *@
+        <filter id="@(p)-brush" x="-5%" y="-30%" width="110%" height="160%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.02 0.045" numOctaves="4" seed="4" result="edge" />
+            <feDisplacementMap in="SourceGraphic" in2="edge" scale="34" xChannelSelector="R" yChannelSelector="G" result="rough" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.006 0.02" numOctaves="3" seed="11" result="cloud" />
+            <feColorMatrix in="cloud" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 0" result="cloudAlpha" />
+            <feComposite in="rough" in2="cloudAlpha" operator="in" result="wash" />
+            <feGaussianBlur in="wash" stdDeviation="2.5" />
+        </filter>
+        @* Paint: soft, uneven pigment inside a clean shape. *@
+        <filter id="@(p)-paint" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" seed="2" result="grain" />
+            <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.5 0 0 0 0.68" result="grainAlpha" />
+            <feComposite in="SourceGraphic" in2="grainAlpha" operator="in" />
+        </filter>
+        <linearGradient id="@(p)-blue" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#9ad3ee" />
+            <stop offset="1" stop-color="#3f93c9" />
+        </linearGradient>
+        <linearGradient id="@(p)-red" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d23a52" />
+            <stop offset="1" stop-color="#e3677b" />
+        </linearGradient>
+        <linearGradient id="@(p)-yellow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f6d77f" />
+            <stop offset="1" stop-color="#e8b447" />
+        </linearGradient>
+        <mask id="@(p)-wrench-cut">
+            <rect width="880" height="640" fill="#fff" />
+            <rect x="413" y="0" width="30" height="36" fill="#000" />
+            <circle cx="428" cy="36" r="15" fill="#000" />
+            <circle cx="428" cy="184" r="8" fill="#000" />
+        </mask>
+        <mask id="@(p)-house-cut">
+            <rect width="880" height="640" fill="#fff" />
+            <rect x="551" y="158" width="34" height="60" rx="5" fill="#000" />
+        </mask>
+    </defs>
+
+    @* Icons: plumbing drop, handyman wrench, building house - the three divisions. *@
+    <g filter="url(#@(p)-paint)" stroke-width="5" stroke-linejoin="round">
+        <path d="M309 30 C298 70 248 110 248 154 A61 61 0 0 0 370 154 C370 110 320 70 309 30 Z" fill="url(#@(p)-blue)" stroke="#3a86bd" />
+        <g fill="url(#@(p)-red)" stroke="#b92a42" mask="url(#@(p)-wrench-cut)">
+            <path d="M428 2 A44 44 0 0 1 448 84 L448 160 A26 26 0 1 1 408 160 L408 84 A44 44 0 0 1 428 2 Z" />
+        </g>
+        <g fill="url(#@(p)-yellow)" stroke="#dca33a" mask="url(#@(p)-house-cut)">
+            <path d="M568 44 L606 79 L606 60 L630 60 L630 101 L660 129 L636 129 L636 210 L500 210 L500 129 L476 129 Z" stroke-width="7" />
+        </g>
+    </g>
+    <path d="M275 150 C271 172 279 191 297 200" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity="0.85" />
+
+    @* Brush strokes behind the words *@
+    <rect x="40" y="220" width="800" height="132" rx="20" fill="#9ccbe6" opacity="0.8" filter="url(#@(p)-brush)" />
+    <rect x="6" y="354" width="868" height="136" rx="20" fill="#f1a3b2" opacity="0.72" filter="url(#@(p)-brush)" />
+    <rect x="96" y="498" width="688" height="132" rx="20" fill="#f4d27e" opacity="0.72" filter="url(#@(p)-brush)" />
+
+    @* Words: real text, so they stay sharp. textLength pins each word's width whatever the font. *@
+    <g text-anchor="middle" filter="url(#@(p)-paint)">
+        <text x="442" y="335" font-family="Outfit, sans-serif" font-weight="600" font-size="121" letter-spacing="4" textLength="655" lengthAdjust="spacing" fill="#3b86b8">PLUMBING</text>
+        <text x="438" y="475" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="130" textLength="785" lengthAdjust="spacing" fill="#c9283f">HANDYMAN</text>
+        <text x="443" y="582" font-family="Outfit, sans-serif" font-weight="600" font-size="96" letter-spacing="4" textLength="407" lengthAdjust="spacing" fill="#d8a42c">SURREY</text>
+    </g>
+</svg>

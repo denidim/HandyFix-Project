@@ -1,6 +1,5 @@
 @page
 @model LoginModel
-@using HandyFix.Common
 @{
     ViewData["Title"] = "Log in";
 }
@@ -8,7 +7,7 @@
 <div class="auth-page-container">
     <div class="auth-card">
         <div class="auth-header">
-            <h1 class="brand-logo">@GlobalConstants.SystemName</h1>
+            <h1 class="brand-logo"><a class="site-logo" asp-area="" asp-controller="Home" asp-action="Index"><partial name="_Logo" model="@("auth")" /></a></h1>
             <p class="subtitle">Please enter your details to sign in.</p>
         </div>
 
