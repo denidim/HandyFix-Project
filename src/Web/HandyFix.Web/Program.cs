@@ -206,7 +206,19 @@ namespace HandyFix.Web
 
             app.UseHttpsRedirection();
             app.UseWebOptimizer();
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                // Site images get replaced in place under the same file name (PROJECT_STATE Section 3bd).
+                // With no Cache-Control, browsers cached them heuristically and kept showing the old
+                // pictures; "no-cache" makes them re-check every time (a cheap 304 when unchanged).
+                OnPrepareResponse = context =>
+                {
+                    if (context.Context.Request.Path.StartsWithSegments("/images"))
+                    {
+                        context.Context.Response.Headers.CacheControl = "no-cache";
+                    }
+                },
+            });
             app.UseCookiePolicy();
 
             app.UseRouting();
