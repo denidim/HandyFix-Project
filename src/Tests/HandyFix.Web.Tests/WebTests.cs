@@ -112,5 +112,16 @@
             var responseContent = await response.Content.ReadAsStringAsync();
             Assert.Contains("/Areas/wimbledon", responseContent);
         }
+
+        [Fact]
+        public async Task SiteImagesShouldTellBrowsersToRevalidate()
+        {
+            // Images are regenerated in place under the same file names (PROJECT_STATE Section 3bd).
+            // Without a Cache-Control header, browsers kept showing the old pictures after a swap.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/images/hero.webp");
+            response.EnsureSuccessStatusCode();
+            Assert.True(response.Headers.CacheControl?.NoCache);
+        }
     }
 }
