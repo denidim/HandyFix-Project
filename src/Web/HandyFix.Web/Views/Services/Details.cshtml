@@ -307,6 +307,7 @@
                                                              BasePrice = related.BasePrice,
                                                              EstimatedDurationMinutes = related.EstimatedDurationMinutes,
                                                              IsQuoteBased = related.CategorySlug == "small-building-works",
+                                                             DivisionClass = related.CategorySlug == "small-building-works" ? "pricing-card-building" : (related.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
                                                              CtaText = "View Details",
                                                              CtaUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = related.CategorySlug, serviceSlug = related.Slug }),
                                                          })" />

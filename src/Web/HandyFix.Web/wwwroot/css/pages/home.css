@@ -44,7 +44,19 @@
 .hero-bg-overlay {
   position: absolute;
   inset: 0;
-  background-color: rgba(255, 255, 255, 0.5);
+  /* Legibility wash (unchanged) plus the diagonal plumbing-to-handyman colour
+     accent, CSS-only per Section 4 Tier 1 item 1 -- retunable without touching
+     the underlying image. Transparent middle band keeps the text/booking-card
+     area close to neutral white; the corners carry the colour. */
+  background:
+    linear-gradient(
+      135deg,
+      rgba(14, 165, 233, 0.28) 0%,
+      rgba(255, 255, 255, 0) 45%,
+      rgba(255, 255, 255, 0) 55%,
+      rgba(225, 29, 72, 0.28) 100%
+    ),
+    rgba(255, 255, 255, 0.5);
 }
 
 .hero-content {
@@ -238,16 +250,11 @@
 
 /* Division Specific Gradients & Theming */
 .division-card-plumbing .division-card-content {
-  background: linear-gradient(
-    155deg,
-    #e0f2fe 0%,
-    #d0ebfd 45%,
-    #f8fafc 100%
-  );
+  background: var(--division-plumbing-wash);
 }
 
 .division-card-plumbing {
-  border: 1.5px solid #bae6fd;
+  border: 1.5px solid var(--division-plumbing-border);
 }
 
 .division-card-plumbing:hover {
@@ -256,16 +263,11 @@
 }
 
 .division-card-handyman .division-card-content {
-  background: linear-gradient(
-    155deg,
-    #fff1f2 0%,
-    #ffe4e6 50%,
-    #f8fafc 100%
-  );
+  background: var(--division-handyman-wash);
 }
 
 .division-card-handyman {
-  border: 1.5px solid #fecdd3;
+  border: 1.5px solid var(--division-handyman-border);
 }
 
 .division-card-handyman:hover {
@@ -287,16 +289,11 @@
 }
 
 .division-card-building .division-card-content {
-  background: linear-gradient(
-    155deg,
-    #fffbeb 0%,
-    #fef3c7 45%,
-    #f8fafc 100%
-  );
+  background: var(--division-building-wash);
 }
 
 .division-card-building {
-  border: 1.5px solid #fde68a;
+  border: 1.5px solid var(--division-building-border);
 }
 
 .division-card-building:hover {
@@ -423,6 +420,13 @@
   margin-bottom: 0;
   box-shadow: var(--shadow-sm);
 }
+
+/* Popular Services bento cards have no separate text box below the photo (the
+   content overlays the image itself, on the existing dark legibility scrim), so the
+   division colour identity lives on this badge instead of a card background. */
+.bento-badge-plumbing { background-color: var(--division-plumbing); color: #ffffff; }
+.bento-badge-handyman { background-color: var(--division-handyman); color: #ffffff; }
+.bento-badge-building { background-color: var(--division-building); color: #ffffff; }
 
 .bento-duration-pill {
   background: rgba(15, 23, 42, 0.7);

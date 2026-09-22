@@ -213,6 +213,24 @@
   border-color: var(--secondary);
 }
 
+/* Division colour identity -- same wash as the Specialised Divisions card content
+   and .service-horizontal-card-*, so "Typical Job Costs" / "Popular Services in
+   {Area}" cards read as belonging to their division at a glance. */
+.pricing-card-plumbing {
+  background: var(--division-plumbing-wash);
+  border-color: var(--division-plumbing-border);
+}
+
+.pricing-card-handyman {
+  background: var(--division-handyman-wash);
+  border-color: var(--division-handyman-border);
+}
+
+.pricing-card-building {
+  background: var(--division-building-wash);
+  border-color: var(--division-building-border);
+}
+
 /* Full-bleed thumbnail: the negative margins cancel the card's own padding so the image
    meets the card edges, and the card's overflow: hidden clips it to the rounded corners. */
 .pricing-card-media {

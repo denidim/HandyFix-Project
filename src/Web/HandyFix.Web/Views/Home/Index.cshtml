@@ -100,6 +100,7 @@
       <div class="division-card division-card-plumbing">
         <div class="img-container">
           <img src="~/images/services/plumbing-category-hero.webp" alt="Plumbing" asp-append-version="true" width="1024" height="1024" loading="lazy">
+          <div class="division-tint division-tint-plumbing"></div>
         </div>
         <div class="division-card-content">
           <div class="division-header-title">
@@ -125,6 +126,7 @@
       <div class="division-card division-card-handyman">
         <div class="img-container">
           <img src="~/images/services/handyman-category-hero.webp" alt="Handyman" asp-append-version="true" width="1024" height="1024" loading="lazy">
+          <div class="division-tint division-tint-handyman"></div>
         </div>
         <div class="division-card-content">
           <div class="division-header-title">
@@ -150,6 +152,7 @@
       <div class="division-card division-card-building">
         <div class="img-container">
           <img src="~/images/services/small-building-category-hero.webp" alt="Small Building &amp; Refurbishments" asp-append-version="true" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
+          <div class="division-tint division-tint-building"></div>
         </div>
         <div class="division-card-content">
           <div class="division-header-title">
@@ -197,6 +200,7 @@
             @foreach (var svc in Model.PopularServices)
             {
                 var svcIsBuilding = svc.CategorySlug == "small-building-works";
+                var svcBadgeClass = svcIsBuilding ? "bento-badge-building" : (svc.CategoryName == "Plumbing" ? "bento-badge-plumbing" : "bento-badge-handyman");
                 <a class="bento-card"
                      asp-route="ServiceDetails"
                      asp-route-categorySlug="@svc.CategorySlug"
@@ -213,7 +217,7 @@
                     <div class="bento-card-overlay"></div>
 
                     <div class="bento-card-top">
-                        <span class="bento-badge">@svc.CategoryName</span>
+                        <span class="bento-badge @svcBadgeClass">@svc.CategoryName</span>
                         @if (svc.EstimatedDurationMinutes > 0)
                         {
                             <span class="bento-duration-pill">

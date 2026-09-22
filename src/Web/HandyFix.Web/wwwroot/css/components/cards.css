@@ -7,6 +7,30 @@
   box-shadow: var(--shadow-2xl);
 }
 
+/* Division colour tint, applied directly on an image. Used only by the Specialised
+   Divisions tiles (.division-card .img-container) -- every other service/category
+   image container (service hero, category list cards, bento cards, pricing cards)
+   deliberately does NOT get this: the colour identity lives on the card/badge
+   background there instead, once the tint read as too strong sitting on the photo
+   itself. mix-blend-mode: color carries the division's hue onto the painting without
+   flattening its own brushwork/luminance the way a flat alpha wash would -- CSS-only
+   per PROJECT_STATE.md Section 4 Tier 1 item 1, never baked into the generated image
+   itself. Opacity tuned down from an initial 0.55 (read as a near-monochrome duotone
+   filter) to 0.28 (reads as a colour cast). Requires a `position: relative` ancestor
+   -- .division-card .img-container has one. */
+.division-tint {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  mix-blend-mode: color;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.division-tint-plumbing { background: var(--division-plumbing); }
+.division-tint-handyman { background: var(--division-handyman); }
+.division-tint-building { background: var(--division-building); }
+
 .division-card {
   position: relative;
   overflow: hidden;
@@ -24,6 +48,7 @@
 }
 
 .division-card .img-container {
+  position: relative;
   height: 16rem;
   overflow: hidden;
 }

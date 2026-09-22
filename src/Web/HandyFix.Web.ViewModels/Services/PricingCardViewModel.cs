@@ -16,6 +16,10 @@ namespace HandyFix.Web.ViewModels.Services
 
         public bool IsQuoteBased { get; set; }
 
+        // CSS class for the card's division colour identity (pricing-card-plumbing/
+        // -handyman/-building) -- see pages/pricing.css.
+        public string DivisionClass { get; set; }
+
         public string CtaText { get; set; }
 
         public string CtaUrl { get; set; }

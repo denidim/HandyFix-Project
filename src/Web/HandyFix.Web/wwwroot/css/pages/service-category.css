@@ -106,7 +106,27 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Division colour identity -- replaces the neutral glass background with the same
+   wash used on the Specialised Divisions card content (base/variables.css's
+   --division-*-wash tokens), so a division's service list reads as visually "theirs".
+   Card-level, not on the image -- the photo itself is left untinted. */
+.service-horizontal-card-plumbing {
+  background: var(--division-plumbing-wash);
+  border-color: var(--division-plumbing-border);
+}
+
+.service-horizontal-card-handyman {
+  background: var(--division-handyman-wash);
+  border-color: var(--division-handyman-border);
+}
+
+.service-horizontal-card-building {
+  background: var(--division-building-wash);
+  border-color: var(--division-building-border);
+}
+
 .service-card-thumbnail-wrapper {
+  position: relative;
   width: 100%;
   height: 192px;
   border-radius: var(--radius-lg);
