@@ -76,15 +76,18 @@ raw pixel size only) with these when a semantic size already exists.
 | Class | Size / Line-height / Weight | Responsive? |
 | :--- | :--- | :--- |
 | `.font-display-brand` | 24px / 32px / 800, `letter-spacing:-0.5px` | — |
-| `.font-headline-xl` | 32px/40px/700 → **48px/56px/700 at ≥768px** | yes |
-| `.font-headline-lg` | 28px/36px → **32px/40px at ≥768px** | yes |
-| `.font-headline-md` | 24px / 32px / 700 | — |
-| `.font-headline-sm` | 20px / 28px / 600 | — |
-| `.font-body-lg` | 18px / 28px / 400 | — |
-| `.font-body-md` | 16px / 24px / 400 | — |
-| `.font-nav-link` | 16px / 24px / 500 | — |
-| `.font-button-text` | 16px / 24px / 600 | — |
-| `.font-label-sm` | 14px / 20px / 500 | — |
+| `.font-headline-xl` | 34px/42px/700 → **52px/60px/700 at ≥768px** | yes |
+| `.font-headline-lg` | 30px/38px → **36px/44px at ≥768px** | yes |
+| `.font-headline-md` | 26px / 34px / 700 | — |
+| `.font-headline-sm` | 22px / 30px / 600 | — |
+| `.font-body-lg` | 20px / 30px / 400 | — |
+| `.font-body-md` | 18px / 28px / 400 (also the `body` default) | — |
+| `.font-nav-link` | 17px / 26px / 500 | — |
+| `.font-button-text` | 17px / 26px / 600 | — |
+| `.font-label-sm` | 16px / 24px / 500 | — |
+
+**Nothing on a public page goes below 14px** (older customers; scaled up 2026-09-22, see
+`PROJECT_STATE.md` Section 3bf). The `fs-9`…`fs-13` utilities still exist for the admin panel only.
 
 ### Color-token text classes (all `!important`)
 `.text-primary`, `.text-secondary`, `.text-text-main`, `.text-on-surface-variant`, `.text-white`

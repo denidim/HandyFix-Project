@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-09-22 (second session) — **Category pages: the map placeholder and its made-up "3 Active Technicians Nearby" replaced by the real coverage diagram** (Section 3be). Earlier the same session: **all 59 site images regenerated in a bright, sunlit watercolour style** (Section 3bd, merged to `main` as PR #19), in batches of about five with every image checked before the next batch (now the rule, since each image costs real money). Tests 160/160. Next: the rest of L1 item 6 (the paragraph) goes with the rename. Previous update (2026-09-22, Section 3bc): image pipeline, division colour system, category page background.
+> **Last updated**: 2026-09-22 (second session) — **Font scale-up done (L2 item 8): nothing under 14px on public pages** (Section 3bf), plus the three layout fixes it needed (menu layout up to 1280px, one popular-services card per row on phones, booking submit hint above its button). Earlier the same session: category pages got the real coverage map (Section 3be, PR #20) and all 59 site images were regenerated in a bright, sunlit watercolour style (Section 3bd, PR #19), in batches of about five with every image checked before the next batch (now the rule, since each image costs real money). Tests 160/160. Previous update (2026-09-22, Section 3bc): image pipeline, division colour system, category page background.
 
 ---
 
@@ -1608,6 +1608,22 @@ The Section 3bc images read too dark and nostalgic, so every image on the site w
 
 ---
 
+## 3bf. Font Scale-Up: Nothing Under 14px on Public Pages (2026-09-22)
+
+L2 item 8, done early at the user's request.
+
+- **Tokens** (`variables.css`): body 18px, labels 16px, body-lg 20px, nav links and buttons 17px, headlines one step up (22/26/36/52px; 30 and 34px on mobile). Text with no size class follows the body token now instead of Bootstrap's 16px (`reset.css`). Admin pages share the tokens, so they grew too. `DESIGN.md` updated.
+- **Public pages**: 33 `fs-11`/`fs-12`/`fs-13` uses in 8 views swapped to `fs-14`, and 32 CSS sizes under 14px raised to 14px. The small utility classes stay for the admin panel.
+- **Three layouts broke at the new sizes, all fixed**: the navbar wrapped between 768 and 1279px and pushed Login off-screen, so the menu layout now runs up to 1280px (`navbar.css`); the homepage's popular-services cards clipped their pills at two per row on phones, so phones get one per row; the booking page's "Proceed to Payment" wrapped to three lines beside its hint, which now sits above it (its `mb-2` always meant that).
+- Gotcha: `pages-info.css` is stored with CRLF line endings in the repo, unlike the other CSS files, so a plain `sed -i` rewrote every line; redone with `sed -b`.
+
+### Verified
+
+- Phone (390px) and desktop (1440px) screenshots of home, a category page, a service page, booking, contact and an area page, plus the navbar at 768/1024/1279/1280px. A script check found no visible text under 14px (only breadcrumb chevron icons) and nothing past the screen edge (only an intentionally off-screen decoration).
+- `dotnet test src/HandyFix.sln`: 160/160.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Launch Sprints — the working list from 2026-09-21 until launch
@@ -1639,7 +1655,7 @@ The Section 3bc images read too dark and nostalgic, so every image on the site w
 5. **"See full pricing" link** in the base-rates reassurance card (`Booking/Index` ~line 88), to the `Pricing` route.
 6. **Placeholder colour**: a `.form-control::placeholder` rule in `forms.css` using a lighter existing token, `opacity: 1` so browsers don't override it; verify inputs' own `color` stays `--on-surface`.
 7. **Areas details cards** (`Areas/Details.cshtml` ~line 78): (a) **Bug**: "Book Now" builds `new { serviceId = svc.Id }`, but `BookingController.Index` binds `selectedServiceId`, so the wizard opens with no service chosen; pass `selectedServiceId = svc.Id` and `categorySlug = svc.CategorySlug`. The same mistake is at `Services/Pricing.cshtml` ~line 159 (commit `0bb538e` fixed the Services pages but missed both). Add a `WebTests` full-stack check that the rendered hrefs contain `selectedServiceId`: a mistyped route value fails silently and nothing at compile time catches it. (b) Pass `ImageUrl = svc.ImageUrl` and the category-correct icon into `_PricingCard` — a one-line gap, the partial already renders the image.
-8. **Font scale-up**: `variables.css` tokens → body 18px, label 16px, body-lg 20px, nav/button 17px, headlines one step up; sweep `fs-11`/`fs-12`/`fs-13` uses in public views to ≥14px; mobile check of navbar wrap, category cards and the booking wizard afterwards.
+8. **Done 2026-09-22 (Section 3bf).** **Font scale-up**: `variables.css` tokens → body 18px, label 16px, body-lg 20px, nav/button 17px, headlines one step up; sweep `fs-11`/`fs-12`/`fs-13` uses in public views to ≥14px; mobile check of navbar wrap, category cards and the booking wizard afterwards.
 9. **Cancellation copy**: FAQ "through your dashboard" → "call or email us"; Terms section 3 restated per Section 3bb; `Booking/Confirmed` gets a "need to cancel or reschedule? call or email us" line.
 10. *** **Service details mobile CTA**: `order: -1` on the `<aside>` below 992px so the CTA card precedes the overview, and `_MobileStickyCta` becomes service-aware (passes `selectedServiceId`/`categorySlug` when rendered on a service page). Not launch-blocking.
 11. **Category card mobile image**: deliberately unchanged; re-judged after L5.
