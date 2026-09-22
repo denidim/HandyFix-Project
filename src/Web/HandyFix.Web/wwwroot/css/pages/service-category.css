@@ -343,17 +343,12 @@
   padding: var(--spacing-16) 0;
 }
 
+/* One column at every width: the coverage diagram under the text is 780px wide and
+   needs the full row, or its town labels shrink below a readable size. */
 .seo-local-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--spacing-12);
-  align-items: center;
-}
-
-@media (min-width: 768px) {
-  .seo-local-grid {
-    grid-template-columns: 1fr 1fr;
-  }
 }
 
 .seo-local-title {
@@ -396,50 +391,12 @@
   color: var(--secondary);
 }
 
-/* Map widget */
+/* Coverage diagram: the shared _AreaCoverageMap partial, styled in areas.css */
 .seo-map-container {
   border-radius: var(--radius-xl);
   overflow: hidden;
-  height: 320px;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--outline-variant);
-}
-
-.seo-map-placeholder {
-  width: 100%;
-  height: 100%;
-  background-color: var(--surface-container-high);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.seo-map-icon {
-  color: var(--outline);
-  font-size: 64px;
-}
-
-.seo-map-indicator {
-  position: absolute;
-  bottom: var(--spacing-4);
-  left: var(--spacing-4);
-  background: var(--surface);
-  padding: var(--spacing-2) var(--spacing-4);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  font-size: var(--fs-label-sm);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-}
-
-.seo-map-dot {
-  width: 8px;
-  height: 8px;
-  background-color: var(--secondary);
-  border-radius: var(--radius-full);
-  animation: pulse 2s infinite;
 }
 
 /* Sidebar instant book CTA */
