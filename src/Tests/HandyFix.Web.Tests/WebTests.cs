@@ -136,5 +136,20 @@
             Assert.Contains("coverage-map", responseContent);
             Assert.DoesNotContain("Active Technicians", responseContent);
         }
+
+        [Fact]
+        public async Task RegistrationIsClosedButLoginStaysOpen()
+        {
+            // Public sign-up is closed (roadmap L3 item 7): the page 404s and the login page no
+            // longer links to it. Login itself must keep working - it is how the admin signs in.
+            var client = this.server.CreateClient();
+            var registerResponse = await client.GetAsync("/Identity/Account/Register");
+            Assert.Equal(HttpStatusCode.NotFound, registerResponse.StatusCode);
+
+            var loginResponse = await client.GetAsync("/Identity/Account/Login");
+            loginResponse.EnsureSuccessStatusCode();
+            var loginContent = await loginResponse.Content.ReadAsStringAsync();
+            Assert.DoesNotContain("Account/Register", loginContent);
+        }
     }
 }
