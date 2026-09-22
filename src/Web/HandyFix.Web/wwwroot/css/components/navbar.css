@@ -4,9 +4,12 @@
   top: 0;
   width: 100%;
   z-index: 1020;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* A watercolour strip in the logo's colours, softened by a white veil so the links stay
+     readable; its left end is near-white paper, where the logo sits (PROJECT_STATE Section 3bj).
+     Opaque, so the old frosted-glass backdrop blur had nothing left to blur and is gone. */
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+    url('/images/bg-navbar.webp') center / cover;
   border-bottom: 1px solid var(--glass-border);
   box-shadow: var(--shadow-sm);
   transition: background var(--transition-fast), box-shadow var(--transition-fast);
