@@ -1632,7 +1632,7 @@ A list of small changes from the user, done together.
 - **Footer**: lists all 15 areas instead of the first 8, so every area page is linked site-wide.
 - **Card pictures are links on mouse devices**: division cards (Home, Services) go to their category, category-page service cards go to the service page (their Details button), and pricing cards go where their button goes. `.card-image-link` (`components/cards.css`) turns the link on only for `(hover: hover) and (pointer: fine)`, so touch screens can't trigger it while scrolling; each is `tabindex="-1" aria-hidden="true"` so keyboard and screen-reader users meet the link once, on the button. Area and popular-services cards were already whole-card links.
 - **"24/7 Available"** on service pages now shows for plumbing only; handyman and building work are planned jobs.
-- **Copy**: home booking widget heading "Check Availability and Book Online"; Contact "Replies in < 12 hrs".
+- **Copy**: home booking widget heading "Check Availability and Book Online"; Contact "Replies in < 12 hrs"; About headline "From a Leaking Tap" (was "Valve").
 - **Carpentry image** regenerated: the carpenter was half inside the cupboard. He now stands in front of it, and a framed painting of Bulgarian Kukeri hangs above the fireplace, as an easter egg (prompt in `batch-jobs.mjs`).
 
 ### Verified
