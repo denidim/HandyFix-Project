@@ -94,44 +94,46 @@
   --font-family-display: 'Outfit', sans-serif;
 
   /* Typography - Font Sizes & Line Heights */
-  --fs-label-sm: 14px;
-  --lh-label-sm: 20px;
+  /* Scaled up 2026-09-22 (roadmap L2 item 8): older customers must be able to read the
+     site without effort, and nothing on a public page goes below 14px. */
+  --fs-label-sm: 16px;
+  --lh-label-sm: 24px;
   --fw-label-sm: 500;
 
-  --fs-body-md: 16px;
-  --lh-body-md: 24px;
+  --fs-body-md: 18px;
+  --lh-body-md: 28px;
   --fw-body-md: 400;
 
-  --fs-body-lg: 18px;
-  --lh-body-lg: 28px;
+  --fs-body-lg: 20px;
+  --lh-body-lg: 30px;
   --fw-body-lg: 400;
 
-  --fs-nav-link: 16px;
-  --lh-nav-link: 24px;
+  --fs-nav-link: 17px;
+  --lh-nav-link: 26px;
   --fw-nav-link: 500;
 
-  --fs-button-text: 16px;
-  --lh-button-text: 24px;
+  --fs-button-text: 17px;
+  --lh-button-text: 26px;
   --fw-button-text: 600;
 
-  --fs-headline-sm: 20px;
-  --lh-headline-sm: 28px;
+  --fs-headline-sm: 22px;
+  --lh-headline-sm: 30px;
   --fw-headline-sm: 600;
 
-  --fs-headline-md: 24px;
-  --lh-headline-md: 32px;
+  --fs-headline-md: 26px;
+  --lh-headline-md: 34px;
   --fw-headline-md: 700;
 
-  --fs-headline-lg: 32px;
-  --lh-headline-lg: 40px;
+  --fs-headline-lg: 36px;
+  --lh-headline-lg: 44px;
   --fw-headline-lg: 700;
 
-  --fs-headline-xl: 48px;
-  --lh-headline-xl: 56px;
+  --fs-headline-xl: 52px;
+  --lh-headline-xl: 60px;
   --fw-headline-xl: 700;
 
-  --fs-headline-xl-mobile: 32px;
-  --lh-headline-xl-mobile: 40px;
+  --fs-headline-xl-mobile: 34px;
+  --lh-headline-xl-mobile: 42px;
   --fw-headline-xl-mobile: 700;
 
   --fs-display-brand: 24px;

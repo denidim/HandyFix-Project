@@ -51,7 +51,7 @@
 
 .coverage-ring-label text {
   fill: var(--outline);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -83,7 +83,7 @@
 
 .coverage-legend-text {
   fill: var(--outline);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -126,7 +126,7 @@
 
 .coverage-hub-sub {
   fill: var(--outline);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -141,7 +141,7 @@
   max-width: 640px;
   margin: var(--spacing-6) auto 0;
   color: var(--on-surface-variant);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   text-align: center;
 }
@@ -154,7 +154,7 @@
 .coverage-list-heading {
   margin: 0 0 var(--spacing-3);
   color: var(--outline);
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;

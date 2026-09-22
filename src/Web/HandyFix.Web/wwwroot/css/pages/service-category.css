@@ -315,7 +315,7 @@
     flex-wrap: nowrap;
     gap: var(--spacing-3);
     margin: var(--spacing-1) 0 0 0;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
   }
 
   .service-metadata-item {
