@@ -278,7 +278,7 @@ namespace HandyFix.Services.Data.Tests
                 x => x.SendEmailAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    "admin@handyfix.co.uk",
+                    "info@plumbing-handyman-surrey.co.uk",
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     null),

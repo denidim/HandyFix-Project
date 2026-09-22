@@ -65,7 +65,7 @@ namespace HandyFix.Web.Controllers
                 LocalAreas = localAreas.Take(12),
             };
 
-            this.ViewData["Title"] = "Pricing - HandyFix Surrey & South London";
+            this.ViewData["Title"] = "Pricing";
             this.ViewData["MetaDescription"] = "Transparent, up-front hourly pricing for plumbing and handyman services across Surrey and South London, including Chessington, Cobham, and Epsom. No hidden fees.";
 
             return this.View(model);
@@ -87,7 +87,7 @@ namespace HandyFix.Web.Controllers
             IEnumerable<ServiceAreaViewModel> localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
             category.LocalAreas = localAreas;
 
-            this.ViewData["Title"] = $"{category.Name} Services in Surrey & South London";
+            this.ViewData["Title"] = $"{category.Name} Services";
             this.ViewData["MetaDescription"] = $"Professional {category.Name.ToLower()} services operating across Surrey and South London, including Chessington, Cobham, Esher, and Kingston. Book your service online.";
 
             return this.View(category);
@@ -110,7 +110,7 @@ namespace HandyFix.Web.Controllers
 
             var isBuildingService = service.CategorySlug == "small-building-works";
 
-            this.ViewData["Title"] = $"{service.Name} - HandyFix Surrey & South London";
+            this.ViewData["Title"] = service.Name;
             this.ViewData["MetaDescription"] = isBuildingService
                 ? $"Need {service.Name.ToLower()} in Surrey or South London? Free on-site survey and a fixed quote before any work begins. Request your quote today."
                 : $"Need {service.Name.ToLower()} in Surrey or South London? Certified plumbers and handymen, transparent pricing starting from £{service.BasePrice}. Book a slot now.";

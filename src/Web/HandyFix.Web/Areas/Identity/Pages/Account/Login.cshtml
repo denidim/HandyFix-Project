@@ -1,5 +1,6 @@
 @page
 @model LoginModel
+@using HandyFix.Common
 @{
     ViewData["Title"] = "Log in";
 }
@@ -7,7 +8,7 @@
 <div class="auth-page-container">
     <div class="auth-card">
         <div class="auth-header">
-            <h1 class="brand-logo">Handy Fix</h1>
+            <h1 class="brand-logo">@GlobalConstants.SystemName</h1>
             <p class="subtitle">Please enter your details to sign in.</p>
         </div>
 

@@ -1,7 +1,8 @@
+@using HandyFix.Common
 <footer class="footer-main">
     <div class="page-container footer-content">
         <div>
-            <div class="font-display-brand text-white mb-6">Handy Fix</div>
+            <div class="font-display-brand text-white mb-6">@GlobalConstants.SystemName</div>
             <p class="text-white-80 font-body-md leading-relaxed mb-6">
                 Your trusted local partner for plumbing, maintenance, and handyman services across South London. Dedicated to quality and transparency.
             </p>
@@ -28,7 +29,7 @@
             <h5 class="footer-title">Service Areas</h5>
             <vc:footer-service-areas></vc:footer-service-areas>
             <div class="footer-copyright">
-                <p>© @DateTime.Now.Year Handy Fix. All rights reserved.</p>
+                <p>© @DateTime.Now.Year @GlobalConstants.SystemName. All rights reserved.</p>
             </div>
         </div>
     </div>

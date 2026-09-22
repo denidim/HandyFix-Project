@@ -21,9 +21,9 @@ namespace HandyFix.Services.Data.Payments
 
     public class PaymentsService : IPaymentsService
     {
-        private const string DefaultAdminNotificationEmail = "admin@handyfix.co.uk";
-        private const string DefaultBookingsFromAddress = "bookings@handyfix.co.uk";
-        private const string DefaultSystemFromAddress = "no-reply@handyfix.co.uk";
+        private const string DefaultAdminNotificationEmail = "info@plumbing-handyman-surrey.co.uk";
+        private const string DefaultBookingsFromAddress = "bookings@plumbing-handyman-surrey.co.uk";
+        private const string DefaultSystemFromAddress = "bookings@plumbing-handyman-surrey.co.uk";
 
         private readonly IDeletableEntityRepository<Payment> paymentRepository;
         private readonly IDeletableEntityRepository<PaymentStatus> paymentStatusRepository;
@@ -153,10 +153,10 @@ namespace HandyFix.Services.Data.Payments
                 ? booking.AvailabilitySlot.StartTime.ToString("dd MMM yyyy 'at' HH:mm")
                 : "To be confirmed";
 
-            // Both addresses default to the not-yet-real @handyfix.co.uk placeholders and are
-            // overridable via configuration -- Brevo (and any real email provider) rejects sends
-            // from an unverified sender, so staging/local testing needs to point these at an
-            // address that's actually verified in the Brevo account until the real domain lands.
+            // Both addresses default to the real domain's bookings@ mailbox and are overridable via
+            // configuration -- Brevo (and any real email provider) rejects sends from an unverified
+            // sender, so staging/local testing needs to point these at an address that's actually
+            // verified in the Brevo account until the domain itself is verified there.
             var bookingsFromAddress = this.configuration["Email:BookingsFromAddress"];
             if (string.IsNullOrWhiteSpace(bookingsFromAddress))
             {
@@ -173,7 +173,7 @@ namespace HandyFix.Services.Data.Payments
             // deposit clears, so this email would always read "Not yet assigned" - which looks
             // unfinished to the customer. The technician detail belongs in the admin-approval
             // "CONFIRMED" email instead (BookingsService.UpdateStatusAsync).
-            var clientSubject = "Your HandyFix Booking is Confirmed!";
+            var clientSubject = "Your Plumbing Handyman Surrey Booking is Confirmed!";
             var clientBody = $@"
                 <h3>Hi {booking.CustomerFirstName},</h3>
                 <p>Great news — your deposit of £{payment.Amount:F2} has been received and your booking is now confirmed.</p>
@@ -184,11 +184,11 @@ namespace HandyFix.Services.Data.Payments
                     <li><strong>Address:</strong> {booking.Address}</li>
                 </ul>
                 <p>We'll confirm your assigned technician shortly.</p>
-                <p>We look forward to helping you. Thank you for choosing HandyFix!</p>";
+                <p>We look forward to helping you. Thank you for choosing Plumbing Handyman Surrey!</p>";
 
             await this.emailSender.SendEmailAsync(
                 bookingsFromAddress,
-                "HandyFix Bookings",
+                "Plumbing Handyman Surrey",
                 booking.Email,
                 clientSubject,
                 clientBody);
@@ -214,7 +214,7 @@ namespace HandyFix.Services.Data.Payments
 
             await this.emailSender.SendEmailAsync(
                 systemFromAddress,
-                "HandyFix System",
+                "Plumbing Handyman Surrey Website",
                 adminEmail,
                 adminSubject,
                 adminBody);
@@ -343,8 +343,8 @@ namespace HandyFix.Services.Data.Payments
                             Currency = "gbp",
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
-                                Name = $"HandyFix Booking Deposit (Ref: {bookingId})",
-                                Description = "Deposit to secure your service booking for South London.",
+                                Name = $"Plumbing Handyman Surrey Booking Deposit (Ref: {bookingId})",
+                                Description = "Deposit to secure your service booking.",
                             },
                         },
                         Quantity = 1,

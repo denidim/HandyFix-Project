@@ -23,8 +23,8 @@ namespace HandyFix.Services.Data.Bookings
 
     public class BookingsService : IBookingsService
     {
-        private const string DefaultBookingsFromAddress = "bookings@handyfix.co.uk";
-        private const string DefaultSystemFromAddress = "no-reply@handyfix.co.uk";
+        private const string DefaultBookingsFromAddress = "bookings@plumbing-handyman-surrey.co.uk";
+        private const string DefaultSystemFromAddress = "bookings@plumbing-handyman-surrey.co.uk";
 
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
         private readonly IDeletableEntityRepository<Service> serviceRepository;
@@ -154,10 +154,10 @@ namespace HandyFix.Services.Data.Bookings
             }
 
             // 5. Send booking confirmation email safely
-            var subject = "Your HandyFix Booking Inquiry has been Received!";
+            var subject = "Your Plumbing Handyman Surrey Booking Inquiry has been Received!";
             var body = $@"
             <h3>Hello {model.CustomerFirstName} {model.CustomerLastName},</h3>
-            <p>Thank you for choosing <strong>HandyFix</strong>. We have received your booking request details:</p>
+            <p>Thank you for choosing <strong>Plumbing Handyman Surrey</strong>. We have received your booking request details:</p>
             <ul>
                 <li><strong>Booking Reference:</strong> {booking.Id}</li>
                 <li><strong>Service(s):</strong> {string.Join(", ", selectedServices.Select(s => s.Name))}</li>
@@ -167,7 +167,7 @@ namespace HandyFix.Services.Data.Bookings
             <p>To secure this appointment slot, please pay the deposit of £{depositAmount.ToString("F2")} on the next screen.</p>
             <p>Once paid, we will confirm your technician assignment.</p>
             <br />
-            <p>Best Regards,<br/><strong>HandyFix Team</strong></p>";
+            <p>Best Regards,<br/><strong>The Plumbing Handyman Surrey Team</strong></p>";
 
             var systemFromAddress = this.configuration["Email:SystemFromAddress"];
             if (string.IsNullOrWhiteSpace(systemFromAddress))
@@ -177,7 +177,7 @@ namespace HandyFix.Services.Data.Bookings
 
             await this.emailSender.SendEmailAsync(
                 systemFromAddress,
-                "HandyFix Booking System",
+                "Plumbing Handyman Surrey",
                 model.Email,
                 subject,
                 body);
@@ -256,12 +256,12 @@ namespace HandyFix.Services.Data.Bookings
                         : "<p>A professional technician is scheduled for your address at the selected slot.</p>";
 
                     // Send Booking Confirmed email
-                    var subject = "Your HandyFix Booking is CONFIRMED!";
+                    var subject = "Your Plumbing Handyman Surrey Booking is CONFIRMED!";
                     var body = $@"
                         <h3>Hi {booking.CustomerFirstName},</h3>
                         <p>We are pleased to inform you that your booking reference <strong>{booking.Id}</strong> is officially confirmed.</p>
                         {technicianBlock}
-                        <p>Thank you for choosing HandyFix!</p>";
+                        <p>Thank you for choosing Plumbing Handyman Surrey!</p>";
 
                     var bookingsFromAddress = this.configuration["Email:BookingsFromAddress"];
                     if (string.IsNullOrWhiteSpace(bookingsFromAddress))
@@ -271,7 +271,7 @@ namespace HandyFix.Services.Data.Bookings
 
                     await this.emailSender.SendEmailAsync(
                         bookingsFromAddress,
-                        "HandyFix Support",
+                        "Plumbing Handyman Surrey",
                         booking.Email,
                         subject,
                         body);

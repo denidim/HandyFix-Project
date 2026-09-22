@@ -1,5 +1,6 @@
 @page
 @model RegisterModel
+@using HandyFix.Common
 @{
     ViewData["Title"] = "Register";
 }
@@ -7,7 +8,7 @@
 <div class="auth-page-container">
     <div class="auth-card wide">
         <div class="auth-header">
-            <a class="brand-logo" asp-area="" asp-controller="Home" asp-action="Index">Handy Fix</a>
+            <a class="brand-logo" asp-area="" asp-controller="Home" asp-action="Index">@GlobalConstants.SystemName</a>
             <p class="subtitle">Create your account to book services seamlessly.</p>
         </div>
 

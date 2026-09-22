@@ -5,4 +5,4 @@ Disallow: /Identity/
 Disallow: /Payment/
 Disallow: /Settings/
 
-Sitemap: https://handyfix.co.uk/sitemap.xml
+Sitemap: https://plumbing-handyman-surrey.co.uk/sitemap.xml

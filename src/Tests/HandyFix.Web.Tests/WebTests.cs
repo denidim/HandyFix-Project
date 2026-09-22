@@ -1,6 +1,7 @@
 ﻿namespace HandyFix.Web.Tests
 {
     using System.Net;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -150,6 +151,42 @@
             loginResponse.EnsureSuccessStatusCode();
             var loginContent = await loginResponse.Content.ReadAsStringAsync();
             Assert.DoesNotContain("Account/Register", loginContent);
+        }
+
+        [Theory]
+        [InlineData("/")]
+        [InlineData("/About")]
+        [InlineData("/Contact")]
+        [InlineData("/FAQ")]
+        [InlineData("/Reviews")]
+        [InlineData("/Pricing")]
+        [InlineData("/Services")]
+        [InlineData("/Services/plumbing")]
+        [InlineData("/Services/plumbing/tap-repairs")]
+        [InlineData("/Areas")]
+        [InlineData("/Areas/cobham")]
+        [InlineData("/Booking")]
+        [InlineData("/PrivacyPolicy")]
+        [InlineData("/TermsAndConditions")]
+        [InlineData("/CookiePolicy")]
+        [InlineData("/Identity/Account/Login")]
+        public async Task PublicPagesShowTheNewBrandOnceInTheTitleAndNeverTheOldName(string url)
+        {
+            // Visible rename to "Plumbing Handyman Surrey" (roadmap L1 item 1). The layout appends
+            // the brand to every title, so a page that also typed it into its own title showed it
+            // twice. "HandyFix." stays allowed: it is the internal codename in asset paths.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.DoesNotContain("Handy Fix", content);
+            Assert.DoesNotContain("handyfix.co", content);
+            Assert.DoesNotMatch("HandyFix(?!\\.)", content);
+
+            var title = Regex.Match(content, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value;
+            Assert.EndsWith(" - Plumbing Handyman Surrey", title);
+            Assert.Single(Regex.Matches(title, "Plumbing Handyman Surrey"));
         }
     }
 }
