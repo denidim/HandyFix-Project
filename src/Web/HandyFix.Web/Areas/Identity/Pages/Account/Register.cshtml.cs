@@ -16,6 +16,11 @@ namespace HandyFix.Web.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class RegisterModel : PageModel
     {
+        // Public sign-up is closed for now (roadmap L3 item 7): the only account is the seeded admin.
+        // Keep this page rather than deleting it - it overrides the Identity UI package's built-in
+        // Register page, which would otherwise take its place. Set to true to reopen sign-up.
+        private static readonly bool RegistrationOpen = false;
+
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<RegisterModel> _logger;
@@ -68,13 +73,24 @@ namespace HandyFix.Web.Areas.Identity.Pages.Account
             public string ConfirmPassword { get; set; }
         }
 
-        public void OnGet(string returnUrl = null)
+        public IActionResult OnGet(string returnUrl = null)
         {
+            if (!RegistrationOpen)
+            {
+                return this.NotFound();
+            }
+
             ReturnUrl = returnUrl;
+            return this.Page();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
+            if (!RegistrationOpen)
+            {
+                return this.NotFound();
+            }
+
             returnUrl ??= Url.Content("~/");
             if (ModelState.IsValid)
             {

@@ -43,10 +43,10 @@
                         : new[] { "Furniture Assembly", "TV Mounting", "Door Repairs", "Shelf Installation" });
 
                 <div class="division-card @divisionClass">
-                    <div class="img-container">
+                    <a class="img-container card-image-link" asp-route="ServiceCategory" asp-route-categorySlug="@category.Slug" tabindex="-1" aria-hidden="true">
                         <img src="~/images/services/@categoryHero" alt="@category.Name" asp-append-version="true" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
                         <div class="division-tint @tintClass"></div>
-                    </div>
+                    </a>
                     <div class="division-card-content">
                         <div class="division-header-title">
                             <span class="material-symbols-outlined text-secondary division-icon-lg">@categoryIcon</span>

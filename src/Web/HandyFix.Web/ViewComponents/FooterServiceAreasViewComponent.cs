@@ -1,7 +1,6 @@
 namespace HandyFix.Web.ViewComponents
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.ServiceAreas;
@@ -18,10 +17,12 @@ namespace HandyFix.Web.ViewComponents
             this.areasService = areasService;
         }
 
-        public async Task<IViewComponentResult> InvokeAsync(int take = 8)
+        // Every area, not a sample: the footer is on every page, so it is the one place each
+        // area page is linked from site-wide (local SEO).
+        public async Task<IViewComponentResult> InvokeAsync()
         {
             IEnumerable<ServiceAreaViewModel> areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
-            return this.View(areas.Take(take).ToList());
+            return this.View(areas);
         }
     }
 }

@@ -12,12 +12,14 @@
 <article class="pricing-card @Model.DivisionClass">
     @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
     {
-        <div class="pricing-card-media">
+        @* Links to the same place as the card's button; with no button, href="@null" drops the
+           attribute and the <a> is a plain, non-interactive box. *@
+        <a class="pricing-card-media card-image-link" href="@(string.IsNullOrWhiteSpace(Model.CtaUrl) ? null : Model.CtaUrl)" tabindex="-1" aria-hidden="true">
             <img class="pricing-card-image" src="@Model.ImageUrl" alt="@Model.Name" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
             <span class="pricing-card-media-icon">
                 <span class="material-symbols-outlined">@Model.IconName</span>
             </span>
-        </div>
+        </a>
     }
     else
     {

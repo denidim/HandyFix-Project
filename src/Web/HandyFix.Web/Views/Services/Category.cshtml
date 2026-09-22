@@ -58,9 +58,9 @@
                         : $"{svc.EstimatedDurationMinutes} Mins");
 
                 <article class="service-horizontal-card group @cardDivisionClass">
-                    <div class="service-card-thumbnail-wrapper">
+                    <a class="service-card-thumbnail-wrapper card-image-link" asp-controller="Services" asp-action="Details" asp-route-categorySlug="@Model.Slug" asp-route-serviceSlug="@svc.Slug" tabindex="-1" aria-hidden="true">
                         <img class="service-card-thumbnail" alt="@svc.Name" src="@svc.ImageUrl" asp-append-version="true" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
-                    </div>
+                    </a>
                     <div class="service-card-content">
                         <div class="service-card-main-header">
                             <h3 class="service-card-title">@svc.Name</h3>

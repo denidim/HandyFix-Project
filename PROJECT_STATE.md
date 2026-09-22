@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-09-22 (second session) — **Font scale-up done (L2 item 8): nothing under 14px on public pages** (Section 3bf), plus the three layout fixes it needed (menu layout up to 1280px, one popular-services card per row on phones, booking submit hint above its button). Earlier the same session: category pages got the real coverage map (Section 3be, PR #20) and all 59 site images were regenerated in a bright, sunlit watercolour style (Section 3bd, PR #19), in batches of about five with every image checked before the next batch (now the rule, since each image costs real money). Tests 160/160. Previous update (2026-09-22, Section 3bc): image pipeline, division colour system, category page background.
+> **Last updated**: 2026-09-22 (second session) — **Batch of site fixes** (Section 3bg): public registration closed (L3 item 7, login kept for the admin), all 15 areas in the footer, card pictures clickable on mouse devices, "24/7" only on plumbing service pages, a couple of copy changes, and a regenerated carpentry image. Before that: **font scale-up (L2 item 8): nothing under 14px on public pages** (Section 3bf, PR #21), plus the three layout fixes it needed. Earlier the same session: category pages got the real coverage map (Section 3be, PR #20) and all 59 site images were regenerated in a bright, sunlit watercolour style (Section 3bd, PR #19), in batches of about five with every image checked before the next batch (now the rule, since each image costs real money). Tests 160/160. Previous update (2026-09-22, Section 3bc): image pipeline, division colour system, category page background.
 
 ---
 
@@ -1624,6 +1624,24 @@ L2 item 8, done early at the user's request.
 
 ---
 
+## 3bg. Site Fixes: Registration Closed, Footer Areas, Clickable Card Pictures (2026-09-22)
+
+A list of small changes from the user, done together.
+
+- **Registration closed** (L3 item 7): the Register links are gone from the navbar and the login page, and the Register page returns 404. The scaffolded page is kept, not deleted: it overrides the Identity UI package's built-in Register page, which would otherwise take its place. A `RegistrationOpen` flag in `Register.cshtml.cs` reopens it. Login is untouched: it is how the admin signs in.
+- **Footer**: lists all 15 areas instead of the first 8, so every area page is linked site-wide.
+- **Card pictures are links on mouse devices**: division cards (Home, Services) go to their category, category-page service cards go to the service page (their Details button), and pricing cards go where their button goes. `.card-image-link` (`components/cards.css`) turns the link on only for `(hover: hover) and (pointer: fine)`, so touch screens can't trigger it while scrolling; each is `tabindex="-1" aria-hidden="true"` so keyboard and screen-reader users meet the link once, on the button. Area and popular-services cards were already whole-card links.
+- **"24/7 Available"** on service pages now shows for plumbing only; handyman and building work are planned jobs.
+- **Copy**: home booking widget heading "Check Availability and Book Online"; Contact "Replies in < 12 hrs".
+- **Carpentry image** regenerated: the carpenter was half inside the cupboard. He now stands in front of it, and a framed painting of Bulgarian Kukeri hangs above the fireplace, as an easter egg (prompt in `batch-jobs.mjs`).
+
+### Verified
+
+- Script check on the live build: picture links are clickable with a mouse and inert on touch on all five pages that have them, each pointing where its button points; footer has 15 area links; no Register link on any checked page; `/Identity/Account/Register` returns 404; "24/7 Available" shows on a plumbing service page and not on a handyman one. Cards and footer screenshotted: unchanged look.
+- `dotnet test src/HandyFix.sln`: 161/161, including a new `WebTests` check that registration is closed and login still works.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Launch Sprints — the working list from 2026-09-21 until launch
@@ -1668,7 +1686,7 @@ L2 item 8, done early at the user's request.
 4. **Stricter validation** (shared attributes in `HandyFix.Web.ViewModels`): UK phone (`07`/`+447` mobiles, `01`/`02`/`03` landlines, 10–11 digits after stripping spaces); a stricter email pattern; names letters/space/hyphen/apostrophe only; a **postcode required** in the booking address (UK format regex) and checked against the served areas; minimum 20 characters on the problem description; reject messages that are mostly URLs. Same rules on the client via the unobtrusive adapters.
 5. **Duplicate submissions**: disable-and-spinner on every submit button (site-wide JS); server-side soft dedupe for enquiries (same email + identical message hash within 10 minutes → accepted, not re-saved). Bookings already fail safely on a re-submit via the slot `RowVersion` (Section 2); the redirect-after-POST already exists on all three forms. A second, *different* enquiry is never blocked — a mistake the first time is normal.
 6. **Notifications to the company inbox**: enquiries and job applications email `info@plumbing-handyman-surrey.co.uk` via `Admin:NotificationEmail` (decided 2026-09-21: one inbox for every notification, so the existing deposit-paid notice goes there too); **plus a customer acknowledgement email** for enquiries and applications ("we've received your message and will be in touch"), sent from the bookings address. Both go through the existing `IEmailSender` — `InquiriesService` gains that dependency, with the fail-loud-outside-development rule unchanged.
-7. **Disable public registration**: remove the Register links from `_LoginPartial` and `Login.cshtml`; make the Register page 404 (or redirect to Login) so the scaffolded Identity page can't be used. The admin account is seeded (`Admin:SeedPassword`).
+7. **Done 2026-09-22 (Section 3bg).** **Disable public registration**: remove the Register links from `_LoginPartial` and `Login.cshtml`; make the Register page 404 (or redirect to Login) so the scaffolded Identity page can't be used. The admin account is seeded (`Admin:SeedPassword`).
 8. **Enquiry hard delete** (Tier 3 item 24, code half): `InquiriesService.DeleteAsync` → a real delete after removing the `InquiryImage` rows and the R2 objects; the "Delete Permanent" label stays and now means it.
 9. **Seeder guard** (Section 3ak caveat): `ServicesSeeder` stops overwriting rows an admin has edited — e.g. only upsert when `ModifiedOn` is null, or behind a `Seeder:SyncExisting` flag that production doesn't set — so a panel edit survives the next deploy.
 

@@ -71,9 +71,14 @@
                 <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
                     <span class="material-symbols-outlined">verified</span> Professional Service
                 </span>
-                <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
-                    <span class="material-symbols-outlined">schedule</span> 24/7 Available
-                </span>
+                @* Plumbing only: emergencies (leaks, bursts) are a plumbing thing - handyman and
+                   building jobs are planned work, so "24/7" would promise the wrong thing. *@
+                @if (isPlumbing)
+                {
+                    <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined">schedule</span> 24/7 Available
+                    </span>
+                }
             </div>
         </div>
     </section>
