@@ -2,7 +2,7 @@
 
 > **Purpose**: This is the permanent architectural memory for HandyFix. It records what the system actually is (not aspirational template boilerplate), what's been built and verified, and what's left. Update it at the close of each sprint rather than letting it drift out of sync with the code.
 >
-> **Last updated**: 2026-09-22 (third session) — **L1 started: visible rename to "Plumbing Handyman Surrey"** (Section 3bh, L1 item 1): every page, title, email, the Stripe product name, structured data, robots.txt and the README; the navbar shows the name stacked on three lines; the admin sidebar's brand, invisible until now, fixed. Tests 177/177. Before that, in the second session: **batch of site fixes** (Section 3bg): public registration closed (L3 item 7, login kept for the admin), all 15 areas in the footer, card pictures clickable on mouse devices, "24/7" only on plumbing service pages, a couple of copy changes, and a regenerated carpentry image. Before that: **font scale-up (L2 item 8): nothing under 14px on public pages** (Section 3bf, PR #21), plus the three layout fixes it needed. Earlier the same session: category pages got the real coverage map (Section 3be, PR #20) and all 59 site images were regenerated in a bright, sunlit watercolour style (Section 3bd, PR #19), in batches of about five with every image checked before the next batch (now the rule, since each image costs real money). Tests 160/160. Previous update (2026-09-22, Section 3bc): image pipeline, division colour system, category page background.
+> **Last updated**: 2026-09-23 — **The logo** (Section 3bi, L1 item 13): the user's watercolour logo redrawn as an inline SVG and used in the header, footer, login and admin, plus a new tab icon; a round badge version exported for Google/social profiles. Then a **watercolour header background** in the logo's colours (Section 3bj). Tests 178/178. Before that, 2026-09-22 (third session) — **L1 started: visible rename to "Plumbing Handyman Surrey"** (Section 3bh, L1 item 1): every page, title, email, the Stripe product name, structured data, robots.txt and the README; the navbar shows the name stacked on three lines; the admin sidebar's brand, invisible until now, fixed. Tests 177/177. Before that, in the second session: **batch of site fixes** (Section 3bg): public registration closed (L3 item 7, login kept for the admin), all 15 areas in the footer, card pictures clickable on mouse devices, "24/7" only on plumbing service pages, a couple of copy changes, and a regenerated carpentry image. Before that: **font scale-up (L2 item 8): nothing under 14px on public pages** (Section 3bf, PR #21), plus the three layout fixes it needed. Earlier the same session: category pages got the real coverage map (Section 3be, PR #20) and all 59 site images were regenerated in a bright, sunlit watercolour style (Section 3bd, PR #19), in batches of about five with every image checked before the next batch (now the rule, since each image costs real money). Tests 160/160. Previous update (2026-09-22, Section 3bc): image pipeline, division colour system, category page background.
 
 ---
 
@@ -1652,8 +1652,8 @@ L1 item 1, the first L1 item. Visible text only, as decided in Section 3bb: name
 - **Emails**: subjects, bodies and sender names in `BookingsService`/`PaymentsService` say the new name (customer emails send as "Plumbing Handyman Surrey", the deposit-paid notice as "Plumbing Handyman Surrey Website"). Code defaults moved to the new domain per L4 items 2-3: both From addresses → `bookings@`, `Admin:NotificationEmail` → `info@` (also in `appsettings.json`). The old `no-reply@` default is gone, since no such mailbox is planned. Staging still overrides all of these with env vars.
 - **Stripe** (L1 item 11): product name "Plumbing Handyman Surrey Booking Deposit"; description drops "for South London".
 - **Also**: `robots.txt` sitemap URL on the new domain; Privacy and Terms contact email `support@handyfix.com` (never owned) → `info@`; admin enquiry reply subject; the Areas hero alt text no longer claims every area is in Surrey.
-- **Navbar: the name stacks on three lines** ("Plumbing / Handyman / Surrey") at every width, the user's call. On one line the name is about 300px wide: at 1280px it squeezed the link row until the name, "Small Building Work" and "Call Now" each wrapped, and on phones it pushed the call button's number onto two lines. `width: min-content` on the navbar brand makes the box as narrow as its longest word (about 100px at 20px, line-height 1), so the full link row fits from 1280px again with no breakpoint change. Header height is 85px at every width. A 1440px breakpoint was tried first and dropped once the stacked version was chosen. The footer, login page and admin sidebar keep the name on one line. The logo itself is L1 item 13.
-- **Admin sidebar**: its brand link used `text-white` on the white sidebar, so "Handy Fix Admin" was never visible. Switched to the unused `.admin-sidebar-brand` class written for it.
+- **Navbar: the name stacks on three lines** ("Plumbing / Handyman / Surrey") at every width, the user's call. On one line the name is about 300px wide: at 1280px it squeezed the link row until the name, "Small Building Work" and "Call Now" each wrapped, and on phones it pushed the call button's number onto two lines. `width: min-content` on the navbar brand makes the box as narrow as its longest word (about 100px at 20px, line-height 1), so the full link row fits from 1280px again with no breakpoint change. Header height is 85px at every width. A 1440px breakpoint was tried first and dropped once the stacked version was chosen. The footer, login page and admin sidebar keep the name on one line. *Replaced the next day by the SVG logo everywhere (Section 3bi); the lesson stands: the brand block in the header has to stay about as narrow as "Handyman" for the link row to fit at 1280px.*
+- **Admin sidebar**: its brand link used `text-white` on the white sidebar, so "Handy Fix Admin" was never visible. Switched to the unused `.admin-sidebar-brand` class written for it (then to the logo, Section 3bi).
 - **Not changed, on purpose**: the admin login email `admin@handyfix.co.uk` (`AdminUserSeeder`). It's a login name nobody sees, and the seeder looks the admin up by email, so changing it would create a second admin on staging next deploy. Decide during L4 data entry. CSS/JS header comments keep the codename.
 - **Found, left for the honest-copy items**: "Satisfaction Guaranteed" badge on the home page CTA and "100% satisfaction guarantee" in the service page FAQ (confirmed not real, Tier 3 item 16); "thousands of homeowners" on Reviews; "rigorous background checks and technical vetting" on Home (unconfirmed). Privacy and Terms repeat the full name awkwardly; they're rewritten in L1 item 12.
 
@@ -1662,6 +1662,40 @@ L1 item 1, the first L1 item. Visible text only, as decided in Section 3bb: name
 - New `WebTests` theory over 16 public pages: no "Handy Fix", no `handyfix.co`, no bare "HandyFix", and the title ends with the brand exactly once.
 - Local run (Development): headless Chrome checked titles on the same 16 pages and no horizontal overflow at 390px; navbar at 13 widths from 360 to 1920px (name on three lines, no link or button wrapping, no overflow); footer, login and admin sidebar screenshotted.
 - `dotnet build`: 0 errors, no new warnings. `dotnet test src/HandyFix.sln`: 177/177 (97 + 80).
+
+---
+
+## 3bi. The Logo: Hand-Drawn SVG from the User's Artwork, Used Site-Wide (2026-09-23)
+
+L1 item 13, done differently from its plan (a styled text wordmark) and from Tier 3 item 15 (a logo built from Outfit plus the navbar's cyan dot).
+
+- **The artwork**: the user generated two watercolour logos with an image AI (`tools/image-gen/logos.example/logo-1.jpg`, wide; `logo-2.jpg`, round badge). Three icons over three brush-stroked words: a blue drop "PLUMBING", a red wrench "HANDYMAN" (serif), a yellow house "SURREY". The colours are the site's three divisions, which is why it reads as the business at a glance.
+- **Why redrawn rather than used as a picture**: the JPGs are 3210px and about 2MB with a paper background baked in; in a 100px-tall header that is a slow download, a beige box on the white bar, and letters too soft to read. The SVG is about 5KB, sharp at any size, has no background, and one line changes a colour.
+- **How**: `Views/Shared/_Logo.cshtml`, inline SVG hand-drawn to match logo-1. Icons are paths with gradients and a darker rim; the brush strokes are rectangles through an SVG filter (turbulence displacement for ragged edges, alpha noise for cloudy pigment, a slight blur for the soft rim); the words are real `<text>`, Outfit for PLUMBING/SURREY and the system serif (Georgia) for HANDYMAN, with `textLength` pinning each word's width whatever font a device falls back to. Inline, not `<img>`, because an SVG loaded as an image can't use the page's web font. The partial takes an id prefix, since the header and footer render it on the same page and filter/gradient ids must be unique.
+- **Placements** (`components/logo.css`, each sets only a height): header 100px (header 125px tall at every width; the full link row still fits from 1280px, logo about 138px wide); footer 120px on a light rounded card, since the pale brush strokes vanish on the dark footer; login page 130px; admin sidebar 60px.
+- **Tab icon**: `favicon.svg` is the three icons only, no filter or text (neither survives at 16-32px); `favicon.ico` (16/32/48, PNG entries) replaces the default ASP.NET icon for browsers that don't take SVG; `apple-touch-icon.png` (180px, white) for iPhone home screens. Linked from both layouts.
+- **Round badge**: rebuilt from logo-2 the same way, for places that crop to a circle (Google Business Profile, Facebook, Instagram, WhatsApp). Not used on the site. The SVGs and 1024px PNG exports sit next to the originals in `logos.example/`, kept out of git.
+
+### Verified
+
+- New `WebTests` check: the home page renders the header and footer logos with separate id prefixes and links `favicon.svg`.
+- Local run: header at 13 widths from 360 to 1920px (no overflow, no link or button wrapping), footer, login and admin sidebar screenshotted.
+- `dotnet test src/HandyFix.sln`: 178/178 (97 + 81).
+
+---
+
+## 3bj. Header Background: Watercolour Strip Behind the Logo (2026-09-23)
+
+The plain white header looked flat next to the new colourful logo (user's call).
+
+- **Generated**: `tools/image-gen/generate-navbar-bg.mjs`, Nano Banana Pro with `bg-services-category.webp` as the only style reference: an abstract wash running pale blue, rose, yellow, blue from left to right, 21:9 at 2K. Four variants in one call batch (about £0.50); the model stayed close to the reference, so they differ mostly in detail. The user picked **variant 3**, whose left fifth is near-white paper, exactly where the logo sits on desktop.
+- **Cropped, not squashed**: `--convert nav-bg-3` cuts a header-shaped band (1920:125) from the middle of the image and saves it at 2400x156, WebP quality 70: `wwwroot/images/bg-navbar.webp`, 9.7KB.
+- **CSS** (`navbar.css`): the strip under a 50% white veil, `center / cover`. The header's frosted-glass `backdrop-filter` was removed: the background is opaque now, so it blurred nothing. On phones `cover` shows the middle of the strip, so the logo sits on soft pink there.
+
+### Verified
+
+- Tried behind the live header before choosing: all four variants screenshotted at 1440px and 390px with the veil; menu text readable on each.
+- After the change: header at 390, 1280 and 1440px screenshotted, height unchanged at 125px, no overflow. CSS and an image only, so the 178/178 test run from Section 3bi still stands.
 
 ---
 
@@ -1685,7 +1719,7 @@ L1 item 1, the first L1 item. Visible text only, as decided in Section 3bb: name
 10. **Copy contradictions**: home widget "cancel anytime" → matches the 24-hour policy; `Details.cshtml` "Sutton and surrounding areas" → a generic areas line; ~~`Booking/Index` title and `BookingController` meta → Surrey-first, new brand~~ done (Section 3bh).
 11. **Done 2026-09-22 (Section 3bh).** **Stripe wording**: kept (payments stay on Stripe); only brand-check the surrounding sentences during the rename.
 12. **Legal pages, content half** (Tier 3 item 24): Privacy, Terms and Cookie Policy rewritten to what the site does — real dates, data controller, R2 photo storage, Brevo, job applications, retention periods, the site's own cookies listed (antiforgery, login, consent, TempData), banner text without the analytics claim, the 30-minute billing rule, the cancellation process from Section 3bb. **Blocked on Tier 2 item 9** for the legal entity and address; everything else can be drafted now.
-13. **Wordmark** (Tier 3 item 15): the new name rendered as the styled text wordmark in navbar and footer at launch (two lines below 768px if needed); the SVG version is post-launch unless time allows.
+13. **Done 2026-09-23 (Section 3bi).** **Wordmark** (Tier 3 item 15): ~~the new name rendered as the styled text wordmark in navbar and footer at launch~~ became a full logo: the user's watercolour artwork redrawn as an inline SVG, in the header, footer, login page and admin, plus the tab icon.
 
 #### L2 — Booking and enquiry flow
 
@@ -1804,7 +1838,7 @@ L1 item 1, the first L1 item. Visible text only, as decided in Section 3bb: name
 
 **14. Domain finalization.** ~~Depends on the rebrand decision.~~ **Done 2026-09-01 — see Section 3ah.** The old name.com/Zap Construction recovery question is moot — a fresh domain was bought instead: `plumbing-handyman-surrey.co.uk` (primary) + `.com` (backup), via `names.co.uk`, Denislav's account, Zaprqn paid. **New follow-up, not yet done**: point the domain's DNS at the Hetzner staging box (currently reachable only via its free reverse-DNS hostname), and set up Zoho Mail (free tier, up to 5 branded addresses) — MX records + mailbox creation, chosen over the registrar's own paid email add-on.
 
-**15. Wordmark/logo.** Blocked on item 10. Build as SVG from the existing Outfit font + navbar cyan accent dot once the name lands — not AI-generated, which cannot render text reliably (the exact problem with the current garbled-logo images, item 1).
+**15. Wordmark/logo.** ~~Blocked on item 10.~~ **Done 2026-09-23, differently (Section 3bi)**: the user's AI-made watercolour logo, redrawn by hand as SVG with real text, so the "AI can't render text" objection below no longer applies. Original plan, kept for history: Build as SVG from the existing Outfit font + navbar cyan accent dot once the name lands — not AI-generated, which cannot render text reliably (the exact problem with the current garbled-logo images, item 1).
 
 **16. Fake statistics → real or removed.** Replace fabricated figures across `Home/Index`, `Home/Reviews`, `Home/About`, `Services/Index`, `Services/Details`, `Services/Category`:
   - **Resolved 2026-07-30, closed for good 2026-09-01**: `Up to £5M Public Liability insurance` → **"Comprehensive Public Liability insurance"**, confirmed genuine coverage (exact figure will not be published at all, per Zaprqn — not merely still pending, item 9) — `Home/Index.cshtml:238` keeps its existing "…covering every single visit" tail unchanged; `Services/Details.cshtml:217`'s shorter sidebar line and `Services/Details.cshtml:153`'s FAQ-prose version get the equivalent swap adapted to each sentence's shape, not a literal paste. The **"100% satisfaction guarantee"** bundled into that same FAQ sentence (`Services/Details.cshtml:153`) is confirmed **not real — remove it outright**, don't reword it.
