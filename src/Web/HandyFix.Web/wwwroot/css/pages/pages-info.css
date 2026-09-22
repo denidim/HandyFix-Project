@@ -378,30 +378,6 @@
   }
 }
 
-.stat-overview-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-8);
-}
-
-.stat-overview-pill {
-  background-color: var(--surface-container-low);
-  padding: var(--spacing-3) var(--spacing-6);
-  border-radius: var(--radius-xl);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-4);
-  border: 1px solid var(--border-subtle);
-}
-
-.stat-overview-pill .num-highlight {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--primary);
-  line-height: 1;
-}
-
 .review-feed {
   display: flex;
   flex-direction: column;
