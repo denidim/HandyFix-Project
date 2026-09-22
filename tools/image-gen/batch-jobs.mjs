@@ -185,8 +185,11 @@ export const jobs = [
     "behind, flowering borders, bright summer day.",
     "outdoorJob"),
   service("custom-carpentry-boxing-in",
-    "A carpenter in his 60s with a neat grey beard fitting bespoke painted alcove cupboards and shelves beside a chimney breast in a " +
-    "Victorian living room, bright sunshine."),
+    "A carpenter in his 60s with a neat grey beard standing in a bright Victorian living room, clearly in front of " +
+    "(not inside) newly fitted bespoke painted alcove cupboards and shelves beside a chimney breast, checking a " +
+    "shelf with a spirit level, full figure visible. Above the fireplace hangs a framed painting of Bulgarian Kukeri: " +
+    "folk dancers in huge shaggy fur costumes, tall carved wooden masks and large brass bells, in a snowy village. " +
+    "Bright sunshine."),
 
   // ---- Areas ----
   { name: "area-chessington", out: "areas/chessington-hero.webp", w: 1600, h: 700, reuse: "output/chessington-area-hero-autumn-rain-v2.jpg" },
