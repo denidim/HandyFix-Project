@@ -41,6 +41,16 @@
   padding-bottom: var(--spacing-3);
 }
 
+/* The brand name stacks one word per line ("Plumbing / Handyman / Surrey") at every width
+   (roadmap L1 item 1): min-content makes the box as narrow as its longest word, so each word
+   wraps. That narrow block is also what keeps the full link row fitting from 1280px. */
+.navbar-container .font-display-brand {
+  display: inline-block;
+  width: min-content;
+  font-size: 20px;
+  line-height: 1;
+}
+
 .nav-links {
   display: none;
 }
