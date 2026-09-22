@@ -33,7 +33,7 @@
             var result = controller.About();
 
             var viewResult = Assert.IsType<ViewResult>(result);
-            Assert.Equal("About Us - Plumbing Handyman Surrey", controller.ViewData["Title"]);
+            Assert.Equal("About Us", controller.ViewData["Title"]);
             Assert.NotNull(controller.ViewData["MetaDescription"]);
         }
 

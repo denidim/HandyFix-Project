@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="240 -105 430 430">
+  <!-- Browser-tab icon: the logo's three icons only (drop, wrench, house). No filters or text:
+       neither survives at 16-32px. Kept in step with Views/Shared/_Logo.cshtml. -->
+  <defs>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9ad3ee"/>
+      <stop offset="1" stop-color="#3f93c9"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d23a52"/>
+      <stop offset="1" stop-color="#e3677b"/>
+    </linearGradient>
+    <linearGradient id="yellow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6d77f"/>
+      <stop offset="1" stop-color="#e8b447"/>
+    </linearGradient>
+    <mask id="wrench-cut">
+      <rect x="240" y="-105" width="430" height="430" fill="#fff"/>
+      <rect x="413" y="-10" width="30" height="46" fill="#000"/>
+      <circle cx="428" cy="36" r="15" fill="#000"/>
+      <circle cx="428" cy="184" r="8" fill="#000"/>
+    </mask>
+    <mask id="house-cut">
+      <rect x="240" y="-105" width="430" height="430" fill="#fff"/>
+      <rect x="551" y="158" width="34" height="60" rx="5" fill="#000"/>
+    </mask>
+  </defs>
+  <g stroke-width="8" stroke-linejoin="round">
+    <path d="M309 30 C298 70 248 110 248 154 A61 61 0 0 0 370 154 C370 110 320 70 309 30 Z" fill="url(#blue)" stroke="#3a86bd"/>
+    <path d="M428 2 A44 44 0 0 1 448 84 L448 160 A26 26 0 1 1 408 160 L408 84 A44 44 0 0 1 428 2 Z" fill="url(#red)" stroke="#b92a42" mask="url(#wrench-cut)"/>
+    <path d="M568 44 L606 79 L606 60 L630 60 L630 101 L660 129 L636 129 L636 210 L500 210 L500 129 L476 129 Z" fill="url(#yellow)" stroke="#dca33a" mask="url(#house-cut)"/>
+  </g>
+</svg>

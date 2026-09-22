@@ -68,8 +68,8 @@ namespace HandyFix.Web.Controllers
                 PopularServices = services.Take(4).ToList(),
             };
 
-            this.ViewData["Title"] = "Handy Fix - Plumbers & Handymen in Surrey & South London";
-            this.ViewData["MetaDescription"] = "Handy Fix provides reliable local plumbing and handyman services across Surrey and South London, including Chessington, Cobham, Esher, Guildford, Epsom, and Kingston. Book hourly slots online.";
+            this.ViewData["Title"] = "Plumbers & Handymen in Surrey & South London";
+            this.ViewData["MetaDescription"] = "Plumbing Handyman Surrey provides reliable local plumbing and handyman services across Surrey and South London, including Chessington, Cobham, Esher, Guildford, Epsom, and Kingston. Book hourly slots online.";
 
             return this.View(model);
         }
@@ -79,7 +79,7 @@ namespace HandyFix.Web.Controllers
         public async Task<IActionResult> Contact(string service = null)
         {
             this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
-            this.ViewData["MetaDescription"] = "Get in touch with Handy Fix for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.";
+            this.ViewData["MetaDescription"] = "Get in touch with Plumbing Handyman Surrey for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.";
             var model = new ContactInputModel();
             if (!string.IsNullOrWhiteSpace(service))
             {
@@ -156,15 +156,15 @@ namespace HandyFix.Web.Controllers
                 ShowOnSiteReviews = showOnSiteReviews,
             };
 
-            this.ViewData["Title"] = "Customer Reviews - HandyFix London";
-            this.ViewData["MetaDescription"] = "Read verified customer reviews for Handy Fix's plumbing and handyman services across Surrey and South London, or leave your own.";
+            this.ViewData["Title"] = "Customer Reviews";
+            this.ViewData["MetaDescription"] = "Read verified customer reviews of our plumbing and handyman services across Surrey and South London, or leave your own.";
             return this.View(model);
         }
 
         [Route("About")]
         public IActionResult About()
         {
-            this.ViewData["Title"] = "About Us - Plumbing Handyman Surrey";
+            this.ViewData["Title"] = "About Us";
             this.ViewData["MetaDescription"] = "Learn about Plumbing Handyman Surrey, the dedicated plumbing, handyman and refurbishment specialists serving Surrey and South London from Chessington.";
             return this.View();
         }
@@ -172,8 +172,8 @@ namespace HandyFix.Web.Controllers
         [Route("FAQ")]
         public IActionResult FAQ()
         {
-            this.ViewData["Title"] = "Frequently Asked Questions - Handy Fix";
-            this.ViewData["MetaDescription"] = "Answers to common questions about booking, pricing, and scheduling plumbing and handyman services with Handy Fix.";
+            this.ViewData["Title"] = "Frequently Asked Questions";
+            this.ViewData["MetaDescription"] = "Answers to common questions about booking, pricing, and scheduling plumbing and handyman services with Plumbing Handyman Surrey.";
             return this.View();
         }
 
@@ -189,24 +189,24 @@ namespace HandyFix.Web.Controllers
         [Route("PrivacyPolicy")]
         public IActionResult Privacy()
         {
-            this.ViewData["Title"] = "Privacy Policy - Handy Fix";
-            this.ViewData["MetaDescription"] = "How Handy Fix collects, uses, and protects your personal data.";
+            this.ViewData["Title"] = "Privacy Policy";
+            this.ViewData["MetaDescription"] = "How Plumbing Handyman Surrey collects, uses, and protects your personal data.";
             return this.View();
         }
 
         [Route("TermsAndConditions")]
         public IActionResult Terms()
         {
-            this.ViewData["Title"] = "Terms & Conditions - Handy Fix";
-            this.ViewData["MetaDescription"] = "The terms and conditions governing bookings and service delivery with Handy Fix.";
+            this.ViewData["Title"] = "Terms & Conditions";
+            this.ViewData["MetaDescription"] = "The terms and conditions governing bookings and service delivery with Plumbing Handyman Surrey.";
             return this.View();
         }
 
         [Route("CookiePolicy")]
         public IActionResult CookiePolicy()
         {
-            this.ViewData["Title"] = "Cookie Policy - Handy Fix";
-            this.ViewData["MetaDescription"] = "How Handy Fix uses cookies on this website.";
+            this.ViewData["Title"] = "Cookie Policy";
+            this.ViewData["MetaDescription"] = "How Plumbing Handyman Surrey uses cookies on this website.";
             return this.View();
         }
 

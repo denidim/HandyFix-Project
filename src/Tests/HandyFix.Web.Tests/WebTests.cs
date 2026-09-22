@@ -1,6 +1,8 @@
 ﻿namespace HandyFix.Web.Tests
 {
+    using System.Linq;
     using System.Net;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -150,6 +152,60 @@
             loginResponse.EnsureSuccessStatusCode();
             var loginContent = await loginResponse.Content.ReadAsStringAsync();
             Assert.DoesNotContain("Account/Register", loginContent);
+        }
+
+        [Theory]
+        [InlineData("/")]
+        [InlineData("/About")]
+        [InlineData("/Contact")]
+        [InlineData("/FAQ")]
+        [InlineData("/Reviews")]
+        [InlineData("/Pricing")]
+        [InlineData("/Services")]
+        [InlineData("/Services/plumbing")]
+        [InlineData("/Services/plumbing/tap-repairs")]
+        [InlineData("/Areas")]
+        [InlineData("/Areas/cobham")]
+        [InlineData("/Booking")]
+        [InlineData("/PrivacyPolicy")]
+        [InlineData("/TermsAndConditions")]
+        [InlineData("/CookiePolicy")]
+        [InlineData("/Identity/Account/Login")]
+        public async Task PublicPagesShowTheNewBrandOnceInTheTitleAndNeverTheOldName(string url)
+        {
+            // Visible rename to "Plumbing Handyman Surrey" (roadmap L1 item 1). The layout appends
+            // the brand to every title, so a page that also typed it into its own title showed it
+            // twice. "HandyFix." stays allowed: it is the internal codename in asset paths.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.DoesNotContain("Handy Fix", content);
+            Assert.DoesNotContain("handyfix.co", content);
+            Assert.DoesNotMatch("HandyFix(?!\\.)", content);
+
+            var title = Regex.Match(content, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value;
+            Assert.EndsWith(" - Plumbing Handyman Surrey", title);
+            Assert.Single(Regex.Matches(title, "Plumbing Handyman Surrey"));
+        }
+
+        [Fact]
+        public async Task HeaderAndFooterLogosUseSeparateSvgIdsAndTheTabIconIsLinked()
+        {
+            // The logo is inline SVG, rendered in both the header and the footer (PROJECT_STATE
+            // Section 3bi). With one shared set of ids the footer copy would silently reuse the
+            // header's filters and gradients, so each placement passes its own prefix.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("id=\"nav-brush\"", content);
+            Assert.Contains("id=\"footer-brush\"", content);
+            var logoIds = Regex.Matches(content, "id=\"((?:nav|footer)-[^\"]+)\"").Select(m => m.Groups[1].Value).ToList();
+            Assert.Equal(logoIds.Count, logoIds.Distinct().Count());
+            Assert.Contains("href=\"/favicon.svg\"", content);
         }
     }
 }

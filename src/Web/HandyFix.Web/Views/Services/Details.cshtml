@@ -2,7 +2,7 @@
 @using HandyFix.Web.ViewModels.Services
 @{
     this.Layout = "_Layout";
-    this.ViewData["Title"] = $"{Model.Name} - HandyFix Surrey & South London";
+    this.ViewData["Title"] = Model.Name;
 
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == "small-building-works" || Model.CategoryName.Contains("Building");
@@ -119,7 +119,7 @@
             <section class="details-prose">
                 <h2 class="details-section-title">Service Overview</h2>
                 <p>@Model.Description</p>
-                <p>At <strong>HandyFix</strong>, our mobile crews are specialized in @Model.Name operations. We come equipped with professional-grade tools, quality replacement components, and follow strict building codes to ensure a lasting repair or installation. All our work is fully insured for your peace of mind.</p>
+                <p>At <strong>Plumbing Handyman Surrey</strong>, our mobile crews are specialized in @Model.Name operations. We come equipped with professional-grade tools, quality replacement components, and follow strict building codes to ensure a lasting repair or installation. All our work is fully insured for your peace of mind.</p>
 
                 <div class="details-features-grid">
                     <div class="details-feature-item">
@@ -180,7 +180,7 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        Yes, absolutely. All HandyFix services, including @Model.Name, are fully backed by our comprehensive public liability insurance and 100% satisfaction guarantee.
+                        Yes, absolutely. All our services, including @Model.Name, are fully backed by our comprehensive public liability insurance and 100% satisfaction guarantee.
                     </div>
                 </details>
             </section>
@@ -269,7 +269,7 @@
 
                 <!-- Trust Card -->
                 <div class="sidebar-trust-box">
-                    <h4 class="sidebar-trust-title">Why Handy Fix?</h4>
+                    <h4 class="sidebar-trust-title">Why Choose Us?</h4>
                     <div class="sidebar-trust-list">
                         <div class="sidebar-trust-item">
                             <span class="material-symbols-outlined sidebar-trust-icon">workspace_premium</span>
@@ -330,7 +330,7 @@
   "serviceType": "@Model.Name",
   "provider": {
     "@@type": "LocalBusiness",
-    "name": "HandyFix",
+    "name": "Plumbing Handyman Surrey",
     "telephone": "07123456789",
     "priceRange": "££",
     "address": {

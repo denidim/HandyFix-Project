@@ -53,7 +53,7 @@ namespace HandyFix.Web.Controllers
                     SelectedServiceId = selectedServiceId,
                 };
 
-                this.ViewData["MetaDescription"] = "Book a plumbing or handyman appointment online in South London. Pick a service, choose an available slot, and secure it with a deposit.";
+                this.ViewData["MetaDescription"] = "Book a plumbing or handyman appointment online across Surrey and South London. Pick a service, choose an available slot, and secure it with a deposit.";
 
                 return this.View(model);
             }

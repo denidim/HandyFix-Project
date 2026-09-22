@@ -1,9 +1,11 @@
-# Handy Fix - Plumbing & Handyman Services
+# Plumbing Handyman Surrey - Plumbing & Handyman Services
 
 ![.NET](https://img.shields.io/badge/.NET-10.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**Professional web application** for a local plumbing and handyman business based in **Chessington**, covering South West London and Surrey.
+**Professional web application** for a local plumbing and handyman business based in **Chessington**, covering Surrey and South West London.
+
+`HandyFix` is the project's internal codename: namespaces, the solution, the databases and the repository keep it, while everything a visitor sees says Plumbing Handyman Surrey.
 
 **Goal**: High-conversion website with strong local SEO, online booking system and payment integration.
 

@@ -1,7 +1,7 @@
 @model HandyFix.Web.ViewModels.Services.CategoryViewModel
 @{
     this.Layout = "_Layout";
-    this.ViewData["Title"] = $"{Model.Name} Services - HandyFix South London";
+    this.ViewData["Title"] = $"{Model.Name} Services";
 
     var isPlumbing = Model.Slug == "plumbing" || Model.Name == "Plumbing";
     var isBuilding = Model.Slug == "small-building-works" || Model.Name.Contains("Building");
@@ -169,7 +169,7 @@
             <div>
                 <h2 class="seo-local-title">@Model.Name Experts in Your Local Area.</h2>
                 <p class="seo-local-desc">
-                    Handy Fix provides premium @Model.Name.ToLower() services across <strong>Cobham, Esher, and Epsom</strong>. We are committed to local excellence, ensuring that our response times are the fastest in the region. Whether you're in the heart of the town or in a surrounding village, our local vans are equipped with the latest diagnostic tools to solve your issues on the first visit.
+                    Plumbing Handyman Surrey provides premium @Model.Name.ToLower() services across <strong>Cobham, Esher, and Epsom</strong>. We are committed to local excellence, ensuring that our response times are the fastest in the region. Whether you're in the heart of the town or in a surrounding village, our local vans are equipped with the latest diagnostic tools to solve your issues on the first visit.
                 </p>
                 <div class="seo-local-areas">
                     @foreach (var area in Model.LocalAreas.Take(12))
