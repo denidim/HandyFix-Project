@@ -78,10 +78,12 @@
                     <partial name="_PricingCard" model="@(new PricingCardViewModel
                                                          {
                                                              Name = svc.Name,
-                                                             IconName = svc.CategoryName == "Plumbing" ? "water_drop" : "handyman",
+                                                             IconName = svc.CategorySlug == "small-building-works" ? "foundation" : (svc.CategoryName == "Plumbing" ? "water_drop" : "handyman"),
+                                                             ImageUrl = svc.ImageUrl,
                                                              Description = svc.Description,
                                                              BasePrice = svc.BasePrice,
                                                              EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
+                                                             DivisionClass = svc.CategorySlug == "small-building-works" ? "pricing-card-building" : (svc.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
                                                              CtaText = "Book Now",
                                                              CtaUrl = this.Url.Action("Index", "Booking", new { serviceId = svc.Id }),
                                                          })" />

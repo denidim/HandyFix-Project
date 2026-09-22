@@ -10,6 +10,23 @@
   --text-dark: #0f172a;
   --border-subtle: #e2e8f0;
 
+  /* Colors - Division Brand (Tier 1: plumbing / handyman / small building).
+     Single source of truth for the per-division ink colour, wash background, and
+     card border -- each used by three-plus components (Specialised Divisions cards,
+     service-horizontal-card, pricing-card, bento badges, division-tint), so the
+     actual values live here once instead of as raw hex repeated per component. */
+  --division-plumbing: #0ea5e9;
+  --division-handyman: #e11d48;
+  --division-building: #b45309;
+
+  --division-plumbing-wash: linear-gradient(155deg, #e0f2fe 0%, #d0ebfd 45%, #f8fafc 100%);
+  --division-handyman-wash: linear-gradient(155deg, #fff1f2 0%, #ffe4e6 50%, #f8fafc 100%);
+  --division-building-wash: linear-gradient(155deg, #fffbeb 0%, #fef3c7 45%, #f8fafc 100%);
+
+  --division-plumbing-border: #bae6fd;
+  --division-handyman-border: #fecdd3;
+  --division-building-border: #fde68a;
+
   /* Colors - Surface & Containers */
   --surface: #f7f9fb;
   --surface-container: #eceef0;

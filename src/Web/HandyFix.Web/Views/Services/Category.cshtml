@@ -5,6 +5,11 @@
 
     var isPlumbing = Model.Slug == "plumbing" || Model.Name == "Plumbing";
     var isBuilding = Model.Slug == "small-building-works" || Model.Name.Contains("Building");
+    var cardDivisionClass = isBuilding ? "service-horizontal-card-building" : (isPlumbing ? "service-horizontal-card-plumbing" : "service-horizontal-card-handyman");
+
+    // Same background for all three category pages, division-agnostic -- see
+    // base/layout.css's body.page-bg-services-category.
+    this.ViewData["BodyClass"] = "page-bg-services-category";
 
     var specBadgeText = isBuilding ? "Survey & Fixed Quote" : (isPlumbing ? "Licensed & Insured" : "Multi-Skill Pros");
     var specBadgeClass = isBuilding ? "category-hero-badge-building" : (isPlumbing ? "category-hero-badge-primary" : "category-hero-badge-tertiary");
@@ -52,7 +57,7 @@
                         ? $"{(svc.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
                         : $"{svc.EstimatedDurationMinutes} Mins");
 
-                <article class="service-horizontal-card group">
+                <article class="service-horizontal-card group @cardDivisionClass">
                     <div class="service-card-thumbnail-wrapper">
                         <img class="service-card-thumbnail" alt="@svc.Name" src="@svc.ImageUrl" asp-append-version="true" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
                     </div>
