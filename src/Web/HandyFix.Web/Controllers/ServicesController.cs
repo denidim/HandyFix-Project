@@ -83,8 +83,9 @@ namespace HandyFix.Web.Controllers
             IEnumerable<ServiceViewModel> services = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(category.Name);
             category.Services = services.ToList();
 
+            // All areas: the coverage diagram plots every one; the view caps the badge links at 12.
             IEnumerable<ServiceAreaViewModel> localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
-            category.LocalAreas = localAreas.Take(12);
+            category.LocalAreas = localAreas;
 
             this.ViewData["Title"] = $"{category.Name} Services in Surrey & South London";
             this.ViewData["MetaDescription"] = $"Professional {category.Name.ToLower()} services operating across Surrey and South London, including Chessington, Cobham, Esher, and Kingston. Book your service online.";

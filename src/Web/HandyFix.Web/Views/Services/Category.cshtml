@@ -172,7 +172,7 @@
                     Handy Fix provides premium @Model.Name.ToLower() services across <strong>Cobham, Esher, and Epsom</strong>. We are committed to local excellence, ensuring that our response times are the fastest in the region. Whether you're in the heart of the town or in a surrounding village, our local vans are equipped with the latest diagnostic tools to solve your issues on the first visit.
                 </p>
                 <div class="seo-local-areas">
-                    @foreach (var area in Model.LocalAreas)
+                    @foreach (var area in Model.LocalAreas.Take(12))
                     {
                         <a asp-route="AreaDetails" asp-route-areaSlug="@area.Slug" class="seo-area-badge">
                             <span class="material-symbols-outlined seo-area-icon">location_on</span>
@@ -182,13 +182,7 @@
                 </div>
             </div>
             <div class="seo-map-container">
-                <div class="seo-map-placeholder">
-                    <span class="material-symbols-outlined seo-map-icon">map</span>
-                    <div class="seo-map-indicator">
-                        <span class="seo-map-dot"></span>
-                        <span>3 Active Technicians Nearby</span>
-                    </div>
-                </div>
+                <partial name="_AreaCoverageMap" model="Model.LocalAreas" />
             </div>
         </div>
     </section>

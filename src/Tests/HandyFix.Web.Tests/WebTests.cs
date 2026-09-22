@@ -123,5 +123,18 @@
             response.EnsureSuccessStatusCode();
             Assert.True(response.Headers.CacheControl?.NoCache);
         }
+
+        [Fact]
+        public async Task CategoryPageShowsCoverageMapWithoutMadeUpTechnicianCount()
+        {
+            // The old map placeholder claimed "3 Active Technicians Nearby", a made-up figure
+            // (PROJECT_STATE Section 3be); the real coverage diagram replaced it.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/Services/plumbing");
+            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains("coverage-map", responseContent);
+            Assert.DoesNotContain("Active Technicians", responseContent);
+        }
     }
 }
