@@ -72,16 +72,17 @@ body {
 /* Services/Category background -- all three category pages (plumbing, handyman,
    small-building-works), set unconditionally via ViewData["BodyClass"] (see
    Services/Category.cshtml). Same image for all three, not division-specific.
-   TEMPORARY -- visual test, option 2: background-size: 100% auto scales the image
-   by width only, with height following at the SAME scale (auto preserves the
-   image's own aspect ratio) -- zero distortion, unlike `cover`, which stretched
-   height independently to match each page's own length. background-repeat: repeat-y
-   then tiles that undistorted image down the page however far it needs to go, so
-   every page-length is covered with no exception. bg-transition.jpg was generated
-   specifically to tile seamlessly (its bottom edge matches its top edge, both
-   blue), so the repeat reads as one continuous flow rather than a hard seam. */
+   Final decision (2026-09-22, Section 3bc/3bd): background-size: 100% auto
+   scales the image by width only, with height following at the SAME scale
+   (auto preserves the image's own aspect ratio) -- zero distortion, unlike
+   `cover`, which stretched height independently to match each page's own
+   length. background-repeat: repeat-y then tiles that undistorted image down
+   the page however far it needs to go, so every page-length is covered with
+   no exception. bg-services-category.webp was generated specifically to tile
+   seamlessly (its bottom edge matches its top edge, both blue), so the repeat
+   reads as one continuous flow rather than a hard seam. */
 body.page-bg-services-category {
-  background-image: url('/images/test-bg-vertical.webp');
+  background-image: url('/images/bg-services-category.webp');
   background-size: 100% auto;
   background-position: top center;
   background-repeat: repeat-y;
