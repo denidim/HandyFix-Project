@@ -131,3 +131,20 @@
 .testimonial-card:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* Card pictures that repeat the card's own button link, as a bigger click target for mouse
+   users only: on touch screens the picture stays inert so a scroll can't set it off. The
+   markup also marks it tabindex="-1" aria-hidden="true", so keyboard and screen-reader users
+   meet each link once, on the button. Page CSS for the wrapper (loaded later) keeps its own
+   display/size; display: block here only covers wrappers that never set one. */
+.card-image-link {
+  display: block;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-image-link {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+}
