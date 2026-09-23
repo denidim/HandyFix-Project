@@ -18,6 +18,27 @@
             this.server = server;
         }
 
+        // The public pages the site-wide copy checks below run against.
+        public static TheoryData<string> PublicPages => new TheoryData<string>
+        {
+            "/",
+            "/About",
+            "/Contact",
+            "/FAQ",
+            "/Reviews",
+            "/Pricing",
+            "/Services",
+            "/Services/plumbing",
+            "/Services/plumbing/tap-repairs",
+            "/Areas",
+            "/Areas/cobham",
+            "/Booking",
+            "/PrivacyPolicy",
+            "/TermsAndConditions",
+            "/CookiePolicy",
+            "/Identity/Account/Login",
+        };
+
         [Fact]
         public async Task IndexPageShouldReturnStatusCode200WithTitle()
         {
@@ -155,22 +176,24 @@
         }
 
         [Theory]
-        [InlineData("/")]
-        [InlineData("/About")]
-        [InlineData("/Contact")]
-        [InlineData("/FAQ")]
-        [InlineData("/Reviews")]
-        [InlineData("/Pricing")]
-        [InlineData("/Services")]
-        [InlineData("/Services/plumbing")]
-        [InlineData("/Services/plumbing/tap-repairs")]
-        [InlineData("/Areas")]
-        [InlineData("/Areas/cobham")]
-        [InlineData("/Booking")]
-        [InlineData("/PrivacyPolicy")]
-        [InlineData("/TermsAndConditions")]
-        [InlineData("/CookiePolicy")]
-        [InlineData("/Identity/Account/Login")]
+        [MemberData(nameof(PublicPages))]
+        public async Task PublicPagesUseNoLongDashes(string url)
+        {
+            // Visitor-facing text uses a hyphen or two sentences, never an em-dash (decided in
+            // PROJECT_STATE Section 3bb, swept in Section 3bl). Covers the raw character, the named
+            // entity, and the numeric form Razor produces when it encodes one from code.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.DoesNotContain("—", content);
+            Assert.DoesNotContain("&mdash;", content);
+            Assert.DoesNotContain("&#x2014;", content);
+        }
+
+        [Theory]
+        [MemberData(nameof(PublicPages))]
         public async Task PublicPagesShowTheNewBrandOnceInTheTitleAndNeverTheOldName(string url)
         {
             // Visible rename to "Plumbing Handyman Surrey" (roadmap L1 item 1). The layout appends
