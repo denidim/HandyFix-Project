@@ -176,7 +176,7 @@ namespace HandyFix.Services.Data.Payments
             var clientSubject = "Your Plumbing Handyman Surrey Booking is Confirmed!";
             var clientBody = $@"
                 <h3>Hi {booking.CustomerFirstName},</h3>
-                <p>Great news — your deposit of £{payment.Amount:F2} has been received and your booking is now confirmed.</p>
+                <p>Great news! Your deposit of £{payment.Amount:F2} has been received and your booking is now confirmed.</p>
                 <ul>
                     <li><strong>Booking Reference:</strong> {booking.Id}</li>
                     <li><strong>Service(s):</strong> {serviceNames}</li>

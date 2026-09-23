@@ -309,13 +309,14 @@
 .contact-info-icon-box {
   width: 48px;
   height: 48px;
+  flex-shrink: 0;
   background-color: var(--secondary);
 }
 
-.faq-search-input {
-  padding-left: 45px;
-  border: 1px solid var(--outline-variant);
-  background-color: var(--surface-container-lowest);
+/* The email address is one long word; let it break inside its tile on narrow columns. */
+.contact-info-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .accordion-toggle-btn {

@@ -20,12 +20,6 @@
 
     <!-- Main Content Canvas -->
     <div class="info-canvas">
-    <!-- Search Bar -->
-    <div class="position-relative mb-5">
-        <input id="faqSearchInput" class="form-control py-3 rounded-xl faq-search-input" placeholder="Search for answers..." type="text" />
-        <span class="material-symbols-outlined position-absolute start-0 top-0 bottom-0 d-flex align-items-center ps-3 text-on-surface-variant pe-none">search</span>
-    </div>
-
     <!-- FAQ Categories & Accordion -->
     <div class="faq-accordion" id="generalFaq">
 
@@ -42,7 +36,7 @@
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
                 <div class="accordion-content">
-                    Booking is simple. Select your required service (Plumbing, Electrical, etc.) from our main dashboard, choose a preferred time slot, and provide details about the job. You will receive an instant confirmation via email and SMS once a professional is assigned.
+                    Booking is simple. Select your required service (Plumbing, Electrical, etc.) from our main dashboard, choose a preferred time slot, and provide details about the job. You will receive an instant confirmation via email once a professional is assigned.
                 </div>
             </div>
 
@@ -53,6 +47,16 @@
                 </button>
                 <div class="accordion-content">
                     The £50 deposit secures your appointment and ensures the professional's travel and time are covered. This amount is fully deductible from your final invoice. We use this system to maintain a reliable schedule for all our clients and professionals.
+                </div>
+            </div>
+
+            <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                    <span class="font-headline-sm text-primary fs-16 fw-bold">How is my time charged?</span>
+                    <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
+                </button>
+                <div class="accordion-content">
+                    <strong>Plumbing and Handyman</strong> jobs start with a one-hour minimum at the hourly rate for the service. After the first hour, additional time is billed in 30-minute blocks at the same hourly rate. <strong>Small Building &amp; Refurbishment</strong> work is quoted as a fixed price after a free on-site survey.
                 </div>
             </div>
         </div>
@@ -70,7 +74,7 @@
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
                 <div class="accordion-content">
-                    Yes, you can cancel or reschedule through your dashboard. Cancellations made more than 24 hours before the appointment are eligible for a full refund of the £50 deposit. Cancellations within 24 hours are non-refundable.
+                    Yes. To cancel or reschedule, call or email us. Cancellations made more than 24 hours before the appointment get a full refund of the £50 deposit. Cancellations within 24 hours are non-refundable.
                 </div>
             </div>
         </div>
@@ -88,7 +92,7 @@
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
                 <div class="accordion-content">
-                    Absolutely. We provide 24/7 emergency callouts for burst pipes, electrical failures, and HVAC issues. Emergency plumbing is charged at our standard Plumbing rate of £90 per hour (one-hour minimum) plus any parts required &mdash; there's no separate call-out fee. We aim to have a professional at your door within 60-90 minutes of the request.
+                    Absolutely. We provide 24/7 emergency callouts for burst pipes, electrical failures, and HVAC issues. Emergency plumbing is charged at our standard Plumbing rate of £90 per hour (one-hour minimum) plus any parts required. There's no separate call-out fee. We aim to have a professional at your door within 60-90 minutes of the request.
                 </div>
             </div>
         </div>
@@ -98,14 +102,14 @@
     <section class="mt-5 glass-morphism p-4 rounded-xl d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 faq-contact-cta">
         <div class="text-center text-md-start">
             <h3 class="font-headline-md text-primary mb-1">Still have questions?</h3>
-            <p class="text-on-surface-variant font-body-md mb-0">Our customer support team is available 24/7 to assist you.</p>
+            <p class="text-on-surface-variant font-body-md mb-0">Send us an enquiry or give us a call and we'll help.</p>
         </div>
-        <div class="d-flex gap-3">
-            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline d-flex align-items-center gap-2 px-4 py-3 rounded-lg fw-semibold info-print-btn">
-                <span class="material-symbols-outlined">chat</span>
-                <span>Chat Now</span>
+        <div class="d-flex flex-column flex-sm-row gap-3">
+            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline d-flex align-items-center justify-content-center gap-2 px-4 py-3 rounded-lg fw-semibold info-print-btn">
+                <span class="material-symbols-outlined">mail</span>
+                <span>Send an Enquiry</span>
             </a>
-            <a href="tel:+1555HANDYFIX" class="btn btn-primary d-flex align-items-center gap-2 px-4 py-3 rounded-lg fw-semibold">
+            <a href="tel:07123456789" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-3 rounded-lg fw-semibold">
                 <span class="material-symbols-outlined">call</span>
                 <span>Call Us</span>
             </a>
@@ -135,22 +139,4 @@
         const firstItem = document.querySelector('.accordion-item');
         if (firstItem) firstItem.classList.add('active');
     });
-
-    // Search Filter Simulation
-    const searchInput = document.getElementById('faqSearchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const items = document.querySelectorAll('.accordion-item');
-
-            items.forEach(item => {
-                const text = item.innerText.toLowerCase();
-                if (text.includes(term)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-    }
 </script>
