@@ -13,7 +13,7 @@
         <div class="services-header-content text-center">
             <h1 class="services-hero-title">Terms of <span>Service.</span></h1>
             <p class="services-subtitle mb-1">Please read these terms carefully before booking our services.</p>
-            <p class="font-label-sm text-on-surface-variant font-medium opacity-70 fs-14">Last updated: October 24, 2024</p>
+            <p class="font-label-sm text-on-surface-variant font-medium opacity-70 fs-14">Last updated: 23 September 2026</p>
         </div>
     </section>
 
@@ -27,73 +27,95 @@
                 <h2>1. Services Provided</h2>
             </div>
             <p class="font-body-md text-on-surface-variant mb-0">
-                Plumbing Handyman Surrey provides professional mobile plumbing and general handyman services. Our dedicated team of skilled technicians operates across a defined service territory to ensure timely and reliable property maintenance. We currently offer coverage in the following regions:
+                Plumbing Handyman Surrey provides plumbing, handyman, and small building and refurbishment services from our base in Chessington. We work across:
             </p>
             <ul class="d-flex flex-column gap-2 p-0 list-unstyled pl-4">
                 <li class="d-flex align-items-start gap-2">
                     <span class="material-symbols-outlined text-success mt-1 fs-16">check_circle</span>
-                    <span><strong>South London:</strong> All major boroughs and residential districts.</span>
+                    <span><strong>Surrey:</strong> towns and villages within reach of Chessington.</span>
                 </li>
                 <li class="d-flex align-items-start gap-2">
                     <span class="material-symbols-outlined text-success mt-1 fs-16">check_circle</span>
-                    <span><strong>Surrey:</strong> Comprehensive coverage for suburban and rural properties.</span>
-                </li>
-                <li class="d-flex align-items-start gap-2">
-                    <span class="material-symbols-outlined text-success mt-1 fs-16">check_circle</span>
-                    <span><strong>Kent:</strong> Extended service availability for the garden of England.</span>
+                    <span><strong>South London:</strong> the neighbouring boroughs.</span>
                 </li>
             </ul>
+            <p class="font-body-md text-on-surface-variant mb-0">
+                Every town we cover is listed on our <a asp-route="Areas">Areas page</a>.
+            </p>
         </section>
 
         <hr class="info-section-divider" />
 
-        <!-- 2. Booking & Payments -->
+        <!-- 2. Prices -->
+        <section class="info-section">
+            <div class="info-section-title-row">
+                <span class="material-symbols-filled text-secondary">sell</span>
+                <h2>2. Prices</h2>
+            </div>
+            <p class="font-body-md text-on-surface-variant mb-2">
+                <strong>Plumbing and Handyman</strong> work is charged by the hour, with a one-hour minimum at the rate shown for the service. After the first hour, additional time is billed in 30-minute blocks at the same hourly rate. Emergency plumbing is charged at the standard plumbing rate, with no separate call-out fee.
+            </p>
+            <p class="font-body-md text-on-surface-variant mb-2">
+                Materials beyond what our technician carries as standard are quoted and agreed with you before work begins.
+            </p>
+            <p class="font-body-md text-on-surface-variant mb-0">
+                <strong>Small Building &amp; Refurbishment</strong> work is quoted individually as a fixed price after a free on-site survey.
+            </p>
+        </section>
+
+        <hr class="info-section-divider" />
+
+        <!-- 3. Booking & Payments -->
         <section class="info-section">
             <div class="info-section-title-row">
                 <span class="material-symbols-filled text-secondary">payments</span>
-                <h2>2. Booking Deposit &amp; Payments</h2>
+                <h2>3. Booking Deposit &amp; Payments</h2>
             </div>
             <p class="font-body-md text-on-surface-variant mb-2">
-                To secure your service appointment, a mandatory booking deposit of <strong>£50.00</strong> is required at the time of scheduling. All deposits are processed securely via <strong>Stripe</strong>.
+                To secure an appointment, a booking deposit of <strong>£50.00</strong> is paid online when you book. Deposits are processed securely by <strong>Stripe</strong>; your card details never reach our servers. If the deposit isn't paid within 15 minutes, the time slot is released for other customers.
             </p>
             <p class="font-body-md text-on-surface-variant mb-0">
-                The full amount of the deposit will be explicitly deducted from your final project invoice upon completion of the requested work. We accept all major credit cards and digital wallets through our secure payment gateway.
+                The full deposit is deducted from your final invoice when the work is complete.
             </p>
         </section>
 
         <hr class="info-section-divider" />
 
-        <!-- 3. Cancellations -->
+        <!-- 4. Cancellations -->
         <section class="p-4 rounded-lg terms-cancellation-box">
             <div class="info-section-title-row mb-3">
                 <span class="material-symbols-outlined text-secondary">event_busy</span>
-                <h2>3. Cancellations &amp; Rescheduling</h2>
+                <h2>4. Cancellations &amp; Rescheduling</h2>
             </div>
             <p class="font-body-md text-on-surface-variant mb-3">
-                We understand that plans change. Our policy is designed to be fair to both our customers and our technicians:
+                We understand that plans change. To cancel or reschedule, call or email us. Our policy is designed to be fair to both our customers and our technicians:
             </p>
             <ul class="d-flex flex-column gap-2 p-0 list-unstyled">
                 <li class="d-flex align-items-start gap-2">
                     <span class="material-symbols-outlined text-success mt-1 fs-16">check_circle</span>
-                    <span><strong>Standard Window:</strong> Cancellations or rescheduling requests made 24 hours or more prior to the appointment are free of charge. Your deposit will be fully refunded or transferred.</span>
+                    <span><strong>More than 24 hours before:</strong> cancelling or rescheduling is free. Your deposit is refunded in full to your card, or moved to the new appointment.</span>
                 </li>
                 <li class="d-flex align-items-start gap-2">
                     <span class="material-symbols-outlined text-danger mt-1 fs-16">cancel</span>
-                    <span><strong>Late Window:</strong> Any cancellation or rescheduling request made within 24 hours of the scheduled start time will result in the forfeiture of the £50.00 deposit.</span>
+                    <span><strong>Within 24 hours of the appointment:</strong> the £50.00 deposit is forfeited.</span>
+                </li>
+                <li class="d-flex align-items-start gap-2">
+                    <span class="material-symbols-outlined text-success mt-1 fs-16">check_circle</span>
+                    <span><strong>If we have to cancel:</strong> we'll offer you a new time or refund your deposit in full.</span>
                 </li>
             </ul>
         </section>
 
         <hr class="info-section-divider" />
 
-        <!-- 4. User Obligations -->
+        <!-- 5. User Obligations -->
         <section class="info-section">
             <div class="info-section-title-row">
                 <span class="material-symbols-filled text-secondary">assignment_ind</span>
-                <h2>4. User Obligations</h2>
+                <h2>5. Your Responsibilities</h2>
             </div>
             <p class="font-body-md text-on-surface-variant mb-2">
-                As a user of Plumbing Handyman Surrey services, you agree to the following responsibilities:
+                When you book with us, you agree to:
             </p>
             <ul class="d-flex flex-column gap-2 p-0 list-unstyled pl-4">
                 <li class="d-flex align-items-start gap-2">
@@ -113,14 +135,17 @@
 
         <hr class="info-section-divider" />
 
-        <!-- 5. Liability -->
+        <!-- 6. Liability -->
         <section class="info-section">
             <div class="info-section-title-row">
                 <span class="material-symbols-filled text-secondary">gavel</span>
-                <h2>5. Liability &amp; Insurance</h2>
+                <h2>6. Liability &amp; Insurance</h2>
             </div>
+            <p class="font-body-md text-on-surface-variant mb-2">
+                Plumbing Handyman Surrey maintains comprehensive public liability insurance. While we take every precaution to protect your property, our liability is limited to the direct costs of repair for damage caused by our gross negligence. We are not responsible for pre-existing structural issues, normal wear and tear, or indirect consequential losses.
+            </p>
             <p class="font-body-md text-on-surface-variant mb-0">
-                Plumbing Handyman Surrey maintains comprehensive professional liability insurance. While we take every precaution to protect your property, our liability is limited to the direct costs of repair for damage caused by our gross negligence. We are not responsible for pre-existing structural issues, normal wear and tear, or indirect consequential losses.
+                Nothing in these terms affects your statutory rights as a consumer. These terms are governed by the law of England and Wales.
             </p>
         </section>
 
@@ -129,7 +154,7 @@
         <!-- Bottom Action -->
         <div class="pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 info-bottom-action">
             <div class="text-on-surface-variant font-body-md mb-0">
-                Need a custom copy for your records?
+                Need a copy for your records?
             </div>
             <button class="btn btn-outline d-flex align-items-center gap-2 px-5 py-3 rounded-lg info-print-btn" onclick="window.print()">
                 <span class="material-symbols-outlined">download</span>
@@ -141,7 +166,7 @@
     <!-- Additional Help -->
     <div class="info-help-box">
         <h3>Have questions?</h3>
-        <p class="font-body-md text-on-surface-variant mb-3">Our support team is ready to clarify any part of these terms.</p>
+        <p class="font-body-md text-on-surface-variant mb-3">Email us and we'll clarify any part of these terms.</p>
         <a href="mailto:info@plumbing-handyman-surrey.co.uk">info@plumbing-handyman-surrey.co.uk</a>
     </div>
     </div>
