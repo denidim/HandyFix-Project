@@ -319,12 +319,6 @@
   overflow-wrap: anywhere;
 }
 
-.faq-search-input {
-  padding-left: 45px;
-  border: 1px solid var(--outline-variant);
-  background-color: var(--surface-container-lowest);
-}
-
 .accordion-toggle-btn {
   outline: none;
 }
