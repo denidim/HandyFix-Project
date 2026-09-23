@@ -168,8 +168,19 @@
         <div class="seo-local-grid">
             <div>
                 <h2 class="seo-local-title">@Model.Name Experts in Your Local Area.</h2>
+                @{
+                    // The first three areas (featured first) from the real service-area data, so the
+                    // paragraph names places we actually cover instead of a hardcoded list.
+                    List<string> namedAreas = Model.LocalAreas.Take(3).Select(a => a.Name).ToList();
+                    string areaSentence = namedAreas.Count switch
+                    {
+                        0 => "Surrey and South London",
+                        1 => namedAreas[0],
+                        _ => string.Join(", ", namedAreas.Take(namedAreas.Count - 1)) + " and " + namedAreas[^1],
+                    };
+                }
                 <p class="seo-local-desc">
-                    Plumbing Handyman Surrey provides premium @Model.Name.ToLower() services across <strong>Cobham, Esher, and Epsom</strong>. We are committed to local excellence, ensuring that our response times are the fastest in the region. Whether you're in the heart of the town or in a surrounding village, our local vans are equipped with the latest diagnostic tools to solve your issues on the first visit.
+                    Plumbing Handyman Surrey provides @Model.Name.ToLower() services from our Chessington base across <strong>@areaSentence</strong> and the towns and villages around them. Whether you're in the heart of a town or out in a surrounding village, we come to you with the tools and common parts to finish most jobs on the first visit.
                 </p>
                 <div class="seo-local-areas">
                     @foreach (var area in Model.LocalAreas.Take(12))
