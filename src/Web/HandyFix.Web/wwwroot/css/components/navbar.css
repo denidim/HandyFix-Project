@@ -4,13 +4,12 @@
   top: 0;
   width: 100%;
   z-index: 1020;
-  /* A watercolour strip in the logo's colours, softened by a white veil so the links stay
-     readable; its left end is near-white paper, where the logo sits (PROJECT_STATE Section 3bj).
-     Opaque, so the old frosted-glass backdrop blur had nothing left to blur and is gone. */
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
-    url('/images/bg-navbar.webp') center / cover;
-  border-bottom: 1px solid var(--glass-border);
+  /* Plain white, so the logo is the only colour in the header (PROJECT_STATE Section 3bn). The
+     watercolour strip it replaced (Section 3bj) competed with the logo and, stacked on the pastel
+     hero pictures, looked like a toy shop, most of all on phones. The grey line keeps the header
+     from melting into a pale sky picture below it. */
+  background: var(--surface-container-lowest);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   box-shadow: var(--shadow-sm);
   transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
