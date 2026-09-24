@@ -135,9 +135,20 @@
                         <!-- Underneath Timeslots Reassuring Message -->
                         <div class="reassuring-info-card mt-6">
                             <span class="material-symbols-outlined reassuring-info-icon">schedule</span>
-                            <p class="reassuring-info-text">
-                                Can't find your convenient timeslot or your convenient timeslot isn't available? Note that availability circumstances change often as cancellations may have been made that have not yet been updated to the availability slots, or we have extra technicians on shift that can take your booking. Please leave an inquiry anyway or call us. We may still be able to book your appointment!
-                            </p>
+                            <div>
+                                <p class="reassuring-info-text">
+                                    Can't find your convenient timeslot or your convenient timeslot isn't available? Note that availability circumstances change often as cancellations may have been made that have not yet been updated to the availability slots, or we have extra technicians on shift that can take your booking. Please leave an inquiry anyway or call us. We may still be able to book your appointment!
+                                </p>
+                                @* The script adds the chosen service and day to this link, so the Contact
+                                   form opens asking about that day (PROJECT_STATE Section 3bp). *@
+                                <div class="reassuring-info-actions">
+                                    <a asp-controller="Home" asp-action="Contact" id="slot-enquiry-link" class="btn btn-primary reassuring-info-btn">
+                                        <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+                                        <span>Send an Enquiry</span>
+                                    </a>
+                                    <a href="tel:07123456789" class="reassuring-info-call">or call 07123 456789</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -272,6 +283,8 @@
             const hiddenSlotInput = document.getElementById("wizard-slot-id");
             const submitBtn = document.getElementById("submit-btn");
             const step1IncompleteHint = document.getElementById("step1-incomplete-hint");
+            const enquiryLink = document.getElementById("slot-enquiry-link");
+            const enquiryBaseHref = enquiryLink.getAttribute("href");
 
             // Sidebar Elements
             const summaryService = document.getElementById("summary-service");
@@ -342,6 +355,8 @@
                     basePrice = activeCategory === "plumbing" ? 90 : 60; // Flat category rates (Plumbing £90, Handyman £60)
                 }
 
+                updateEnquiryLink();
+
                 const formattedPrice = "£" + basePrice.toFixed(2);
                 summaryMinCharge.textContent = formattedPrice;
                 // The deposit is a flat £50 (BookingsService.CreateBookingAsync), not the first-hour
@@ -363,6 +378,20 @@
                 } else {
                     summaryDatetime.textContent = "--";
                 }
+            }
+
+            // "Send an Enquiry" in the timeslot card: carries the chosen service and day to the
+            // Contact page, which pre-fills a message asking about that day. The day only goes
+            // with a service, since the message names both.
+            function updateEnquiryLink() {
+                const opt = serviceSelect.options[serviceSelect.selectedIndex];
+                const params = new URLSearchParams();
+                if (opt && opt.value !== "") {
+                    params.set("service", opt.text.split(" (from")[0].trim());
+                    if (dateInput.value) params.set("date", dateInput.value);
+                }
+                const query = params.toString();
+                enquiryLink.setAttribute("href", query ? `${enquiryBaseHref}?${query}` : enquiryBaseHref);
             }
 
             serviceSelect.addEventListener("change", updateSummaryPrice);
@@ -468,6 +497,8 @@
             // ==========================================
             function loadSlotsForDate(dateStr) {
                 if (!dateStr) return;
+
+                updateEnquiryLink();
 
                 const formattedDateHeading = new Date(dateStr).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
                 slotsHeaderDate.textContent = `Slots for ${formattedDateHeading}`;
