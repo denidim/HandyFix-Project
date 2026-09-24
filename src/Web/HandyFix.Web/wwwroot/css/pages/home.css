@@ -169,6 +169,40 @@
   }
 }
 
+/* Booking widget date picker (PROJECT_STATE Section 3bo): the booking page's calendar
+   (booking.css) as a dropdown under the field. It is part of the page, so it scrolls with it
+   instead of closing. Two classes deep because booking.css loads after this file. */
+.hero-date-field {
+  position: relative;
+}
+
+.hero-date-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hero-date-placeholder {
+  color: var(--on-surface-variant);
+}
+
+.hero-date-icon {
+  color: var(--secondary);
+}
+
+.hero-date-field .hero-calendar {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 60;
+  width: 100%;
+  max-width: 360px;
+  margin: 6px 0 0;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+}
+
 .slots-grid-widget {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

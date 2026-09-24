@@ -54,9 +54,31 @@
                 }
               </select>
             </div>
-            <div class="mb-6">
-              <label for="widget-date" class="form-label">Choose Date</label>
-              <input type="date" id="widget-date" name="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+            @* The site's own calendar rather than <input type="date">: the browser's picker only
+               opened from its small icon and closed whenever the page scrolled. The day still goes
+               to the booking page as ?date=yyyy-MM-dd, through the hidden input. *@
+            <div class="mb-6 hero-date-field">
+              <label for="widget-date-btn" class="form-label">Choose Date</label>
+              <button type="button" id="widget-date-btn" class="form-control hero-date-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="widget-calendar">
+                <span id="widget-date-text" class="hero-date-placeholder">Choose a date</span>
+                <span class="material-symbols-outlined hero-date-icon" aria-hidden="true">calendar_month</span>
+              </button>
+              <input type="hidden" id="widget-date" name="date" />
+              <div class="custom-calendar-card hero-calendar" id="widget-calendar" role="dialog" aria-label="Choose a date" data-min="@DateTime.Today.ToString("yyyy-MM-dd")" hidden>
+                <div class="calendar-header">
+                  <button type="button" class="calendar-nav-btn" id="widget-cal-prev" aria-label="Previous month">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                  </button>
+                  <h4 class="calendar-month-title" id="widget-cal-title"></h4>
+                  <button type="button" class="calendar-nav-btn" id="widget-cal-next" aria-label="Next month">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                  </button>
+                </div>
+                <div class="calendar-days-header">
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+                <div class="calendar-dates-grid" id="widget-cal-grid"></div>
+              </div>
             </div>
 
             <!-- Informative Copy Block -->
