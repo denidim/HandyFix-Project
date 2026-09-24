@@ -29,6 +29,22 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Printing: opens the closed <details> FAQs on service pages so their answers reach the
+    // paper (print.css can't open a <details> in every browser), and closes them again after.
+    // Each one is marked on the element, so a repeated beforeprint can't lose track of it.
+    window.addEventListener('beforeprint', function () {
+        document.querySelectorAll('details:not([open])').forEach(function (details) {
+            details.open = true;
+            details.dataset.openedForPrint = '';
+        });
+    });
+    window.addEventListener('afterprint', function () {
+        document.querySelectorAll('details[data-opened-for-print]').forEach(function (details) {
+            details.open = false;
+            delete details.dataset.openedForPrint;
+        });
+    });
+
     const heroForm = document.getElementById("hero-booking-form");
     if (!heroForm) return;
 
