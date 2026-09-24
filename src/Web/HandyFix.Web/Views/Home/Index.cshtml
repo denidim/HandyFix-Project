@@ -46,10 +46,11 @@
               <label for="widget-category" class="form-label">Select Service</label>
               <select id="widget-category" name="categorySlug" class="form-control" required>
                 <option value="">-- Choose a service --</option>
-                @foreach (var cat in categories)
+                @* Small Building is quote-only, so it's left out here as it is on the booking page;
+                   the Get a Custom Quote button below is its route (PROJECT_STATE Section 3bo). *@
+                @foreach (var cat in categories.Where(c => c.Slug != "small-building-works"))
                 {
-                    var catIsBuilding = cat.Slug == "small-building-works" || cat.Name.Contains("Building");
-                    <option value="@cat.Slug">@(catIsBuilding ? cat.Name : $"{cat.Name} (from £{cat.BasePrice}/hr)")</option>
+                    <option value="@cat.Slug">@($"{cat.Name} (from £{cat.BasePrice}/hr)")</option>
                 }
               </select>
             </div>
