@@ -1672,7 +1672,7 @@ L1 item 13, done differently from its plan (a styled text wordmark) and from Tie
 - **The artwork**: the user generated two watercolour logos with an image AI (`tools/image-gen/logos.example/logo-1.jpg`, wide; `logo-2.jpg`, round badge). Three icons over three brush-stroked words: a blue drop "PLUMBING", a red wrench "HANDYMAN" (serif), a yellow house "SURREY". The colours are the site's three divisions, which is why it reads as the business at a glance.
 - **Why redrawn rather than used as a picture**: the JPGs are 3210px and about 2MB with a paper background baked in; in a 100px-tall header that is a slow download, a beige box on the white bar, and letters too soft to read. The SVG is about 5KB, sharp at any size, has no background, and one line changes a colour.
 - **How**: `Views/Shared/_Logo.cshtml`, inline SVG hand-drawn to match logo-1. Icons are paths with gradients and a darker rim; the brush strokes are rectangles through an SVG filter (turbulence displacement for ragged edges, alpha noise for cloudy pigment, a slight blur for the soft rim); the words are real `<text>`, Outfit for PLUMBING/SURREY and the system serif (Georgia) for HANDYMAN, with `textLength` pinning each word's width whatever font a device falls back to. Inline, not `<img>`, because an SVG loaded as an image can't use the page's web font. The partial takes an id prefix, since the header and footer render it on the same page and filter/gradient ids must be unique.
-- **Placements** (`components/logo.css`, each sets only a height): header 100px (header 125px tall at every width; the full link row still fits from 1280px, logo about 138px wide); footer 120px on a light rounded card, since the pale brush strokes vanish on the dark footer; login page 130px; admin sidebar 60px.
+- **Placements** (`components/logo.css`, each sets only a height): header 100px from 768px up (header 125px tall there; the full link row still fits from 1280px, logo about 138px wide), 40px on phones since Section 3bm; footer 120px on a light rounded card, since the pale brush strokes vanish on the dark footer; login page 130px; admin sidebar 60px.
 - **Tab icon**: `favicon.svg` is the three icons only, no filter or text (neither survives at 16-32px); `favicon.ico` (16/32/48, PNG entries) replaces the default ASP.NET icon for browsers that don't take SVG; `apple-touch-icon.png` (180px, white) for iPhone home screens. Linked from both layouts.
 - **Round badge**: rebuilt from logo-2 the same way, for places that crop to a circle (Google Business Profile, Facebook, Instagram, WhatsApp). Not used on the site. The SVGs and 1024px PNG exports sit next to the originals in `logos.example/`, kept out of git.
 
@@ -1729,6 +1729,22 @@ The rest of L1 that doesn't need Zaprqn, done in one pass at the user's request 
 - New `WebTests` theory: none of the 16 public pages contains an em-dash in any form (raw, `&mdash;`, or Razor's encoded `&#x2014;`). The 16-page list is now shared (`PublicPages`) with the Section 3bh brand check.
 - Local run: the 8 changed pages at 390, 768, 1024 and 1440px, with no horizontal overflow and nothing past the screen edge; Contact tiles, FAQ buttons, category paragraph and footer screenshotted.
 - `dotnet build` clean, no new warnings; `dotnet test src/HandyFix.sln`: 194/194 (97 + 97).
+
+---
+
+## 3bm. Header Logo Smaller on Phones (2026-09-24)
+
+The 100px header logo took up too much of a phone screen (user's call; the user set the size themselves and picked 40px after trying it).
+
+- **CSS** (`components/logo.css`): below 768px the header logo is 40px tall, 55px wide. Tablets and desktops keep 100px. Footer, login page and admin sidebar are unchanged.
+- **Header on phones**: 65px tall instead of 125px. Nothing else needed changing: `site.js` measures the header into `--header-height`, which sets the body's top padding and the open menu's height (`navbar.css`).
+- **Trade-off accepted**: at 40px the three words are small; the coloured icons carry the brand. The 100px comment in `logo.css` ("the smallest height at which SURREY still reads comfortably") now applies to tablets and desktops only.
+
+### Verified
+
+- Local run, measured in the browser: logo 55x40px and header 65px at 360, 390, 430 and 767px; logo 137.5x100px and header 125px at 768, 1024 and 1440px; body padding matched the header at each width; no horizontal overflow at any of them.
+- Header at 360 and 390px and the open phone menu at 390px screenshotted: the menu opens directly under the shorter header.
+- `dotnet build` clean; `dotnet test src/HandyFix.sln`: 194/194 (97 + 97).
 
 ---
 
