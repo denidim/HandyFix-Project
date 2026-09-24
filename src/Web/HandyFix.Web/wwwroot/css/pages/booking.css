@@ -243,6 +243,28 @@
   margin: 0;
 }
 
+/* The card's way out when no slot suits: an enquiry about that day, or a call. */
+.reassuring-info-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-3) var(--spacing-4);
+  margin-top: var(--spacing-4);
+}
+
+.reassuring-info-btn {
+  gap: var(--spacing-2);
+}
+
+.reassuring-info-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.reassuring-info-call {
+  font-weight: 600;
+  color: var(--secondary);
+}
+
 /* Custom Calendar Widget */
 .custom-calendar-card {
   background: var(--surface-container-lowest);

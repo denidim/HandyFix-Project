@@ -140,6 +140,46 @@
             Assert.Null(model.Message);
         }
 
+        [Fact]
+        public async Task ContactGetWithServiceAndDateShouldAskAboutThatDay()
+        {
+            var servicesService = new Mock<IServicesService>();
+            servicesService
+                .Setup(s => s.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel>
+                {
+                    new ServiceViewModel { Name = "General Plumbing Maintenance", CategoryName = "Plumbing" },
+                });
+            var controller = BuildController(servicesService: servicesService, categoriesService: CategoriesMock("Handyman", "Plumbing"));
+
+            var result = await controller.Contact("General Plumbing Maintenance", "2026-09-27");
+
+            var model = Assert.IsType<ContactInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("Plumbing", model.Category);
+            Assert.StartsWith("Hi, I'd like to book General Plumbing Maintenance on Sun 27 Sep, but I couldn't find a time", model.Message);
+        }
+
+        [Theory]
+        [InlineData("not-a-date")]
+        [InlineData("27/09/2026")]
+        [InlineData("2026-02-30")]
+        public async Task ContactGetWithUnreadableDateShouldFallBackToTheQuoteMessage(string date)
+        {
+            var servicesService = new Mock<IServicesService>();
+            servicesService
+                .Setup(s => s.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel>
+                {
+                    new ServiceViewModel { Name = "Tap Repairs", CategoryName = "Plumbing" },
+                });
+            var controller = BuildController(servicesService: servicesService, categoriesService: CategoriesMock("Handyman", "Plumbing"));
+
+            var result = await controller.Contact("Tap Repairs", date);
+
+            var model = Assert.IsType<ContactInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.StartsWith("Hi, I would like to request a quote / survey for: Tap Repairs.", model.Message);
+        }
+
         private static HomeController BuildController(
             Mock<IInquiriesService> inquiriesService = null,
             Mock<IServicesService> servicesService = null,

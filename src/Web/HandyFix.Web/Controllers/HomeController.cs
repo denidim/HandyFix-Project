@@ -3,6 +3,7 @@ namespace HandyFix.Web.Controllers
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Globalization;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -76,14 +77,24 @@ namespace HandyFix.Web.Controllers
 
         [HttpGet]
         [Route("Contact")]
-        public async Task<IActionResult> Contact(string service = null)
+        public async Task<IActionResult> Contact(string service = null, string date = null)
         {
             this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
             this.ViewData["MetaDescription"] = "Get in touch with Plumbing Handyman Surrey for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.";
             var model = new ContactInputModel();
             if (!string.IsNullOrWhiteSpace(service))
             {
-                model.Message = $"Hi, I would like to request a quote / survey for: {service.Trim()}.\n\nProject details:\n";
+                // A date comes from the booking page's "Send an Enquiry" (PROJECT_STATE Section 3bp):
+                // the visitor wanted that day and found no time that suits, so the message asks about
+                // the day rather than requesting a quote. A date that doesn't parse is ignored.
+                if (DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime preferredDate))
+                {
+                    model.Message = $"Hi, I'd like to book {service.Trim()} on {preferredDate.ToString("ddd d MMM", CultureInfo.InvariantCulture)}, but I couldn't find a time that works in the booking calendar. Could you fit me in?\n\n";
+                }
+                else
+                {
+                    model.Message = $"Hi, I would like to request a quote / survey for: {service.Trim()}.\n\nProject details:\n";
+                }
 
                 // Pre-select the category of the service the visitor came from, so a building quote
                 // request isn't filed under whichever category happens to be listed first.
