@@ -1771,6 +1771,25 @@ Two things from a mobile review. The watercolour header strip (Section 3bj) look
 
 ---
 
+## 3bo. Home Booking Widget: The Site's Calendar Instead of the Browser's Date Picker; Small Building Out of Its List (2026-09-24)
+
+User's report: the "Choose Date" field only opened its picker from the small calendar icon, and the picker closed as soon as the page scrolled.
+
+- **Why a new calendar rather than a fix**: both are how Chrome's own `<input type="date">` picker behaves on desktop. `showPicker()` could open it from a click anywhere, but no page can stop Chrome closing it on scroll. The booking page already has the site's own calendar (`Booking/Index.cshtml`, `booking.css`), so the home field now opens that same design as a dropdown (user's pick, from mockups of a dropdown and an inline version).
+- **`Home/Index.cshtml`**: the date input is now a button showing "Choose a date" or the picked day ("Sat 26 Sep 2026") with a calendar icon, a hidden `name="date"` input, and the calendar markup, `hidden` until opened. The earliest day comes from the server (`data-min`, today), as the old input's `min` did. The booking page still receives `?date=yyyy-MM-dd`.
+- **`site.js`**: renders the month (Monday first, past days disabled, no going back before this month), fills the hidden input, and closes on a pick, a click outside the field or Escape, never on scroll; focus returns to the field after a pick or Escape. Dates are built from their parts because `new Date("yyyy-MM-dd")` reads UTC midnight; the display string is written out by hand because `toLocaleDateString` gives "Sept" and a comma in some browsers. A date the browser restores on Back is shown in the field.
+- **`home.css`**: the dropdown's position (under the field, up to 360px wide, over the rest of the form). The day grid reuses `booking.css`.
+- **Duplication accepted**: the month-grid logic now exists twice, here and inline in `Booking/Index.cshtml`. Sharing it would have meant changing the booking wizard, the path to payment, for a home-page fix; a later cleanup could move both onto one script.
+- **Small Building out of the widget's list** (user's call; the second half of L2 item 3): it's quote-only and the booking wizard already leaves it out, so choosing it led to an empty wizard (Section 3bb). The list now filters `small-building-works` the way `Booking/Index.cshtml` does, and every remaining option shows its hourly rate. "Get a Custom Quote" right under the form is the route for building work. Contact, Services and Pricing still list it.
+
+### Verified
+
+- Mockups of the dropdown and inline versions at 1440px and 390px before any code (`docs/private/previews/`).
+- Local run, driven in Chromium at 1440px (mouse) and 390px (touch): the list shows only Handyman and Plumbing; a click on the field's text, away from the icon, opens the calendar; it stays open after scrolling 250px and after month navigation; September shows 23 disabled past days, today (the 24th) outlined and the previous-month button disabled, October none disabled; picking the 26th closes it, shows "Sat 26 Sep 2026", sets the hidden input to `2026-09-26` and returns focus to the field; reopening shows the 26th selected; Escape, a click outside and a second click on the label all close it; Enter on the focused field opens it; the submit button stays off until a service is chosen too; submitting lands on `/Booking?categorySlug=plumbing&date=2026-09-26` with the wizard's date set to `2026-09-26`. No console errors.
+- `dotnet build` clean; `dotnet test src/HandyFix.sln`: 194/194 (97 + 97).
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Launch Sprints — the working list from 2026-09-21 until launch
@@ -1797,7 +1816,7 @@ Two things from a mobile review. The watercolour header strip (Section 3bj) look
 
 1. **Service ordering and popularity as data, not code**: a migration adding `DisplayOrder` (int) and `IsPopular` (bool) to `Service`, both editable on the admin Create/Edit forms; `ServicesService` orders by `DisplayOrder` then `Name`; `HomeController.Index` shows the `IsPopular` services (fallback: the first four) instead of `Take(4)`; the seeder sets initial values and the Section 3ak upsert leaves both fields alone. Why: today every list is alphabetical and "popular" is an accident of the alphabet; two admin fields let Zap change both without a deploy, which is the "he won't maintain code" principle from the vision doc Section 1. **Popular four, decided 2026-09-21**: Full Bathroom Refurbishment, Kitchen Fitting & Alterations, Emergency Plumbing, Furniture Assembly. Two are Small Building services, so the bento card's building branch needs finishing: the Section 3ar price guard already shows "Survey & Fixed Quote", but the minutes pill would read "480m" and any "Book" action label must read "Request Quote" for them. The card already links to the service page, whose CTA is quote-first for this category, so no routing change is needed.
 2. **Generic call-out service per category**: "General Plumbing Maintenance" (exists) gets `DisplayOrder = 0` for Plumbing; a new Handyman equivalent, **"General Handyman Call-Out"** (name decided 2026-09-21), is seeded with `DisplayOrder = 0` at the flat £60 rate. Its description says, in effect, "not sure what you need? book this and describe the problem".
-3. **Booking page default service**: arriving with `categorySlug` and no `selectedServiceId` preselects that category's lowest-`DisplayOrder` service; switching the category radio does the same. Small Building is removed from the home widget's `<select>` (or rendered as a "Request a quote" link to `/Contact`), since the wizard can't book it.
+3. **Booking page default service**: arriving with `categorySlug` and no `selectedServiceId` preselects that category's lowest-`DisplayOrder` service; switching the category radio does the same. ~~Small Building is removed from the home widget's `<select>` (or rendered as a "Request a quote" link to `/Contact`), since the wizard can't book it.~~ Removed 2026-09-24 (Section 3bo); the preselect half is still open.
 4. **No-availability enquiry** (Tier 6 item 23): a "Send a quick enquiry" button under the "Can't find your timeslot" card and inside the JS "No availability on this date" message, linking to `/Contact?service={name}` with the preferred date appended to the pre-filled message (the Contact GET already pre-selects the category and pre-fills the message); plus a "Call us" link.
 5. **"See full pricing" link** in the base-rates reassurance card (`Booking/Index` ~line 88), to the `Pricing` route.
 6. **Placeholder colour**: a `.form-control::placeholder` rule in `forms.css` using a lighter existing token, `opacity: 1` so browsers don't override it; verify inputs' own `color` stays `--on-surface`.
