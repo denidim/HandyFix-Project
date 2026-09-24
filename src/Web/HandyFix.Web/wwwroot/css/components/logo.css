@@ -13,9 +13,18 @@
   aspect-ratio: 880 / 640;
 }
 
-/* Header: 100px, the smallest height at which "SURREY" still reads comfortably. */
+/* Header on tablets and desktops: 100px, the smallest height at which "SURREY" still reads
+   comfortably. */
 .navbar-container .site-logo {
   height: 100px;
+}
+
+/* Phones: 40px (55px wide). The header shrinks from 125px to 65px; site.js re-measures
+   it, so the page padding and the menu follow on their own. */
+@media (max-width: 767.98px) {
+  .navbar-container .site-logo {
+    height: 40px;
+  }
 }
 
 /* Footer: the artwork's pale brush strokes need a light ground on the dark footer. */
