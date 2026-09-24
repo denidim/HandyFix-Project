@@ -1672,7 +1672,7 @@ L1 item 13, done differently from its plan (a styled text wordmark) and from Tie
 - **The artwork**: the user generated two watercolour logos with an image AI (`tools/image-gen/logos.example/logo-1.jpg`, wide; `logo-2.jpg`, round badge). Three icons over three brush-stroked words: a blue drop "PLUMBING", a red wrench "HANDYMAN" (serif), a yellow house "SURREY". The colours are the site's three divisions, which is why it reads as the business at a glance.
 - **Why redrawn rather than used as a picture**: the JPGs are 3210px and about 2MB with a paper background baked in; in a 100px-tall header that is a slow download, a beige box on the white bar, and letters too soft to read. The SVG is about 5KB, sharp at any size, has no background, and one line changes a colour.
 - **How**: `Views/Shared/_Logo.cshtml`, inline SVG hand-drawn to match logo-1. Icons are paths with gradients and a darker rim; the brush strokes are rectangles through an SVG filter (turbulence displacement for ragged edges, alpha noise for cloudy pigment, a slight blur for the soft rim); the words are real `<text>`, Outfit for PLUMBING/SURREY and the system serif (Georgia) for HANDYMAN, with `textLength` pinning each word's width whatever font a device falls back to. Inline, not `<img>`, because an SVG loaded as an image can't use the page's web font. The partial takes an id prefix, since the header and footer render it on the same page and filter/gradient ids must be unique.
-- **Placements** (`components/logo.css`, each sets only a height): header 100px from 768px up (header 125px tall there; the full link row still fits from 1280px, logo about 138px wide), 40px on phones since Section 3bm; footer 120px on a light rounded card, since the pale brush strokes vanish on the dark footer; login page 130px; admin sidebar 60px.
+- **Placements** (`components/logo.css`, each sets only a height): header 70px from 768px up since Section 3bn (first 100px, about 138px wide; the full link row fits from 1280px), 40px on phones since Section 3bm; footer 120px on a light rounded card, since the pale brush strokes vanish on the dark footer; login page 130px; admin sidebar 60px.
 - **Tab icon**: `favicon.svg` is the three icons only, no filter or text (neither survives at 16-32px); `favicon.ico` (16/32/48, PNG entries) replaces the default ASP.NET icon for browsers that don't take SVG; `apple-touch-icon.png` (180px, white) for iPhone home screens. Linked from both layouts.
 - **Round badge**: rebuilt from logo-2 the same way, for places that crop to a circle (Google Business Profile, Facebook, Instagram, WhatsApp). Not used on the site. The SVGs and 1024px PNG exports sit next to the originals in `logos.example/`, kept out of git.
 
@@ -1685,6 +1685,8 @@ L1 item 13, done differently from its plan (a styled text wordmark) and from Tie
 ---
 
 ## 3bj. Header Background: Watercolour Strip Behind the Logo (2026-09-23)
+
+> **Replaced 2026-09-24 (Section 3bn):** the header is plain white again and `bg-navbar.webp` is deleted. Kept below for the history.
 
 The plain white header looked flat next to the new colourful logo (user's call).
 
@@ -1744,6 +1746,27 @@ The 100px header logo took up too much of a phone screen (user's call; the user 
 
 - Local run, measured in the browser: logo 55x40px and header 65px at 360, 390, 430 and 767px; logo 137.5x100px and header 125px at 768, 1024 and 1440px; body padding matched the header at each width; no horizontal overflow at any of them.
 - Header at 360 and 390px and the open phone menu at 390px screenshotted: the menu opens directly under the shorter header.
+- `dotnet build` clean; `dotnet test src/HandyFix.sln`: 194/194 (97 + 97).
+
+---
+
+## 3bn. White Header, Smaller Desktop Logo and Print Styles (2026-09-24)
+
+Two things from a mobile review. The watercolour header strip (Section 3bj) looked like a children's toy shop on phones, pink behind the logo and stacked on the sky-blue hero pictures (user's call, after side-by-side mockups of pink, white and a faint tint). Separately, it was raised that some visitors print pages, and the navy cards would not print well.
+
+- **Header** (`navbar.css`): plain white on every screen size with a faint grey line under it, so the logo is the only colour in the header. `wwwroot/images/bg-navbar.webp` deleted as unused; `tools/image-gen/generate-navbar-bg.mjs` can still recreate it.
+- **Header logo on tablets and desktops** (`logo.css`): 70px tall, 96px wide, down from 100px (user's call; the user set it by hand). The header there becomes 95px instead of 125px (the logo plus 12px padding above and below and the 1px line), worked out from the CSS rather than measured: the user asked to skip further checks, and the change is one CSS value. Phones keep 40px (Section 3bm).
+- **Why print got its own styles instead of new screen colours**: browsers skip background colours when printing unless the visitor ticks "Background graphics". Printed that way, the navy cards (service sidebar, category sidebar, booking summary, the Privacy page's processors box) and the footer came out as faint grey text; with backgrounds on they printed as solid navy, on a bright pink page background. The Privacy and Terms "Download as PDF" buttons open the print dialog, so this was reachable from the site itself. The navy stays on screen: with the header white, it is the one strong colour holding the site together.
+- **`wwwroot/css/print.css`** (imported last in `site.css`, everything inside `@media print`): black text on white everywhere; the dark cards and footer as outlined boxes; the header printed once instead of on every sheet (it is `position: fixed` below 1280px); no buttons, menu, cookie banner or floating Book Now; hero pictures hidden and the hero's screen height removed; the FAQ page's collapsed answers expanded. The main rule uses `:root body *` rather than `*` so it outranks Bootstrap's `!important` one-class utilities such as `.text-white`.
+- **`site.js`**: on `beforeprint` it opens any closed `<details>` (the service and area page FAQs), which CSS can't open in every browser, and closes them on `afterprint`. Each opened one is marked with `data-opened-for-print`, so a repeated `beforeprint` can't lose track of it; a first version kept a list, which a second `beforeprint` emptied, caught in testing.
+- **Book Now left as it is** (user's call): green, floating, visible from the top of the page. Navy and the site blue for the booking buttons, and hiding the floating button until the visitor scrolls, were mocked up and turned down.
+- **Not checked**: admin pages also load `site.css`, so they print black on white without buttons too, but weren't looked at (behind sign-in).
+
+### Verified
+
+- Mockups before any code: header pink/white/tint at 390px and pink/white at 1440px; booking buttons green/navy/blue; floating button now/after scrolling; print today against print styles. Kept in `docs/private/previews/`.
+- Screen, measured in the browser at 360, 390, 768, 1024, 1280 and 1440px: header white with no background image, 65px tall on phones and 125px from 768px (measured before the logo went to 70px), no horizontal overflow, `print.css` loaded, no failed requests.
+- Print: all 17 public pages printed to A4 PDF in Chromium with background graphics off, every sheet checked as an image: black on white, header once, no photo behind a title, FAQ answers printed on the FAQ, service and area pages, and the `<details>` answers closed again afterwards (also with a deliberate extra `beforeprint`).
 - `dotnet build` clean; `dotnet test src/HandyFix.sln`: 194/194 (97 + 97).
 
 ---

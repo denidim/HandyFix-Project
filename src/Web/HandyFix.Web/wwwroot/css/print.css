@@ -1,0 +1,66 @@
+/* Paper only (PROJECT_STATE Section 3bn); nothing here reaches the screen. Browsers drop
+   background colours when printing unless the visitor ticks "Background graphics", so the navy
+   cards' white text printed faint grey, and with backgrounds on they cost a page of ink. Paper
+   gets black text on white instead. The Privacy and Terms "Download as PDF" buttons print. */
+@media print {
+  /* ":root body" outranks one-class utilities that are also !important, such as Bootstrap's
+     .text-white. Opacity too: some light text is faded rather than coloured. */
+  :root body *,
+  :root body *::before,
+  :root body *::after {
+    background: transparent !important;
+    color: #111111 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Below 1280px the header is fixed, and a fixed element repeats on every sheet. */
+  .header-docked {
+    position: static !important;
+    border-bottom: 1px solid #cccccc !important;
+  }
+
+  body {
+    padding-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Nothing to press on paper. */
+  .navbar-mobile-toggle,
+  .mobile-nav-dropdown,
+  .mobile-cta-bar,
+  #cookieConsent,
+  .btn {
+    display: none !important;
+  }
+
+  /* The dark cards keep their shape as outlined boxes. */
+  .sidebar-booking-card,
+  .sidebar-cta-card,
+  .summary-glow-card,
+  .info-feature-dark,
+  .footer-main {
+    border: 1px solid #bbbbbb !important;
+  }
+
+  /* Hero pictures: the home and area pages use real images, which would print with the page
+     title on top of the photo, so they are hidden like the background ones already are. Without
+     the min-height reset the hero's screen height stays behind as a blank gap. */
+  .hero-bg,
+  .area-hero-image {
+    display: none !important;
+  }
+
+  .hero-section,
+  .service-hero-section {
+    min-height: 0 !important;
+  }
+
+  /* FAQ page answers are collapsed with max-height. The service pages' <details> answers are
+     opened by site.js instead, since CSS can't open those in every browser. */
+  .accordion-content {
+    max-height: none !important;
+    padding: var(--spacing-3) var(--spacing-6) !important;
+  }
+}
