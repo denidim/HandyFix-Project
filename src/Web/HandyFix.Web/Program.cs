@@ -35,6 +35,8 @@ namespace HandyFix.Web
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
 
+    using WebOptimizer;
+
     public class Program
     {
         public static void Main(string[] args)
@@ -109,11 +111,27 @@ namespace HandyFix.Web
 
             services.AddSingleton(configuration);
 
-            // WebOptimizer (bundling and minification)
+            // WebOptimizer: the public stylesheets combined into one minified file, in the order
+            // SiteStylesheets lists them (PROJECT_STATE Section 3bs). Its tag helper stamps the
+            // layout's link with a hash of the combined content, so a change in any source file
+            // changes the address and no browser keeps a stale copy.
             services.AddWebOptimizer(pipeline =>
             {
-                pipeline.AddCssBundle("/css/site.min.css", "css/site.css");
+                pipeline.AddCssBundle(SiteStylesheets.BundleRoute, SiteStylesheets.SourceFiles);
                 pipeline.AddJavaScriptBundle("/js/site.min.js", "js/site.js");
+            });
+
+            // Set here rather than left to the package's defaults, so what each environment does
+            // is written down. Live: pages link the one combined file, and browsers may keep it
+            // for a year, since its address changes when its content does. Development: pages link
+            // each source file by itself, which is easier to debug. No disk cache anywhere: the
+            // bundle is rebuilt in memory after a start, and nothing is written next to the app.
+            services.AddOptions<WebOptimizerOptions>().Configure<IHostEnvironment>((options, environment) =>
+            {
+                bool isLive = !environment.IsDevelopment();
+                options.EnableTagHelperBundling = isLive;
+                options.EnableCaching = isLive;
+                options.EnableDiskCache = false;
             });
 
             // Data repositories

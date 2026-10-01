@@ -1,11 +1,17 @@
 ﻿namespace HandyFix.Web.Tests
 {
+    using System;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Testing;
+    using Microsoft.Extensions.DependencyInjection;
+
+    using WebOptimizer;
 
     using Xunit;
 
@@ -270,6 +276,74 @@
 
             Assert.Matches("value=\"handyman\"\\s+checked", content);
             Assert.DoesNotMatch("value=\"plumbing\"\\s+checked", content);
+        }
+
+        [Fact]
+        public void EveryStylesheetOnDiskIsInTheSiteBundle()
+        {
+            // The list in SiteStylesheets.cs is the only thing that loads a public stylesheet
+            // (PROJECT_STATE Section 3bs). A file added under wwwroot/css and left off the list
+            // would never reach a page, with nothing to say so.
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            var onDisk = Directory
+                .EnumerateFiles(Path.Combine(webRoot, "css"), "*.css", SearchOption.AllDirectories)
+                .Select(path => "/" + Path.GetRelativePath(webRoot, path).Replace('\\', '/'))
+                .Where(path => path != "/css/pages/admin.css") // the admin layout links this one itself
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .ToList();
+
+            Assert.Equal(onDisk, SiteStylesheets.SourceFiles.OrderBy(path => path, StringComparer.Ordinal).ToList());
+        }
+
+        [Fact]
+        public async Task DevelopmentPagesLinkEachStylesheetWithItsOwnVersionInCascadeOrder()
+        {
+            // A page two levels deep: the links must start at the site root, or they would point
+            // at /Services/css/... and every nested page would lose its styles.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/Services/plumbing");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var linked = Regex.Matches(content, "href=\"(/css/[^\"?]+\\.css)\\?v=[\\w-]+\"")
+                .Select(m => m.Groups[1].Value)
+                .ToList();
+
+            Assert.Equal(SiteStylesheets.SourceFiles, linked);
+        }
+
+        [Fact]
+        public async Task LiveSitePagesLinkOneCombinedStylesheetThatBrowsersMayKeep()
+        {
+            // Staging and production combine the stylesheets and let browsers keep the result; the
+            // test host is Development, so this switches both on the way Program.cs does there.
+            using var live = this.server.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+                services.Configure<WebOptimizerOptions>(options =>
+                {
+                    options.EnableTagHelperBundling = true;
+                    options.EnableCaching = true;
+                })));
+            var client = live.CreateClient();
+
+            var pageResponse = await client.GetAsync("/Services/plumbing");
+            pageResponse.EnsureSuccessStatusCode();
+            var page = await pageResponse.Content.ReadAsStringAsync();
+
+            // One link, and its address carries a hash of the combined content. That hash is what
+            // changes when any source file changes, so no browser keeps a stale copy.
+            var link = Assert.Single(Regex.Matches(page, "href=\"(/css/[^\"]+)\"")).Groups[1].Value;
+            Assert.Matches("^/css/site\\.min\\.css\\?v=[\\w-]+$", link);
+
+            var response = await client.GetAsync(link);
+            response.EnsureSuccessStatusCode();
+            Assert.Equal("text/css", response.Content.Headers.ContentType?.MediaType);
+            Assert.True(response.Headers.CacheControl?.MaxAge >= TimeSpan.FromDays(365));
+
+            var css = await response.Content.ReadAsStringAsync();
+            Assert.StartsWith("@import url(", css); // web fonts, which must open the file
+            Assert.Equal(2, Regex.Matches(css, "@import").Count); // and no stylesheet of ours is left as an import
+            Assert.Contains(".site-logo", css); // a file from the middle of the list
+            Assert.Contains(".material-symbols-filled", css); // the last file
         }
     }
 }
