@@ -1,76 +1,79 @@
 @using HandyFix.Common
 @model string
 @*
-    The site logo, drawn as inline SVG from the logo-1 artwork (PROJECT_STATE Section 3bi).
-    Inline rather than an <img>: the words are real text in the page's own Outfit font, which
-    an SVG loaded as an image can't use. The model is an id prefix, because the header and
-    footer both render this on one page and the filter/gradient ids must stay unique.
+    The site logo: the shield emblem with the name beside it, drawn as inline SVG from the
+    mature_three_trades_logo artwork (PROJECT_STATE Section 3bq). Inline rather than an <img>
+    so a placement can recolour it from CSS: the logo-* classes below are what logo.css targets
+    to turn the navy white on the dark footer. The model is an id prefix, because the header
+    and footer both render this on one page and the gradient/mask ids must stay unique.
 *@
 @{
     string p = this.Model;
 }
-<svg class="site-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 640" role="img" aria-label="@GlobalConstants.SystemName">
+<svg class="site-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 556" role="img" aria-label="@GlobalConstants.SystemName">
     <defs>
-        @* Brush stroke: ragged edges (displacement), cloudy pigment (alpha noise), soft rim (blur). *@
-        <filter id="@(p)-brush" x="-5%" y="-30%" width="110%" height="160%" color-interpolation-filters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.02 0.045" numOctaves="4" seed="4" result="edge" />
-            <feDisplacementMap in="SourceGraphic" in2="edge" scale="34" xChannelSelector="R" yChannelSelector="G" result="rough" />
-            <feTurbulence type="fractalNoise" baseFrequency="0.006 0.02" numOctaves="3" seed="11" result="cloud" />
-            <feColorMatrix in="cloud" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 0" result="cloudAlpha" />
-            <feComposite in="rough" in2="cloudAlpha" operator="in" result="wash" />
-            <feGaussianBlur in="wash" stdDeviation="2.5" />
-        </filter>
-        @* Paint: soft, uneven pigment inside a clean shape. *@
-        <filter id="@(p)-paint" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" seed="2" result="grain" />
-            <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.5 0 0 0 0.68" result="grainAlpha" />
-            <feComposite in="SourceGraphic" in2="grainAlpha" operator="in" />
-        </filter>
-        <linearGradient id="@(p)-blue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#9ad3ee" />
-            <stop offset="1" stop-color="#3f93c9" />
+        <linearGradient id="@(p)-teal" gradientUnits="userSpaceOnUse" x1="0" y1="157" x2="0" y2="390">
+            <stop class="logo-teal-top" offset="0" stop-color="#14697e" />
+            <stop class="logo-teal-bottom" offset="1" stop-color="#0c4862" />
         </linearGradient>
-        <linearGradient id="@(p)-red" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#d23a52" />
-            <stop offset="1" stop-color="#e3677b" />
+        <linearGradient id="@(p)-copper" gradientUnits="userSpaceOnUse" x1="0" y1="-66" x2="0" y2="321">
+            <stop offset="0" stop-color="#8f3f15" />
+            <stop offset="0.6" stop-color="#cf7c3e" />
+            <stop offset="1" stop-color="#a65220" />
         </linearGradient>
-        <linearGradient id="@(p)-yellow" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#f6d77f" />
-            <stop offset="1" stop-color="#e8b447" />
-        </linearGradient>
-        <mask id="@(p)-wrench-cut">
-            <rect width="880" height="640" fill="#fff" />
-            <rect x="413" y="0" width="30" height="36" fill="#000" />
-            <circle cx="428" cy="36" r="15" fill="#000" />
-            <circle cx="428" cy="184" r="8" fill="#000" />
+        @* The icons sit over the shield with a clear gap around them. *@
+        <mask id="@(p)-shield-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+            <rect width="1024" height="1024" fill="#fff" />
+            <g fill="#000" stroke="#000" stroke-linejoin="round">
+                <path d="M512 157 C500 215 440 262 440 318 A72 72 0 0 0 584 318 C584 262 524 215 512 157 Z" stroke-width="33" />
+                <path d="M-54.8 -36.8 A66 66 0 0 0 -25 61.1 L-25 296 A25 25 0 0 0 25 296 L25 61.1 A66 66 0 0 0 -9.0 -65.4 L12.3 -31.3 L9.1 -8.1 L-11.2 4.7 L-33.5 -2.7 Z" transform="translate(334 396) rotate(-45) scale(1.05)" stroke-width="31" />
+                <path d="M400 572 L610 362 L744 496 L702 496 L610 404 L424 590 Z" stroke="none" />
+                <path d="M400 572 L610 362 L744 496 L702 496 L610 404 L424 590" fill="none" stroke-linejoin="miter" stroke-width="32" />
+                <path d="M676 428 L676 382 L712 382 L712 464 Z" stroke-linejoin="miter" stroke-width="32" />
+            </g>
         </mask>
-        <mask id="@(p)-house-cut">
-            <rect width="880" height="640" fill="#fff" />
-            <rect x="551" y="158" width="34" height="60" rx="5" fill="#000" />
+        @* The roof passes under the wrench. *@
+        <mask id="@(p)-roof-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+            <rect width="1024" height="1024" fill="#fff" />
+            <path d="M-54.8 -36.8 A66 66 0 0 0 -25 61.1 L-25 296 A25 25 0 0 0 25 296 L25 61.1 A66 66 0 0 0 -9.0 -65.4 L12.3 -31.3 L9.1 -8.1 L-11.2 4.7 L-33.5 -2.7 Z" transform="translate(334 396) rotate(-45) scale(1.05)" fill="#000" stroke="#000" stroke-width="31" />
         </mask>
     </defs>
 
-    @* Icons: plumbing drop, handyman wrench, building house - the three divisions. *@
-    <g filter="url(#@(p)-paint)" stroke-width="5" stroke-linejoin="round">
-        <path d="M309 30 C298 70 248 110 248 154 A61 61 0 0 0 370 154 C370 110 320 70 309 30 Z" fill="url(#@(p)-blue)" stroke="#3a86bd" />
-        <g fill="url(#@(p)-red)" stroke="#b92a42" mask="url(#@(p)-wrench-cut)">
-            <path d="M428 2 A44 44 0 0 1 448 84 L448 160 A26 26 0 1 1 408 160 L408 84 A44 44 0 0 1 428 2 Z" />
+    @* Drawn in the artwork's 1024x1024 coordinates, shifted so the emblem starts at the left edge. *@
+    <g transform="translate(-258 -147)">
+        @* Shield *@
+        <g class="logo-ink" mask="url(#@(p)-shield-cut)" fill="none" stroke="#13284b" stroke-width="12" stroke-linejoin="miter">
+            <path d="M308 247 L512 189 L716 247 L716 500 C716 592 626 652 512 694 C398 652 308 592 308 500 Z" />
+            <path d="M345 283 L512 236 L679 283 L679 498 C679 570 604 622 512 656 C420 622 345 570 345 498 Z" />
         </g>
-        <g fill="url(#@(p)-yellow)" stroke="#dca33a" mask="url(#@(p)-house-cut)">
-            <path d="M568 44 L606 79 L606 60 L630 60 L630 101 L660 129 L636 129 L636 210 L500 210 L500 129 L476 129 Z" stroke-width="7" />
+
+        @* Building: roof and chimney *@
+        <g class="logo-gold" mask="url(#@(p)-roof-cut)" fill="none" stroke="#b8975a" stroke-width="14" stroke-linejoin="miter">
+            <path d="M400 572 L610 362 L744 496 L702 496 L610 404 L424 590" />
+            <path d="M676 428 L676 382 L712 382 L712 464" />
         </g>
-    </g>
-    <path d="M275 150 C271 172 279 191 297 200" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity="0.85" />
 
-    @* Brush strokes behind the words *@
-    <rect x="40" y="220" width="800" height="132" rx="20" fill="#9ccbe6" opacity="0.8" filter="url(#@(p)-brush)" />
-    <rect x="6" y="354" width="868" height="136" rx="20" fill="#f1a3b2" opacity="0.72" filter="url(#@(p)-brush)" />
-    <rect x="96" y="498" width="688" height="132" rx="20" fill="#f4d27e" opacity="0.72" filter="url(#@(p)-brush)" />
+        @* Handyman: wrench, drawn pointing up around its head and turned 45 degrees *@
+        <g transform="translate(334 396) rotate(-45) scale(1.05)" fill="none" stroke="url(#@(p)-copper)" stroke-linejoin="round">
+            <path d="M-54.8 -36.8 A66 66 0 0 0 -25 61.1 L-25 296 A25 25 0 0 0 25 296 L25 61.1 A66 66 0 0 0 -9.0 -65.4 L12.3 -31.3 L9.1 -8.1 L-11.2 4.7 L-33.5 -2.7 Z" stroke-width="13" />
+            <rect x="-14" y="20" width="28" height="36" rx="4" stroke-width="6" />
+            <path d="M-14 32 H14 M-14 44 H14" stroke-width="5" />
+            <rect x="-7" y="106" width="14" height="170" rx="7" stroke-width="6" />
+        </g>
 
-    @* Words: real text, so they stay sharp. textLength pins each word's width whatever the font. *@
-    <g text-anchor="middle" filter="url(#@(p)-paint)">
-        <text x="442" y="335" font-family="Outfit, sans-serif" font-weight="600" font-size="121" letter-spacing="4" textLength="655" lengthAdjust="spacing" fill="#3b86b8">PLUMBING</text>
-        <text x="438" y="475" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="130" textLength="785" lengthAdjust="spacing" fill="#c9283f">HANDYMAN</text>
-        <text x="443" y="582" font-family="Outfit, sans-serif" font-weight="600" font-size="96" letter-spacing="4" textLength="407" lengthAdjust="spacing" fill="#d8a42c">SURREY</text>
+        @* Plumbing: water drop *@
+        <g stroke="url(#@(p)-teal)" stroke-linejoin="round">
+            <path d="M512 157 C500 215 440 262 440 318 A72 72 0 0 0 584 318 C584 262 524 215 512 157 Z" fill="none" stroke-width="15" />
+            <path d="M512 243 C506 272 478 296 478 322 A34 34 0 0 0 546 322 C546 296 518 272 512 243 Z" fill="none" stroke-width="8" />
+            <path d="M512 243 C518 272 546 296 546 322 A34 34 0 0 1 512 356 Z" fill="url(#@(p)-teal)" stroke-width="8" />
+        </g>
+
+        @* Words: real text, so they stay sharp. textLength pins each word's width whatever serif a device has. *@
+        <g class="logo-ink-text" font-family="Georgia, 'Times New Roman', serif" font-weight="700" fill="#13284b">
+            <text x="800" y="330" font-size="158" textLength="1005" lengthAdjust="spacing">PLUMBING</text>
+            <text x="800" y="495" font-size="150" textLength="1005" lengthAdjust="spacing">HANDYMAN</text>
+            <text x="1302.5" y="625" font-size="100" text-anchor="middle" textLength="560" lengthAdjust="spacing">SURREY</text>
+        </g>
+        <path class="logo-gold" d="M800 590 H988 M1617 590 H1805" stroke="#b8975a" stroke-width="9" />
     </g>
 </svg>

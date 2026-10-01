@@ -1,5 +1,5 @@
 /* The site logo (Views/Shared/_Logo.cshtml). Each placement sets only the height; the width
-   follows the artwork's 880x640 proportions. */
+   follows the artwork's 1560x556 proportions, 2.8 times the height. */
 .site-logo {
   display: inline-block;
   line-height: 0;
@@ -10,33 +10,62 @@
   display: block;
   height: 100%;
   width: auto;
-  aspect-ratio: 880 / 640;
+  aspect-ratio: 1560 / 556;
 }
 
-/* Header on tablets and desktops: 70px (96px wide); 100px took up too much of the header. */
+/* Header on wide screens: 70px (196px wide). */
 .navbar-container .site-logo {
   height: 70px;
 }
 
-/* Phones: 40px (55px wide), so the header is 65px tall there; site.js re-measures it, so
-   the page padding and the menu follow on their own. */
-@media (max-width: 767.98px) {
+/* Small laptops, where the full link row has the least room: 60px (168px wide). With an
+   admin signed in the row has two more links, and at 70px they wrap; navbar.css closes the
+   link gaps over the same range. */
+@media (min-width: 1280px) and (max-width: 1365.98px) {
   .navbar-container .site-logo {
-    height: 40px;
+    height: 60px;
   }
 }
 
-/* Footer: the artwork's pale brush strokes need a light ground on the dark footer. */
+/* Phones: 48px (135px wide), so the header is 73px tall there; site.js re-measures it, so
+   the page padding and the menu follow on their own. At 40px the name was about 7px tall. */
+@media (max-width: 767.98px) {
+  .navbar-container .site-logo {
+    height: 48px;
+  }
+}
+
 .footer-main .site-logo {
-  height: 120px;
-  background: #faf5f1;
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-3) var(--spacing-4);
-  box-sizing: content-box;
+  height: 84px;
+}
+
+/* Footer: navy lines and letters would vanish on the dark ground, so they turn white and the
+   teal and gold go a step lighter. Screen only: on paper the footer is white (print.css) and
+   the logo keeps its own colours. */
+@media screen {
+  .footer-main .logo-ink {
+    stroke: #ffffff;
+  }
+
+  .footer-main .logo-ink-text {
+    fill: #ffffff;
+  }
+
+  .footer-main .logo-gold {
+    stroke: #d2b57a;
+  }
+
+  .footer-main .logo-teal-top {
+    stop-color: #6fcbdc;
+  }
+
+  .footer-main .logo-teal-bottom {
+    stop-color: #3fa3bf;
+  }
 }
 
 .auth-header .site-logo {
-  height: 130px;
+  height: 104px;
 }
 
 .admin-sidebar-header .site-logo {
