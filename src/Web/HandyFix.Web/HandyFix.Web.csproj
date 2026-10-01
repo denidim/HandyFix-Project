@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <UserSecretsId>aspnet-HandyFix-BBB373B5-EF3F-4DBB-B8AA-7152CEC275BF</UserSecretsId>
-    <WebOptimizerEnableTagHelperBundling>true</WebOptimizerEnableTagHelperBundling>
   </PropertyGroup>
 
    <ItemGroup>
