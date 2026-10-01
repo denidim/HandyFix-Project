@@ -65,7 +65,7 @@ Every `--on-*` token is the readable text/icon color for its matching container.
 ## 2. Typography (`base/typography.css`)
 
 **Font**: `'Outfit', sans-serif` for both body and display (`--font-family-base` /
-`--font-family-display`), loaded via Google Fonts in `site.css`.
+`--font-family-display`), loaded via Google Fonts in `css/fonts.css`.
 
 Headings (`h1`–`h6`) default to `var(--font-family-display)` + `color: var(--primary)`.
 
@@ -167,10 +167,9 @@ with a real, deliberate width value at the point something actually uses it.
 
 ## 5. Admin Design System (`pages/admin.css`)
 
-886 lines, and **loaded outside the `site.css` `@import` chain** — it's not one of the partials
+886 lines, and **loaded outside the site stylesheet bundle** — it's not one of the files
 listed in Section 8 below. It ships via its own `<link>` in the admin layout, so a class added here
-never appears on public pages and vice versa; don't expect `@import` order rules from Section 8 to
-apply to it.
+never appears on public pages; don't expect the load-order rules from Section 8 to apply to it.
 
 ### Shared admin vocabulary
 | Class | Purpose |
@@ -238,15 +237,28 @@ just easy to confuse when searching for "coverage".
 
 ---
 
-## 8. Stylesheet Load Order (`site.css`)
+## 8. Stylesheet Load Order (`SiteStylesheets.cs`)
+
+The list lives in `src/Web/HandyFix.Web/SiteStylesheets.cs`, not in a CSS file. On the live site
+WebOptimizer combines these files, in this order, into one minified `/css/site.min.css` whose
+address carries a hash of its content; in Development each file is linked by itself, in the same
+order (`PROJECT_STATE.md` Section 3bs).
 
 ```
+fonts.css                (the Google Fonts @imports, which must open the combined file)
 base/variables.css → base/reset.css → base/typography.css → base/layout.css → base/utilities.css
-components/navbar.css → footer.css → buttons.css → cards.css → forms.css → image-upload.css
+components/navbar.css → footer.css → logo.css → buttons.css → cards.css → forms.css → image-upload.css
 pages/home.css → services.css → pricing.css → service-details.css → booking.css
       → service-category.css → areas.css → payment.css → auth.css → pages-info.css
+print.css                (paper styles, after everything above)
+icons.css                (Material Symbols defaults)
 ```
-`pages/admin.css` is **not** in this chain (Section 5). Later files can override earlier ones on
+**A new stylesheet has to be added to that list**, at the end of its group. A file under
+`wwwroot/css` that is not listed is not loaded at all; a test (`WebTests`) fails if one is left out.
+Do not chain stylesheets with `@import`: an imported file has no version in its address, so browsers
+keep old copies of it after a deploy.
+
+`pages/admin.css` is **not** in this list (Section 5). Later files can override earlier ones on
 equal specificity — this is exactly how the old duplicate `.glass-card` in `pages-info.css` won
-silently before it was removed, so a genuine duplicate class name in two `@import`ed files is a real
+silently before it was removed, so a genuine duplicate class name in two listed files is a real
 footgun, not just untidiness.
