@@ -2,6 +2,7 @@ namespace HandyFix.Web.Controllers
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using HandyFix.Data.Models;
     using HandyFix.Services;
@@ -18,6 +19,9 @@ namespace HandyFix.Web.Controllers
     [AllowAnonymous]
     public class BookingController : BaseController
     {
+        // Quote-only: the wizard has no tab for it and leaves its services out of the list.
+        private const string QuoteOnlyCategorySlug = "small-building-works";
+
         private readonly IServicesService servicesService;
         private readonly IAvailabilityService availabilityService;
         private readonly IBookingsService bookingsService;
@@ -43,6 +47,18 @@ namespace HandyFix.Web.Controllers
             {
                 IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
                 IEnumerable<DateTime> dates = await this.availabilityService.GetAvailableDatesAsync();
+
+                // A link that names a service but no category would open on the default Plumbing
+                // tab, where a handyman service is not in the list and gets replaced by the
+                // general plumbing one (PROJECT_STATE Section 3br). The service knows its category.
+                if (string.IsNullOrEmpty(categorySlug) && selectedServiceId.HasValue)
+                {
+                    ServiceViewModel selected = services.FirstOrDefault(s => s.Id == selectedServiceId.Value);
+                    if (selected != null && selected.CategorySlug != QuoteOnlyCategorySlug)
+                    {
+                        categorySlug = selected.CategorySlug;
+                    }
+                }
 
                 var model = new BookingInputModel
                 {

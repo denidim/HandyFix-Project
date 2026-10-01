@@ -158,6 +158,58 @@
             Assert.DoesNotContain("SqlException", error);
         }
 
+        // A card's "Book Now" names the service. Opened on the default Plumbing tab, a handyman
+        // service is not in the list and the page swaps it for the general plumbing one
+        // (PROJECT_STATE Section 3br), so the category has to follow the service.
+        [Fact]
+        public async Task IndexGetShouldTakeTheCategoryFromTheServiceWhenTheLinkGivesNone()
+        {
+            var controller = BuildController(out var servicesService, out _, out _, out _);
+            var handymanService = new ServiceViewModel { Id = Guid.NewGuid(), CategorySlug = "handyman" };
+            servicesService
+                .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel> { new ServiceViewModel { Id = Guid.NewGuid(), CategorySlug = "plumbing" }, handymanService });
+
+            var result = await controller.Index(categorySlug: null, date: null, selectedServiceId: handymanService.Id);
+
+            var model = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("handyman", model.SelectedCategorySlug);
+            Assert.Equal(handymanService.Id, model.SelectedServiceId);
+        }
+
+        [Fact]
+        public async Task IndexGetShouldKeepTheCategoryTheLinkGives()
+        {
+            var controller = BuildController(out var servicesService, out _, out _, out _);
+            var tapRepairs = new ServiceViewModel { Id = Guid.NewGuid(), CategorySlug = "plumbing" };
+            servicesService
+                .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel> { tapRepairs });
+
+            var result = await controller.Index(categorySlug: "handyman", date: null, selectedServiceId: tapRepairs.Id);
+
+            var model = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("handyman", model.SelectedCategorySlug);
+        }
+
+        [Fact]
+        public async Task IndexGetShouldNotOpenOnACategoryTheWizardCannotBook()
+        {
+            // Building work is quote-only. The wizard has no tab for it, and its script fails
+            // if told to start on one, so a building service must leave the category alone.
+            var controller = BuildController(out var servicesService, out _, out _, out _);
+            var kitchenFitting = new ServiceViewModel { Id = Guid.NewGuid(), CategorySlug = "small-building-works" };
+            servicesService
+                .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel> { kitchenFitting });
+
+            var building = await controller.Index(categorySlug: null, date: null, selectedServiceId: kitchenFitting.Id);
+            var unknown = await controller.Index(categorySlug: null, date: null, selectedServiceId: Guid.NewGuid());
+
+            Assert.Null(Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(building).Model).SelectedCategorySlug);
+            Assert.Null(Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(unknown).Model).SelectedCategorySlug);
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]

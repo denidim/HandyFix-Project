@@ -230,5 +230,46 @@
             Assert.Equal(logoIds.Count, logoIds.Distinct().Count());
             Assert.Contains("href=\"/favicon.svg\"", content);
         }
+
+        [Theory]
+        [InlineData("/Pricing")]
+        [InlineData("/Areas/chessington")]
+        public async Task ServiceCardBookingLinksNameTheServiceAndItsCategory(string page)
+        {
+            // These cards once linked to /Booking?serviceId=..., a name the booking page does not
+            // read, so every card opened on the general plumbing service (PROJECT_STATE Section
+            // 3br). A mistyped route value fails silently; only the rendered link can show it.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(page);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var bookingLinks = Regex.Matches(content, "href=\"(/Booking\\?[^\"]*)\"")
+                .Select(m => WebUtility.HtmlDecode(m.Groups[1].Value))
+                .ToList();
+
+            Assert.NotEmpty(bookingLinks);
+            Assert.All(bookingLinks, link => Assert.Matches("[?&]selectedServiceId=[0-9a-fA-F-]{36}(&|$)", link));
+            Assert.All(bookingLinks, link => Assert.Matches("[?&]categorySlug=(plumbing|handyman)(&|$)", link));
+        }
+
+        [Fact]
+        public async Task BookingPageOpensOnTheCategoryOfTheServiceItIsGiven()
+        {
+            var client = this.server.CreateClient();
+            var pricing = await (await client.GetAsync("/Pricing")).Content.ReadAsStringAsync();
+            var handymanServiceId = Regex.Match(
+                WebUtility.HtmlDecode(pricing),
+                "/Booking\\?selectedServiceId=([0-9a-fA-F-]{36})&categorySlug=handyman").Groups[1].Value;
+            Assert.NotEmpty(handymanServiceId);
+
+            // The service alone, no category: the page must still open on Handyman.
+            var response = await client.GetAsync("/Booking?selectedServiceId=" + handymanServiceId);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Matches("value=\"handyman\"\\s+checked", content);
+            Assert.DoesNotMatch("value=\"plumbing\"\\s+checked", content);
+        }
     }
 }
