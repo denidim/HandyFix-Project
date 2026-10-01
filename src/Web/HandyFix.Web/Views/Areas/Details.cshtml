@@ -85,7 +85,7 @@
                                                              EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
                                                              DivisionClass = svc.CategorySlug == "small-building-works" ? "pricing-card-building" : (svc.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
                                                              CtaText = "Book Now",
-                                                             CtaUrl = this.Url.Action("Index", "Booking", new { serviceId = svc.Id }),
+                                                             CtaUrl = this.Url.Action("Index", "Booking", new { selectedServiceId = svc.Id, categorySlug = svc.CategorySlug }),
                                                          })" />
                 }
             </div>
