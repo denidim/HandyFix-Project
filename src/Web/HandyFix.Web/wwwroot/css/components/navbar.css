@@ -55,6 +55,14 @@
   }
 }
 
+/* Small laptops: the links sit a little closer, and logo.css shrinks the logo over the same
+   range, so the row still fits on one line with an admin's two extra links. */
+@media (min-width: 1280px) and (max-width: 1365.98px) {
+  .nav-links {
+    gap: var(--spacing-6);
+  }
+}
+
 .nav-link {
   font-size: var(--fs-nav-link);
   font-weight: var(--fw-nav-link);
