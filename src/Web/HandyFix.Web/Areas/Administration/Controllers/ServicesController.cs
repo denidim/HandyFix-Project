@@ -15,6 +15,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
     public class ServicesController : AdministrationController
     {
+        private const string NameTakenMessage = "Another service already has this name, or one that was deleted did. Please choose a different name.";
+
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
 
@@ -46,6 +48,11 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ServiceAdminInputModel model)
         {
+            if (this.ModelState.IsValid && await this.servicesService.NameIsTakenAsync(model.Name))
+            {
+                this.ModelState.AddModelError(nameof(model.Name), NameTakenMessage);
+            }
+
             if (!this.ModelState.IsValid)
             {
                 IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
@@ -109,6 +116,11 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(ServiceAdminInputModel model)
         {
+            if (this.ModelState.IsValid && await this.servicesService.NameIsTakenAsync(model.Name, model.Id))
+            {
+                this.ModelState.AddModelError(nameof(model.Name), NameTakenMessage);
+            }
+
             if (!this.ModelState.IsValid)
             {
                 IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();

@@ -122,6 +122,17 @@ namespace HandyFix.Services.Data.Services
             }
         }
 
+        // A service's slug is made from its name, and the unique index on Slug covers deleted rows
+        // too. A name whose slug is already in the table, on any row but the one being edited,
+        // cannot be saved: the admin form asks before it tries (PROJECT_STATE Section 3ca).
+        public async Task<bool> NameIsTakenAsync(string name, Guid? exceptId = null)
+        {
+            var slug = SlugGenerator.Slugify(name);
+
+            return await this.servicesRepository.AllWithDeleted()
+                .AnyAsync(x => x.Slug == slug && x.Id != exceptId);
+        }
+
         public async Task DeleteAsync(Guid id)
         {
             Service service = await this.servicesRepository.All()

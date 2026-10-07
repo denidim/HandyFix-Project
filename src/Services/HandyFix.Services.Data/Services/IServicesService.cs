@@ -20,6 +20,8 @@ namespace HandyFix.Services.Data.Services
 
         Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular);
 
+        Task<bool> NameIsTakenAsync(string name, Guid? exceptId = null);
+
         Task DeleteAsync(Guid id);
 
         Task AddOrUpdateServiceImageAsync(Guid serviceId, string imageUrl);

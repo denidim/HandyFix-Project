@@ -89,6 +89,50 @@
         }
 
         [Fact]
+        public async Task CreateShouldRefuseANameAlreadyInUseWithAMessage()
+        {
+            // Saving it would break the unique index on the slug and show an error page.
+            var controller = BuildController(out var servicesService, out _);
+            var model = ValidService();
+            servicesService.Setup(x => x.NameIsTakenAsync(model.Name, null)).ReturnsAsync(true);
+
+            var result = await controller.Create(model);
+
+            Assert.IsType<ViewResult>(result);
+            Assert.True(controller.ModelState.ContainsKey(nameof(model.Name)));
+            servicesService.Verify(
+                x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task EditShouldRefuseAnotherServicesNameButAllowItsOwn()
+        {
+            // The check leaves out the service being edited. Asked without its id, every save of
+            // an unchanged name would be refused. One controller per call: a controller keeps a
+            // single ModelState.
+            var model = ValidService();
+            model.Id = Guid.NewGuid();
+
+            var allowing = BuildController(out var allowingService, out _);
+            allowingService.Setup(x => x.NameIsTakenAsync(model.Name, null)).ReturnsAsync(true);
+            allowingService.Setup(x => x.NameIsTakenAsync(model.Name, model.Id)).ReturnsAsync(false);
+
+            AssertGoesBackToTheAdminList(await allowing.Edit(model));
+
+            var refusing = BuildController(out var refusingService, out _);
+            refusingService.Setup(x => x.NameIsTakenAsync(model.Name, model.Id)).ReturnsAsync(true);
+
+            var result = await refusing.Edit(model);
+
+            Assert.IsType<ViewResult>(result);
+            Assert.True(refusing.ModelState.ContainsKey(nameof(model.Name)));
+            refusingService.Verify(
+                x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>()),
+                Times.Never);
+        }
+
+        [Fact]
         public async Task DeleteShouldGoBackToTheAdminList()
         {
             var controller = BuildController(out var servicesService, out _);

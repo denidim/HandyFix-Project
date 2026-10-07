@@ -281,6 +281,35 @@ namespace HandyFix.Services.Data.Tests
         }
 
         [Fact]
+        public async Task NameIsTakenAsyncShouldCountDeletedServicesButNotTheOneBeingEdited()
+        {
+            // The slug comes from the name and its unique index covers deleted rows. Saving a name
+            // already in use, or once used by a deleted service, failed with an error page
+            // (PROJECT_STATE Section 3ca); the admin form now asks here first.
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
+
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Handyman", Description = "general repairs", Slug = "handyman" };
+            dbContext.ServiceCategories.Add(category);
+            var live = new Service { Name = "Gutter Clearing", Description = "d", Slug = "gutter-clearing", BasePrice = 60, CategoryId = category.Id };
+            var deleted = new Service { Name = "Fence Repairs", Description = "d", Slug = "fence-repairs", BasePrice = 60, CategoryId = category.Id, IsDeleted = true };
+            dbContext.Services.AddRange(live, deleted);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+
+            Assert.True(await service.NameIsTakenAsync("Gutter Clearing"));
+            Assert.True(await service.NameIsTakenAsync("gutter clearing"));
+            Assert.True(await service.NameIsTakenAsync("Fence Repairs"));
+            Assert.False(await service.NameIsTakenAsync("Gutter Clearing", live.Id));
+            Assert.True(await service.NameIsTakenAsync("Fence Repairs", live.Id));
+            Assert.False(await service.NameIsTakenAsync("Gutter Guards"));
+        }
+
+        [Fact]
         public async Task GetByIdAsyncShouldReturnNullWhenServiceDoesNotExist()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
