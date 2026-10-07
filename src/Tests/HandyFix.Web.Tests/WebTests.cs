@@ -476,6 +476,40 @@
         }
 
         [Fact]
+        public async Task HomePagePopularServicesAreTheFourMarkedPopular()
+        {
+            // The grid showed the first four services in the alphabet. It now shows the four
+            // marked popular, and a building job, which is quoted and not booked by the hour,
+            // says so: no duration pill and no "Book" (PROJECT_STATE Section 3ca).
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var cards = Regex.Matches(content, "<a class=\"bento-card\"[\\s\\S]*?</a>").Select(m => WebUtility.HtmlDecode(m.Value)).ToList();
+            var names = cards.Select(c => Regex.Match(c, "bento-card-title[^>]*>([^<]+)<").Groups[1].Value.Trim()).ToList();
+
+            Assert.Equal(
+                new[] { "Emergency Plumbing", "Full Bathroom Refurbishment", "Furniture Assembly", "Kitchen Fitting & Alterations" },
+                names);
+
+            foreach (var card in cards)
+            {
+                var action = Regex.Replace(Regex.Match(card, "bento-action-pill\">\\s*([^<]+)<").Groups[1].Value, "\\s+", " ").Trim();
+                if (card.Contains("small-building-works"))
+                {
+                    Assert.Equal("Request Quote", action);
+                    Assert.DoesNotContain("bento-duration-pill", card);
+                }
+                else
+                {
+                    Assert.Equal("Book", action);
+                    Assert.Contains("bento-duration-pill", card);
+                }
+            }
+        }
+
+        [Fact]
         public async Task HomeBookingWidgetOffersSmallBuildingAsAQuoteNotABooking()
         {
             // Small Building cannot be booked online. As an ordinary option in this list it led
