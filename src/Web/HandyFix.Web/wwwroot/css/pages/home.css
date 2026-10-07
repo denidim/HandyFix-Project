@@ -89,6 +89,16 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* The hero paragraph's last sentence, picked out with a marker band and bold type. The
+   paragraph sits on the photo, where a line under regular type was hard to see
+   (PROJECT_STATE Section 3bz). */
+.hero-text-highlight {
+  padding: 0 0.12em;
+  background: linear-gradient(transparent 50%, rgba(16, 185, 129, 0.5) 50%);
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .hero-note-box {
   margin-bottom: var(--spacing-6);
   padding: var(--spacing-4);
