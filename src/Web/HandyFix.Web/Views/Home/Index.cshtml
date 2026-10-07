@@ -16,7 +16,7 @@
     <div class="hero-grid">
       <div class="hero-text-content">
         <h1 class="font-headline-xl text-primary lh-tight mb-6">Local Plumbing & Handyman Services in Surrey & South London</h1>
-        <p class="font-body-lg text-text-main lh-relaxed mb-8">Reliable, professional, and fully insured mobile service operating in Chessington, Cobham, Esher, and beyond. Booking has never been easier.</p>
+        <p class="font-body-lg text-text-main lh-relaxed mb-8">Reliable, professional, and fully insured mobile service operating in Chessington, Cobham, Esher, and beyond. <span class="hero-text-highlight">Booking has never been easier.</span></p>
         <div class="hero-value-props">
           <div class="value-prop-item">
             <span class="material-symbols-filled text-success font-bold">check_circle</span>
@@ -46,18 +46,23 @@
               <label for="widget-category" class="form-label">Select Service</label>
               <select id="widget-category" name="categorySlug" class="form-control" required>
                 <option value="">-- Choose a service --</option>
-                @* Small Building is quote-only, so it's left out here as it is on the booking page;
-                   the Get a Custom Quote button below is its route (PROJECT_STATE Section 3bo). *@
                 @foreach (var cat in categories.Where(c => c.Slug != "small-building-works"))
                 {
                     <option value="@cat.Slug">@($"{cat.Name} (from £{cat.BasePrice}/hr)")</option>
+                }
+                @* Small Building is quote-only: the booking page cannot book it. Choosing it here
+                   hides everything marked data-book-step, shows the quote note, and leaves Get a
+                   Custom Quote as the one button (site.js; PROJECT_STATE Section 3bz). *@
+                @if (categories.Any(c => c.Slug == "small-building-works"))
+                {
+                    <option value="small-building-works" data-quote-only="true">Small Building Work</option>
                 }
               </select>
             </div>
             @* The site's own calendar rather than <input type="date">: the browser's picker only
                opened from its small icon and closed whenever the page scrolled. The day still goes
                to the booking page as ?date=yyyy-MM-dd, through the hidden input. *@
-            <div class="mb-6 hero-date-field">
+            <div class="mb-6 hero-date-field" data-book-step>
               <label for="widget-date-btn" class="form-label">Choose Date</label>
               <button type="button" id="widget-date-btn" class="form-control hero-date-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="widget-calendar">
                 <span id="widget-date-text" class="hero-date-placeholder">Choose a date</span>
@@ -82,7 +87,7 @@
             </div>
 
             <!-- Informative Copy Block -->
-            <div class="hero-note-box">
+            <div class="hero-note-box" data-book-step>
                 <p class="font-label-sm text-on-tertiary-container mb-2 lh-normal">
                     <span class="fw-bold">Secure a visit at your convenient time</span><br>
                     by selecting a time slot & secure deposit on next page. Free cancellation up to 24 hours before your visit.
@@ -93,11 +98,17 @@
                 </p>
             </div>
 
-            <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block hero-submit-btn" disabled>See Available Slots & Book &rarr;</button>
+            <button type="submit" id="widget-submit-btn" class="btn btn-success btn-block hero-submit-btn" data-book-step disabled>See Available Slots & Book &rarr;</button>
+
+            <div class="hero-note-box" id="widget-quote-note" hidden>
+                <p class="font-label-sm text-on-tertiary-container m-0 lh-normal">
+                    To book small building work, get in touch to arrange a free consultation and receive a no-obligation quote.
+                </p>
+            </div>
           </form>
 
           <div class="hero-quote-divider">
-            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center gap-2 hero-quote-btn">
+            <a asp-controller="Home" asp-action="Contact" id="widget-quote-btn" data-quote-href="@Url.Action("Contact", "Home", new { categorySlug = "small-building-works" })" class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center gap-2 hero-quote-btn">
               <span class="material-symbols-outlined">request_quote</span>
               <span>Get a Custom Quote</span>
             </a>

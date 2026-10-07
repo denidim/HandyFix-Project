@@ -89,6 +89,16 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* The hero paragraph's last sentence, picked out with a marker band and bold type. The
+   paragraph sits on the photo, where a line under regular type was hard to see
+   (PROJECT_STATE Section 3bz). */
+.hero-text-highlight {
+  padding: 0 0.12em;
+  background: linear-gradient(transparent 50%, rgba(16, 185, 129, 0.5) 50%);
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .hero-note-box {
   margin-bottom: var(--spacing-6);
   padding: var(--spacing-4);
@@ -126,6 +136,31 @@
   padding-bottom: var(--spacing-3);
   text-decoration: none;
   transition: all var(--transition-normal);
+}
+
+/* .btn sets its own display, which would otherwise win over the hidden attribute. */
+.hero-submit-btn[hidden] {
+  display: none;
+}
+
+/* Small Building chosen in the widget (PROJECT_STATE Section 3bz): the booking button is hidden,
+   so Get a Custom Quote is the only action left and takes the booking button's solid green. The
+   line that set it apart from the booking button goes with it. */
+.hero-booking-card.is-quote-only .hero-quote-divider {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.hero-booking-card.is-quote-only .hero-quote-btn,
+.hero-booking-card.is-quote-only .hero-quote-btn:hover {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--on-primary);
+}
+
+.hero-booking-card.is-quote-only .hero-quote-btn:hover {
+  filter: brightness(0.9);
 }
 
 .value-prop-item {
