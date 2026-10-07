@@ -256,6 +256,19 @@ body.mobile-nav-open {
   color: #ffffff;
 }
 
+/* WhatsApp sits under the call button as its outlined twin, so calling stays the first choice. */
+.mobile-nav-whatsapp-item {
+  background: #ffffff;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  box-shadow: none;
+}
+
+.mobile-nav-whatsapp-item:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
 .mobile-nav-divider {
   height: 1px;
   background: rgba(15, 23, 42, 0.08);
