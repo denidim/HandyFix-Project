@@ -23,6 +23,14 @@
             <a class="nav-link @(IsActive("/Contact") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
             <a class="nav-link @(IsActive("/Areas") ? "active" : "")" asp-area="" asp-route="Areas">Areas</a>
             <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="btn btn-primary navbar-call-btn">Call Now</a>
+            @* Visitors only. A signed-in admin gets two links where a visitor gets one, the row has
+               no room for this button as well, and the business does not need to message itself. *@
+            @if (this.User.Identity?.IsAuthenticated != true)
+            {
+                <a href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener" class="navbar-whatsapp-btn" aria-label="Message us on WhatsApp">
+                    <partial name="_WhatsAppIcon" />
+                </a>
+            }
             <partial name="_LoginPartial" />
         </nav>
         
@@ -30,6 +38,9 @@
             <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="navbar-mobile-call-btn" aria-label="Call @GlobalConstants.BusinessPhone">
                 <span class="material-symbols-outlined">call</span>
                 <span class="navbar-mobile-phone-number">@GlobalConstants.BusinessPhone</span>
+            </a>
+            <a href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener" class="navbar-whatsapp-btn navbar-whatsapp-btn-compact" aria-label="Message us on WhatsApp">
+                <partial name="_WhatsAppIcon" />
             </a>
             <button class="navbar-mobile-toggle" id="mobile-menu-btn" aria-label="Toggle mobile menu">
                 <span class="material-symbols-outlined">menu</span>

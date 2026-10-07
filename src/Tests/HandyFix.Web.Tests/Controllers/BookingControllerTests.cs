@@ -197,14 +197,23 @@
         {
             // Building work is quote-only. The wizard has no tab for it, and its script fails
             // if told to start on one, so a building service must leave the category alone.
-            var controller = BuildController(out var servicesService, out _, out _, out _);
+            // One controller per call: a controller keeps a single ViewData, so a second call
+            // replaces the model the first result points at. With one shared controller this
+            // test read the unknown-id answer twice and never checked the building service
+            // (PROJECT_STATE Section 3by).
             var kitchenFitting = new ServiceViewModel { Id = Guid.NewGuid(), CategorySlug = "small-building-works" };
-            servicesService
-                .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
-                .ReturnsAsync(new List<ServiceViewModel> { kitchenFitting });
 
-            var building = await controller.Index(categorySlug: null, date: null, selectedServiceId: kitchenFitting.Id);
-            var unknown = await controller.Index(categorySlug: null, date: null, selectedServiceId: Guid.NewGuid());
+            BookingController ControllerOfferingKitchenFitting()
+            {
+                var controller = BuildController(out var servicesService, out _, out _, out _);
+                servicesService
+                    .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                    .ReturnsAsync(new List<ServiceViewModel> { kitchenFitting });
+                return controller;
+            }
+
+            var building = await ControllerOfferingKitchenFitting().Index(categorySlug: null, date: null, selectedServiceId: kitchenFitting.Id);
+            var unknown = await ControllerOfferingKitchenFitting().Index(categorySlug: null, date: null, selectedServiceId: Guid.NewGuid());
 
             Assert.Null(Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(building).Model).SelectedCategorySlug);
             Assert.Null(Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(unknown).Model).SelectedCategorySlug);
