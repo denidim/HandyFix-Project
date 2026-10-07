@@ -6,6 +6,8 @@ namespace HandyFix.Data.Seeding
 
     using HandyFix.Data.Models;
 
+    using Microsoft.EntityFrameworkCore;
+
     internal class ServicesSeeder : ISeeder
     {
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
@@ -66,19 +68,23 @@ namespace HandyFix.Data.Seeding
                 new { Slug = "custom-carpentry-boxing-in", Name = "Custom Carpentry & Boxing-In", Description = "Bespoke alcove cupboards, floating shelving units, pipework boxing-in, and tailored interior woodwork crafted to suit your room dimensions.", Price = 280.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
             };
 
-            // Where a service sits in its lists and whether the home page shows it as popular are
-            // the admin's to change, so they are set only when a row is first inserted and never
-            // synced afterwards. Databases that already had these rows got the same starting
-            // values from the AddDisplayOrderAndIsPopularToService migration.
-            var firstInTheirCategory = new[] { "general-plumbing-maintenance", "general-handyman-call-out" };
-            var popular = new[] { "full-bathroom-refurbishment", "kitchen-fitting-alterations", "emergency-plumbing", "furniture-assembly" };
-
-            foreach (var item in services)
+            // The list above goes into an empty table only. Once the table holds any service, live
+            // or deleted, the catalogue is the admin's and this seeder leaves it alone: a change
+            // to the list reaches an existing database through the admin panel or a migration.
+            //
+            // It used to look each service up by name at every start and add the ones it could
+            // not find. It cannot tell a renamed service from a missing one, so a renamed service
+            // came back under its old name; and it could not see a deleted one, so its insert hit
+            // the unique index on Slug and the site failed to start. It also wrote its own price,
+            // duration and category over whatever an admin had set (PROJECT_STATE Section 3cb).
+            if (!dbContext.Services.IgnoreQueryFilters().Any())
             {
-                Service service = dbContext.Services.FirstOrDefault(x => x.Name == item.Name);
-                if (service == null)
+                var firstInTheirCategory = new[] { "general-plumbing-maintenance", "general-handyman-call-out" };
+                var popular = new[] { "full-bathroom-refurbishment", "kitchen-fitting-alterations", "emergency-plumbing", "furniture-assembly" };
+
+                foreach (var item in services)
                 {
-                    service = new Service
+                    await dbContext.Services.AddAsync(new Service
                     {
                         Slug = item.Slug,
                         Name = item.Name,
@@ -89,21 +95,11 @@ namespace HandyFix.Data.Seeding
                         IsActive = true,
                         DisplayOrder = firstInTheirCategory.Contains(item.Slug) ? 0 : Service.DefaultDisplayOrder,
                         IsPopular = popular.Contains(item.Slug),
-                    };
-
-                    await dbContext.Services.AddAsync(service);
-                }
-                else
-                {
-                    service.BasePrice = item.Price;
-                    service.EstimatedDurationMinutes = item.Duration;
-
-                    // Category is synced too, not just price/duration: without it, moving a service
-                    // between categories in this file (Section 3ao) never reached an already-seeded
-                    // database. Same pre-launch caveat as the price upsert (Section 3ak).
-                    service.CategoryId = item.CategoryId;
+                    });
                 }
 
+                // One save for the whole list: a start that fails part-way must not leave a
+                // part-filled table, which the next start would take for a finished catalogue.
                 await dbContext.SaveChangesAsync();
             }
 

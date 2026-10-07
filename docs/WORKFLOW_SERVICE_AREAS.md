@@ -49,12 +49,19 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 applies a global `HasQueryFilter(e => !e.IsDeleted)` to every deletable entity. A soft-deleted area
 therefore still occupies its slug at the database level while being invisible to every query.
 
-If areas were soft-deleted, then on the next boot `ServiceAreasSeeder` — which looks the area up by
-slug, sees nothing, and inserts — would hit a unique-index violation, and **the app would fail to
-start** because seeding runs inside `Program.Configure`. Recovery would mean hand-deleting the row
-in SQL.
+If areas were soft-deleted, a deleted area's slug could never be used again: adding an area with
+that slug would fail at the database, on a row no admin page can show. Recovery would mean
+hand-deleting the row in SQL.
 
 For the same reason, the admin form validates slug uniqueness with `AllWithDeleted()`, not `All()`.
+
+### The seeder fills an empty table, once
+
+`ServiceAreasSeeder` adds its 15 areas and their questions **only when the ServiceAreas table is
+empty**. After that it does nothing: an area deleted here stays deleted, and an area whose
+questions were all removed stays without them. Editing the seeder's list has no effect on a
+database that already has areas; use this admin page. (Until `PROJECT_STATE.md` Section 3cb it
+added back any seeded area it could not find, at every start.)
 
 ---
 

@@ -7,14 +7,17 @@ namespace HandyFix.Data.Seeding
 
     using HandyFix.Data.Models;
 
+    using Microsoft.EntityFrameworkCore;
+
     /// <summary>
-    /// Seeds the initial coverage areas. Note this only ever INSERTS missing slugs - it never
-    /// updates an area that already exists, so editing the copy below has no effect on a database
-    /// that has already been seeded. Use the admin panel at /Administration/ServiceAreas for that.
+    /// Seeds the initial coverage areas into an empty table. Once the table holds any area, this
+    /// seeder does nothing: editing the list below has no effect on a database that has already
+    /// been seeded, and an area deleted in the admin panel stays deleted. Use the admin panel at
+    /// /Administration/ServiceAreas to add, change or remove areas.
     /// <para>
-    /// Areas must be hard-deleted, never soft-deleted: IX_ServiceAreas_Slug is unique with no
-    /// IsDeleted filter, but the global query filter hides soft-deleted rows, so this seeder would
-    /// try to re-insert the slug and fail startup with a unique-index violation.
+    /// Areas are hard-deleted, never soft-deleted: IX_ServiceAreas_Slug is unique with no
+    /// IsDeleted filter, so a soft-deleted area would keep its slug taken while hidden from every
+    /// query, and the admin could never use that slug again.
     /// </para>
     /// <para>See docs/WORKFLOW_SERVICE_AREAS.md for the full three-step add/update workflow.</para>
     /// </summary>
@@ -269,44 +272,45 @@ namespace HandyFix.Data.Seeding
                 },
             };
 
+            // Into an empty table only, as ServicesSeeder does and for the same reason. Looking
+            // each area up by slug and adding the missing ones brought an area the admin had
+            // deleted back at the next start, and gave an area whose questions the admin had
+            // removed its two seeded questions again (PROJECT_STATE Section 3cb).
+            if (dbContext.ServiceAreas.IgnoreQueryFilters().Any())
+            {
+                return;
+            }
+
             foreach (var item in areas)
             {
-                ServiceArea area = dbContext.ServiceAreas.FirstOrDefault(x => x.Slug == item.Slug);
-                if (area == null)
+                var area = new ServiceArea
                 {
-                    area = new ServiceArea
-                    {
-                        Slug = item.Slug,
-                        Name = item.Name,
-                        Region = item.Region,
-                        DriveTimeMinutes = item.DriveTimeMinutes,
-                        IntroCopy = item.IntroCopy,
-                        LocalNeighbourhoodsCopy = item.NeighbourhoodsCopy,
-                        IsFeatured = item.IsFeatured,
-                        DisplayOrder = item.DisplayOrder,
-                    };
+                    Slug = item.Slug,
+                    Name = item.Name,
+                    Region = item.Region,
+                    DriveTimeMinutes = item.DriveTimeMinutes,
+                    IntroCopy = item.IntroCopy,
+                    LocalNeighbourhoodsCopy = item.NeighbourhoodsCopy,
+                    IsFeatured = item.IsFeatured,
+                    DisplayOrder = item.DisplayOrder,
+                };
 
-                    await dbContext.ServiceAreas.AddAsync(area);
-                    await dbContext.SaveChangesAsync();
+                var displayOrder = 1;
+                foreach ((string question, string answer) in item.Faqs)
+                {
+                    area.Faqs.Add(new ServiceAreaFaq
+                    {
+                        Question = question,
+                        Answer = answer,
+                        DisplayOrder = displayOrder++,
+                    });
                 }
 
-                if (!dbContext.ServiceAreaFaqs.Any(x => x.ServiceAreaId == area.Id))
-                {
-                    var displayOrder = 1;
-                    foreach ((string question, string answer) in item.Faqs)
-                    {
-                        await dbContext.ServiceAreaFaqs.AddAsync(new ServiceAreaFaq
-                        {
-                            ServiceAreaId = area.Id,
-                            Question = question,
-                            Answer = answer,
-                            DisplayOrder = displayOrder++,
-                        });
-                    }
-
-                    await dbContext.SaveChangesAsync();
-                }
+                await dbContext.ServiceAreas.AddAsync(area);
             }
+
+            // One save for all of them, so a failed start cannot leave a part-filled table.
+            await dbContext.SaveChangesAsync();
         }
     }
 }

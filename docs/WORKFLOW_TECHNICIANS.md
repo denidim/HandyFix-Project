@@ -59,7 +59,8 @@ saved with no change made. In that dropdown they appear labelled **"(inactive)"*
 ## The seeded placeholder
 
 `TechniciansSeeder` inserts exactly one row — `John Doe`, `07123456789`, active — but **only when
-the Technicians table is completely empty**. This means:
+the Technicians table is completely empty**, deleted rows counted (so deleting the placeholder
+does not bring it back at the next start). This means:
 
 - A fresh clone or newly stood-up environment always starts with this one placeholder.
 - **You cannot add a second technician by editing the seeder.** It won't run again once the table
