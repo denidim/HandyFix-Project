@@ -460,19 +460,22 @@
         }
 
         [Theory]
-        [InlineData("plumbing")]
-        [InlineData("handyman")]
-        public async Task BookingPageOffersAGeneralServiceInEachCategoryItCanBook(string category)
+        [InlineData("plumbing", "General Plumbing Maintenance")]
+        [InlineData("handyman", "General Handyman Call-Out")]
+        public async Task BookingPageListsEachCategorysGeneralServiceFirst(string category, string expected)
         {
-            // The booking page opens a category on the service with "General" in its name.
-            // Handyman had none, so it opened on the first one in the alphabet, a bath screen
-            // fitting (PROJECT_STATE Section 3bz).
+            // The booking page opens a category on the first service in its list. Handyman once
+            // had no general service and opened on a bath screen fitting (PROJECT_STATE Section
+            // 3bz); the general ones are now first by display order, not by a match on the word
+            // "General" (Section 3ca).
             var client = this.server.CreateClient();
             var response = await client.GetAsync("/Booking?categorySlug=" + category);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
 
-            Assert.Matches("data-category=\"" + category + "\"[^>]*>\\s*General ", content);
+            var firstInCategory = Regex.Match(content, "data-category=\"" + category + "\"[^>]*>\\s*([^<]+?)\\s*\\(from");
+            Assert.True(firstInCategory.Success);
+            Assert.Equal(expected, WebUtility.HtmlDecode(firstInCategory.Groups[1].Value));
         }
 
         [Fact]

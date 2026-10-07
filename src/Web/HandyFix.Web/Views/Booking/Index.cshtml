@@ -87,6 +87,7 @@
                             <span class="material-symbols-outlined reassuring-info-icon">info</span>
                             <p class="reassuring-info-text">
                                 Base rates are applied transparently per hour depending on your chosen service category (Plumbing or Handyman). A £50 deposit secures your slot today and is deducted from your final bill once the job is complete.
+                                <a asp-route="Pricing" class="reassuring-info-link">See full pricing</a>
                             </p>
                         </div>
                     </div>
@@ -300,9 +301,12 @@
 
             function filterServices() {
                 const activeCategory = document.querySelector('input[name="service-category"]:checked').value;
-                let defaultOptionVal = "";
                 let firstCategoryOptionVal = "";
 
+                // The list arrives in display order (an admin field on each service), so a
+                // category's first option is its default: the general call-out, unless an admin
+                // has put another service ahead of it. This once looked for "general" in the
+                // name, which a rename would have broken (PROJECT_STATE Section 3ca).
                 Array.from(serviceSelect.options).forEach(opt => {
                     if (opt.value === "") {
                         opt.style.display = "";
@@ -311,28 +315,20 @@
                     if (opt.dataset.category === activeCategory) {
                         opt.style.display = "";
                         if (!firstCategoryOptionVal) firstCategoryOptionVal = opt.value;
-
-                        // Check for default / general service name
-                        const nameLower = opt.text.toLowerCase();
-                        if (nameLower.includes("general") || nameLower.includes("default")) {
-                            defaultOptionVal = opt.value;
-                        }
                     } else {
                         opt.style.display = "none";
                     }
                 });
 
-                // Auto select default or first matching category service
+                // The service named in the link if it belongs to this category, else the default
                 const targetServiceId = @Json.Serialize(selectedServiceId?.ToString() ?? string.Empty);
-                if (targetServiceId && Array.from(serviceSelect.options).some(o => o.value.toLowerCase() === targetServiceId.toLowerCase())) {
-                    const matchedOpt = Array.from(serviceSelect.options).find(o => o.value.toLowerCase() === targetServiceId.toLowerCase());
-                    if (matchedOpt && matchedOpt.dataset.category === activeCategory) {
-                        serviceSelect.value = matchedOpt.value;
-                    } else {
-                        serviceSelect.value = defaultOptionVal || firstCategoryOptionVal || "";
-                    }
+                const matchedOpt = targetServiceId
+                    ? Array.from(serviceSelect.options).find(o => o.value.toLowerCase() === targetServiceId.toLowerCase())
+                    : null;
+                if (matchedOpt && matchedOpt.dataset.category === activeCategory) {
+                    serviceSelect.value = matchedOpt.value;
                 } else {
-                    serviceSelect.value = defaultOptionVal || firstCategoryOptionVal || "";
+                    serviceSelect.value = firstCategoryOptionVal || "";
                 }
 
                 updateSummaryPrice();
