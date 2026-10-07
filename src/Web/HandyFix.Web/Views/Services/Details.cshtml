@@ -258,9 +258,9 @@
                             <span class="material-symbols-outlined">calendar_month</span>
                             <span>Book a Slot</span>
                         </a>
-                        <a href="tel:07123456789" class="sidebar-booking-btn sidebar-booking-btn-ghost">
+                        <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="sidebar-booking-btn sidebar-booking-btn-ghost">
                             <span class="material-symbols-outlined">call</span>
-                            <span>Call Us: 07123 456 789</span>
+                            <span>Call Us: @GlobalConstants.BusinessPhone</span>
                         </a>
                     </div>
                     <p class="sidebar-booking-note">Requests are free &bull; Slots secured with a £50 deposit</p>
@@ -331,12 +331,14 @@
   "provider": {
     "@@type": "LocalBusiness",
     "name": "Plumbing Handyman Surrey",
-    "telephone": "07123456789",
+    "telephone": @Json.Serialize(GlobalConstants.BusinessPhoneInternational),
     "priceRange": "££",
     "address": {
       "@@type": "PostalAddress",
-      "addressLocality": "Chessington",
-      "addressRegion": "Surrey",
+      "streetAddress": @Json.Serialize(GlobalConstants.CompanyAddressStreet),
+      "addressLocality": @Json.Serialize(GlobalConstants.CompanyAddressTown),
+      "addressRegion": @Json.Serialize(GlobalConstants.CompanyAddressCounty),
+      "postalCode": @Json.Serialize(GlobalConstants.CompanyAddressPostcode),
       "addressCountry": "GB"
     }
   },

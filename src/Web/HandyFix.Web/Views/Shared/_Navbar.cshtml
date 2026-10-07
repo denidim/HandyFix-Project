@@ -22,14 +22,14 @@
             <a class="nav-link @(IsActive("/Pricing") ? "active" : "")" asp-area="" asp-route="Pricing">Pricing</a>
             <a class="nav-link @(IsActive("/Contact") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
             <a class="nav-link @(IsActive("/Areas") ? "active" : "")" asp-area="" asp-route="Areas">Areas</a>
-            <a href="tel:07123456789" class="btn btn-primary navbar-call-btn">Call Now</a>
+            <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="btn btn-primary navbar-call-btn">Call Now</a>
             <partial name="_LoginPartial" />
         </nav>
         
         <div class="navbar-actions">
-            <a href="tel:07123456789" class="navbar-mobile-call-btn" aria-label="Call 07123 456789">
+            <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="navbar-mobile-call-btn" aria-label="Call @GlobalConstants.BusinessPhone">
                 <span class="material-symbols-outlined">call</span>
-                <span class="navbar-mobile-phone-number">07123 456789</span>
+                <span class="navbar-mobile-phone-number">@GlobalConstants.BusinessPhone</span>
             </a>
             <button class="navbar-mobile-toggle" id="mobile-menu-btn" aria-label="Toggle mobile menu">
                 <span class="material-symbols-outlined">menu</span>
@@ -39,9 +39,9 @@
     
     <div class="mobile-nav-dropdown" id="mobile-nav-menu">
         <nav class="mobile-nav-links">
-            <a href="tel:07123456789" class="mobile-nav-call-item">
+            <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="mobile-nav-call-item">
                 <span class="material-symbols-outlined">call</span>
-                <span>Call 07123 456 789</span>
+                <span>Call @GlobalConstants.BusinessPhone</span>
             </a>
             <div class="mobile-nav-divider"></div>
             <a class="nav-link @(IsActive("/") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>

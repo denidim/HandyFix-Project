@@ -4,8 +4,11 @@
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Text.Json;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+
+    using HandyFix.Common;
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -217,6 +220,84 @@
             var title = Regex.Match(content, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value;
             Assert.EndsWith(" - Plumbing Handyman Surrey", title);
             Assert.Single(Regex.Matches(title, "Plumbing Handyman Surrey"));
+        }
+
+        [Theory]
+        [MemberData(nameof(PublicPages))]
+        public async Task PublicPagesLinkTheRealContactDetailsAndNeverThePlaceholderNumber(string url)
+        {
+            // The phone, WhatsApp link and email live once in GlobalConstants (PROJECT_STATE Section
+            // 3bu). Before that a made-up number was typed by hand into 12 views in three spellings,
+            // one of them an old-brand number the rename had missed. The header and footer are on
+            // every page, so every page must carry the real links. "07123456789" by itself stays
+            // allowed: the booking form shows it as an example of what a customer types.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            // Razor writes the "+" of a tel: link as an entity, which browsers decode in an attribute.
+            Assert.Contains("tel:" + GlobalConstants.BusinessPhoneInternational, WebUtility.HtmlDecode(content));
+            Assert.Contains("href=\"" + GlobalConstants.BusinessWhatsAppUrl + "\"", content);
+            Assert.Contains("mailto:" + GlobalConstants.BusinessEmail, content);
+
+            Assert.DoesNotContain("tel:07123456789", content);
+            Assert.DoesNotContain("07123 456", content);
+
+            // The line is a VoIP landline, so written messages go to WhatsApp and never to SMS.
+            Assert.DoesNotContain("sms:", content);
+
+            // A script block is never HTML-decoded, so each JSON-LD number is read the way a search
+            // engine reads it, as a JSON string. An HTML entity in it would fail here.
+            foreach (Match phone in Regex.Matches(content, "\"telephone\":\\s*(\"[^\"]*\")"))
+            {
+                Assert.Equal(GlobalConstants.BusinessPhoneInternational, JsonSerializer.Deserialize<string>(phone.Groups[1].Value));
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(PublicPages))]
+        public async Task PublicPagesNameTheCompanyBehindTheTradingName(string url)
+        {
+            // A UK limited company has to say on its website who it is: the footer of every page
+            // names the company, its number and its registered office beside the trading name
+            // (PROJECT_STATE Section 3bu).
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("trading name of " + GlobalConstants.CompanyLegalName, content);
+            Assert.Contains("company number " + GlobalConstants.CompanyNumber, content);
+            Assert.Contains("Registered office: " + GlobalConstants.CompanyAddress, content);
+
+            // The structured data used to carry a made-up office and postcode. Any address in it is
+            // now the registered office, read as JSON the way the phone number is.
+            Assert.DoesNotContain("Dispatch Office", content);
+            foreach (Match postcode in Regex.Matches(content, "\"postalCode\":\\s*(\"[^\"]*\")"))
+            {
+                Assert.Equal(GlobalConstants.CompanyAddressPostcode, JsonSerializer.Deserialize<string>(postcode.Groups[1].Value));
+            }
+        }
+
+        [Fact]
+        public async Task HomePageStructuredDataNamesThePhoneAndTheCompanyAndNoSocialProfiles()
+        {
+            // The home page JSON-LD used to list two social profiles the business never had
+            // (PROJECT_STATE Section 3bu, roadmap L1 item 2). "sameAs" comes back only with real ones.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var phone = Regex.Match(content, "\"telephone\":\\s*(\"[^\"]*\")");
+            Assert.True(phone.Success);
+            Assert.Equal(GlobalConstants.BusinessPhoneInternational, JsonSerializer.Deserialize<string>(phone.Groups[1].Value));
+            Assert.Contains("\"legalName\": \"" + GlobalConstants.CompanyLegalName + "\"", content);
+            Assert.Contains("\"foundingDate\": \"" + GlobalConstants.CompanyIncorporatedOn + "\"", content);
+            Assert.Contains("\"streetAddress\": \"" + GlobalConstants.CompanyAddressStreet + "\"", content);
+            Assert.Contains("\"postalCode\": \"" + GlobalConstants.CompanyAddressPostcode + "\"", content);
+            Assert.DoesNotContain("\"sameAs\"", content);
         }
 
         [Fact]

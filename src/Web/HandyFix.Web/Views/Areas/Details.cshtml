@@ -188,12 +188,14 @@
   "provider": {
     "@@type": "LocalBusiness",
     "name": "Plumbing Handyman Surrey",
-    "telephone": "07123456789",
+    "telephone": @Json.Serialize(GlobalConstants.BusinessPhoneInternational),
     "priceRange": "££",
     "address": {
       "@@type": "PostalAddress",
-      "addressLocality": "Chessington",
-      "addressRegion": "London",
+      "streetAddress": @Json.Serialize(GlobalConstants.CompanyAddressStreet),
+      "addressLocality": @Json.Serialize(GlobalConstants.CompanyAddressTown),
+      "addressRegion": @Json.Serialize(GlobalConstants.CompanyAddressCounty),
+      "postalCode": @Json.Serialize(GlobalConstants.CompanyAddressPostcode),
       "addressCountry": "GB"
     }
   }
