@@ -141,6 +141,52 @@
   }
 }
 
+/* WhatsApp in the header: a round icon button, so the bar keeps its width. On the desktop bar
+   it sits beside "Call Now". In the menu layout it sits beside the phone number, but only from
+   440px up: a narrower phone has no room for it next to the number, and its menu opens on the
+   WhatsApp button anyway. */
+.navbar-whatsapp-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--primary);
+  border-radius: 50%;
+  color: var(--primary);
+  font-size: 16px;
+  transition: all var(--transition-fast);
+}
+
+.navbar-whatsapp-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.navbar-whatsapp-btn-compact {
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 1280px) {
+  .navbar-whatsapp-btn {
+    display: inline-flex;
+  }
+
+  .navbar-whatsapp-btn-compact {
+    display: none;
+  }
+}
+
+@media (min-width: 440px) and (max-width: 1279.98px) {
+  .navbar-whatsapp-btn-compact {
+    display: inline-flex;
+  }
+}
+
 .navbar-mobile-toggle {
   background: transparent;
   border: none;
