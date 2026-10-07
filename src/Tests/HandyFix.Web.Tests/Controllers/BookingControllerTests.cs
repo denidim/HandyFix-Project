@@ -220,6 +220,22 @@
         }
 
         [Fact]
+        public async Task IndexGetShouldSendAQuoteOnlyCategoryToTheContactForm()
+        {
+            // The wizard has no tab for building work, and with no tab ticked its script stops
+            // (PROJECT_STATE Section 3bz). The Contact form is where that work is quoted.
+            var controller = BuildController(out var servicesService, out _, out _, out _);
+
+            var result = await controller.Index(categorySlug: "Small-Building-Works", date: null, selectedServiceId: null);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Contact", redirect.ActionName);
+            Assert.Equal("Home", redirect.ControllerName);
+            Assert.Equal("small-building-works", redirect.RouteValues["categorySlug"]);
+            servicesService.Verify(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()), Times.Never);
+        }
+
+        [Fact]
         public async Task IndexGetShouldGiveThePageTheDateFromTheLink()
         {
             // The home page's booking form sends the day the visitor picked. Whether the text in a

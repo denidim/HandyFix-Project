@@ -431,6 +431,33 @@
             Assert.DoesNotMatch("value=\"plumbing\"\\s+checked", content);
         }
 
+        [Fact]
+        public async Task BookingPageOpensOnPlumbingForACategoryItHasNoTabFor()
+        {
+            // The page's script reads the ticked tab first. A link naming a category with no tab
+            // ticked neither, and the calendar and the slots never appeared (PROJECT_STATE
+            // Section 3bz).
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/Booking?categorySlug=no-such-category");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Matches("value=\"plumbing\"\\s+checked", content);
+            Assert.DoesNotMatch("value=\"handyman\"\\s+checked", content);
+        }
+
+        [Fact]
+        public async Task BookingLinkForSmallBuildingGoesToTheContactFormOnThatCategory()
+        {
+            // Building work is quoted, not booked. The link value has to be the name the Contact
+            // page reads: a mistyped one would redirect and select nothing.
+            var client = this.server.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            var response = await client.GetAsync("/Booking?categorySlug=small-building-works");
+
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.EndsWith("/Contact?categorySlug=small-building-works", response.Headers.Location.ToString());
+        }
+
         [Theory]
         [InlineData("plumbing")]
         [InlineData("handyman")]

@@ -7,11 +7,11 @@
     var services = Model.Services;
     var dates = Model.AvailableDates;
     var selectedServiceId = Model.SelectedServiceId;
-    var targetCategorySlug = "plumbing";
-    if (!string.IsNullOrEmpty(Model.SelectedCategorySlug))
-    {
-        targetCategorySlug = Model.SelectedCategorySlug;
-    }
+
+    // The page has two tabs. A link naming any other category opens on Plumbing: with neither
+    // tab ticked the script below stops at its first line and no calendar or slot appears
+    // (PROJECT_STATE Section 3bz).
+    var targetCategorySlug = string.Equals(Model.SelectedCategorySlug, "handyman", StringComparison.OrdinalIgnoreCase) ? "handyman" : "plumbing";
 }
 
 <div class="page-container booking-page">

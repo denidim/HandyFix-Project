@@ -43,6 +43,14 @@ namespace HandyFix.Web.Controllers
         [Route("Booking")]
         public async Task<IActionResult> Index(string categorySlug = null, DateTime? date = null, Guid? selectedServiceId = null)
         {
+            // A link asking to book the quote-only category goes to the Contact form with that
+            // category chosen, which is where building work is quoted. The wizard has no tab for
+            // it, and with no tab ticked its script stops (PROJECT_STATE Section 3bz).
+            if (string.Equals(categorySlug, QuoteOnlyCategorySlug, StringComparison.OrdinalIgnoreCase))
+            {
+                return this.RedirectToAction("Contact", "Home", new { categorySlug = QuoteOnlyCategorySlug });
+            }
+
             // The date and the service id are typed, so the model binder reads them, as it does for
             // the admin calendar. Whatever in the link is not a date or not an id arrives here as
             // null, and the page opens on today with no service chosen (PROJECT_STATE Section 3bw).
