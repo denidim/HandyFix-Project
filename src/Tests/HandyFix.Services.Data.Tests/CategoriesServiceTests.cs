@@ -74,6 +74,33 @@ namespace HandyFix.Services.Data.Tests
         }
 
         [Fact]
+        public async Task GetAllAsyncShouldLeaveSwitchedOffServicesOutOfTheBasePrice()
+        {
+            // The "from" price on the home page and the category pages comes from here. A service
+            // an admin has switched off is not on sale, so it must not set that price
+            // (PROJECT_STATE Section 3ca).
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<ServiceCategory>(dbContext);
+
+            var onSale = new ServiceCategory { Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
+            var nothingOnSale = new ServiceCategory { Name = "Roofing", Description = "roof repairs", Slug = "roofing" };
+            dbContext.ServiceCategories.AddRange(onSale, nothingOnSale);
+            dbContext.Services.Add(new Service { Name = "Tap Repair", Description = "d", Slug = "tap-repair", BasePrice = 80m, CategoryId = onSale.Id, IsActive = true });
+            dbContext.Services.Add(new Service { Name = "Old Offer", Description = "d", Slug = "old-offer", BasePrice = 20m, CategoryId = onSale.Id, IsActive = false });
+            dbContext.Services.Add(new Service { Name = "Old Roof Job", Description = "d", Slug = "old-roof-job", BasePrice = 20m, CategoryId = nothingOnSale.Id, IsActive = false });
+            await dbContext.SaveChangesAsync();
+
+            var service = new CategoriesService(repository);
+            var results = (await service.GetAllAsync<CategoryViewModel>()).ToList();
+
+            Assert.Equal(80m, results.Single(c => c.Slug == "plumbing").BasePrice);
+            Assert.Equal(0m, results.Single(c => c.Slug == "roofing").BasePrice);
+        }
+
+        [Fact]
         public async Task GetAllAsyncShouldReturnZeroBasePriceWhenCategoryHasNoServices()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
