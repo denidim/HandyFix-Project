@@ -1,5 +1,9 @@
 @model HandyFix.Web.ViewModels.Services.ServiceDetailsViewModel
+@using System.Globalization
 @using HandyFix.Web.ViewModels.Services
+@* Anything written inside a script block below goes through Json.Serialize. Razor's own HTML
+   encoding is wrong there: a script block is never HTML-decoded, so "&" reached search engines
+   as "&amp;" and "£" as "&#xA3;" (PROJECT_STATE Section 3bv). *@
 @{
     this.Layout = "_Layout";
     this.ViewData["Title"] = Model.Name;
@@ -327,7 +331,7 @@
 {
   "@@context": "https://schema.org",
   "@@type": "Service",
-  "serviceType": "@Model.Name",
+  "serviceType": @Json.Serialize(Model.Name),
   "provider": {
     "@@type": "LocalBusiness",
     "name": "Plumbing Handyman Surrey",
@@ -354,7 +358,7 @@
   ]
   @if (!isBuilding)
   {
-    @:,"offers": { "@@type": "Offer", "price": "@Model.BasePrice.ToString("F2")", "priceCurrency": "GBP" }
+    @:,"offers": { "@@type": "Offer", "price": @Json.Serialize(Model.BasePrice.ToString("F2", CultureInfo.InvariantCulture)), "priceCurrency": "GBP" }
   }
 }
 </script>
@@ -367,10 +371,10 @@
   "mainEntity": [
     {
       "@@type": "Question",
-      "name": "How much does @Model.Name cost?",
+      "name": @Json.Serialize($"How much does {Model.Name} cost?"),
       "acceptedAnswer": {
         "@@type": "Answer",
-        "text": "@(isBuilding ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}.")"
+        "text": @Json.Serialize(isBuilding ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}.")
       }
     },
     {
@@ -392,6 +396,6 @@
         probe.onerror = function () {
             heroBg.style.backgroundImage = "url('/images/hero.webp')";
         };
-        probe.src = "@serviceImage";
+        probe.src = @Json.Serialize(serviceImage);
     })();
 </script>

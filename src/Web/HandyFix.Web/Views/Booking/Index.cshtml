@@ -321,7 +321,7 @@
                 });
 
                 // Auto select default or first matching category service
-                const targetServiceId = '@selectedServiceId';
+                const targetServiceId = @Json.Serialize(selectedServiceId?.ToString() ?? string.Empty);
                 if (targetServiceId && Array.from(serviceSelect.options).some(o => o.value.toLowerCase() === targetServiceId.toLowerCase())) {
                     const matchedOpt = Array.from(serviceSelect.options).find(o => o.value.toLowerCase() === targetServiceId.toLowerCase());
                     if (matchedOpt && matchedOpt.dataset.category === activeCategory) {
@@ -399,7 +399,9 @@
             // ==========================================
             // Custom Open Calendar Logic
             // ==========================================
-            let initialDateStr = '@Model.SelectedDate';
+            // The date comes from the link the visitor opened, so it is written as a JSON string:
+            // HTML encoding left a backslash alone, and one was enough to break this script.
+            let initialDateStr = @Json.Serialize(Model.SelectedDate ?? string.Empty);
             if (!initialDateStr) {
                 initialDateStr = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
             }
