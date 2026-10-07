@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Booking.BookingInputModel
+@using System.Globalization
 @using HandyFix.Web.ViewModels.Services
 @{
     this.Layout = "_Layout";
@@ -146,7 +147,7 @@
                                         <span class="material-symbols-outlined" aria-hidden="true">mail</span>
                                         <span>Send an Enquiry</span>
                                     </a>
-                                    <a href="tel:07123456789" class="reassuring-info-call">or call 07123 456789</a>
+                                    <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="reassuring-info-call">or call @GlobalConstants.BusinessPhone</a>
                                 </div>
                             </div>
                         </div>
@@ -321,7 +322,7 @@
                 });
 
                 // Auto select default or first matching category service
-                const targetServiceId = '@selectedServiceId';
+                const targetServiceId = @Json.Serialize(selectedServiceId?.ToString() ?? string.Empty);
                 if (targetServiceId && Array.from(serviceSelect.options).some(o => o.value.toLowerCase() === targetServiceId.toLowerCase())) {
                     const matchedOpt = Array.from(serviceSelect.options).find(o => o.value.toLowerCase() === targetServiceId.toLowerCase());
                     if (matchedOpt && matchedOpt.dataset.category === activeCategory) {
@@ -399,7 +400,9 @@
             // ==========================================
             // Custom Open Calendar Logic
             // ==========================================
-            let initialDateStr = '@Model.SelectedDate';
+            // The date comes from the link the visitor opened. The controller only passes on a
+            // real date, and it is written here as a JSON string like every value in a script.
+            let initialDateStr = @Json.Serialize(Model.SelectedDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty);
             if (!initialDateStr) {
                 initialDateStr = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
             }

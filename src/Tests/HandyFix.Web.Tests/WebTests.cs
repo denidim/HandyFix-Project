@@ -1,11 +1,15 @@
 ﻿namespace HandyFix.Web.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Text.Json;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+
+    using HandyFix.Common;
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -219,6 +223,155 @@
             Assert.Single(Regex.Matches(title, "Plumbing Handyman Surrey"));
         }
 
+        [Theory]
+        [MemberData(nameof(PublicPages))]
+        public async Task PublicPagesLinkTheRealContactDetailsAndNeverThePlaceholderNumber(string url)
+        {
+            // The phone, WhatsApp link and email live once in GlobalConstants (PROJECT_STATE Section
+            // 3bu). Before that a made-up number was typed by hand into 12 views in three spellings,
+            // one of them an old-brand number the rename had missed. The header and footer are on
+            // every page, so every page must carry the real links. "07123456789" by itself stays
+            // allowed: the booking form shows it as an example of what a customer types.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            // Razor writes the "+" of a tel: link as an entity, which browsers decode in an attribute.
+            Assert.Contains("tel:" + GlobalConstants.BusinessPhoneInternational, WebUtility.HtmlDecode(content));
+            Assert.Contains("href=\"" + GlobalConstants.BusinessWhatsAppUrl + "\"", content);
+            Assert.Contains("mailto:" + GlobalConstants.BusinessEmail, content);
+
+            Assert.DoesNotContain("tel:07123456789", content);
+            Assert.DoesNotContain("07123 456", content);
+
+            // The line is a VoIP landline, so written messages go to WhatsApp and never to SMS.
+            Assert.DoesNotContain("sms:", content);
+
+            // A script block is never HTML-decoded, so each JSON-LD number is read the way a search
+            // engine reads it, as a JSON string. An HTML entity in it would fail here.
+            foreach (Match phone in Regex.Matches(content, "\"telephone\":\\s*(\"[^\"]*\")"))
+            {
+                Assert.Equal(GlobalConstants.BusinessPhoneInternational, JsonSerializer.Deserialize<string>(phone.Groups[1].Value));
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(PublicPages))]
+        public async Task PublicPagesNameTheCompanyBehindTheTradingName(string url)
+        {
+            // A UK limited company has to say on its website who it is: the footer of every page
+            // names the company, its number and its registered office beside the trading name
+            // (PROJECT_STATE Section 3bu).
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("trading name of " + GlobalConstants.CompanyLegalName, content);
+            Assert.Contains("company number " + GlobalConstants.CompanyNumber, content);
+            Assert.Contains("Registered office: " + GlobalConstants.CompanyAddress, content);
+
+            // The structured data used to carry a made-up office and postcode. Any address in it is
+            // now the registered office, read as JSON the way the phone number is.
+            Assert.DoesNotContain("Dispatch Office", content);
+            foreach (Match postcode in Regex.Matches(content, "\"postalCode\":\\s*(\"[^\"]*\")"))
+            {
+                Assert.Equal(GlobalConstants.CompanyAddressPostcode, JsonSerializer.Deserialize<string>(postcode.Groups[1].Value));
+            }
+        }
+
+        [Fact]
+        public async Task HomePageStructuredDataNamesThePhoneAndTheCompanyAndNoSocialProfiles()
+        {
+            // The home page JSON-LD used to list two social profiles the business never had
+            // (PROJECT_STATE Section 3bu, roadmap L1 item 2). "sameAs" comes back only with real ones.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var phone = Regex.Match(content, "\"telephone\":\\s*(\"[^\"]*\")");
+            Assert.True(phone.Success);
+            Assert.Equal(GlobalConstants.BusinessPhoneInternational, JsonSerializer.Deserialize<string>(phone.Groups[1].Value));
+            Assert.Contains("\"legalName\": \"" + GlobalConstants.CompanyLegalName + "\"", content);
+            Assert.Contains("\"foundingDate\": \"" + GlobalConstants.CompanyIncorporatedOn + "\"", content);
+            Assert.Contains("\"streetAddress\": \"" + GlobalConstants.CompanyAddressStreet + "\"", content);
+            Assert.Contains("\"postalCode\": \"" + GlobalConstants.CompanyAddressPostcode + "\"", content);
+            Assert.DoesNotContain("\"sameAs\"", content);
+        }
+
+        [Theory]
+        [MemberData(nameof(PublicPages))]
+        public async Task PublicPagesStructuredDataIsJsonWithNoHtmlEntities(string url)
+        {
+            // Razor HTML-encodes whatever it writes, and a script block is never HTML-decoded. A
+            // value written there as plain Razor reached search engines with the entity still in
+            // it: "&amp;" in 14 service and area names, "&#xA3;" for the pound sign on every bookable
+            // service page (PROJECT_STATE Section 3bv). Such values go through Json.Serialize now.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            foreach (var block in JsonLdBlocks(content))
+            {
+                Assert.DoesNotMatch("&(amp|quot|lt|gt|#x?[0-9A-Fa-f]+);", block);
+                JsonDocument.Parse(block).Dispose();
+            }
+        }
+
+        [Theory]
+        [InlineData("/Services/plumbing/radiator-trv-replacement", "Radiator & TRV Replacement")]
+        [InlineData("/Services/plumbing/radiator-trv-replacement", "How much does Radiator & TRV Replacement cost?")]
+        [InlineData("/Services/plumbing/radiator-trv-replacement", "starts from £")]
+        [InlineData("/Areas/worcester-park-ewell", "Worcester Park & Ewell")]
+        public async Task StructuredDataHoldsNamesAndPricesAsTheyAreTyped(string url, string expected)
+        {
+            // The same bug, read the way a search engine reads the page: each JSON-LD block parsed
+            // as JSON, and its text values compared with what a person typed into the admin panel.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var values = new List<string>();
+            foreach (var block in JsonLdBlocks(content))
+            {
+                using var json = JsonDocument.Parse(block);
+                values.AddRange(JsonStrings(json.RootElement));
+            }
+
+            Assert.Contains(values, value => value.Contains(expected));
+        }
+
+        [Theory]
+        [InlineData("2026-10-20", "2026-10-20")]
+        [InlineData("2026-10-20T15:30:00", "2026-10-20")]
+        [InlineData("abc", "")]
+        [InlineData("2026-13-45", "")]
+        [InlineData("\\", "")]
+        [InlineData("';alert(1);//", "")]
+        [InlineData("\";alert(1);//", "")]
+        [InlineData("</script><script>alert(1)</script>", "")]
+        public async Task BookingPageOpensOnTheDateInTheLinkOnlyWhenItIsADate(string date, string expected)
+        {
+            // The date in /Booking?date=... comes from whoever made the link. Written into the
+            // page's script with HTML encoding, one backslash swallowed the closing quote and
+            // stopped the whole booking script (PROJECT_STATE Section 3bv), and anything that was
+            // not a date opened the calendar on "undefined NaN" (Section 3bw). The model binder
+            // now reads it as a date: a real one reaches the script as yyyy-MM-dd, anything else
+            // as an empty string, which the script takes to mean today.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/Booking?date=" + Uri.EscapeDataString(date));
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var written = Regex.Match(content, "let initialDateStr = (\"[^\\r\\n]*\");\\r?\\n");
+            Assert.True(written.Success);
+            Assert.Equal(expected, JsonSerializer.Deserialize<string>(written.Groups[1].Value));
+        }
+
         [Fact]
         public async Task HeaderAndFooterLogosUseSeparateSvgIdsAndTheTabIconIsLinked()
         {
@@ -344,6 +497,45 @@
             Assert.Equal(2, Regex.Matches(css, "@import").Count); // and no stylesheet of ours is left as an import
             Assert.Contains(".site-logo", css); // a file from the middle of the list
             Assert.Contains(".material-symbols-filled", css); // the last file
+        }
+
+        // The JSON-LD blocks of a page. The "+" in the tag's type is rendered as an entity, which
+        // browsers decode inside an attribute, so both spellings are matched.
+        private static IEnumerable<string> JsonLdBlocks(string html)
+        {
+            return Regex.Matches(html, "<script type=\"application/ld(?:\\+|&#x2B;)json\">(.*?)</script>", RegexOptions.Singleline)
+                .Select(match => match.Groups[1].Value);
+        }
+
+        // Every text value in a JSON document, at any depth, unescaped.
+        private static IEnumerable<string> JsonStrings(JsonElement element)
+        {
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.String:
+                    yield return element.GetString();
+                    break;
+                case JsonValueKind.Object:
+                    foreach (var property in element.EnumerateObject())
+                    {
+                        foreach (var value in JsonStrings(property.Value))
+                        {
+                            yield return value;
+                        }
+                    }
+
+                    break;
+                case JsonValueKind.Array:
+                    foreach (var item in element.EnumerateArray())
+                    {
+                        foreach (var value in JsonStrings(item))
+                        {
+                            yield return value;
+                        }
+                    }
+
+                    break;
+            }
         }
     }
 }

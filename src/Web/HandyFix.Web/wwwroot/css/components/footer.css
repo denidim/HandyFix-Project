@@ -63,6 +63,13 @@
   background-color: var(--secondary);
 }
 
+/* The WhatsApp mark scales with the text around it (icons.css). In these round buttons there is
+   no text, so it gets a fixed size that sits level with the two Material Symbols beside it. */
+.footer-social-icon .whatsapp-icon {
+  width: 22px;
+  height: 22px;
+}
+
 .footer-areas-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

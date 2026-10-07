@@ -99,17 +99,23 @@
     </div>
 
     <!-- Contact CTA Card -->
-    <section class="mt-5 glass-morphism p-4 rounded-xl d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 faq-contact-cta">
-        <div class="text-center text-md-start">
+    @* Three buttons do not fit beside the text in this column, so the text sits above them at
+       every width; the buttons share a row from tablet width up and stack on a phone. *@
+    <section class="mt-5 glass-morphism p-4 rounded-xl d-flex flex-column align-items-center gap-4 faq-contact-cta">
+        <div class="text-center">
             <h3 class="font-headline-md text-primary mb-1">Still have questions?</h3>
-            <p class="text-on-surface-variant font-body-md mb-0">Send us an enquiry or give us a call and we'll help.</p>
+            <p class="text-on-surface-variant font-body-md mb-0">Send us an enquiry, message us on WhatsApp or give us a call and we'll help.</p>
         </div>
-        <div class="d-flex flex-column flex-sm-row gap-3">
-            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline d-flex align-items-center justify-content-center gap-2 px-4 py-3 rounded-lg fw-semibold info-print-btn">
+        <div class="d-flex flex-column flex-md-row gap-3">
+            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline d-flex align-items-center justify-content-center gap-2 px-4 py-3 rounded-lg fw-semibold text-nowrap info-print-btn">
                 <span class="material-symbols-outlined">mail</span>
                 <span>Send an Enquiry</span>
             </a>
-            <a href="tel:07123456789" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-3 rounded-lg fw-semibold">
+            <a href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener" class="btn btn-outline d-flex align-items-center justify-content-center gap-2 px-4 py-3 rounded-lg fw-semibold text-nowrap info-print-btn">
+                <partial name="_WhatsAppIcon" />
+                <span>WhatsApp</span>
+            </a>
+            <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-3 rounded-lg fw-semibold text-nowrap">
                 <span class="material-symbols-outlined">call</span>
                 <span>Call Us</span>
             </a>

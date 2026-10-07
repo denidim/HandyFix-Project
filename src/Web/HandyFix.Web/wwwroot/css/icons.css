@@ -9,3 +9,12 @@
   font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   font-family: 'Material Symbols Outlined';
 }
+
+/* The WhatsApp mark (_WhatsAppIcon.cshtml) is a drawing, because Material Symbols has no brand
+   icons. It takes the text colour and scales with the text of the button or link that holds it. */
+.whatsapp-icon {
+  width: 1.25em;
+  height: 1.25em;
+  flex-shrink: 0;
+  fill: currentColor;
+}

@@ -183,17 +183,19 @@
   "serviceType": "Handyman and Plumbing Services",
   "areaServed": {
     "@@type": "City",
-    "name": "@area.Name"
+    "name": @Json.Serialize(area.Name)
   },
   "provider": {
     "@@type": "LocalBusiness",
     "name": "Plumbing Handyman Surrey",
-    "telephone": "07123456789",
+    "telephone": @Json.Serialize(GlobalConstants.BusinessPhoneInternational),
     "priceRange": "££",
     "address": {
       "@@type": "PostalAddress",
-      "addressLocality": "Chessington",
-      "addressRegion": "London",
+      "streetAddress": @Json.Serialize(GlobalConstants.CompanyAddressStreet),
+      "addressLocality": @Json.Serialize(GlobalConstants.CompanyAddressTown),
+      "addressRegion": @Json.Serialize(GlobalConstants.CompanyAddressCounty),
+      "postalCode": @Json.Serialize(GlobalConstants.CompanyAddressPostcode),
       "addressCountry": "GB"
     }
   }
@@ -218,9 +220,9 @@
   "@@context": "https://schema.org",
   "@@type": "BreadcrumbList",
   "itemListElement": [
-    { "@@type": "ListItem", "position": 1, "name": "Home", "item": "@(this.Context.Request.Scheme)://@(this.Context.Request.Host)/" },
-    { "@@type": "ListItem", "position": 2, "name": "Our Areas", "item": "@(this.Url.RouteUrl("Areas", null, this.Context.Request.Scheme))" },
-    { "@@type": "ListItem", "position": 3, "name": "@area.Name", "item": "@(this.ViewData["Canonical"])" }
+    { "@@type": "ListItem", "position": 1, "name": "Home", "item": @Json.Serialize($"{this.Context.Request.Scheme}://{this.Context.Request.Host}/") },
+    { "@@type": "ListItem", "position": 2, "name": "Our Areas", "item": @Json.Serialize(this.Url.RouteUrl("Areas", null, this.Context.Request.Scheme)) },
+    { "@@type": "ListItem", "position": 3, "name": @Json.Serialize(area.Name), "item": @Json.Serialize(this.ViewData["Canonical"]) }
   ]
 }
 </script>

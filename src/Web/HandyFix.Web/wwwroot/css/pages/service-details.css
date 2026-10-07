@@ -415,7 +415,7 @@
   transform: translateX(4px);
 }
 
-/* Request (primary) / Book a Slot / Call Us, stacked full-width. */
+/* Request (primary) / Book a Slot / Call Us / WhatsApp, stacked full-width. */
 .sidebar-booking-actions {
   display: flex;
   flex-direction: column;

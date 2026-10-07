@@ -41,8 +41,11 @@ namespace HandyFix.Web.Controllers
 
         [HttpGet]
         [Route("Booking")]
-        public async Task<IActionResult> Index(string categorySlug = null, string date = null, Guid? selectedServiceId = null)
+        public async Task<IActionResult> Index(string categorySlug = null, DateTime? date = null, Guid? selectedServiceId = null)
         {
+            // The date and the service id are typed, so the model binder reads them, as it does for
+            // the admin calendar. Whatever in the link is not a date or not an id arrives here as
+            // null, and the page opens on today with no service chosen (PROJECT_STATE Section 3bw).
             try
             {
                 IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();

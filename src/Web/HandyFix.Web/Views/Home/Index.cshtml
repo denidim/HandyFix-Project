@@ -434,16 +434,18 @@
       "@@context": "https://schema.org",
       "@@type": "LocalBusiness",
       "name": "Plumbing Handyman Surrey",
+      "legalName": @Json.Serialize(GlobalConstants.CompanyLegalName),
+      "foundingDate": @Json.Serialize(GlobalConstants.CompanyIncorporatedOn),
       "@@id": "https://plumbing-handyman-surrey.co.uk",
       "url": "https://plumbing-handyman-surrey.co.uk",
-      "telephone": "07123456789",
+      "telephone": @Json.Serialize(GlobalConstants.BusinessPhoneInternational),
       "priceRange": "££",
       "address": {
         "@@type": "PostalAddress",
-        "streetAddress": "Chessington Dispatch Office",
-        "addressLocality": "Chessington",
-        "addressRegion": "Surrey",
-        "postalCode": "KT9 1AA",
+        "streetAddress": @Json.Serialize(GlobalConstants.CompanyAddressStreet),
+        "addressLocality": @Json.Serialize(GlobalConstants.CompanyAddressTown),
+        "addressRegion": @Json.Serialize(GlobalConstants.CompanyAddressCounty),
+        "postalCode": @Json.Serialize(GlobalConstants.CompanyAddressPostcode),
         "addressCountry": "GB"
       },
       "geo": {
@@ -463,11 +465,7 @@
         ],
         "opens": "09:00",
         "closes": "17:00"
-      },
-      "sameAs": [
-        "https://facebook.com/handyfixlondon",
-        "https://twitter.com/handyfixlondon"
-      ]
+      }
     }
 </script>
 
