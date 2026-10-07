@@ -205,6 +205,52 @@
             Assert.Null(model.Message);
         }
 
+        [Fact]
+        public async Task IndexShouldShowTheServicesMarkedPopularInListOrder()
+        {
+            // "Popular" was the first four services in the alphabet. It is now the four an admin
+            // ticked (PROJECT_STATE Section 3ca); a fifth ticked one does not fit the grid.
+            var controller = BuildController(servicesService: ServicesMock(
+                ("Bath Screen Fitting", false),
+                ("Emergency Plumbing", true),
+                ("Full Bathroom Refurbishment", true),
+                ("Furniture Assembly", true),
+                ("Gutter Clearing", false),
+                ("Kitchen Fitting", true),
+                ("Tap Repairs", true)));
+
+            var result = await controller.Index();
+
+            var model = Assert.IsType<HomeIndexViewModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(
+                new[] { "Emergency Plumbing", "Full Bathroom Refurbishment", "Furniture Assembly", "Kitchen Fitting" },
+                model.PopularServices.Select(s => s.Name));
+        }
+
+        [Theory]
+        [InlineData("Gutter Clearing", new[] { "Gutter Clearing", "Bath Screen Fitting", "Blocked Drains", "Door Repairs" })]
+        [InlineData(null, new[] { "Bath Screen Fitting", "Blocked Drains", "Door Repairs", "Gutter Clearing" })]
+        public async Task IndexShouldFillTheGridFromTheListWhenFewerThanFourAreMarked(string popular, string[] expected)
+        {
+            // The grid holds four. One ticked service, or none, must not leave it part-empty.
+            var names = new[] { "Bath Screen Fitting", "Blocked Drains", "Door Repairs", "Gutter Clearing", "Tap Repairs" };
+            var controller = BuildController(servicesService: ServicesMock(names.Select(n => (n, n == popular)).ToArray()));
+
+            var result = await controller.Index();
+
+            var model = Assert.IsType<HomeIndexViewModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(expected, model.PopularServices.Select(s => s.Name));
+        }
+
+        private static Mock<IServicesService> ServicesMock(params (string Name, bool IsPopular)[] services)
+        {
+            var servicesService = new Mock<IServicesService>();
+            servicesService
+                .Setup(s => s.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(services.Select(s => new ServiceViewModel { Name = s.Name, IsPopular = s.IsPopular }).ToList());
+            return servicesService;
+        }
+
         private static HomeController BuildController(
             Mock<IInquiriesService> inquiriesService = null,
             Mock<IServicesService> servicesService = null,
@@ -212,7 +258,6 @@
         {
             var reviewsService = new Mock<IReviewsService>();
             var imageService = new Mock<IImageService>();
-            var configuration = new Mock<IConfiguration>();
 
             var controller = new HomeController(
                 reviewsService.Object,
@@ -220,7 +265,7 @@
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
                 imageService.Object,
-                configuration.Object);
+                new ConfigurationBuilder().Build());
 
             var httpContext = new DefaultHttpContext();
             controller.ControllerContext = new ControllerContext

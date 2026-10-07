@@ -66,6 +66,13 @@ namespace HandyFix.Data.Seeding
                 new { Slug = "custom-carpentry-boxing-in", Name = "Custom Carpentry & Boxing-In", Description = "Bespoke alcove cupboards, floating shelving units, pipework boxing-in, and tailored interior woodwork crafted to suit your room dimensions.", Price = 280.00m, Duration = 480, CategoryId = smallBuildingCategory.Id },
             };
 
+            // Where a service sits in its lists and whether the home page shows it as popular are
+            // the admin's to change, so they are set only when a row is first inserted and never
+            // synced afterwards. Databases that already had these rows got the same starting
+            // values from the AddDisplayOrderAndIsPopularToService migration.
+            var firstInTheirCategory = new[] { "general-plumbing-maintenance", "general-handyman-call-out" };
+            var popular = new[] { "full-bathroom-refurbishment", "kitchen-fitting-alterations", "emergency-plumbing", "furniture-assembly" };
+
             foreach (var item in services)
             {
                 Service service = dbContext.Services.FirstOrDefault(x => x.Name == item.Name);
@@ -80,6 +87,8 @@ namespace HandyFix.Data.Seeding
                         EstimatedDurationMinutes = item.Duration,
                         CategoryId = item.CategoryId,
                         IsActive = true,
+                        DisplayOrder = firstInTheirCategory.Contains(item.Slug) ? 0 : Service.DefaultDisplayOrder,
+                        IsPopular = popular.Contains(item.Slug),
                     };
 
                     await dbContext.Services.AddAsync(service);

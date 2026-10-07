@@ -13,6 +13,7 @@
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Testing;
+    using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.DependencyInjection;
 
     using WebOptimizer;
@@ -459,19 +460,56 @@
         }
 
         [Theory]
-        [InlineData("plumbing")]
-        [InlineData("handyman")]
-        public async Task BookingPageOffersAGeneralServiceInEachCategoryItCanBook(string category)
+        [InlineData("plumbing", "General Plumbing Maintenance")]
+        [InlineData("handyman", "General Handyman Call-Out")]
+        public async Task BookingPageListsEachCategorysGeneralServiceFirst(string category, string expected)
         {
-            // The booking page opens a category on the service with "General" in its name.
-            // Handyman had none, so it opened on the first one in the alphabet, a bath screen
-            // fitting (PROJECT_STATE Section 3bz).
+            // The booking page opens a category on the first service in its list. Handyman once
+            // had no general service and opened on a bath screen fitting (PROJECT_STATE Section
+            // 3bz); the general ones are now first by display order, not by a match on the word
+            // "General" (Section 3ca).
             var client = this.server.CreateClient();
             var response = await client.GetAsync("/Booking?categorySlug=" + category);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
 
-            Assert.Matches("data-category=\"" + category + "\"[^>]*>\\s*General ", content);
+            var firstInCategory = Regex.Match(content, "data-category=\"" + category + "\"[^>]*>\\s*([^<]+?)\\s*\\(from");
+            Assert.True(firstInCategory.Success);
+            Assert.Equal(expected, WebUtility.HtmlDecode(firstInCategory.Groups[1].Value));
+        }
+
+        [Fact]
+        public async Task HomePagePopularServicesAreTheFourMarkedPopular()
+        {
+            // The grid showed the first four services in the alphabet. It now shows the four
+            // marked popular, and a building job, which is quoted and not booked by the hour,
+            // says so: no duration pill and no "Book" (PROJECT_STATE Section 3ca).
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var cards = Regex.Matches(content, "<a class=\"bento-card\"[\\s\\S]*?</a>").Select(m => WebUtility.HtmlDecode(m.Value)).ToList();
+            var names = cards.Select(c => Regex.Match(c, "bento-card-title[^>]*>([^<]+)<").Groups[1].Value.Trim()).ToList();
+
+            Assert.Equal(
+                new[] { "Emergency Plumbing", "Full Bathroom Refurbishment", "Furniture Assembly", "Kitchen Fitting & Alterations" },
+                names);
+
+            foreach (var card in cards)
+            {
+                var action = Regex.Replace(Regex.Match(card, "bento-action-pill\">\\s*([^<]+)<").Groups[1].Value, "\\s+", " ").Trim();
+                if (card.Contains("small-building-works"))
+                {
+                    Assert.Equal("Request Quote", action);
+                    Assert.DoesNotContain("bento-duration-pill", card);
+                }
+                else
+                {
+                    Assert.Equal("Book", action);
+                    Assert.Contains("bento-duration-pill", card);
+                }
+            }
         }
 
         [Fact]
@@ -504,6 +542,18 @@
             var content = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
             Assert.Matches("<option[^>]*selected[^>]*>Small Building & Refurbishments</option>", content);
+        }
+
+        [Fact]
+        public void AdminServicesListIsReachedByNamingItsControllerAndArea()
+        {
+            // Two controllers are called ServicesController: the public one, fixed at /Services,
+            // and the admin one. The admin one redirects to its list by these three values
+            // (AdminServicesControllerTests); this is the address they must produce.
+            var links = this.server.Services.GetRequiredService<LinkGenerator>();
+
+            Assert.Equal("/Administration/Services", links.GetPathByAction("Index", "Services", new { area = "Administration" }));
+            Assert.Equal("/Services", links.GetPathByAction("Index", "Services", new { area = string.Empty }));
         }
 
         [Fact]

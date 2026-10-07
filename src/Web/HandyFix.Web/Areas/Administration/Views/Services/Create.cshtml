@@ -67,6 +67,24 @@
                 </div>
             </div>
 
+            <div class="row">
+                <!-- Display Order -->
+                <div class="col-md-6 form-group">
+                    <label asp-for="DisplayOrder" class="form-label font-label-sm text-on-surface-variant mb-2">Display Order</label>
+                    <input asp-for="DisplayOrder" class="form-control py-3 admin-form-control form-pad-standard" type="number" min="0" max="999" step="1" required />
+                    <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Lower numbers come first in every list of services. The lowest in a category is the service the booking page opens on. Services with the same number are sorted by name.</span>
+                    <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+                </div>
+                <!-- Popular on the home page -->
+                <div class="col-md-6 form-group">
+                    <div class="form-check d-flex align-items-center gap-2 m-0 ps-0 form-check-beside-input">
+                        <input asp-for="IsPopular" class="form-check-input checkbox-lg" type="checkbox" />
+                        <label asp-for="IsPopular" class="form-check-label font-label-sm text-on-surface font-bold label-clickable">Show in Popular Services on the home page</label>
+                    </div>
+                    <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">The home page shows four: the ticked services first, in list order. If fewer than four are ticked, the next services in the list fill the rest.</span>
+                </div>
+            </div>
+
             <!-- Service Image Upload -->
             <div class="form-group">
                 <label asp-for="ImageFile" class="form-label font-label-sm text-on-surface-variant mb-2">Service Image</label>

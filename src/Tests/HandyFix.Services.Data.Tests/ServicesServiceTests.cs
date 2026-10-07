@@ -36,7 +36,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.CreateAsync("Leaky Pipe Repair", "Repairing leaky pipes quickly", 60.00m, 45, category.Id);
+            await service.CreateAsync("Leaky Pipe Repair", "Repairing leaky pipes quickly", 60.00m, 45, category.Id, 7, true);
 
             Assert.Equal(1, dbContext.Services.Count());
             var created = dbContext.Services.First();
@@ -44,6 +44,8 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal(60.00m, created.BasePrice);
             Assert.Equal(45, created.EstimatedDurationMinutes);
             Assert.Equal(category.Id, created.CategoryId);
+            Assert.Equal(7, created.DisplayOrder);
+            Assert.True(created.IsPopular);
         }
 
         [Fact]
@@ -153,7 +155,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.CreateAsync("Walton-on-Thames & Weybridge Repairs", "A test service", 60.00m, 45, category.Id);
+            await service.CreateAsync("Walton-on-Thames & Weybridge Repairs", "A test service", 60.00m, 45, category.Id, Service.DefaultDisplayOrder, false);
 
             var created = dbContext.Services.First();
             Assert.Equal("walton-on-thames-weybridge-repairs", created.Slug);
@@ -247,6 +249,67 @@ namespace HandyFix.Services.Data.Tests
         }
 
         [Fact]
+        public async Task ListsShouldOrderByDisplayOrderThenName()
+        {
+            // Lists were alphabetical only, so a category's general call-out sat wherever its name
+            // put it and "popular" was the first four in the alphabet (PROJECT_STATE Section 3ca).
+            // A lower display order comes first; services sharing a number fall back to the name.
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
+
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Handyman", Description = "general repairs", Slug = "handyman" };
+            dbContext.ServiceCategories.Add(category);
+            dbContext.Services.Add(new Service { Name = "Bravo", Description = "d", Slug = "bravo", BasePrice = 50, CategoryId = category.Id });
+            dbContext.Services.Add(new Service { Name = "Zulu Call-Out", Description = "d", Slug = "zulu-call-out", BasePrice = 50, CategoryId = category.Id, DisplayOrder = 0 });
+            dbContext.Services.Add(new Service { Name = "Alpha", Description = "d", Slug = "alpha", BasePrice = 50, CategoryId = category.Id, IsPopular = true });
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var all = (await service.GetAllAsync<ServiceViewModel>()).ToList();
+            var byCategory = (await service.GetByCategoryAsync<ServiceViewModel>("Handyman")).ToList();
+
+            Assert.Equal(new[] { "Zulu Call-Out", "Alpha", "Bravo" }, all.Select(s => s.Name));
+            Assert.Equal(new[] { "Zulu Call-Out", "Alpha", "Bravo" }, byCategory.Select(s => s.Name));
+
+            // The view model carries the fields the home page and the admin list read.
+            Assert.Equal(new[] { 0, Service.DefaultDisplayOrder, Service.DefaultDisplayOrder }, all.Select(s => s.DisplayOrder));
+            Assert.Equal(new[] { false, true, false }, all.Select(s => s.IsPopular));
+            Assert.All(all, s => Assert.True(s.IsActive));
+        }
+
+        [Fact]
+        public async Task NameIsTakenAsyncShouldCountDeletedServicesButNotTheOneBeingEdited()
+        {
+            // The slug comes from the name and its unique index covers deleted rows. Saving a name
+            // already in use, or once used by a deleted service, failed with an error page
+            // (PROJECT_STATE Section 3ca); the admin form now asks here first.
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
+
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Handyman", Description = "general repairs", Slug = "handyman" };
+            dbContext.ServiceCategories.Add(category);
+            var live = new Service { Name = "Gutter Clearing", Description = "d", Slug = "gutter-clearing", BasePrice = 60, CategoryId = category.Id };
+            var deleted = new Service { Name = "Fence Repairs", Description = "d", Slug = "fence-repairs", BasePrice = 60, CategoryId = category.Id, IsDeleted = true };
+            dbContext.Services.AddRange(live, deleted);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+
+            Assert.True(await service.NameIsTakenAsync("Gutter Clearing"));
+            Assert.True(await service.NameIsTakenAsync("gutter clearing"));
+            Assert.True(await service.NameIsTakenAsync("Fence Repairs"));
+            Assert.False(await service.NameIsTakenAsync("Gutter Clearing", live.Id));
+            Assert.True(await service.NameIsTakenAsync("Fence Repairs", live.Id));
+            Assert.False(await service.NameIsTakenAsync("Gutter Guards"));
+        }
+
+        [Fact]
         public async Task GetByIdAsyncShouldReturnNullWhenServiceDoesNotExist()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -295,7 +358,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.UpdateAsync(serviceEntity.Id, "Tap Replacement", "new description", 75m, 60, false, newCategory.Id);
+            await service.UpdateAsync(serviceEntity.Id, "Tap Replacement", "new description", 75m, 60, false, newCategory.Id, 5, true);
 
             var updated = dbContext.Services.First(x => x.Id == serviceEntity.Id);
             Assert.Equal("Tap Replacement", updated.Name);
@@ -305,6 +368,8 @@ namespace HandyFix.Services.Data.Tests
             Assert.False(updated.IsActive);
             Assert.Equal(newCategory.Id, updated.CategoryId);
             Assert.Equal("tap-replacement", updated.Slug);
+            Assert.Equal(5, updated.DisplayOrder);
+            Assert.True(updated.IsPopular);
         }
 
         [Fact]
@@ -317,7 +382,7 @@ namespace HandyFix.Services.Data.Tests
             using var repository = new EfDeletableEntityRepository<Service>(dbContext);
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.UpdateAsync(Guid.NewGuid(), "Name", "Description", 10m, 10, true, Guid.NewGuid());
+            await service.UpdateAsync(Guid.NewGuid(), "Name", "Description", 10m, 10, true, Guid.NewGuid(), Service.DefaultDisplayOrder, false);
 
             Assert.Equal(0, dbContext.Services.Count());
         }

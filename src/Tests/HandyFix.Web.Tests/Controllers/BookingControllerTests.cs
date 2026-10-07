@@ -78,6 +78,29 @@
         }
 
         [Fact]
+        public async Task IndexPostShouldReopenTheFormOnTheCategoryOfTheChosenService()
+        {
+            // The category tabs are not part of what the form posts. Without the category the page
+            // reopened on Plumbing, where a handyman service is not in the list, and swapped it for
+            // the plumbing default at the plumbing rate (PROJECT_STATE Section 3ca).
+            var controller = BuildController(out var servicesService, out _, out _, out _);
+            var gutterClearing = new ServiceViewModel { Id = Guid.NewGuid(), CategorySlug = "handyman" };
+            servicesService
+                .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel> { new ServiceViewModel { Id = Guid.NewGuid(), CategorySlug = "plumbing" }, gutterClearing });
+            controller.ModelState.AddModelError(nameof(BookingInputModel.Email), "The Email field is not a valid e-mail address.");
+
+            var model = ValidModel();
+            model.ServiceId = gutterClearing.Id;
+
+            var result = await controller.Index(model);
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("handyman", returnedModel.SelectedCategorySlug);
+            Assert.Equal(gutterClearing.Id, returnedModel.SelectedServiceId);
+        }
+
+        [Fact]
         public async Task IndexPostShouldRedirectToPaymentWhenTheBookingIsCreated()
         {
             var controller = BuildController(out _, out _, out var bookingsService, out var imageService);

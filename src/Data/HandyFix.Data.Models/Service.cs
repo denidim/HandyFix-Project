@@ -10,6 +10,10 @@
     [Index(nameof(Slug), IsUnique = true)]
     public class Service : BaseDeletableModel<Guid>
     {
+        // Most services share this value, so they stay in alphabetical order behind the few
+        // given a lower number.
+        public const int DefaultDisplayOrder = 100;
+
         public Service()
         {
             this.Id = Guid.NewGuid();
@@ -39,6 +43,13 @@
         public int EstimatedDurationMinutes { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        // Every service list sorts by this, then by name. Lower comes first.
+        [Range(0, 999, ErrorMessage = "The {0} must be between 0 and 999.")]
+        public int DisplayOrder { get; set; } = DefaultDisplayOrder;
+
+        // Shown in the home page's Popular Services.
+        public bool IsPopular { get; set; }
 
         [Required(ErrorMessage = "The {0} field is required.")]
         public Guid CategoryId { get; set; }

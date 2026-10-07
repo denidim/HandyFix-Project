@@ -156,6 +156,11 @@ namespace HandyFix.Web.Controllers
             model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
             model.SelectedServiceId = model.ServiceId;
 
+            // The tabs are not part of what the form posts, so the category comes back from the
+            // service. Without it the page reopened on Plumbing and swapped a handyman service
+            // for the plumbing default, at the plumbing rate (PROJECT_STATE Section 3ca).
+            model.SelectedCategorySlug = model.Services.FirstOrDefault(s => s.Id == model.ServiceId)?.CategorySlug;
+
             return this.View(model);
         }
 

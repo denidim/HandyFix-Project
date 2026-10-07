@@ -243,6 +243,14 @@
   margin: 0;
 }
 
+/* A link inside the card's sentence. */
+.reassuring-info-link {
+  font-weight: 600;
+  color: var(--secondary);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
 /* The card's way out when no slot suits: an enquiry about that day, or a call. */
 .reassuring-info-actions {
   display: flex;

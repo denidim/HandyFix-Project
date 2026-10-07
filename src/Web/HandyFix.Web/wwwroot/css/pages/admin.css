@@ -674,6 +674,21 @@
   user-select: none;
 }
 
+/* A checkbox sharing a two-column form row with a labelled input: pushed down past that
+   input's label, so the checkbox lines up with the input, not with the label above it. */
+@media (min-width: 768px) {
+  .form-check-beside-input {
+    min-height: 48px;
+    margin-top: 30px !important;
+  }
+}
+
+/* Bootstrap hangs a checkbox to the left of its label's padding. With the padding removed
+   (ps-0) that put the box in the gutter between the two columns. */
+.form-check-beside-input .form-check-input {
+  margin-left: 0;
+}
+
 .current-image-thumb {
   width: 120px;
   height: 90px;

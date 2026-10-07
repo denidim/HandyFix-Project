@@ -51,7 +51,9 @@ namespace HandyFix.Web.Controllers
         {
             var categories = (await this.categoriesService.GetAllAsync<CategoryViewModel>()).ToList();
 
-            IEnumerable<ServiceViewModel> allServices = categories.SelectMany(c => c.Services);
+            // From the active services only. A category's own collection also holds the ones an
+            // admin has switched off, which then stayed on this page with a Book Now button.
+            IEnumerable<ServiceViewModel> allServices = await this.servicesService.GetAllAsync<ServiceViewModel>();
             IEnumerable<ServiceViewModel> typicalJobs = TypicalJobSlugs
                 .Select(slug => allServices.FirstOrDefault(s => s.Slug == slug))
                 .Where(s => s != null);
@@ -96,8 +98,10 @@ namespace HandyFix.Web.Controllers
         [Route("Services/{categorySlug}/{serviceSlug}", Name = "ServiceDetails")]
         public async Task<IActionResult> Details(string categorySlug, string serviceSlug)
         {
+            // A service an admin has switched off is "not visible to the public", as its form
+            // says: no list shows it, and its own address answers 404 too.
             ServiceDetailsViewModel service = await this.servicesService.GetBySlugAsync<ServiceDetailsViewModel>(serviceSlug);
-            if (service == null || !service.CategorySlug.Equals(categorySlug, StringComparison.OrdinalIgnoreCase))
+            if (service == null || !service.IsActive || !service.CategorySlug.Equals(categorySlug, StringComparison.OrdinalIgnoreCase))
             {
                 return this.NotFound();
             }

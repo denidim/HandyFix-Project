@@ -24,6 +24,8 @@ namespace HandyFix.Web.Controllers
     [AllowAnonymous]
     public class HomeController : BaseController
     {
+        private const int PopularServicesCount = 4;
+
         private readonly IReviewsService reviewsService;
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
@@ -66,7 +68,7 @@ namespace HandyFix.Web.Controllers
                 Categories = categories,
                 SliderReviews = sliderReviews,
                 ShowOnSiteReviews = showOnSiteReviews,
-                PopularServices = services.Take(4).ToList(),
+                PopularServices = PickPopularServices(services),
             };
 
             this.ViewData["Title"] = "Plumbers & Handymen in Surrey & South London";
@@ -239,6 +241,18 @@ namespace HandyFix.Web.Controllers
         {
             return this.View(
                 new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
+        }
+
+        // The home page's grid holds four. The services an admin marked popular come first, in
+        // list order; with fewer than four marked, the next services in the list fill the rest,
+        // so the grid is never part-empty (PROJECT_STATE Section 3ca).
+        private static List<ServiceViewModel> PickPopularServices(IEnumerable<ServiceViewModel> services)
+        {
+            return services
+                .Where(s => s.IsPopular)
+                .Concat(services.Where(s => !s.IsPopular))
+                .Take(PopularServicesCount)
+                .ToList();
         }
 
         private void SetJoinTeamMetadata()

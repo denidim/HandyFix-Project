@@ -25,7 +25,17 @@
   box-shadow: 0 0 0 2px var(--secondary-fixed);
 }
 
+/* A placeholder is an example, not an answer: lighter than typed text, which stays
+   --on-surface, so "John" in an empty field does not read as already filled in. The opacity is
+   set because Firefox fades placeholders on its own. */
+.form-control::placeholder {
+  color: var(--outline);
+  opacity: 1;
+}
+
 select.form-control {
+  /* Room for the arrow, so a long option stops short of it. */
+  padding-right: calc(var(--spacing-3) * 2 + 16px);
   appearance: none;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2345464d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;

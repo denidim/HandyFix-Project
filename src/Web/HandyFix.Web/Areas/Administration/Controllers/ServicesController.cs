@@ -15,6 +15,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
     public class ServicesController : AdministrationController
     {
+        private const string NameTakenMessage = "Another service already has this name, or one that was deleted did. Please choose a different name.";
+
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
 
@@ -46,6 +48,11 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ServiceAdminInputModel model)
         {
+            if (this.ModelState.IsValid && await this.servicesService.NameIsTakenAsync(model.Name))
+            {
+                this.ModelState.AddModelError(nameof(model.Name), NameTakenMessage);
+            }
+
             if (!this.ModelState.IsValid)
             {
                 IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
@@ -53,7 +60,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
-            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId);
+            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, model.DisplayOrder, model.IsPopular);
 
             try
             {
@@ -67,7 +74,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
-            return this.RedirectToAction(nameof(this.Index));
+            return this.RedirectToList();
         }
 
         [HttpGet]
@@ -79,6 +86,9 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.NotFound();
             }
 
+            // Every field the form posts back is copied here. IsActive was once left out, so the
+            // form opened ticked for an inactive service and saving any change switched it back
+            // on (PROJECT_STATE Section 3ca).
             var model = new ServiceAdminInputModel
             {
                 Id = service.Id,
@@ -87,6 +97,9 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 BasePrice = service.BasePrice,
                 EstimatedDurationMinutes = service.EstimatedDurationMinutes,
                 Slug = service.Slug,
+                IsActive = service.IsActive,
+                DisplayOrder = service.DisplayOrder,
+                IsPopular = service.IsPopular,
             };
 
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
@@ -103,6 +116,11 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(ServiceAdminInputModel model)
         {
+            if (this.ModelState.IsValid && await this.servicesService.NameIsTakenAsync(model.Name, model.Id))
+            {
+                this.ModelState.AddModelError(nameof(model.Name), NameTakenMessage);
+            }
+
             if (!this.ModelState.IsValid)
             {
                 IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
@@ -113,7 +131,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             ServiceDetailsViewModel oldService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
             var oldSlug = oldService?.Slug;
 
-            await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId);
+            await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId, model.DisplayOrder, model.IsPopular);
 
             ServiceDetailsViewModel newService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
             var newSlug = newService?.Slug;
@@ -133,14 +151,23 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 }
             }
 
-            return this.RedirectToAction(nameof(this.Index));
+            return this.RedirectToList();
         }
 
         [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
             await this.servicesService.DeleteAsync(id);
-            return this.RedirectToAction(nameof(this.Index));
+            return this.RedirectToList();
+        }
+
+        // Controller and area are named in full. The public site has a ServicesController too,
+        // with a fixed address of its own, and a redirect naming only the action resolved to that
+        // one: every save or delete left the admin on the public /Services page, outside the
+        // panel (PROJECT_STATE Section 3ca).
+        private IActionResult RedirectToList()
+        {
+            return this.RedirectToAction(nameof(this.Index), "Services", new { area = "Administration" });
         }
     }
 }

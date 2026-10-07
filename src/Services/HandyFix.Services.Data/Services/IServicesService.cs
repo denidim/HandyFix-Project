@@ -16,9 +16,11 @@ namespace HandyFix.Services.Data.Services
 
         Task<T> GetBySlugAsync<T>(string slug);
 
-        Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId);
+        Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId, int displayOrder, bool isPopular);
 
-        Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId);
+        Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular);
+
+        Task<bool> NameIsTakenAsync(string name, Guid? exceptId = null);
 
         Task DeleteAsync(Guid id);
 

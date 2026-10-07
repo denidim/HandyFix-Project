@@ -252,7 +252,9 @@
 
                     <div class="bento-card-top">
                         <span class="bento-badge @svcBadgeClass">@svc.CategoryName</span>
-                        @if (svc.EstimatedDurationMinutes > 0)
+                        @* A building job is quoted after a survey: its stored duration is a placeholder
+                           day, not a time anyone books, so the pill is left off. *@
+                        @if (svc.EstimatedDurationMinutes > 0 && !svcIsBuilding)
                         {
                             <span class="bento-duration-pill">
                                 <span class="material-symbols-outlined">schedule</span>
@@ -283,7 +285,7 @@
                             </div>
 
                             <span class="bento-action-pill">
-                                Book
+                                @(svcIsBuilding ? "Request Quote" : "Book")
                                 <span class="material-symbols-outlined">arrow_forward</span>
                             </span>
                         </div>
