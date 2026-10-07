@@ -77,7 +77,7 @@ namespace HandyFix.Web.Controllers
 
         [HttpGet]
         [Route("Contact")]
-        public async Task<IActionResult> Contact(string service = null, string date = null)
+        public async Task<IActionResult> Contact(string service = null, string date = null, string categorySlug = null)
         {
             this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
             this.ViewData["MetaDescription"] = "Get in touch with Plumbing Handyman Surrey for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.";
@@ -104,7 +104,20 @@ namespace HandyFix.Web.Controllers
                     ?.CategoryName;
             }
 
-            await this.SetContactCategoriesAsync();
+            IEnumerable<CategoryViewModel> categories = await this.SetContactCategoriesAsync();
+
+            // The home booking widget sends a category's slug, with no service, when a quote-only
+            // category is chosen there (PROJECT_STATE Section 3bz). A slug that matches nothing
+            // leaves the list unselected. The parameter is not called "category": the form's
+            // list reads a posted or query value of that name before it reads the model, and
+            // would look for an option whose value is the slug.
+            if (model.Category == null && !string.IsNullOrWhiteSpace(categorySlug))
+            {
+                model.Category = categories
+                    .FirstOrDefault(c => string.Equals(c.Slug, categorySlug.Trim(), StringComparison.OrdinalIgnoreCase))
+                    ?.Name;
+            }
+
             return this.View(model);
         }
 
@@ -236,10 +249,11 @@ namespace HandyFix.Web.Controllers
 
         // The Contact form's category options come from the real service categories, so a category
         // added through the admin panel appears there without a code change.
-        private async Task SetContactCategoriesAsync()
+        private async Task<IEnumerable<CategoryViewModel>> SetContactCategoriesAsync()
         {
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
             this.ViewData["ContactCategories"] = categories.Select(c => c.Name).ToList();
+            return categories;
         }
     }
 }

@@ -180,6 +180,31 @@
             Assert.StartsWith("Hi, I would like to request a quote / survey for: Tap Repairs.", model.Message);
         }
 
+        [Theory]
+        [InlineData("small-building-works", "Small Building & Refurbishments")]
+        [InlineData("SMALL-BUILDING-WORKS", "Small Building & Refurbishments")]
+        [InlineData("no-such-category", null)]
+        public async Task ContactGetWithCategorySlugShouldPreselectThatCategory(string slug, string expected)
+        {
+            // The home booking widget's quote button sends the slug when Small Building is chosen
+            // there (PROJECT_STATE Section 3bz).
+            var categoriesService = new Mock<ICategoriesService>();
+            categoriesService
+                .Setup(c => c.GetAllAsync<CategoryViewModel>())
+                .ReturnsAsync(new List<CategoryViewModel>
+                {
+                    new CategoryViewModel { Name = "Plumbing", Slug = "plumbing" },
+                    new CategoryViewModel { Name = "Small Building & Refurbishments", Slug = "small-building-works" },
+                });
+            var controller = BuildController(categoriesService: categoriesService);
+
+            var result = await controller.Contact(categorySlug: slug);
+
+            var model = Assert.IsType<ContactInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(expected, model.Category);
+            Assert.Null(model.Message);
+        }
+
         private static HomeController BuildController(
             Mock<IInquiriesService> inquiriesService = null,
             Mock<IServicesService> servicesService = null,

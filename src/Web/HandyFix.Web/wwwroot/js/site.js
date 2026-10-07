@@ -52,15 +52,44 @@ document.addEventListener("DOMContentLoaded", function () {
     const categorySelect = document.getElementById("widget-category");
     const submitBtn = document.getElementById("widget-submit-btn");
 
+    // Small Building is quote-only: the booking page cannot book it (PROJECT_STATE Section 3bz).
+    // With it chosen, the date, the booking note and the booking button are hidden, a note
+    // about quotes takes their place, and Get a Custom Quote opens the Contact form with that
+    // category already chosen.
+    const bookSteps = heroForm.querySelectorAll("[data-book-step]");
+    const quoteNote = document.getElementById("widget-quote-note");
+    const quoteBtn = document.getElementById("widget-quote-btn");
+    const quoteBaseHref = quoteBtn.getAttribute("href");
+    const bookingCard = heroForm.closest(".hero-booking-card");
+
+    function isQuoteOnly() {
+        const option = categorySelect.options[categorySelect.selectedIndex];
+        return Boolean(option && option.dataset.quoteOnly);
+    }
+
     function checkFormValidity() {
-        if (categorySelect.value && dateInput.value) {
+        if (categorySelect.value && dateInput.value && !isQuoteOnly()) {
             submitBtn.removeAttribute("disabled");
         } else {
             submitBtn.setAttribute("disabled", "true");
         }
     }
 
-    categorySelect.addEventListener("change", checkFormValidity);
+    function showCategoryMode() {
+        const quoteOnly = isQuoteOnly();
+        bookSteps.forEach(function (step) {
+            step.hidden = quoteOnly;
+        });
+        quoteNote.hidden = !quoteOnly;
+        bookingCard.classList.toggle("is-quote-only", quoteOnly);
+        quoteBtn.setAttribute("href", quoteOnly ? quoteBtn.dataset.quoteHref : quoteBaseHref);
+        if (quoteOnly) {
+            closeCalendar(false);
+        }
+        checkFormValidity();
+    }
+
+    categorySelect.addEventListener("change", showCategoryMode);
 
     // Date picker: the booking page's calendar as a dropdown under the field, instead of the
     // browser's picker, which only opened from its icon and closed whenever the page scrolled
@@ -204,10 +233,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // A browser that restores form values on Back can refill the hidden input; show that date
-    // in the field and re-check the button, rather than a blank field with a filled value.
-    if (dateInput.value) {
-        pickDate(parseIsoDate(dateInput.value), false);
+    // A browser that restores form values on Back can refill the hidden input and the service
+    // list; show that date in the field and lay the form out for that service, rather than a
+    // blank field with a filled value. Chrome puts the values back after the load event, so
+    // this runs again on pageshow, the first event that sees them.
+    function showRestoredValues() {
+        if (dateInput.value) {
+            pickDate(parseIsoDate(dateInput.value), false);
+        }
+        showCategoryMode();
     }
-    checkFormValidity();
+
+    showRestoredValues();
+    window.addEventListener("pageshow", showRestoredValues);
 });

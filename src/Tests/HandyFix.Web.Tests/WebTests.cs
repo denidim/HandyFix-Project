@@ -448,6 +448,38 @@
         }
 
         [Fact]
+        public async Task HomeBookingWidgetOffersSmallBuildingAsAQuoteNotABooking()
+        {
+            // Small Building cannot be booked online. As an ordinary option in this list it led
+            // to an empty booking page (PROJECT_STATE Sections 3bo and 3bz). The page script reads
+            // data-quote-only and swaps the date and the booking button for the quote note.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("<option value=\"small-building-works\" data-quote-only=\"true\">Small Building Work</option>", content);
+            Assert.Contains("data-quote-href=\"/Contact?categorySlug=small-building-works\"", content);
+            Assert.Contains("To book small building work, get in touch", content);
+            Assert.Equal(3, Regex.Matches(content, "\\sdata-book-step[\\s>]").Count);
+        }
+
+        [Fact]
+        public async Task ContactPageOpensOnTheCategoryNamedInTheLink()
+        {
+            // The widget's quote link first sent ?category=..., the name of the form's own field.
+            // The list then looked for an option whose value was the slug and selected nothing,
+            // though the controller had set the right category (PROJECT_STATE Section 3bz). Only
+            // the rendered page shows which option is selected.
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/Contact?categorySlug=small-building-works");
+            response.EnsureSuccessStatusCode();
+            var content = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+            Assert.Matches("<option[^>]*selected[^>]*>Small Building & Refurbishments</option>", content);
+        }
+
+        [Fact]
         public void EveryStylesheetOnDiskIsInTheSiteBundle()
         {
             // The list in SiteStylesheets.cs is the only thing that loads a public stylesheet

@@ -128,6 +128,31 @@
   transition: all var(--transition-normal);
 }
 
+/* .btn sets its own display, which would otherwise win over the hidden attribute. */
+.hero-submit-btn[hidden] {
+  display: none;
+}
+
+/* Small Building chosen in the widget (PROJECT_STATE Section 3bz): the booking button is hidden,
+   so Get a Custom Quote is the only action left and takes the booking button's solid green. The
+   line that set it apart from the booking button goes with it. */
+.hero-booking-card.is-quote-only .hero-quote-divider {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.hero-booking-card.is-quote-only .hero-quote-btn,
+.hero-booking-card.is-quote-only .hero-quote-btn:hover {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--on-primary);
+}
+
+.hero-booking-card.is-quote-only .hero-quote-btn:hover {
+  filter: brightness(0.9);
+}
+
 .value-prop-item {
   display: flex;
   align-items: center;
