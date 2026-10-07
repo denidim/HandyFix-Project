@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Booking.BookingInputModel
+@using System.Globalization
 @using HandyFix.Web.ViewModels.Services
 @{
     this.Layout = "_Layout";
@@ -399,9 +400,9 @@
             // ==========================================
             // Custom Open Calendar Logic
             // ==========================================
-            // The date comes from the link the visitor opened, so it is written as a JSON string:
-            // HTML encoding left a backslash alone, and one was enough to break this script.
-            let initialDateStr = @Json.Serialize(Model.SelectedDate ?? string.Empty);
+            // The date comes from the link the visitor opened. The controller only passes on a
+            // real date, and it is written here as a JSON string like every value in a script.
+            let initialDateStr = @Json.Serialize(Model.SelectedDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty);
             if (!initialDateStr) {
                 initialDateStr = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
             }

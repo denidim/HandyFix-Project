@@ -210,6 +210,22 @@
             Assert.Null(Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(unknown).Model).SelectedCategorySlug);
         }
 
+        [Fact]
+        public async Task IndexGetShouldGiveThePageTheDateFromTheLink()
+        {
+            // The home page's booking form sends the day the visitor picked. Whether the text in a
+            // link is a date at all is the model binder's job, checked in WebTests; here it is
+            // already a date or null. One controller per call: a controller keeps a single
+            // ViewData, so a second call would replace the model the first result points at.
+            var withDate = await BuildController(out _, out _, out _, out _)
+                .Index(categorySlug: null, date: new DateTime(2026, 10, 20), selectedServiceId: null);
+            var withoutDate = await BuildController(out _, out _, out _, out _)
+                .Index(categorySlug: null, date: null, selectedServiceId: null);
+
+            Assert.Equal(new DateTime(2026, 10, 20), Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(withDate).Model).SelectedDate);
+            Assert.Null(Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(withoutDate).Model).SelectedDate);
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]

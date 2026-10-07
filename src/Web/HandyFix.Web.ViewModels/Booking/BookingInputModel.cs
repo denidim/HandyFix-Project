@@ -58,6 +58,6 @@ namespace HandyFix.Web.ViewModels.Booking
 
         public Guid? SelectedServiceId { get; set; }
 
-        public string SelectedDate { get; set; }
+        public DateTime? SelectedDate { get; set; }
     }
 }

@@ -346,17 +346,22 @@
         }
 
         [Theory]
-        [InlineData("2026-10-20")]
-        [InlineData("\\")]
-        [InlineData("';alert(1);//")]
-        [InlineData("\";alert(1);//")]
-        [InlineData("</script><script>alert(1)</script>")]
-        public async Task BookingPageWritesTheDateFromTheLinkAsOneScriptString(string date)
+        [InlineData("2026-10-20", "2026-10-20")]
+        [InlineData("2026-10-20T15:30:00", "2026-10-20")]
+        [InlineData("abc", "")]
+        [InlineData("2026-13-45", "")]
+        [InlineData("\\", "")]
+        [InlineData("';alert(1);//", "")]
+        [InlineData("\";alert(1);//", "")]
+        [InlineData("</script><script>alert(1)</script>", "")]
+        public async Task BookingPageOpensOnTheDateInTheLinkOnlyWhenItIsADate(string date, string expected)
         {
-            // The date in /Booking?date=... comes from whoever made the link. HTML encoding stopped
-            // quotes and tags but left a backslash alone, and one backslash swallowed the closing
-            // quote and stopped the whole booking script (PROJECT_STATE Section 3bv). Written as a
-            // JSON string, whatever arrives stays one value.
+            // The date in /Booking?date=... comes from whoever made the link. Written into the
+            // page's script with HTML encoding, one backslash swallowed the closing quote and
+            // stopped the whole booking script (PROJECT_STATE Section 3bv), and anything that was
+            // not a date opened the calendar on "undefined NaN" (Section 3bw). The model binder
+            // now reads it as a date: a real one reaches the script as yyyy-MM-dd, anything else
+            // as an empty string, which the script takes to mean today.
             var client = this.server.CreateClient();
             var response = await client.GetAsync("/Booking?date=" + Uri.EscapeDataString(date));
             response.EnsureSuccessStatusCode();
@@ -364,8 +369,7 @@
 
             var written = Regex.Match(content, "let initialDateStr = (\"[^\\r\\n]*\");\\r?\\n");
             Assert.True(written.Success);
-            Assert.Equal(date, JsonSerializer.Deserialize<string>(written.Groups[1].Value));
-            Assert.DoesNotContain("<", written.Groups[1].Value);
+            Assert.Equal(expected, JsonSerializer.Deserialize<string>(written.Groups[1].Value));
         }
 
         [Fact]
