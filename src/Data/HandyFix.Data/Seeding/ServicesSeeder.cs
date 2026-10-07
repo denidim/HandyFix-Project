@@ -38,6 +38,7 @@ namespace HandyFix.Data.Seeding
                 new { Slug = "outside-garden-tap-installation", Name = "Outside Garden Tap Installation", Description = "Fitting an external garden tap with a double-check valve, connected to the internal water supply.", Price = 90.00m, Duration = 90, CategoryId = plumbingCategory.Id },
 
                 // Handyman Services
+                new { Slug = "general-handyman-call-out", Name = "General Handyman Call-Out", Description = "Not sure which service you need? Book a handyman for an hour and tell us about the job. Good for small mixed jobs and anything not on the list.", Price = 60.00m, Duration = 60, CategoryId = handymanCategory.Id },
                 new { Slug = "furniture-assembly", Name = "Furniture Assembly", Description = "Professional flat pack furniture assembly for wardrobes, beds, desks, and tables.", Price = 60.00m, Duration = 90, CategoryId = handymanCategory.Id },
                 new { Slug = "silicone-mastic-resealing", Name = "Silicone & Mastic Resealing", Description = "Removing old, mouldy silicone and resealing around baths, showers, and sinks to stop leaks and damp.", Price = 60.00m, Duration = 60, CategoryId = handymanCategory.Id },
                 new { Slug = "bath-shower-screen-fitting", Name = "Bath & Shower Screen Fitting", Description = "Fitting a glass bath or shower screen, including tile drilling and sealing for a watertight finish.", Price = 60.00m, Duration = 60, CategoryId = handymanCategory.Id },

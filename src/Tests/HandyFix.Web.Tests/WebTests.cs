@@ -431,6 +431,22 @@
             Assert.DoesNotMatch("value=\"plumbing\"\\s+checked", content);
         }
 
+        [Theory]
+        [InlineData("plumbing")]
+        [InlineData("handyman")]
+        public async Task BookingPageOffersAGeneralServiceInEachCategoryItCanBook(string category)
+        {
+            // The booking page opens a category on the service with "General" in its name.
+            // Handyman had none, so it opened on the first one in the alphabet, a bath screen
+            // fitting (PROJECT_STATE Section 3bz).
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/Booking?categorySlug=" + category);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Matches("data-category=\"" + category + "\"[^>]*>\\s*General ", content);
+        }
+
         [Fact]
         public void EveryStylesheetOnDiskIsInTheSiteBundle()
         {

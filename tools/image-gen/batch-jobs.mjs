@@ -109,7 +109,7 @@ export const jobs = [
     "outdoorJob"),
 
   // ---- Handyman ----
-  service("general-handyman-call-out", // slug assumed; the service is seeded in Launch Sprint L2 item 2
+  service("general-handyman-call-out",
     "A friendly, stocky handyman in his 50s with a bald head and a warm smile, carrying a toolbox, being welcomed at a sunny front door by a smiling older " +
     "couple, colourful front garden, bright morning. Warm first impression.",
     "outdoorJob"),
