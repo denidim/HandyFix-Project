@@ -2053,7 +2053,7 @@ L2 item 2 and the rest of item 3. User's report: choosing Plumbing in the home p
 - **Highlight, same three widths**: bold navy on the green band, on one line at 1440px and across two at 390px and 360px, no sideways scroll.
 - Mockups before code and pictures of the finished result: `docs/private/previews/25a`, `25b`, `26` (the box), `27a`, `27b`, `28` (the highlight).
 - `dotnet build` with a full rebuild: 268 warnings before and after, none new; `dotnet test src/HandyFix.sln`: 279/279 (97 + 182).
-- **Not checked on staging**: written before the push to `dev`.
+- **Staging, behind its password, after the deploy**: the home page has the Small Building option, the quote link, the note and the highlight, and the bundled stylesheet and `site.js` carry the new rules. `/Booking?categorySlug=handyman` lists "General Handyman Call-Out" with Handyman ticked, so the seeder added the service there. `/Booking?categorySlug=small-building-works` answers 302 to the Contact link, which opens with the category selected. An unknown category opens on Plumbing. The new service page and its picture answer 200. Read from the pages with `curl`, not driven in a browser. Merged to `main` as PR #37.
 
 ---
 
