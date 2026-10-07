@@ -30,6 +30,12 @@ namespace HandyFix.Web.ViewModels.Services
 
         public string ImageUrl { get; set; }
 
+        public bool IsActive { get; set; }
+
+        public int DisplayOrder { get; set; }
+
+        public bool IsPopular { get; set; }
+
         public void CreateMappings(TypeAdapterConfig config)
         {
             config.NewConfig<Service, ServiceViewModel>()

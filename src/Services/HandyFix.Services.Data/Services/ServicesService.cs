@@ -41,7 +41,8 @@ namespace HandyFix.Services.Data.Services
             }
 
             return await query
-                .OrderBy(x => x.Name)
+                .OrderBy(x => x.DisplayOrder)
+                .ThenBy(x => x.Name)
                 .To<T>()
                 .ToListAsync();
         }
@@ -57,7 +58,8 @@ namespace HandyFix.Services.Data.Services
             }
 
             return await query
-                .OrderBy(x => x.Name)
+                .OrderBy(x => x.DisplayOrder)
+                .ThenBy(x => x.Name)
                 .To<T>()
                 .ToListAsync();
         }
@@ -78,7 +80,7 @@ namespace HandyFix.Services.Data.Services
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId)
+        public async Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId, int displayOrder, bool isPopular)
         {
             var service = new Service
             {
@@ -88,6 +90,8 @@ namespace HandyFix.Services.Data.Services
                 EstimatedDurationMinutes = estimatedDurationMinutes,
                 CategoryId = categoryId,
                 IsActive = true,
+                DisplayOrder = displayOrder,
+                IsPopular = isPopular,
                 Slug = SlugGenerator.Slugify(name),
             };
 
@@ -97,7 +101,7 @@ namespace HandyFix.Services.Data.Services
             return service.Id;
         }
 
-        public async Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId)
+        public async Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular)
         {
             Service service = await this.servicesRepository.All()
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -110,6 +114,8 @@ namespace HandyFix.Services.Data.Services
                 service.EstimatedDurationMinutes = estimatedDurationMinutes;
                 service.IsActive = isActive;
                 service.CategoryId = categoryId;
+                service.DisplayOrder = displayOrder;
+                service.IsPopular = isPopular;
                 service.Slug = SlugGenerator.Slugify(name);
 
                 await this.servicesRepository.SaveChangesAsync();

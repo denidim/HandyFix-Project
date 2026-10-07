@@ -73,6 +73,7 @@
             <thead>
                 <tr class="admin-table-head">
                     <th class="px-4 py-3 font-label-sm uppercase">Service Name</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">Order</th>
                     <th class="px-4 py-3 font-label-sm uppercase">Category</th>
                     <th class="px-4 py-3 font-label-sm uppercase">Estimated Duration</th>
                     <th class="px-4 py-3 font-label-sm uppercase">Price</th>
@@ -95,11 +96,22 @@
                                         <span class="material-symbols-outlined text-secondary">@icon</span>
                                     </div>
                                     <div>
-                                        <p class="font-body-md font-bold mb-0 text-primary">@svc.Name</p>
+                                        <p class="font-body-md font-bold mb-0 text-primary">
+                                            @svc.Name
+                                            @if (svc.IsPopular)
+                                            {
+                                                <span class="ms-1 px-2 py-1 rounded-full fs-11 tint-info">Popular</span>
+                                            }
+                                            @if (!svc.IsActive)
+                                            {
+                                                <span class="ms-1 px-2 py-1 rounded-full fs-11 tint-neutral-soft">Inactive</span>
+                                            }
+                                        </p>
                                         <p class="text-on-surface-variant mb-0 fs-12 service-desc-truncate">@svc.Description</p>
                                     </div>
                                 </div>
                             </td>
+                            <td class="px-4 py-3 font-body-md text-primary">@svc.DisplayOrder</td>
                             <td class="px-4 py-3">
                                 <span class="px-3 py-1 rounded-full font-label-sm @categoryBadgeClass">@categorySlug</span>
                             </td>
@@ -123,7 +135,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-center p-4 text-muted">No services found in database.</td>
+                        <td colspan="6" class="text-center p-4 text-muted">No services found in database.</td>
                     </tr>
                 }
             </tbody>

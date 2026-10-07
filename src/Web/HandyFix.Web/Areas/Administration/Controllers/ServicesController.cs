@@ -53,7 +53,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
-            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId);
+            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, model.DisplayOrder, model.IsPopular);
 
             try
             {
@@ -79,6 +79,9 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.NotFound();
             }
 
+            // Every field the form posts back is copied here. IsActive was once left out, so the
+            // form opened ticked for an inactive service and saving any change switched it back
+            // on (PROJECT_STATE Section 3ca).
             var model = new ServiceAdminInputModel
             {
                 Id = service.Id,
@@ -87,6 +90,9 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 BasePrice = service.BasePrice,
                 EstimatedDurationMinutes = service.EstimatedDurationMinutes,
                 Slug = service.Slug,
+                IsActive = service.IsActive,
+                DisplayOrder = service.DisplayOrder,
+                IsPopular = service.IsPopular,
             };
 
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
@@ -113,7 +119,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             ServiceDetailsViewModel oldService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
             var oldSlug = oldService?.Slug;
 
-            await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId);
+            await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId, model.DisplayOrder, model.IsPopular);
 
             ServiceDetailsViewModel newService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
             var newSlug = newService?.Slug;

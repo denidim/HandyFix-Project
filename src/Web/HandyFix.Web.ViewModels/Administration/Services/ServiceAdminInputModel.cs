@@ -4,6 +4,8 @@ namespace HandyFix.Web.ViewModels.Administration.Services
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
+    using HandyFix.Data.Models;
+
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -30,6 +32,13 @@ namespace HandyFix.Web.ViewModels.Administration.Services
         public int EstimatedDurationMinutes { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        [Display(Name = "Display order")]
+        [Range(0, 999, ErrorMessage = "Display order must be between 0 and 999.")]
+        public int DisplayOrder { get; set; } = Service.DefaultDisplayOrder;
+
+        [Display(Name = "Popular service")]
+        public bool IsPopular { get; set; }
 
         [Required(ErrorMessage = "Category is required.")]
         public Guid CategoryId { get; set; }
