@@ -66,7 +66,7 @@
 
             var result = await controller.Edit(model);
 
-            Assert.IsType<RedirectToActionResult>(result);
+            AssertGoesBackToTheAdminList(result);
             servicesService.Verify(
                 x => x.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, false, model.CategoryId, 0, true),
                 Times.Once);
@@ -82,10 +82,22 @@
 
             var result = await controller.Create(model);
 
-            Assert.IsType<RedirectToActionResult>(result);
+            AssertGoesBackToTheAdminList(result);
             servicesService.Verify(
                 x => x.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, 12, true),
                 Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteShouldGoBackToTheAdminList()
+        {
+            var controller = BuildController(out var servicesService, out _);
+            var id = Guid.NewGuid();
+
+            var result = await controller.Delete(id);
+
+            AssertGoesBackToTheAdminList(result);
+            servicesService.Verify(x => x.DeleteAsync(id), Times.Once);
         }
 
         [Fact]
@@ -93,6 +105,18 @@
         {
             // A new service left at 0 would jump ahead of every category's general call-out.
             Assert.Equal(Service.DefaultDisplayOrder, new ServiceAdminInputModel().DisplayOrder);
+        }
+
+        // The redirect has to name the controller and the area. Naming only the action resolved
+        // to the public ServicesController, which has a fixed address of its own, and every save
+        // left the admin on the public /Services page (PROJECT_STATE Section 3ca). WebTests checks
+        // that these three values produce the admin address.
+        private static void AssertGoesBackToTheAdminList(IActionResult result)
+        {
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Index", redirect.ActionName);
+            Assert.Equal("Services", redirect.ControllerName);
+            Assert.Equal("Administration", redirect.RouteValues["area"]);
         }
 
         private static ServiceAdminInputModel ValidService() => new ServiceAdminInputModel

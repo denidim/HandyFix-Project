@@ -67,7 +67,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
-            return this.RedirectToAction(nameof(this.Index));
+            return this.RedirectToList();
         }
 
         [HttpGet]
@@ -139,14 +139,23 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 }
             }
 
-            return this.RedirectToAction(nameof(this.Index));
+            return this.RedirectToList();
         }
 
         [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
             await this.servicesService.DeleteAsync(id);
-            return this.RedirectToAction(nameof(this.Index));
+            return this.RedirectToList();
+        }
+
+        // Controller and area are named in full. The public site has a ServicesController too,
+        // with a fixed address of its own, and a redirect naming only the action resolved to that
+        // one: every save or delete left the admin on the public /Services page, outside the
+        // panel (PROJECT_STATE Section 3ca).
+        private IActionResult RedirectToList()
+        {
+            return this.RedirectToAction(nameof(this.Index), "Services", new { area = "Administration" });
         }
     }
 }

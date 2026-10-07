@@ -13,6 +13,7 @@
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Testing;
+    using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.DependencyInjection;
 
     using WebOptimizer;
@@ -504,6 +505,18 @@
             var content = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
             Assert.Matches("<option[^>]*selected[^>]*>Small Building & Refurbishments</option>", content);
+        }
+
+        [Fact]
+        public void AdminServicesListIsReachedByNamingItsControllerAndArea()
+        {
+            // Two controllers are called ServicesController: the public one, fixed at /Services,
+            // and the admin one. The admin one redirects to its list by these three values
+            // (AdminServicesControllerTests); this is the address they must produce.
+            var links = this.server.Services.GetRequiredService<LinkGenerator>();
+
+            Assert.Equal("/Administration/Services", links.GetPathByAction("Index", "Services", new { area = "Administration" }));
+            Assert.Equal("/Services", links.GetPathByAction("Index", "Services", new { area = string.Empty }));
         }
 
         [Fact]
