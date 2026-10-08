@@ -19,6 +19,7 @@ namespace HandyFix.Services.Data.Tests
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -65,7 +66,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             // Seed required statuses
@@ -103,7 +104,7 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
 
             var model = new BookingInputModel
             {
@@ -145,7 +146,8 @@ namespace HandyFix.Services.Data.Tests
                     "john@example.com",
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    null),
+                    null,
+                    It.IsAny<string>()),
                 Times.Once);
         }
 
@@ -176,7 +178,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -230,7 +232,7 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
 
             var model = new BookingInputModel
             {
@@ -261,7 +263,8 @@ namespace HandyFix.Services.Data.Tests
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    null),
+                    null,
+                    It.IsAny<string>()),
                 Times.Never);
         }
 
@@ -285,7 +288,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -335,7 +338,7 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
 
             await bookingsService.RescheduleBookingAsync(booking.Id, newSlot.Id);
 
@@ -380,7 +383,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -439,7 +442,7 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
 
             await Assert.ThrowsAsync<SlotUnavailableException>(
                 () => bookingsService.RescheduleBookingAsync(booking.Id, newSlot.Id));
@@ -479,7 +482,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -519,7 +522,7 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
 
             // Simulate a concurrent process (e.g. the stale-booking cleanup sweep)
             // having already updated this slot's row - and thereby bumped its
@@ -559,7 +562,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -636,7 +639,7 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
 
             var releasedCount = await bookingsService.ReleaseAbandonedBookingsAsync(TimeSpan.FromMinutes(15));
 
@@ -730,7 +733,7 @@ namespace HandyFix.Services.Data.Tests
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
@@ -790,7 +793,7 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
         }
 
         [Fact]
@@ -798,7 +801,7 @@ namespace HandyFix.Services.Data.Tests
         {
             // A pure computation over whatever list it's handed - no repository access - so it
             // needs none of BookingsService's other dependencies wired up.
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -817,7 +820,7 @@ namespace HandyFix.Services.Data.Tests
         [Fact]
         public void GetSummaryStatsShouldReturnZeroRevenueForAnEmptyList()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
 
             BookingSummaryStats stats = service.GetSummaryStats(new List<BookingDetailsViewModel>());
 
@@ -842,7 +845,7 @@ namespace HandyFix.Services.Data.Tests
                 new BookingStatus { Name = "Approved" });
             dbContext.SaveChanges();
 
-            var service = new BookingsService(null, null, null, bookingStatusRepo, null, null, null, null, null, null, null);
+            var service = new BookingsService(null, null, null, bookingStatusRepo, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
 
             IEnumerable<string> result = await service.GetStatusOptionsAsync();
 
