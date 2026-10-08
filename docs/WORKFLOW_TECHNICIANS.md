@@ -13,8 +13,16 @@ Fields: First Name, Last Name, Phone Number, Active flag.
 
 | Field | Rule |
 | --- | --- |
-| First / Last Name | required, 2–100 chars |
+| First Name | required, 2–100 chars |
+| Last Name | **optional**; 2–100 chars when given |
 | Phone Number | **required at the form level**, `[Phone]` format, ≤20 chars |
+
+**One name is enough.** A technician kept under a first name alone is shown, and named to the
+customer, by that name: "Your technician for this visit is Zapryan (020 3951 5915)". The business
+launches this way on purpose, so no surname goes into a customer's email. Every place that prints
+a technician's name goes through `NameFormat.Full` (`HandyFix.Common`), which leaves no space
+hanging after a name that stands alone. A last name box left empty is saved as no value, not as
+an empty one.
 
 The phone number is required on the form even though the underlying database column is nullable.
 Reason, straight from the code comment: it's what the customer receives in the booking-confirmation
@@ -56,18 +64,21 @@ saved with no change made. In that dropdown they appear labelled **"(inactive)"*
 
 ---
 
-## The seeded placeholder
+## The technician a new database starts with
 
-`TechniciansSeeder` inserts exactly one row — `John Doe`, `07123456789`, active — but **only when
-the Technicians table is completely empty**, deleted rows counted (so deleting the placeholder
-does not bring it back at the next start). This means:
+`TechniciansSeeder` inserts exactly one row — `Zapryan`, no last name, the business's own number
+(`GlobalConstants.BusinessPhone`), active — but **only when the Technicians table is completely
+empty**, deleted rows counted (so deleting him does not bring him back at the next start). He is
+the one technician the business launches with, so the live site's new database holds a real
+person from its first start. This means:
 
-- A fresh clone or newly stood-up environment always starts with this one placeholder.
+- A fresh clone or newly stood-up environment always starts with this one technician.
 - **You cannot add a second technician by editing the seeder.** It won't run again once the table
-  has any row in it. The admin CRUD above is the only way to grow the roster past the placeholder.
-- Editing `John Doe` into a real person's details (rather than adding alongside them) is the
-  intended path once real names are available — see `PROJECT_STATE.md` Tier 2 item 11. That's a
-  data-entry task through this admin panel, not a code change.
+  has any row in it. The admin CRUD above is the only way to grow the roster.
+- **A database made before 2026-10-08 still holds the old placeholder**, `John Doe` on a made-up
+  number, because the seeder never touches a table that has a row. There the placeholder is edited
+  into the real technician in this admin panel, which keeps its past bookings attached. Staging
+  was done this way on 2026-10-08 (`PROJECT_STATE.md` Section 3cd).
 
 ---
 
@@ -79,7 +90,8 @@ does not bring it back at the next start). This means:
 | Assignment dropdown is empty | No active technicians exist. Add or reactivate one. |
 | A booking's assigned technician shows "(inactive)" in the dropdown | Expected — they were deactivated after being assigned. Reassigning to someone else is fine; leaving them is fine too. |
 | Confirmation email says nothing about a technician | The booking was approved *before* a technician was assigned — see `WORKFLOW_BOOKINGS.md`'s troubleshooting table. |
-| "Adding" `John Doe` again did nothing | The seeder only fires on a completely empty table — edit the existing row instead. |
+| A change to `TechniciansSeeder` did nothing | The seeder only fires on a completely empty table — edit the existing row in the admin panel instead. |
+| The customer's email names the technician by first name only | Expected when the roster entry has no last name. Add one on the technician's Edit page if it should be there. |
 
 ---
 
@@ -88,4 +100,4 @@ does not bring it back at the next start). This means:
 - Assignment itself (which technician does which job) happens on the booking, not here: see
   `WORKFLOW_BOOKINGS.md` Step 3.
 - Architectural history: `PROJECT_STATE.md` Section 3r (technicians decoupled from capacity slots,
-  admin CRUD added).
+  admin CRUD added) and Section 3cd (the last name made optional, the launch technician seeded).
