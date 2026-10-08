@@ -1,5 +1,10 @@
-<div class="mobile-cta-bar">
-    <a asp-controller="Booking" asp-action="Index" class="btn btn-success btn-mobile-cta">
-        Book Now
-    </a>
-</div>
+@* Not on the booking pages: there the button linked to the page the visitor was already on, and on
+   a phone it sat on top of the form's fields (PROJECT_STATE Section 3cb). *@
+@if (!string.Equals(this.ViewContext.RouteData.Values["controller"] as string, "Booking", StringComparison.OrdinalIgnoreCase))
+{
+    <div class="mobile-cta-bar">
+        <a asp-controller="Booking" asp-action="Index" class="btn btn-success btn-mobile-cta">
+            Book Now
+        </a>
+    </div>
+}

@@ -454,6 +454,12 @@
   box-shadow: 0 0 0 3px rgba(57, 184, 253, 0.15);
 }
 
+/* The rows inside a form card. The markup's space-y-6 class had no rule behind it, so each row's
+   label sat right under the row above. */
+.stylish-input-card.space-y-6 > * + * {
+  margin-top: var(--spacing-6);
+}
+
 /* Centred Proceed to Payment Button Container */
 .submit-container-centered {
   display: flex;
