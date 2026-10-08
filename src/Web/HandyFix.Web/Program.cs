@@ -14,6 +14,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Data.Reviews;
@@ -148,7 +149,10 @@ namespace HandyFix.Web
                 var apiKey = configuration["Brevo:ApiKey"];
                 if (!string.IsNullOrWhiteSpace(apiKey))
                 {
-                    return new BrevoEmailSender(apiKey);
+                    // Staging sends from the live site's address, so it marks its subjects.
+                    IEmailSender brevo = new BrevoEmailSender(apiKey);
+                    var subjectPrefix = EmailSettings.SubjectPrefix(configuration);
+                    return subjectPrefix == null ? brevo : new SubjectPrefixEmailSender(brevo, subjectPrefix);
                 }
 
                 Microsoft.AspNetCore.Hosting.IWebHostEnvironment env = sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();

@@ -4,8 +4,8 @@
 
     // The addresses the site's emails go from and to, each with the real domain's address as its
     // default and a configuration key to override it. Brevo, like any real email provider,
-    // refuses a sender it has not verified, so staging and local testing point these at an
-    // address that is verified in the Brevo account they use.
+    // refuses a sender it has not verified. Staging keeps the defaults, so the real sender is
+    // tried there before the live site depends on it; only its notices go somewhere else.
     public static class EmailSettings
     {
         // The name on emails to a customer, and on notices to the company about a customer.
@@ -34,6 +34,13 @@
         public static string AdminNotificationAddress(IConfiguration configuration)
         {
             return Read(configuration, "Admin:NotificationEmail", DefaultAdminNotificationAddress);
+        }
+
+        // A mark put in front of every subject: "[STAGING]" on staging, nothing on the live site.
+        // Null when there is none to add.
+        public static string SubjectPrefix(IConfiguration configuration)
+        {
+            return Read(configuration, "Email:SubjectPrefix", null);
         }
 
         private static string Read(IConfiguration configuration, string key, string fallback)

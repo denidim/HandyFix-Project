@@ -17,6 +17,9 @@ services:
       Brevo__ApiKey: ${BREVO_API_KEY}
       Email__BookingsFromAddress: ${EMAIL_BOOKINGS_FROM_ADDRESS}
       Email__SystemFromAddress: ${EMAIL_SYSTEM_FROM_ADDRESS}
+      # A mark in front of every subject. Staging sends from the live site's
+      # address, so without one a test email reads exactly like a real one.
+      Email__SubjectPrefix: ${EMAIL_SUBJECT_PREFIX:-}
       # Where notices to the company go (paid deposits, enquiries, job
       # applications). Empty means the real info@ inbox; staging sets its own
       # so test enquiries do not land there.
