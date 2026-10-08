@@ -32,6 +32,7 @@ namespace HandyFix.Web
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.HttpOverrides;
+    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -63,6 +64,10 @@ namespace HandyFix.Web
 
             services.AddDefaultIdentity<ApplicationUser>(IdentityOptionsProvider.GetIdentityOptions)
                 .AddRoles<ApplicationRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+
+            // How long an emailed password reset link works. Identity's own default is a day.
+            services.Configure<DataProtectionTokenProviderOptions>(
+                options => options.TokenLifespan = TimeSpan.FromHours(AdminAccountService.ResetLinkHours));
 
             services.Configure<CookiePolicyOptions>(
                 options =>
@@ -191,6 +196,10 @@ namespace HandyFix.Web
             services.TryAddSingleton(TimeProvider.System);
             services.AddTransient<IFormGuard, FormGuard>();
             services.AddRateLimiter(RateLimits.Configure);
+
+            // The admin account: changing its password and login email, and resetting a forgotten
+            // password by email (PROJECT_STATE Section 3cc).
+            services.AddTransient<IAdminAccountService, AdminAccountService>();
 
             // Five seconds to ask Cloudflare about a Turnstile token. If no answer comes the
             // submission is let through (TurnstileVerifier says why), so this is also the longest

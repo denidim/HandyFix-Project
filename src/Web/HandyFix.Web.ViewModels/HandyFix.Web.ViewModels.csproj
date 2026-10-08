@@ -2,6 +2,7 @@
 
 
   <ItemGroup>
+    <ProjectReference Include="..\..\HandyFix.Common\HandyFix.Common.csproj" />
     <ProjectReference Include="..\..\Data\HandyFix.Data.Models\HandyFix.Data.Models.csproj" />
     <ProjectReference Include="..\..\Services\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
   </ItemGroup>
