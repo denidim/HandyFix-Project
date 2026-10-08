@@ -26,6 +26,24 @@ namespace HandyFix.Services.Data.Tests
 
     public class BookingsServiceTests
     {
+        // The booking form asks for the postcode in a box of its own (PROJECT_STATE.md Section
+        // 3cb); a booking keeps one address.
+        [Theory]
+        [InlineData("12 Main Rd, Sutton", "sm1 1aa", "12 Main Rd, Sutton, SM1 1AA")]
+        [InlineData("  12 Main Rd, Sutton,  ", " SM11AA ", "12 Main Rd, Sutton, SM1 1AA")]
+
+        // Typed into the address as well: kept once, as the visitor wrote it.
+        [InlineData("12 Main Rd, Sutton SM1 1AA", "SM1 1AA", "12 Main Rd, Sutton SM1 1AA")]
+        [InlineData("12 Main Rd, Sutton, sm11aa", "SM1 1AA", "12 Main Rd, Sutton, sm11aa")]
+
+        // Nothing usable in the postcode box (the form refuses that before it gets here).
+        [InlineData("12 Main Rd, Sutton", null, "12 Main Rd, Sutton")]
+        [InlineData("12 Main Rd, Sutton", "not a postcode", "12 Main Rd, Sutton")]
+        public void JoinAddressAndPostcodeShouldGiveOneAddress(string address, string postcode, string expected)
+        {
+            Assert.Equal(expected, BookingsService.JoinAddressAndPostcode(address, postcode));
+        }
+
         [Fact]
         public async Task CreateBookingAsyncShouldCreateBookingCorrectly()
         {
@@ -94,6 +112,7 @@ namespace HandyFix.Services.Data.Tests
                 Email = "john@example.com",
                 PhoneNumber = "07123456789",
                 Address = "12 Main Rd, Sutton",
+                Postcode = "sm1 1aa",
                 ProblemDescription = "Leaking kitchen sink pipe",
                 SlotId = slot.Id,
                 ServiceId = serviceEntity.Id,
@@ -108,7 +127,9 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal("Doe", booking.CustomerLastName);
             Assert.Equal("john@example.com", booking.Email);
             Assert.Equal("07123456789", booking.PhoneNumber);
-            Assert.Equal("12 Main Rd, Sutton", booking.Address);
+
+            // The form's two boxes are one address on the booking, postcode written the standard way.
+            Assert.Equal("12 Main Rd, Sutton, SM1 1AA", booking.Address);
             Assert.Equal("Leaking kitchen sink pipe", booking.ProblemDescription);
             Assert.Equal(pendingStatus.Id, booking.StatusId);
 

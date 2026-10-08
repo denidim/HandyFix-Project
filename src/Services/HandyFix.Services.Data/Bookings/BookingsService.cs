@@ -13,6 +13,7 @@ namespace HandyFix.Services.Data.Bookings
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
+    using HandyFix.Web.ViewModels.Validation;
 
     using Mapster;
 
@@ -64,6 +65,26 @@ namespace HandyFix.Services.Data.Bookings
             this.configuration = configuration;
         }
 
+        // The form takes the postcode in a box of its own so it can be checked. A booking has one
+        // address, so the two are joined here, with the postcode written the standard way
+        // ("KT9 2QN"). A visitor who typed the postcode into the address as well gets it once.
+        public static string JoinAddressAndPostcode(string address, string postcode)
+        {
+            var street = (address ?? string.Empty).Trim().TrimEnd(',').TrimEnd();
+            var normalized = UkPostcode.Normalize(postcode);
+            if (normalized == null)
+            {
+                return street;
+            }
+
+            var streetCompact = new string(street.Where(c => !char.IsWhiteSpace(c)).ToArray());
+            var postcodeCompact = normalized.Replace(" ", string.Empty);
+
+            return streetCompact.Contains(postcodeCompact, StringComparison.OrdinalIgnoreCase)
+                ? street
+                : $"{street}, {normalized}";
+        }
+
         public async Task<Booking> CreateBookingAsync(
             BookingInputModel model,
             IReadOnlyList<string> imageUrls,
@@ -90,6 +111,7 @@ namespace HandyFix.Services.Data.Bookings
 
             var totalAmount = selectedServices.Sum(x => x.BasePrice);
             var depositAmount = 50.00m; // Flat booking deposit
+            var address = JoinAddressAndPostcode(model.Address, model.Postcode);
 
             // 1. Build the booking object framework completely in-memory
             var booking = new Booking
@@ -98,7 +120,7 @@ namespace HandyFix.Services.Data.Bookings
                 CustomerLastName = model.CustomerLastName,
                 Email = model.Email,
                 PhoneNumber = model.PhoneNumber,
-                Address = model.Address,
+                Address = address,
                 ProblemDescription = model.ProblemDescription,
                 StatusId = pendingStatus.Id,
                 UserId = userId,
@@ -162,7 +184,7 @@ namespace HandyFix.Services.Data.Bookings
                 <li><strong>Booking Reference:</strong> {booking.Id}</li>
                 <li><strong>Service(s):</strong> {string.Join(", ", selectedServices.Select(s => s.Name))}</li>
                 <li><strong>Scheduled Time:</strong> {slot.StartTime:dd MMM yyyy 'at' HH:mm}</li>
-                <li><strong>Address:</strong> {model.Address}</li>
+                <li><strong>Address:</strong> {address}</li>
             </ul>
             <p>To secure this appointment slot, please pay the deposit of £{depositAmount.ToString("F2")} on the next screen.</p>
             <p>Once paid, we will confirm your technician assignment.</p>

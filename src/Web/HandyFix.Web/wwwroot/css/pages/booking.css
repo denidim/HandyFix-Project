@@ -273,6 +273,30 @@
   color: var(--secondary);
 }
 
+/* The card sets display: flex, which would otherwise beat the hidden attribute. */
+.reassuring-info-card[hidden] {
+  display: none;
+}
+
+/* The same card when it stops the booking: the postcode is outside the areas we cover. */
+.reassuring-info-card.is-blocking {
+  background: var(--error-container);
+  border-color: var(--error);
+}
+
+.reassuring-info-card.is-blocking .reassuring-info-icon {
+  color: var(--error);
+}
+
+/* The hint beside the postcode box. */
+.booking-field-hint {
+  font-size: var(--fs-label-sm);
+  color: var(--on-surface-variant);
+  line-height: 1.55;
+  margin: 0;
+  align-self: center;
+}
+
 /* Custom Calendar Widget */
 .custom-calendar-card {
   background: var(--surface-container-lowest);

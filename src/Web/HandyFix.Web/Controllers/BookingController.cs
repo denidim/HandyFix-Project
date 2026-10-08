@@ -4,13 +4,16 @@ namespace HandyFix.Web.Controllers
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
+    using HandyFix.Web.ViewModels.Validation;
 
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
@@ -26,17 +29,20 @@ namespace HandyFix.Web.Controllers
         private readonly IAvailabilityService availabilityService;
         private readonly IBookingsService bookingsService;
         private readonly IImageService imageService;
+        private readonly IServiceAreasService serviceAreasService;
 
         public BookingController(
             IServicesService servicesService,
             IAvailabilityService availabilityService,
             IBookingsService bookingsService,
-            IImageService imageService)
+            IImageService imageService,
+            IServiceAreasService serviceAreasService)
         {
             this.servicesService = servicesService;
             this.availabilityService = availabilityService;
             this.bookingsService = bookingsService;
             this.imageService = imageService;
+            this.serviceAreasService = serviceAreasService;
         }
 
         [HttpGet]
@@ -78,6 +84,7 @@ namespace HandyFix.Web.Controllers
                     SelectedCategorySlug = categorySlug,
                     SelectedDate = date,
                     SelectedServiceId = selectedServiceId,
+                    ServedPostcodeDistricts = await this.serviceAreasService.GetServedPostcodeDistrictsAsync(),
                 };
 
                 this.ViewData["MetaDescription"] = "Book a plumbing or handyman appointment online across Surrey and South London. Pick a service, choose an available slot, and secure it with a deposit.";
@@ -119,6 +126,17 @@ namespace HandyFix.Web.Controllers
                 return await this.RedisplayBookingForm(model);
             }
 
+            // Before anything is saved or a deposit asked for: a postcode outside the districts
+            // the service areas list is a job we may not be able to reach. The page says so as
+            // the postcode is typed; this is the check a visitor cannot skip.
+            if (!await this.serviceAreasService.IsPostcodeServedAsync(model.Postcode))
+            {
+                model.PostcodeNotServed = true;
+                return await this.RedisplayBookingForm(
+                    model,
+                    $"Sorry, we don't take online bookings for {UkPostcode.GetOutwardCode(model.Postcode)} yet. Send us an enquiry or call {GlobalConstants.BusinessPhone}, and we'll tell you whether we can come out to you.");
+            }
+
             try
             {
                 IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "bookings");
@@ -154,6 +172,7 @@ namespace HandyFix.Web.Controllers
 
             model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
             model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
+            model.ServedPostcodeDistricts = await this.serviceAreasService.GetServedPostcodeDistrictsAsync();
             model.SelectedServiceId = model.ServiceId;
 
             // The tabs are not part of what the form posts, so the category comes back from the

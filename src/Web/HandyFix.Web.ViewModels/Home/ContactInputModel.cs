@@ -3,6 +3,8 @@ namespace HandyFix.Web.ViewModels.Home
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
+    using HandyFix.Web.ViewModels.Validation;
+
     using Microsoft.AspNetCore.Http;
 
     public class ContactInputModel
@@ -10,15 +12,16 @@ namespace HandyFix.Web.ViewModels.Home
         [Required(ErrorMessage = "Please enter your name.")]
         [MinLength(2, ErrorMessage = "Name must be at least 2 characters.")]
         [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
+        [PersonName]
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Please enter your email address.")]
-        [EmailAddress(ErrorMessage = "Invalid email address format.")]
+        [StrictEmail]
         [MaxLength(255, ErrorMessage = "Email cannot exceed 255 characters.")]
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Please enter your phone number.")]
-        [Phone(ErrorMessage = "Invalid phone number format.")]
+        [UkPhone]
         [MaxLength(20, ErrorMessage = "Phone number cannot exceed 20 characters.")]
         public string PhoneNumber { get; set; }
 
@@ -27,6 +30,7 @@ namespace HandyFix.Web.ViewModels.Home
         [Required(ErrorMessage = "Please enter your message.")]
         [MinLength(10, ErrorMessage = "Message must be at least 10 characters long.")]
         [MaxLength(2900, ErrorMessage = "Message cannot exceed 2900 characters.")]
+        [NotMostlyLinks]
         public string Message { get; set; }
 
         [Required(ErrorMessage = "Please choose what your enquiry is about.")]

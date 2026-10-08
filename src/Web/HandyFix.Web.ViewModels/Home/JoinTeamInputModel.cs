@@ -3,6 +3,8 @@
     using System.ComponentModel.DataAnnotations;
     using System.Text;
 
+    using HandyFix.Web.ViewModels.Validation;
+
     public class JoinTeamInputModel
     {
         // Marks a saved enquiry as a job application in the admin Enquiries list.
@@ -11,15 +13,16 @@
         [Required(ErrorMessage = "Please enter your name.")]
         [MinLength(2, ErrorMessage = "Name must be at least 2 characters.")]
         [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
+        [PersonName]
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Please enter your email address.")]
-        [EmailAddress(ErrorMessage = "Invalid email address format.")]
+        [StrictEmail]
         [MaxLength(255, ErrorMessage = "Email cannot exceed 255 characters.")]
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Please enter your phone number.")]
-        [Phone(ErrorMessage = "Invalid phone number format.")]
+        [UkPhone]
         [MaxLength(20, ErrorMessage = "Phone number cannot exceed 20 characters.")]
         public string PhoneNumber { get; set; }
 
@@ -41,6 +44,7 @@
         public bool HasOwnTransport { get; set; }
 
         [MaxLength(2000, ErrorMessage = "This section cannot exceed 2000 characters.")]
+        [NotMostlyLinks]
         public string AboutYou { get; set; }
 
         // Applications are stored through the existing enquiry pipeline rather than a table of

@@ -36,11 +36,14 @@ starts with `[Job Application]`, so applications reach this list without a table
 
 | Field | Rule |
 | --- | --- |
-| Name | required, 2–100 chars |
-| Email | required, valid email, ≤255 chars |
-| Phone Number | required, `[Phone]`, ≤20 chars |
-| Message | required, 10–3000 chars |
+| Name | required, 2–100 chars, letters with spaces, hyphens and apostrophes (`[PersonName]`) |
+| Email | required, a full address with a domain ending (`[StrictEmail]`), ≤255 chars |
+| Phone Number | required, a UK mobile or landline (`[UkPhone]`), ≤20 chars |
+| Message | required, 10–2900 chars on the form (3000 in the column, which leaves room for the category prefix), and not mostly web links (`[NotMostlyLinks]`) |
 | Images | optional, uploaded to Cloudflare R2 (see below) |
+
+The rules are the shared attributes in `HandyFix.Web.ViewModels/Validation/`, the same ones the
+booking form uses; `WORKFLOW_BOOKINGS.md` Step 2 says how they reach the browser.
 
 **There is no status, response, or "read" field on `Inquiry` at all** — confirmed directly from the
 entity. This is exactly why the admin list has no status filter, unlike Bookings and Reviews: there

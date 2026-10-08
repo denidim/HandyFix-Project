@@ -9,6 +9,7 @@
     using HandyFix.Services;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
     using HandyFix.Web.ViewModels.Booking;
@@ -67,7 +68,8 @@
             Assert.Equal("Lovelace", returnedModel.CustomerLastName);
             Assert.Equal("ada@example.com", returnedModel.Email);
             Assert.Equal("07700900123", returnedModel.PhoneNumber);
-            Assert.Equal("1 Analytical Engine Way, KT9 1AA", returnedModel.Address);
+            Assert.Equal("1 Analytical Engine Way, Chessington", returnedModel.Address);
+            Assert.Equal("KT9 1AA", returnedModel.Postcode);
             Assert.Equal("The kitchen tap has been dripping for a week.", returnedModel.ProblemDescription);
 
             // And the form has to be usable again, which means its dropdowns get repopulated.
@@ -137,6 +139,52 @@
 
             // No point paying Cloudflare to store photos for a booking that was never valid.
             imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        // A booking is a paid deposit for a visit. A postcode outside the districts the service
+        // areas list is turned down before anything is saved, with the way forward: an enquiry
+        // or a call (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task IndexPostShouldTurnDownAPostcodeOutsideTheAreasWeCover()
+        {
+            var serviceAreasService = new Mock<IServiceAreasService>();
+            serviceAreasService.Setup(x => x.IsPostcodeServedAsync("m1 1ae")).ReturnsAsync(false);
+            var controller = BuildController(out _, out _, out var bookingsService, out var imageService, serviceAreasService);
+
+            var model = ValidModel();
+            model.Postcode = "m1 1ae";
+
+            var result = await controller.Index(model);
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.True(returnedModel.PostcodeNotServed);
+            Assert.Equal(new[] { "KT9", "KT10" }, returnedModel.ServedPostcodeDistricts);
+
+            var error = SingleModelError(controller);
+            Assert.Contains("M1", error);
+            Assert.Contains("enquiry", error);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, error);
+
+            // What the visitor typed and chose survives, slot included: nothing is wrong with it.
+            Assert.Equal(model.SlotId, returnedModel.SlotId);
+            Assert.Equal("Ada", returnedModel.CustomerFirstName);
+
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                Times.Never);
+            imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task IndexGetShouldGiveThePageTheDistrictsWeCover()
+        {
+            var controller = BuildController(out _, out _, out _, out _);
+
+            var result = await controller.Index(categorySlug: null, date: null, selectedServiceId: null);
+
+            var model = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(new[] { "KT9", "KT10" }, model.ServedPostcodeDistricts);
+            Assert.False(model.PostcodeNotServed);
         }
 
         [Fact]
@@ -361,7 +409,8 @@
             CustomerLastName = "Lovelace",
             Email = "ada@example.com",
             PhoneNumber = "07700900123",
-            Address = "1 Analytical Engine Way, KT9 1AA",
+            Address = "1 Analytical Engine Way, Chessington",
+            Postcode = "KT9 1AA",
             ProblemDescription = "The kitchen tap has been dripping for a week.",
             SlotId = Guid.NewGuid(),
             ServiceId = Guid.NewGuid(),
@@ -381,12 +430,24 @@
             out Mock<IServicesService> servicesService,
             out Mock<IAvailabilityService> availabilityService,
             out Mock<IBookingsService> bookingsService,
-            out Mock<IImageService> imageService)
+            out Mock<IImageService> imageService,
+            Mock<IServiceAreasService> serviceAreasService = null)
         {
             servicesService = new Mock<IServicesService>();
             availabilityService = new Mock<IAvailabilityService>();
             bookingsService = new Mock<IBookingsService>();
             imageService = new Mock<IImageService>();
+
+            // Unless a test says otherwise, every postcode is one we cover.
+            if (serviceAreasService == null)
+            {
+                serviceAreasService = new Mock<IServiceAreasService>();
+                serviceAreasService.Setup(x => x.IsPostcodeServedAsync(It.IsAny<string>())).ReturnsAsync(true);
+            }
+
+            serviceAreasService
+                .Setup(x => x.GetServedPostcodeDistrictsAsync())
+                .ReturnsAsync(new List<string> { "KT9", "KT10" });
 
             servicesService
                 .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
@@ -404,7 +465,8 @@
                 servicesService.Object,
                 availabilityService.Object,
                 bookingsService.Object,
-                imageService.Object);
+                imageService.Object,
+                serviceAreasService.Object);
         }
     }
 }
