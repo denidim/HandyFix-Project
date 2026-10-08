@@ -17,6 +17,10 @@ services:
       Brevo__ApiKey: ${BREVO_API_KEY}
       Email__BookingsFromAddress: ${EMAIL_BOOKINGS_FROM_ADDRESS}
       Email__SystemFromAddress: ${EMAIL_SYSTEM_FROM_ADDRESS}
+      # Where notices to the company go (paid deposits, enquiries, job
+      # applications). Empty means the real info@ inbox; staging sets its own
+      # so test enquiries do not land there.
+      Admin__NotificationEmail: ${ADMIN_NOTIFICATION_EMAIL:-}
       # No real Stripe account yet -- lets staging demo the full booking
       # flow via the sandbox bypass. Remove this and set Stripe__SecretKey
       # instead once a real (test-mode) Stripe account exists.

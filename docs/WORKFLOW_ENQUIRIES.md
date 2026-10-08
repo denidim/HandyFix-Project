@@ -60,6 +60,27 @@ Two things stop a double click on Send from making two rows:
 A second enquiry that says anything different is always a new enquiry, however soon it comes:
 people do send a correction straight after the first.
 
+### Two emails go out for each enquiry
+
+`InquiriesService.CreateInquiryAsync` saves the enquiry first and then sends:
+
+1. **A notice to the company's inbox** (`Admin:NotificationEmail`, by default `info@` on the real
+   domain; the same inbox the paid-deposit notice goes to). It carries the name, email, phone, the
+   message and links to the photos. Its Reply-To is the sender's address, so **pressing Reply
+   answers the customer**. A job application gets the subject "New job application - {name}".
+2. **An acknowledgement to the sender**, from the bookings address: "we have received your
+   enquiry and will be in touch". It repeats **nothing** the sender typed, not even their name.
+   Anyone can type any address into a public form, and an email that echoed the form back would
+   let a bot use the site to send a stranger whatever it liked, from the business's own domain.
+
+Both are built as HTML, so everything the sender typed is encoded on its way in
+(`EmailText.Encode`). Both go through `TrySendEmailAsync`: a send that fails is logged
+(`Email not sent: enquiry notice to the company`) and does not throw, because the enquiry is
+already in this list and the visitor should not see an error for something that was received.
+What still fails loudly is a missing `Brevo:ApiKey` outside Development: the email sender cannot
+be created at all, and since `HomeController` needs the enquiries service, every page it serves
+fails until the key is set. That is deliberate, and a start-up check on a new environment.
+
 **There is no status, response, or "read" field on `Inquiry` at all** — confirmed directly from the
 entity. This is exactly why the admin list has no status filter, unlike Bookings and Reviews: there
 is genuinely nothing to filter on. `InquirySortField` only has two members, `CreatedOn` and `Name`.
@@ -114,7 +135,9 @@ detail. Each accepted image becomes its own `InquiryImage` row (`ImageUrl` + the
 | --- | --- |
 | Can't find "Inquiry" anywhere in `Areas/Administration/` | Correct — the admin layer is named "Enquiries". See the naming note above. |
 | Looking for a way to mark an enquiry as handled | Doesn't exist. `Inquiry` has no status field; track responses outside the app. |
-| An enquiry has no photos even though the customer said they attached some | Check the upload actually succeeded against R2 — failures there don't block the enquiry from being created, they just leave it with fewer/no `InquiryImage` rows. |
+| An enquiry has no photos even though the customer said they attached some | Storage could not be reached when it was sent. The enquiry is saved without them, the notice email says "Photos attached but not saved: N", and the customer was told on the thank-you. Ask for them again. |
+| A customer's photos were refused on the form | More than 5, one over 15 MB, or a file that is not JPEG, PNG or WEBP. The form comes back with the reason and everything they typed. |
+| The company inbox got no notice for an enquiry that is in the list | The send failed. Look in the application log for `Email not sent`; the usual causes are a sender address Brevo has not verified, or a wrong API key. |
 
 ---
 

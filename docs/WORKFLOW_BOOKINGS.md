@@ -136,6 +136,17 @@ street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
   walked away would lock an hour forever.
 - **Both Stripe paths are handled.** The webhook and the browser redirect can both fire for the same
   session; an idempotency guard ensures confirmation emails send strictly once.
+- **An email that cannot be sent never undoes what it was about.** Each of the three booking
+  emails (received, deposit paid, confirmed) goes out after its save and through
+  `TrySendEmailAsync`, which logs a failure (`Email not sent: deposit paid, to the customer`) and
+  carries on. Before `PROJECT_STATE.md` Section 3cb a failed send showed the customer "an error
+  occurred while saving your booking" for a booking that had been saved, or an error page on the
+  way back from paying. The paid-deposit notice to the company has the customer as its Reply-To.
+- **Photos never cost a booking.** A photo the site does not take (more than 5, over 15 MB, not
+  JPEG/PNG/WEBP) brings the form back with the reason. If storage itself cannot be reached, the
+  booking is taken without its photos and the failure is logged.
+- **What the customer typed reaches an email as text.** The emails are HTML built as strings;
+  names, the address and the rest go through `EmailText.Encode` first.
 
 **Code:** `BookingsService.CreateBookingAsync`, `Controllers/BookingController.cs`,
 `Controllers/PaymentController.cs`, `PaymentsService`,
@@ -203,6 +214,7 @@ Seeded statuses: `Pending`, `Approved`, `InProgress`, `Completed`, `Cancelled`, 
 | The technician dropdown is empty | No active technicians. Add one at `/Administration/Technicians`. |
 | A technician can't be deleted | They have bookings. Deactivate instead — that's the intended retire path. |
 | The confirmation email didn't name a technician | The booking was approved before a technician was assigned. Assign first, then approve. |
+| A customer says no email arrived | Look in the application log for `Email not sent`. The booking itself is unaffected; the usual causes are a sender address Brevo has not verified, or a wrong API key. |
 | A slot is stuck as booked with no real customer | Wait up to 5 minutes for the cleanup sweep, or Release it manually on the Calendar. |
 | A customer in our area is told "we don't take online bookings for KT21 yet" | No service area lists that district. Add it to the nearest area's Postcode Districts at `/Administration/ServiceAreas`. |
 | The Proceed to Payment button stays grey | A field is empty, the description is under 20 characters, or the postcode is outside the districts we cover (its notice says so). |

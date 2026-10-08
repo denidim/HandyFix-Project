@@ -10,11 +10,14 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Data.Repositories;
     using HandyFix.Services;
     using HandyFix.Services.Data.Inquiries;
+    using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Administration.Enquiries;
     using HandyFix.Web.ViewModels.Home;
 
     using Microsoft.Data.Sqlite;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -168,6 +171,208 @@ namespace HandyFix.Services.Data.Tests
             Assert.False(await service.IsRecentDuplicateAsync(model));
         }
 
+        // An enquiry used to sit in the admin list until someone opened it, and the sender heard
+        // nothing. Now the company's inbox gets a notice and the sender an acknowledgement
+        // (PROJECT_STATE.md Section 3cb).
+        [Fact]
+        public async Task CreateInquiryAsyncShouldTellTheCompanyAndAcknowledgeToTheSender()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            List<SentEmail> sent = CaptureEmails(emailSender);
+
+            await BuildService(dbContext, emailSender: emailSender).CreateInquiryAsync(
+                new ContactInputModel
+                {
+                    Name = "Jane Doe",
+                    Email = "jane@example.com",
+                    PhoneNumber = "07700 900123",
+                    Message = "Kitchen tap is dripping.\nIt is the cold one.",
+                    Category = "Plumbing",
+                },
+                new List<string> { "https://photos.example/inquiries/abc_my tap.jpg" });
+
+            Assert.Equal(2, sent.Count);
+
+            SentEmail notice = sent[0];
+            Assert.Equal("info@plumbing-handyman-surrey.co.uk", notice.To);
+            Assert.Equal("New enquiry - Jane Doe", notice.Subject);
+
+            // Pressing Reply answers the sender, not the website.
+            Assert.Equal("jane@example.com", notice.ReplyTo);
+            Assert.Contains("Jane Doe", notice.Body);
+            Assert.Contains("07700 900123", notice.Body);
+            Assert.Contains("[Category: Plumbing] Kitchen tap is dripping.<br />It is the cold one.", notice.Body);
+            Assert.Contains("<a href=\"https://photos.example/inquiries/abc_my%20tap.jpg\">Photo 1</a>", notice.Body);
+
+            SentEmail acknowledgement = sent[1];
+            Assert.Equal("jane@example.com", acknowledgement.To);
+            Assert.Equal("bookings@plumbing-handyman-surrey.co.uk", acknowledgement.From);
+            Assert.Equal("We have received your enquiry", acknowledgement.Subject);
+            Assert.Null(acknowledgement.ReplyTo);
+            Assert.Contains("020 3951 5915", acknowledgement.Body);
+        }
+
+        // Anyone can type any address into a public form. An acknowledgement that repeated the
+        // form would let the site send a stranger whatever a bot wrote, from the business's own
+        // domain, so it repeats nothing: not the message, not the phone, not even the name.
+        [Fact]
+        public async Task TheAcknowledgementShouldRepeatNothingTheSenderTyped()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            List<SentEmail> sent = CaptureEmails(emailSender);
+
+            await BuildService(dbContext, emailSender: emailSender).CreateInquiryAsync(
+                new ContactInputModel
+                {
+                    Name = "Winnie Prizewinner",
+                    Email = "stranger@example.com",
+                    PhoneNumber = "07700 900123",
+                    Message = "You have won. Claim at spam dot example today.",
+                    Category = "Other",
+                },
+                new List<string>());
+
+            SentEmail acknowledgement = sent.Single(e => e.To == "stranger@example.com");
+            Assert.DoesNotContain("Winnie", acknowledgement.Body);
+            Assert.DoesNotContain("Prizewinner", acknowledgement.Subject);
+            Assert.DoesNotContain("spam dot example", acknowledgement.Body);
+            Assert.DoesNotContain("07700", acknowledgement.Body);
+            Assert.Contains("If you did not send us anything", acknowledgement.Body);
+        }
+
+        // The emails are HTML built as text. A message written into one as typed could carry a
+        // link, an image or a whole fake paragraph into the company's inbox.
+        [Fact]
+        public async Task TheNoticeToTheCompanyShouldCarryWhatWasTypedAsTextNotAsHtml()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            List<SentEmail> sent = CaptureEmails(emailSender);
+
+            await BuildService(dbContext, emailSender: emailSender).CreateInquiryAsync(
+                new ContactInputModel
+                {
+                    Name = "Jane Doe",
+                    Email = "jane@example.com",
+                    PhoneNumber = "07700 900123",
+                    Message = "<img src=x onerror=alert(1)> <a href=\"https://evil.example\">Pay your invoice here</a>",
+                },
+                new List<string> { "https://photos.example/inquiries/abc_\"><script>alert(1)</script>.jpg" });
+
+            SentEmail notice = sent[0];
+            Assert.DoesNotContain("<img", notice.Body);
+            Assert.DoesNotContain("<script", notice.Body);
+            Assert.DoesNotContain("href=\"https://evil.example\"", notice.Body);
+            Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", notice.Body);
+            Assert.Contains("Pay your invoice here", notice.Body);
+        }
+
+        [Fact]
+        public async Task AJobApplicationShouldBeAnnouncedAndAcknowledgedAsOne()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            List<SentEmail> sent = CaptureEmails(emailSender);
+
+            var application = new JoinTeamInputModel
+            {
+                Name = "Sam Fitter",
+                Email = "sam@example.com",
+                PhoneNumber = "07700 900456",
+                Trade = "Plumbing",
+                YearsExperience = 12,
+                Availability = "Full-time",
+            };
+
+            await BuildService(dbContext, emailSender: emailSender).CreateInquiryAsync(application.ToContactInputModel(), new List<string>());
+
+            Assert.Equal("New job application - Sam Fitter", sent[0].Subject);
+            Assert.Contains("Trade: Plumbing", sent[0].Body);
+            Assert.Equal("We have received your application", sent[1].Subject);
+
+            // "If it is urgent, call us" is for a customer with a leak, not for an applicant.
+            Assert.DoesNotContain("urgent", sent[1].Body);
+        }
+
+        // The enquiry is saved before either email is tried. A send that fails is logged and the
+        // other still goes; the visitor is not shown an error for an enquiry that was received.
+        [Fact]
+        public async Task CreateInquiryAsyncShouldKeepTheEnquiryWhenAnEmailCannotBeSent()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            emailSender
+                .Setup(x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    "info@plumbing-handyman-surrey.co.uk",
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<IEnumerable<EmailAttachment>>(),
+                    It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("Brevo email send failed (500)"));
+
+            await BuildService(dbContext, emailSender: emailSender).CreateInquiryAsync(
+                new ContactInputModel { Name = "Jane Doe", Email = "jane@example.com", PhoneNumber = "07700 900123", Message = "Kitchen tap is dripping." },
+                new List<string>());
+
+            Assert.Single(dbContext.Inquiries);
+            emailSender.Verify(
+                x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    "jane@example.com",
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<IEnumerable<EmailAttachment>>(),
+                    It.IsAny<string>()),
+                Times.Once);
+        }
+
+        // Storage out of reach no longer loses the enquiry (HomeController saves it without its
+        // photos). The notice says photos were attached and lost, so someone can ask again.
+        [Fact]
+        public async Task TheNoticeShouldSayWhenAttachedPhotosCouldNotBeSaved()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            List<SentEmail> sent = CaptureEmails(emailSender);
+
+            await BuildService(dbContext, emailSender: emailSender).CreateInquiryAsync(
+                new ContactInputModel { Name = "Jane Doe", Email = "jane@example.com", PhoneNumber = "07700 900123", Message = "Kitchen tap is dripping.", PhotosNotSaved = 3 },
+                new List<string>());
+
+            Assert.Contains("Photos attached but not saved: 3.", sent[0].Body);
+            Assert.DoesNotContain("not saved", sent[1].Body);
+        }
+
+        // Staging sends from, and to, addresses verified in its own Brevo account.
+        [Fact]
+        public async Task TheEnquiryEmailsShouldUseTheConfiguredAddresses()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            List<SentEmail> sent = CaptureEmails(emailSender);
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    ["Admin:NotificationEmail"] = "inbox@staging.example",
+                    ["Email:SystemFromAddress"] = "system@staging.example",
+                    ["Email:BookingsFromAddress"] = "hello@staging.example",
+                })
+                .Build();
+
+            await BuildService(dbContext, emailSender: emailSender, configuration: configuration).CreateInquiryAsync(
+                new ContactInputModel { Name = "Jane Doe", Email = "jane@example.com", PhoneNumber = "07700 900123", Message = "Kitchen tap is dripping." },
+                new List<string>());
+
+            Assert.Equal("inbox@staging.example", sent[0].To);
+            Assert.Equal("system@staging.example", sent[0].From);
+            Assert.Equal("hello@staging.example", sent[1].From);
+        }
+
         // "Delete Permanent" used to set IsDeleted and keep the row: the name, email, phone number
         // and message stayed in the database, hidden from every page, and the photos stayed in
         // storage (PROJECT_STATE.md Section 3cb). On Sqlite, because the photo rows point at the
@@ -236,12 +441,39 @@ namespace HandyFix.Services.Data.Tests
             imageService.Verify(x => x.DeleteImagesAsync(It.IsAny<IEnumerable<string>>()), Times.Never);
         }
 
-        private static InquiriesService BuildService(ApplicationDbContext dbContext, Mock<IImageService> imageService = null)
+        private static InquiriesService BuildService(
+            ApplicationDbContext dbContext,
+            Mock<IImageService> imageService = null,
+            Mock<IEmailSender> emailSender = null,
+            IConfiguration configuration = null)
         {
             return new InquiriesService(
                 new EfDeletableEntityRepository<Inquiry>(dbContext),
                 new EfDeletableEntityRepository<InquiryImage>(dbContext),
-                (imageService ?? new Mock<IImageService>()).Object);
+                (imageService ?? new Mock<IImageService>()).Object,
+                (emailSender ?? new Mock<IEmailSender>()).Object,
+                configuration ?? new ConfigurationBuilder().Build(),
+                NullLogger<InquiriesService>.Instance);
+        }
+
+        // Every email the service sent, in order, as (to, subject, body, replyTo, from, fromName).
+        private static List<SentEmail> CaptureEmails(Mock<IEmailSender> emailSender)
+        {
+            var sent = new List<SentEmail>();
+            emailSender
+                .Setup(x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<IEnumerable<EmailAttachment>>(),
+                    It.IsAny<string>()))
+                .Callback<string, string, string, string, string, IEnumerable<EmailAttachment>, string>(
+                    (from, fromName, to, subject, body, attachments, replyTo) =>
+                        sent.Add(new SentEmail { From = from, FromName = fromName, To = to, Subject = subject, Body = body, ReplyTo = replyTo }))
+                .Returns(Task.CompletedTask);
+            return sent;
         }
 
         private static ApplicationDbContext InMemoryContext()
@@ -284,6 +516,21 @@ namespace HandyFix.Services.Data.Tests
             dbContext.Inquiries.Add(inquiry);
             await dbContext.SaveChangesAsync();
             return inquiry;
+        }
+
+        private sealed class SentEmail
+        {
+            public string From { get; set; }
+
+            public string FromName { get; set; }
+
+            public string To { get; set; }
+
+            public string Subject { get; set; }
+
+            public string Body { get; set; }
+
+            public string ReplyTo { get; set; }
         }
     }
 }

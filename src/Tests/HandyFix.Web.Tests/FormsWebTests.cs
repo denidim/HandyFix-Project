@@ -9,8 +9,11 @@
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data;
+    using HandyFix.Services.Messaging;
 
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.DependencyInjection;
 
     using Xunit;
@@ -171,6 +174,32 @@
             Assert.Contains("Application Received!", await first.Content.ReadAsStringAsync());
             Assert.Contains("Application Received!", await second.Content.ReadAsStringAsync());
             Assert.Equal(1, this.CountEnquiries("Twelve years fitting bathrooms around Epsom and Ewell."));
+        }
+
+        // Through the real controller and service, with only the email sender swapped for one
+        // that keeps what it is given: an enquiry reaches the company's inbox and the sender
+        // hears it arrived.
+        [Fact]
+        public async Task AnEnquiryIsAnnouncedToTheCompanyAndAcknowledgedToTheSender()
+        {
+            var emails = new RecordingEmailSender();
+            var client = this.server
+                .WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddSingleton<IEmailSender>(emails)))
+                .CreateClient();
+
+            var response = await PostFormAsync(client, "/Contact", ValidEnquiry("The stopcock under the sink will not turn at all."));
+
+            Assert.Contains("Request Received!", await response.Content.ReadAsStringAsync());
+            Assert.Equal(2, emails.Sent.Count);
+
+            RecordingEmailSender.Email notice = emails.Sent.Single(e => e.To == GlobalConstants.BusinessEmail);
+            Assert.Equal("New enquiry - Jane Doe", notice.Subject);
+            Assert.Equal("jane.doe@example.com", notice.ReplyTo);
+            Assert.Contains("[Category: Plumbing] The stopcock under the sink will not turn at all.", notice.Body);
+
+            RecordingEmailSender.Email acknowledgement = emails.Sent.Single(e => e.To == "jane.doe@example.com");
+            Assert.Equal("We have received your enquiry", acknowledgement.Subject);
+            Assert.DoesNotContain("stopcock", acknowledgement.Body);
         }
 
         // A form's hidden fields (the antiforgery token among them) as a browser would send them

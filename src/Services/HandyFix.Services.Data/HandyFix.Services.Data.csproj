@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\..\HandyFix.Common\HandyFix.Common.csproj" />
     <ProjectReference Include="..\..\Data\HandyFix.Data.Common\HandyFix.Data.Common.csproj" />
     <ProjectReference Include="..\..\Data\HandyFix.Data.Models\HandyFix.Data.Models.csproj" />
     <ProjectReference Include="..\..\Web\HandyFix.Web.ViewModels\HandyFix.Web.ViewModels.csproj" />
