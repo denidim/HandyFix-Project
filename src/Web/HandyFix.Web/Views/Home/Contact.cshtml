@@ -37,6 +37,7 @@
     <div class="glass-card rounded-xl p-4 p-md-5">
         <form id="contactForm" asp-controller="Home" asp-action="Contact" method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
             <div asp-validation-summary="All" class="validation-summary"></div>
+            <partial name="_FormGuard" />
 
             <div class="row">
                 <!-- Name -->

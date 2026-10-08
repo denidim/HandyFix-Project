@@ -96,3 +96,15 @@ select.form-control {
   margin-top: var(--spacing-1);
 }
 
+
+/* The form guard's extra text box (the _FormGuard partial): moved off the page, so no person sees
+   it or fills it in, while a program filling in every field does. Kept out of the way with
+   position, not display: none, which such programs look for. */
+.form-extra {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

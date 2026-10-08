@@ -11,6 +11,7 @@
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Services;
 
@@ -140,6 +141,64 @@
                 s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
                 Times.Never);
             imageService.Verify(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        // A submission with a program's mark on it (the hidden box filled in, or sent faster than
+        // anyone types) gets the very same reply as a real one, and nothing is saved, uploaded or
+        // looked up for it (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task ContactPostShouldAnswerAProgramLikeAPersonAndSaveNothing()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var imageService = ImageServiceReturning("https://photos.example/inquiries/a.jpg");
+            var controller = BuildController(inquiriesService, imageService: imageService, formGuard: GuardAnswering(FormGuardResult.Automated));
+
+            var result = await controller.Contact(ValidContact());
+
+            Assert.Equal("Contact", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Equal(
+                "Thank you! Your enquiry has been received. Our team will contact you shortly.",
+                Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.VerifyNoOtherCalls();
+            imageService.Verify(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task JoinTeamPostShouldAnswerAProgramLikeAPersonAndSaveNothing()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var controller = BuildController(inquiriesService, formGuard: GuardAnswering(FormGuardResult.Automated));
+            var model = new JoinTeamInputModel
+            {
+                Name = "Jane Smith",
+                Email = "jane@example.com",
+                PhoneNumber = "07000000000",
+                Trade = "Plumbing",
+                YearsExperience = 8,
+                Availability = "Full-time",
+            };
+
+            var result = await controller.JoinTeam(model);
+
+            Assert.Equal("JoinTeam", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Contains("Thanks for applying", Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.VerifyNoOtherCalls();
+        }
+
+        // The form's own rules come first: a submission they refuse comes back with its messages
+        // whoever sent it, and the guard is not asked.
+        [Fact]
+        public async Task ContactPostShouldShowValidationMessagesBeforeTheGuardIsAsked()
+        {
+            Mock<IFormGuard> formGuard = GuardAnswering(FormGuardResult.Automated);
+            var controller = BuildController(categoriesService: CategoriesMock("Plumbing"), formGuard: formGuard);
+            controller.ModelState.AddModelError(nameof(ContactInputModel.Email), "Please enter a full email address, for example name@example.com.");
+
+            var result = await controller.Contact(ValidContact());
+
+            Assert.IsType<ViewResult>(result);
+            Assert.Null(controller.TempData["SuccessMessage"]);
+            formGuard.Verify(g => g.CheckAsync(It.IsAny<HttpContext>(), It.IsAny<string>()), Times.Never);
         }
 
         // Too many photos, one too large, a file that is not a picture: the visitor can put that
@@ -378,6 +437,13 @@
             Category = "Plumbing",
         };
 
+        private static Mock<IFormGuard> GuardAnswering(FormGuardResult result)
+        {
+            var formGuard = new Mock<IFormGuard>();
+            formGuard.Setup(g => g.CheckAsync(It.IsAny<HttpContext>(), It.IsAny<string>())).ReturnsAsync(result);
+            return formGuard;
+        }
+
         private static IFormFile PhotoOf(long bytes)
         {
             var photo = new Mock<IFormFile>();
@@ -398,7 +464,8 @@
             Mock<IInquiriesService> inquiriesService = null,
             Mock<IServicesService> servicesService = null,
             Mock<ICategoriesService> categoriesService = null,
-            Mock<IImageService> imageService = null)
+            Mock<IImageService> imageService = null,
+            Mock<IFormGuard> formGuard = null)
         {
             var reviewsService = new Mock<IReviewsService>();
 
@@ -408,6 +475,7 @@
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
                 (imageService ?? ImageServiceReturning()).Object,
+                (formGuard ?? new Mock<IFormGuard>()).Object,
                 new ConfigurationBuilder().Build(),
                 NullLogger<HomeController>.Instance);
 

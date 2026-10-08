@@ -1,0 +1,11 @@
+@using HandyFix.Web.Services.Forms
+@inject IFormGuard Guard
+@* What tells a person's submission from a program's (PROJECT_STATE Section 3cb). Rendered inside
+   each public form. The text box is moved off the page by forms.css and skipped by the Tab key:
+   no person fills it in, a program filling in every field does. The stamp says when the form was
+   first shown. *@
+<div class="form-extra" aria-hidden="true">
+    <label for="form-reference">Leave this field empty</label>
+    <input type="text" id="form-reference" name="@FormGuard.HoneypotFieldName" value="" tabindex="-1" autocomplete="off" />
+</div>
+<input type="hidden" name="@FormGuard.StampFieldName" value="@Guard.CreateStamp(this.Context)" />

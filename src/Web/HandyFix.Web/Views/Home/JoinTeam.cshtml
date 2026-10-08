@@ -33,6 +33,7 @@
     <div class="glass-card rounded-xl p-4 p-md-5">
         <form id="joinTeamForm" asp-controller="Home" asp-action="JoinTeam" method="post" class="d-flex flex-column gap-3">
             <div asp-validation-summary="All" class="validation-summary"></div>
+            <partial name="_FormGuard" />
 
             <div class="row">
                 <!-- Name -->

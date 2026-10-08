@@ -12,8 +12,10 @@
     using HandyFix.Common;
     using HandyFix.Data;
     using HandyFix.Services.Messaging;
+    using HandyFix.Web.Services.Forms;
 
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
     using Xunit;
@@ -202,6 +204,108 @@
             Assert.DoesNotContain("stopcock", acknowledgement.Body);
         }
 
+        // Each public form carries the form guard's two fields: a text box moved off the page that
+        // no person fills in, and a stamp of when the form was shown.
+        [Theory]
+        [InlineData("/Contact")]
+        [InlineData("/JoinOurTeam")]
+        [InlineData("/Booking")]
+        public async Task PublicFormsCarryTheHiddenBoxAndTheStamp(string url)
+        {
+            var client = this.server.CreateClient();
+            var content = await (await client.GetAsync(url)).Content.ReadAsStringAsync();
+
+            Assert.Matches("<div class=\"form-extra\" aria-hidden=\"true\">\\s*<label[^>]*>[^<]*</label>\\s*<input type=\"text\"[^>]*name=\"Reference\"[^>]*tabindex=\"-1\"", content);
+            Assert.Matches("<input type=\"hidden\" name=\"FormStamp\" value=\"[^\"]{20,}\"", content);
+        }
+
+        // Sent the instant it was fetched, as a program does. This host has the real three-second
+        // minimum (the shared one has none, or no test here could send a form). The reply is the
+        // same thank-you a person gets; nothing is saved and no email goes out.
+        [Fact]
+        public async Task AnEnquirySentFasterThanAPersonTypesIsThankedAndDropped()
+        {
+            var emails = new RecordingEmailSender();
+            var client = this.server
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((context, configuration) => configuration.AddInMemoryCollection(
+                        new Dictionary<string, string> { [FormGuard.MinimumSecondsKey] = "3" }));
+                    builder.ConfigureServices(services => services.AddSingleton<IEmailSender>(emails));
+                })
+                .CreateClient();
+
+            var response = await PostFormAsync(client, "/Contact", ValidEnquiry("Sent by a program the moment the page loaded."));
+
+            Assert.Contains("Request Received!", await response.Content.ReadAsStringAsync());
+            Assert.Equal(0, this.CountEnquiries("Sent by a program the moment the page loaded."));
+            Assert.Empty(emails.Sent);
+        }
+
+        [Theory]
+        [InlineData("/Contact", "Request Received!")]
+        [InlineData("/JoinOurTeam", "Application Received!")]
+        public async Task ASubmissionWithTheHiddenBoxFilledInIsThankedAndDropped(string url, string thanks)
+        {
+            var client = this.server.CreateClient();
+            Dictionary<string, string> fields = url == "/Contact"
+                ? ValidEnquiry("Every field filled in, the hidden one too.")
+                : new Dictionary<string, string>
+                {
+                    ["Name"] = "Robo Filler",
+                    ["Email"] = "robo@example.com",
+                    ["PhoneNumber"] = "07700 900789",
+                    ["Trade"] = "Plumbing",
+                    ["YearsExperience"] = "3",
+                    ["Availability"] = "Full-time",
+                    ["AboutYou"] = "Every field filled in, the hidden one too.",
+                };
+            fields[FormGuard.HoneypotFieldName] = "https://spam.example";
+
+            var response = await PostFormAsync(client, url, fields);
+
+            Assert.Contains(thanks, await response.Content.ReadAsStringAsync());
+            Assert.Equal(0, this.CountEnquiries("Every field filled in, the hidden one too."));
+        }
+
+        // A booking cannot be "thanked": its success is the payment page. A program gets the form
+        // back with a message that gives nothing away and still tells a person how to book.
+        [Fact]
+        public async Task ABookingWithTheHiddenBoxFilledInComesBackWithAPhoneNumberAndIsNotTaken()
+        {
+            var client = this.server.CreateClient();
+            Dictionary<string, string> fields = ValidBooking();
+            fields[FormGuard.HoneypotFieldName] = "filled";
+
+            var response = await PostFormAsync(client, "/Booking", fields);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var content = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            Assert.Contains("We could not take this booking online. Please call us or message us on WhatsApp on " + GlobalConstants.BusinessPhone, content);
+            Assert.Equal(0, this.CountBookings());
+        }
+
+        // A form that comes back with an error keeps the stamp it was sent with, so the person who
+        // corrects it and sends again a second later is timed from when they first saw the form.
+        [Fact]
+        public async Task AFormThatComesBackWithAnErrorKeepsTheStampItWasSentWith()
+        {
+            var client = this.server.CreateClient();
+            var page = await (await client.GetAsync("/Contact")).Content.ReadAsStringAsync();
+            Dictionary<string, string> form = HiddenFieldsOf(page);
+            var sentStamp = form[FormGuard.StampFieldName];
+            foreach (KeyValuePair<string, string> field in ValidEnquiry("short"))
+            {
+                form[field.Key] = field.Value;
+            }
+
+            var response = await client.PostAsync("/Contact", new FormUrlEncodedContent(form));
+
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.Contains("Message must be at least 10 characters long.", content);
+            Assert.Equal(sentStamp, HiddenFieldsOf(content)[FormGuard.StampFieldName]);
+        }
+
         // A form's hidden fields (the antiforgery token among them) as a browser would send them
         // back, with the given fields on top.
         internal static async Task<HttpResponseMessage> PostFormAsync(HttpClient client, string url, Dictionary<string, string> fields)
@@ -261,6 +365,13 @@
             using IServiceScope scope = this.server.Services.CreateScope();
             ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             return dbContext.Inquiries.Count(x => x.Message.Contains(text));
+        }
+
+        private int CountBookings()
+        {
+            using IServiceScope scope = this.server.Services.CreateScope();
+            ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            return dbContext.Bookings.Count();
         }
     }
 }

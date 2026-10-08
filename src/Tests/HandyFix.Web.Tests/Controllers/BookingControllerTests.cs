@@ -12,6 +12,7 @@
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
 
@@ -186,6 +187,32 @@
             var model = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
             Assert.Equal(new[] { "KT9", "KT10" }, model.ServedPostcodeDistricts);
             Assert.False(model.PostcodeNotServed);
+        }
+
+        // A submission with a program's mark on it. The other forms answer one with their usual
+        // thank-you; a booking's success is the payment page, which cannot be faked, so the form
+        // comes back with a message that gives nothing away and still tells a person how to book
+        // (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task IndexPostShouldNotBookForAProgramAndSayNothingOfWhy()
+        {
+            var formGuard = new Mock<IFormGuard>();
+            formGuard.Setup(g => g.CheckAsync(It.IsAny<HttpContext>(), "booking")).ReturnsAsync(FormGuardResult.Automated);
+            var controller = BuildController(out _, out _, out var bookingsService, out var imageService, formGuard: formGuard);
+
+            var result = await controller.Index(ValidModel());
+
+            Assert.IsType<ViewResult>(result);
+            var error = SingleModelError(controller);
+            Assert.Contains("We could not take this booking online", error);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, error);
+            Assert.DoesNotContain("robot", error, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("automat", error, StringComparison.OrdinalIgnoreCase);
+
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                Times.Never);
+            imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
         }
 
         // Too many photos, one too large, a file that is not a picture: the customer can put that
@@ -474,7 +501,8 @@
             out Mock<IAvailabilityService> availabilityService,
             out Mock<IBookingsService> bookingsService,
             out Mock<IImageService> imageService,
-            Mock<IServiceAreasService> serviceAreasService = null)
+            Mock<IServiceAreasService> serviceAreasService = null,
+            Mock<IFormGuard> formGuard = null)
         {
             servicesService = new Mock<IServicesService>();
             availabilityService = new Mock<IAvailabilityService>();
@@ -510,6 +538,7 @@
                 bookingsService.Object,
                 imageService.Object,
                 serviceAreasService.Object,
+                (formGuard ?? new Mock<IFormGuard>()).Object,
                 NullLogger<BookingController>.Instance);
         }
     }

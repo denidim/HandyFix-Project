@@ -11,6 +11,7 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
     using HandyFix.Web.ViewModels.Validation;
@@ -31,6 +32,7 @@ namespace HandyFix.Web.Controllers
         private readonly IBookingsService bookingsService;
         private readonly IImageService imageService;
         private readonly IServiceAreasService serviceAreasService;
+        private readonly IFormGuard formGuard;
         private readonly ILogger<BookingController> logger;
 
         public BookingController(
@@ -39,6 +41,7 @@ namespace HandyFix.Web.Controllers
             IBookingsService bookingsService,
             IImageService imageService,
             IServiceAreasService serviceAreasService,
+            IFormGuard formGuard,
             ILogger<BookingController> logger)
         {
             this.servicesService = servicesService;
@@ -46,6 +49,7 @@ namespace HandyFix.Web.Controllers
             this.bookingsService = bookingsService;
             this.imageService = imageService;
             this.serviceAreasService = serviceAreasService;
+            this.formGuard = formGuard;
             this.logger = logger;
         }
 
@@ -128,6 +132,18 @@ namespace HandyFix.Web.Controllers
             if (!this.ModelState.IsValid)
             {
                 return await this.RedisplayBookingForm(model);
+            }
+
+            // A submission that carries a program's mark. The other forms answer one with their
+            // usual thank-you; a booking's success is the payment page, which cannot be faked, so
+            // this comes back with a message that says nothing about why and still gives a
+            // person a way to book.
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, "booking");
+            if (guard == FormGuardResult.Automated)
+            {
+                return await this.RedisplayBookingForm(
+                    model,
+                    $"We could not take this booking online. Please call us or message us on WhatsApp on {GlobalConstants.BusinessPhone}.");
             }
 
             // Before anything is saved or a deposit asked for: a postcode outside the districts

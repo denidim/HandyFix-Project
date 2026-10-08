@@ -1,5 +1,6 @@
 namespace HandyFix.Web
 {
+    using System;
     using System.Reflection;
 
     using HandyFix.Data;
@@ -23,6 +24,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Messaging;
     using HandyFix.Web.BackgroundServices;
     using HandyFix.Web.Services;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels;
 
     using Microsoft.AspNetCore.Builder;
@@ -33,6 +35,7 @@ namespace HandyFix.Web
     using Microsoft.EntityFrameworkCore.Diagnostics;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
 
     using WebOptimizer;
@@ -174,6 +177,11 @@ namespace HandyFix.Web
                         "images",
                         "services"),
                     sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ImageStorageService>>()));
+
+            // Abuse protection on the public forms (PROJECT_STATE Section 3cb). The clock is a
+            // service so a test can set the time a form was shown and the time it came back.
+            services.TryAddSingleton(TimeProvider.System);
+            services.AddTransient<IFormGuard, FormGuard>();
 
             // Background workers
             services.AddHostedService<StaleBookingCleanupService>();

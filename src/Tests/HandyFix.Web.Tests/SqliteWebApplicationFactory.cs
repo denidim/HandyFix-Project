@@ -1,14 +1,17 @@
 ﻿namespace HandyFix.Web.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
 
     using HandyFix.Data;
+    using HandyFix.Web.Services.Forms;
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.Data.Sqlite;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
 
@@ -46,6 +49,12 @@
             // globally, masking this until a clean CI runner (no such variable) exposed it.
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", Environments.Development);
             builder.UseEnvironment(Environments.Development);
+
+            // A test sends a form the instant it has fetched it, which is exactly what the form
+            // guard takes for a program (PROJECT_STATE.md Section 3cb). So this host asks for no
+            // minimum time; the tests of the guard itself put the real one back.
+            builder.ConfigureAppConfiguration((context, configuration) => configuration.AddInMemoryCollection(
+                new Dictionary<string, string> { [FormGuard.MinimumSecondsKey] = "0" }));
 
             builder.ConfigureServices(services =>
             {

@@ -10,6 +10,7 @@
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.Services;
@@ -154,6 +155,7 @@
                 servicesService.Object,
                 categoriesService.Object,
                 new Mock<IImageService>().Object,
+                new Mock<IFormGuard>().Object,
                 configuration,
                 NullLogger<HomeController>.Instance);
         }

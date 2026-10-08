@@ -12,6 +12,7 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Reviews;
@@ -27,11 +28,17 @@ namespace HandyFix.Web.Controllers
     {
         private const int PopularServicesCount = 4;
 
+        // One wording each, whatever happened behind it: saved, a repeat of one just saved, or
+        // dropped as a program's. A reply that differed would say which.
+        private const string EnquiryReceivedMessage = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
+        private const string ApplicationReceivedMessage = "Thanks for applying! We've received your details and will be in touch soon.";
+
         private readonly IReviewsService reviewsService;
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
         private readonly IImageService imageService;
+        private readonly IFormGuard formGuard;
         private readonly IConfiguration configuration;
         private readonly ILogger<HomeController> logger;
 
@@ -41,6 +48,7 @@ namespace HandyFix.Web.Controllers
             IServicesService servicesService,
             ICategoriesService categoriesService,
             IImageService imageService,
+            IFormGuard formGuard,
             IConfiguration configuration,
             ILogger<HomeController> logger)
         {
@@ -49,6 +57,7 @@ namespace HandyFix.Web.Controllers
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
             this.imageService = imageService;
+            this.formGuard = formGuard;
             this.configuration = configuration;
             this.logger = logger;
         }
@@ -136,6 +145,15 @@ namespace HandyFix.Web.Controllers
                 return await this.RedisplayContactFormAsync(model);
             }
 
+            // A submission that carries a program's mark gets the same thank-you as a real one and
+            // is not saved, uploaded or emailed about: the program learns nothing from the reply.
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, "contact");
+            if (guard == FormGuardResult.Automated)
+            {
+                this.TempData["SuccessMessage"] = EnquiryReceivedMessage;
+                return this.RedirectToAction("Contact");
+            }
+
             // The same enquiry sent a second time (a double click, a resend after Back) is thanked
             // like the first and not saved again. Asked before the photos go to storage, so a
             // repeat does not upload them twice either.
@@ -169,7 +187,7 @@ namespace HandyFix.Web.Controllers
 
             this.TempData["SuccessMessage"] = model.PhotosNotSaved > 0
                 ? "Thank you! Your enquiry has been received, but your photos could not be uploaded this time. Our team will contact you shortly and will ask for them if they are needed."
-                : "Thank you! Your enquiry has been received. Our team will contact you shortly.";
+                : EnquiryReceivedMessage;
 
             return this.RedirectToAction("Contact");
         }
@@ -192,6 +210,14 @@ namespace HandyFix.Web.Controllers
                 return this.View(model);
             }
 
+            // As on the Contact form: a program's submission is thanked and dropped.
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, "join our team");
+            if (guard == FormGuardResult.Automated)
+            {
+                this.TempData["SuccessMessage"] = ApplicationReceivedMessage;
+                return this.RedirectToAction("JoinTeam");
+            }
+
             // Saved as an enquiry with no photos, so applications reach the existing admin
             // Enquiries list without a table of their own - see JoinTeamInputModel. The same
             // application sent twice is saved once, as on the Contact form.
@@ -201,7 +227,7 @@ namespace HandyFix.Web.Controllers
                 await this.inquiriesService.CreateInquiryAsync(application, Array.Empty<string>());
             }
 
-            this.TempData["SuccessMessage"] = "Thanks for applying! We've received your details and will be in touch soon.";
+            this.TempData["SuccessMessage"] = ApplicationReceivedMessage;
 
             return this.RedirectToAction("JoinTeam");
         }
