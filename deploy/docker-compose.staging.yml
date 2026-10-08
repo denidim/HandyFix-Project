@@ -13,6 +13,10 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING}
+      # The admin account's login email and password. Both are read at one
+      # start only, the first start of a database, which makes the account.
+      # After that they are changed in the admin panel, on the Account page.
+      Admin__SeedEmail: ${ADMIN_SEED_EMAIL:-}
       Admin__SeedPassword: ${ADMIN_SEED_PASSWORD}
       Brevo__ApiKey: ${BREVO_API_KEY}
       Email__BookingsFromAddress: ${EMAIL_BOOKINGS_FROM_ADDRESS}
