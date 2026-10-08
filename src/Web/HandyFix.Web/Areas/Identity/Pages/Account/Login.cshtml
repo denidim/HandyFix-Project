@@ -11,6 +11,11 @@
             <p class="subtitle">Please enter your details to sign in.</p>
         </div>
 
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            <p class="auth-notice" role="status">@Model.StatusMessage</p>
+        }
+
         <form id="account" method="post" class="auth-form">
             <div asp-validation-summary="All" class="validation-summary"></div>
 

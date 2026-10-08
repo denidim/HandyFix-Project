@@ -25,6 +25,11 @@
         // The booking page asks for a day's slots each time a day is clicked.
         public const string SlotLookupsPolicy = "slot-lookups";
 
+        // Signing in and resetting the admin password (PROJECT_STATE.md Section 3cc). The same
+        // numbers as the forms but an allowance of its own, so a customer's enquiries and
+        // somebody's guesses at the password do not use each other's up.
+        public const string AccountPolicy = "account";
+
         public const string FormPostsKey = "RateLimiting:FormPostsPerWindow";
 
         public const string FormWindowMinutesKey = "RateLimiting:FormWindowMinutes";
@@ -44,6 +49,7 @@
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.AddPolicy(FormsPolicy, ForForms);
             options.AddPolicy(SlotLookupsPolicy, ForSlotLookups);
+            options.AddPolicy(AccountPolicy, ForAccount);
             options.OnRejected = OnRejectedAsync;
         }
 
@@ -76,12 +82,27 @@
         // a test host can set its own.
         private static RateLimitPartition<string> ForForms(HttpContext httpContext)
         {
+            return FormPostsWindow(httpContext, FormsPolicy);
+        }
+
+        // A Razor Page takes a limit on its whole model, not on one handler, so this is asked
+        // about every request to the login and reset pages. Only what is sent counts: opening
+        // the login page is not a guess at a password.
+        private static RateLimitPartition<string> ForAccount(HttpContext httpContext)
+        {
+            return HttpMethods.IsPost(httpContext.Request.Method)
+                ? FormPostsWindow(httpContext, AccountPolicy)
+                : RateLimitPartition.GetNoLimiter(AccountPolicy + ":not-sent");
+        }
+
+        private static RateLimitPartition<string> FormPostsWindow(HttpContext httpContext, string policy)
+        {
             IConfiguration configuration = httpContext.RequestServices.GetRequiredService<IConfiguration>();
             var permits = Read(configuration, FormPostsKey, DefaultFormPosts);
             var minutes = Read(configuration, FormWindowMinutesKey, DefaultFormWindowMinutes);
 
             return RateLimitPartition.GetFixedWindowLimiter(
-                FormsPolicy + ":" + ClientKey(httpContext.Connection.RemoteIpAddress),
+                policy + ":" + ClientKey(httpContext.Connection.RemoteIpAddress),
                 _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = permits,
