@@ -121,6 +121,31 @@
             Assert.Equal("Approved", world.DbContext.Bookings.Include(b => b.Status).Single().Status.Name);
         }
 
+        // A technician may be on the roster under a first name alone, and a number is written
+        // with spaces (PROJECT_STATE.md Section 3cd). The name must not drag a space behind it,
+        // and the link's address holds the number without the spaces the text keeps.
+        [Theory]
+        [InlineData(null, "<strong>Zapryan</strong>")]
+        [InlineData("Stone", "<strong>Zapryan Stone</strong>")]
+        public async Task TheConfirmedEmailShouldNameTheTechnicianAndLinkTheirNumber(string lastName, string expectedName)
+        {
+            using var world = new World();
+            await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
+
+            var technician = new Technician { FirstName = "Zapryan", LastName = lastName, PhoneNumber = "020 3951 5915" };
+            world.DbContext.Technicians.Add(technician);
+            Booking booking = world.DbContext.Bookings.Single();
+            booking.TechnicianId = technician.Id;
+            await world.DbContext.SaveChangesAsync();
+            List<SentEmail> sent = world.CaptureEmails();
+
+            await world.Bookings.UpdateStatusAsync(booking.Id, "Approved");
+
+            SentEmail email = Assert.Single(sent);
+            Assert.Contains(expectedName, email.Body);
+            Assert.Contains("<a href=\"tel:02039515915\">020 3951 5915</a>", email.Body);
+        }
+
         private sealed class SentEmail
         {
             public string To { get; set; }

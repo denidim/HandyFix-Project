@@ -21,10 +21,11 @@
         [MaxLength(100, ErrorMessage = "The {0} field cannot exceed 100 characters.")]
         public string FirstName { get; set; } = null!;
 
-        [Required(ErrorMessage = "The {0} field is required.")]
+        // Not required: a technician can be on the roster under a first name alone, and that is
+        // then the name a customer is given (PROJECT_STATE.md Section 3cd).
         [MinLength(2, ErrorMessage = "The {0} field must be at least 2 characters long.")]
         [MaxLength(100, ErrorMessage = "The {0} field cannot exceed 100 characters.")]
-        public string LastName { get; set; } = null!;
+        public string LastName { get; set; }
 
         [Phone(ErrorMessage = "The {0} field is not a valid phone number.")]
         [MaxLength(20, ErrorMessage = "The {0} field cannot exceed 20 characters.")]

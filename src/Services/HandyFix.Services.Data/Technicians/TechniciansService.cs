@@ -66,7 +66,7 @@ namespace HandyFix.Services.Data.Technicians
             var technician = new Technician
             {
                 FirstName = model.FirstName.Trim(),
-                LastName = model.LastName.Trim(),
+                LastName = NullIfBlank(model.LastName),
                 PhoneNumber = model.PhoneNumber?.Trim(),
                 IsActive = model.IsActive,
             };
@@ -86,7 +86,7 @@ namespace HandyFix.Services.Data.Technicians
             }
 
             technician.FirstName = model.FirstName.Trim();
-            technician.LastName = model.LastName.Trim();
+            technician.LastName = NullIfBlank(model.LastName);
             technician.PhoneNumber = model.PhoneNumber?.Trim();
             technician.IsActive = model.IsActive;
 
@@ -118,6 +118,12 @@ namespace HandyFix.Services.Data.Technicians
             await this.techniciansRepository.SaveChangesAsync();
 
             return true;
+        }
+
+        // The last name is optional. Left out, it is kept as no value, never as an empty one.
+        private static string NullIfBlank(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
     }
 }

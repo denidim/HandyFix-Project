@@ -3,6 +3,7 @@ namespace HandyFix.Web.ViewModels.Administration.Technicians
     using System;
     using System.Linq;
 
+    using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
 
@@ -24,7 +25,7 @@ namespace HandyFix.Web.ViewModels.Administration.Technicians
 
         public int BookingCount { get; set; }
 
-        public string FullName => $"{this.FirstName} {this.LastName}";
+        public string FullName => NameFormat.Full(this.FirstName, this.LastName);
 
         public void CreateMappings(TypeAdapterConfig config)
         {

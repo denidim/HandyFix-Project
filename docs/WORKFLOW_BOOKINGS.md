@@ -201,6 +201,8 @@ From the same booking Details page:
   CONFIRMED!"** email.
   **This is the one customer email that names the technician** (name + a tappable `tel:` link),
   falling back to a generic line if none is assigned — so assign in step 3 *before* approving.
+  The name is the first name alone when the roster entry has no last name
+  (`WORKFLOW_TECHNICIANS.md`).
 - **Complete** → status `Completed`, once the job is done.
 - **Cancel** → status `Cancelled` and releases the slot back to available.
 

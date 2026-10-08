@@ -18,8 +18,9 @@
                 <span asp-validation-for="FirstName" class="text-danger small"></span>
             </div>
             <div class="col-md-6 form-group">
-                <label asp-for="LastName" class="form-label font-label-sm text-on-surface-variant mb-2">Last Name</label>
-                <input asp-for="LastName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
+                <label asp-for="LastName" class="form-label font-label-sm text-on-surface-variant mb-2">Last Name (optional)</label>
+                <input asp-for="LastName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" />
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Left empty, the customer is given the first name alone.</span>
                 <span asp-validation-for="LastName" class="text-danger small"></span>
             </div>
         </div>
