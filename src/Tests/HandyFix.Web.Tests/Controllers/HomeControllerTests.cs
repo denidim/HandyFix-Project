@@ -185,6 +185,67 @@
             inquiriesService.VerifyNoOtherCalls();
         }
 
+        // The "are you a person" check did not pass. A person can land here (a slow connection, a
+        // blocked widget), so unlike a program's mark this one is said out loud: the form comes
+        // back as typed with a message and a way round it, and nothing is saved.
+        [Fact]
+        public async Task ContactPostShouldComeBackWithAMessageWhenThePersonCheckDidNotPass()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var controller = BuildController(
+                inquiriesService,
+                categoriesService: CategoriesMock("Plumbing"),
+                formGuard: GuardAnswering(FormGuardResult.ChallengeFailed));
+            var model = ValidContact();
+
+            var result = await controller.Contact(model);
+
+            Assert.Same(model, Assert.IsType<ViewResult>(result).Model);
+            var message = controller.ModelState[string.Empty].Errors.Single().ErrorMessage;
+            Assert.Contains("could not confirm that you are a person", message);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, message);
+            Assert.Null(controller.TempData["SuccessMessage"]);
+            inquiriesService.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task JoinTeamPostShouldComeBackWithAMessageWhenThePersonCheckDidNotPass()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var controller = BuildController(inquiriesService, formGuard: GuardAnswering(FormGuardResult.ChallengeFailed));
+            var model = new JoinTeamInputModel
+            {
+                Name = "Jane Smith",
+                Email = "jane@example.com",
+                PhoneNumber = "07000000000",
+                Trade = "Plumbing",
+                YearsExperience = 8,
+                Availability = "Full-time",
+            };
+
+            var result = await controller.JoinTeam(model);
+
+            Assert.Same(model, Assert.IsType<ViewResult>(result).Model);
+            Assert.Contains("could not confirm that you are a person", controller.ModelState[string.Empty].Errors.Single().ErrorMessage);
+            Assert.Equal("Join Our Team - Careers", controller.ViewData["Title"]);
+            inquiriesService.VerifyNoOtherCalls();
+        }
+
+        // Each form tells the guard which form it is: that name is what its Turnstile token is
+        // good for.
+        [Fact]
+        public async Task TheHomeFormsShouldEachTellTheGuardWhichFormTheyAre()
+        {
+            Mock<IFormGuard> formGuard = GuardAnswering(FormGuardResult.Passed);
+            var controller = BuildController(formGuard: formGuard);
+
+            await controller.Contact(ValidContact());
+            await controller.JoinTeam(new JoinTeamInputModel { Name = "Jane Smith", Email = "jane@example.com", PhoneNumber = "07000000000", Trade = "Plumbing", YearsExperience = 8, Availability = "Full-time" });
+
+            formGuard.Verify(g => g.CheckAsync(It.IsAny<HttpContext>(), "contact"), Times.Once);
+            formGuard.Verify(g => g.CheckAsync(It.IsAny<HttpContext>(), "join-team"), Times.Once);
+        }
+
         // The form's own rules come first: a submission they refuse comes back with its messages
         // whoever sent it, and the guard is not asked.
         [Fact]

@@ -128,7 +128,8 @@ If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to Mock/San
 - **[docs/WORKFLOW_SERVICES.md](docs/WORKFLOW_SERVICES.md)** — services & categories admin CRUD and the local WebP image pipeline.
 - **[docs/WORKFLOW_TECHNICIANS.md](docs/WORKFLOW_TECHNICIANS.md)** — the technician roster: create, deactivate vs. delete, the seeded placeholder.
 - **[docs/WORKFLOW_REVIEWS.md](docs/WORKFLOW_REVIEWS.md)** — admin approve/delete and the config gate that controls public display.
-- **[docs/WORKFLOW_ENQUIRIES.md](docs/WORKFLOW_ENQUIRIES.md)** — contact-form submissions: list, view, delete.
+- **[docs/WORKFLOW_ENQUIRIES.md](docs/WORKFLOW_ENQUIRIES.md)** — contact-form submissions and job applications: the emails they send, list, view, delete.
+- **[docs/WORKFLOW_FORMS.md](docs/WORKFLOW_FORMS.md)** — what a public form submission goes through: rate limit, hidden-field and time checks, Cloudflare Turnstile, and the site's own error pages.
 - **[docs/WORKFLOW_DEPLOYMENT.md](docs/WORKFLOW_DEPLOYMENT.md)** — the staging CI/CD pipeline, public-repo-safe (no real hosts/credentials).
 
 ---

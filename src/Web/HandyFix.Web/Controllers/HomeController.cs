@@ -148,11 +148,19 @@ namespace HandyFix.Web.Controllers
 
             // A submission that carries a program's mark gets the same thank-you as a real one and
             // is not saved, uploaded or emailed about: the program learns nothing from the reply.
-            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, "contact");
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, FormNames.Contact);
             if (guard == FormGuardResult.Automated)
             {
                 this.TempData["SuccessMessage"] = EnquiryReceivedMessage;
                 return this.RedirectToAction("Contact");
+            }
+
+            // The "are you a person" check did not pass. A person can land here, so it is said
+            // out loud: the form comes back as typed, with a message and a fresh check.
+            if (guard == FormGuardResult.ChallengeFailed)
+            {
+                this.ModelState.AddModelError(string.Empty, FormNames.ChallengeFailedMessage);
+                return await this.RedisplayContactFormAsync(model);
             }
 
             // The same enquiry sent a second time (a double click, a resend after Back) is thanked
@@ -213,11 +221,18 @@ namespace HandyFix.Web.Controllers
             }
 
             // As on the Contact form: a program's submission is thanked and dropped.
-            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, "join our team");
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, FormNames.JoinTeam);
             if (guard == FormGuardResult.Automated)
             {
                 this.TempData["SuccessMessage"] = ApplicationReceivedMessage;
                 return this.RedirectToAction("JoinTeam");
+            }
+
+            if (guard == FormGuardResult.ChallengeFailed)
+            {
+                this.ModelState.AddModelError(string.Empty, FormNames.ChallengeFailedMessage);
+                this.SetJoinTeamMetadata();
+                return this.View(model);
             }
 
             // Saved as an enquiry with no photos, so applications reach the existing admin

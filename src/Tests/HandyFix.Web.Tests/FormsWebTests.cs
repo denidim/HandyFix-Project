@@ -306,6 +306,95 @@
             Assert.Equal(sentStamp, HiddenFieldsOf(content)[FormGuard.StampFieldName]);
         }
 
+        // With keys, each public form shows Cloudflare's "are you a person" check just above its
+        // button, told which form it is on, and loads Cloudflare's script for it.
+        [Theory]
+        [InlineData("/Contact", "contact")]
+        [InlineData("/JoinOurTeam", "join-team")]
+        [InlineData("/Booking", "booking")]
+        public async Task WithKeysEachPublicFormShowsThePersonCheckForThatForm(string url, string action)
+        {
+            var client = this.server
+                .WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddSingleton<ITurnstileVerifier>(new FakeTurnstile())))
+                .CreateClient();
+
+            var content = await (await client.GetAsync(url)).Content.ReadAsStringAsync();
+
+            Assert.Contains("<div class=\"cf-turnstile\" data-sitekey=\"site-key-for-tests\" data-action=\"" + action + "\"", content);
+            Assert.Contains("<script src=\"https://challenges.cloudflare.com/turnstile/v0/api.js\" async defer></script>", content);
+
+            // Inside the form, and before its button.
+            var form = content.Substring(content.IndexOf("<form", content.IndexOf("<main", StringComparison.Ordinal), StringComparison.Ordinal));
+            form = form.Substring(0, form.IndexOf("</form>", StringComparison.Ordinal));
+            Assert.InRange(form.IndexOf("cf-turnstile", StringComparison.Ordinal), 0, form.LastIndexOf("type=\"submit\"", StringComparison.Ordinal));
+        }
+
+        // Without keys the check is off, which is allowed on a developer's machine only: no
+        // widget, no script from Cloudflare.
+        [Theory]
+        [InlineData("/Contact")]
+        [InlineData("/JoinOurTeam")]
+        [InlineData("/Booking")]
+        public async Task WithoutKeysInDevelopmentNoPersonCheckIsShown(string url)
+        {
+            var content = await (await this.server.CreateClient().GetAsync(url)).Content.ReadAsStringAsync();
+
+            Assert.DoesNotContain("cf-turnstile", content);
+            Assert.DoesNotContain("challenges.cloudflare.com", content);
+        }
+
+        // The check did not pass. A person can land here, so the form comes back as typed with a
+        // message and a way round it; nothing is saved and no email goes out. When it passes,
+        // the enquiry is saved as usual.
+        [Fact]
+        public async Task AnEnquiryIsSavedOnlyWhenThePersonCheckPasses()
+        {
+            var turnstile = new FakeTurnstile { Passes = false };
+            var emails = new RecordingEmailSender();
+            var client = this.server
+                .WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+                {
+                    services.AddSingleton<ITurnstileVerifier>(turnstile);
+                    services.AddSingleton<IEmailSender>(emails);
+                }))
+                .CreateClient();
+            Dictionary<string, string> enquiry = ValidEnquiry("The person check stands between this and the inbox.");
+
+            var refused = await PostFormAsync(client, "/Contact", enquiry);
+
+            var content = WebUtility.HtmlDecode(await refused.Content.ReadAsStringAsync());
+            Assert.Contains("We could not confirm that you are a person and not a program.", content);
+            Assert.Contains("call us or message us on WhatsApp on " + GlobalConstants.BusinessPhone, content);
+            Assert.Contains("The person check stands between this and the inbox.", content);
+            Assert.DoesNotContain("Request Received!", content);
+            Assert.Equal(0, this.CountEnquiries("The person check stands between this and the inbox."));
+            Assert.Empty(emails.Sent);
+
+            turnstile.Passes = true;
+            var accepted = await PostFormAsync(client, "/Contact", enquiry);
+
+            Assert.Contains("Request Received!", await accepted.Content.ReadAsStringAsync());
+            Assert.Equal(1, this.CountEnquiries("The person check stands between this and the inbox."));
+            Assert.Equal(new[] { "contact", "contact" }, turnstile.AskedAbout);
+        }
+
+        [Fact]
+        public async Task ABookingIsNotTakenWhenThePersonCheckDoesNotPass()
+        {
+            var turnstile = new FakeTurnstile { Passes = false };
+            var client = this.server
+                .WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddSingleton<ITurnstileVerifier>(turnstile)))
+                .CreateClient();
+
+            var response = await PostFormAsync(client, "/Booking", ValidBooking());
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var content = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            Assert.Contains("We could not confirm that you are a person and not a program.", content);
+            Assert.Equal(new[] { "booking" }, turnstile.AskedAbout);
+            Assert.Equal(0, this.CountBookings());
+        }
+
         // A form's hidden fields (the antiforgery token among them) as a browser would send them
         // back, with the given fields on top.
         internal static async Task<HttpResponseMessage> PostFormAsync(HttpClient client, string url, Dictionary<string, string> fields)

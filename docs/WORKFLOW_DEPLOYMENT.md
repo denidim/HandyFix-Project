@@ -82,9 +82,9 @@ Two services on a private `internal` Docker network:
 - **`web`** — the app container. **No ports exposed to the host** — only reachable through `caddy`.
 - **`caddy`** — `caddy:2-alpine`, the only service with `80`/`443` published. Terminates TLS
   (via the Hetzner reverse-DNS hostname), enforces HTTP Basic Auth, and sets
-  `X-Robots-Tag: noindex, nofollow` as a second line of defense against the site being indexed while
-  it still carries fabricated placeholder business content (see `PROJECT_STATE.md` Section 4 item
-  16) — belt and braces alongside the Basic Auth itself.
+  `X-Robots-Tag: noindex, nofollow` as a second line of defense against a search engine indexing
+  staging: a copy of the real site under another address — belt and braces alongside the Basic
+  Auth itself.
 
 ### Environment variables the compose file maps into the `web` container
 
@@ -97,6 +97,8 @@ Names only — real values live in `.env` on the server, itself gitignored, gene
 | `ADMIN_SEED_PASSWORD` | `Admin:SeedPassword` |
 | `BREVO_API_KEY` | `Brevo:ApiKey` |
 | `EMAIL_BOOKINGS_FROM_ADDRESS` / `EMAIL_SYSTEM_FROM_ADDRESS` | `Email:BookingsFromAddress` / `Email:SystemFromAddress` |
+| `ADMIN_NOTIFICATION_EMAIL` | `Admin:NotificationEmail` — where notices to the company go (paid deposits, enquiries, job applications). Empty means `info@` on the real domain; staging sets its own. |
+| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | `Turnstile:SiteKey` / `Turnstile:SecretKey` — the person check on the public forms. **The form pages fail without both** outside Development; see `WORKFLOW_FORMS.md`. |
 | `STAGING_HOSTNAME`, `BASIC_AUTH_USER`, `BASIC_AUTH_HASH` | consumed by the `caddy` service, not `web` |
 
 `ASPNETCORE_ENVIRONMENT=Staging` and `Stripe__AllowSandboxOutsideDevelopment=true` are hardcoded
@@ -107,6 +109,16 @@ remove it and set `Stripe__SecretKey` once a real test-mode account exists.
 `CloudflareR2:*` (`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_SERVICE_URL`, `R2_PUBLIC_URL`,
 `R2_BUCKET_NAME`) is wired up as of 2026-08-05 — staging reuses the same bucket as local dev. See
 `PROJECT_STATE.md` Section 3ae for how this was added and the compose-file sync issue it surfaced.
+
+**A new setting has to reach the server before the build that needs it.** The Turnstile keys are
+the case in point: a build with Turnstile fails its form pages when the keys are missing, and the
+pipeline only replaces the image. So the order is: put the new lines into `.env` on the server,
+copy the new `docker-compose.staging.yml` there, and only then push.
+
+Three settings have defaults in code and need no line in `.env` unless they are to change:
+`RateLimiting:FormPostsPerWindow` (10), `RateLimiting:FormWindowMinutes` (10) and
+`RateLimiting:SlotLookupsPerMinute` (60). They are not mapped in the compose file; add
+`RateLimiting__FormPostsPerWindow: "20"`-style lines there to override one.
 
 ---
 
@@ -170,6 +182,8 @@ with a warning. This is the exact CI/startup failure mode covered in the trouble
 | Caddy won't start / Basic Auth rejects a known-correct password | The hash in `BASIC_AUTH_HASH` doesn't match — regenerate with `docker run --rm caddy:2-alpine caddy hash-password --plaintext '<password>'` and update `.env`. |
 | SSH deploy step fails with a key error | `STAGING_SSH_KEY` secret is missing, malformed, or the corresponding public key isn't authorized on the staging host. |
 | Photo uploads fail on staging | `CloudflareR2:*` is configured as of 2026-08-05 (see above) — if this still happens, check the server's actual `.env` and `docker-compose.staging.yml` directly rather than assuming the repo version is what's running. |
+| `/Contact`, `/JoinOurTeam` and `/Booking` fail, the rest of the site works | The Turnstile keys are missing from the container: `Turnstile is not configured for this environment` in the log. Check both lines are in `.env` **and** that the server's compose file maps them. |
+| Every page `HomeController` serves fails | `Brevo:ApiKey` is missing. The enquiries service needs the email sender, and outside Development the sender refuses to exist without a key. |
 | A `Secure`-flagged cookie won't persist, or a generated absolute URL (e.g. Stripe redirect URLs) comes back `http://` instead of `https://` | `Request.Scheme`/`IsHttps` reading wrong behind Caddy — see "Why the app has to trust Caddy's forwarded headers" above. Confirm `UseForwardedHeaders()` is still the first middleware in `Program.cs`. |
 
 For real hostnames/credentials and a step-by-step walkthrough of each failure above with actual

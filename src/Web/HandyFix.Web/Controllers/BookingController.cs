@@ -144,12 +144,19 @@ namespace HandyFix.Web.Controllers
             // usual thank-you; a booking's success is the payment page, which cannot be faked, so
             // this comes back with a message that says nothing about why and still gives a
             // person a way to book.
-            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, "booking");
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, FormNames.Booking);
             if (guard == FormGuardResult.Automated)
             {
                 return await this.RedisplayBookingForm(
                     model,
                     $"We could not take this booking online. Please call us or message us on WhatsApp on {GlobalConstants.BusinessPhone}.");
+            }
+
+            // The "are you a person" check did not pass. A person can land here, so the form
+            // comes back as filled in, slot included, with a message and a fresh check.
+            if (guard == FormGuardResult.ChallengeFailed)
+            {
+                return await this.RedisplayBookingForm(model, FormNames.ChallengeFailedMessage);
             }
 
             // Before anything is saved or a deposit asked for: a postcode outside the districts

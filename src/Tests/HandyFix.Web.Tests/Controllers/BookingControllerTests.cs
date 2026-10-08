@@ -215,6 +215,28 @@
             imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
         }
 
+        // The "are you a person" check did not pass. A person can land here, so the form comes back
+        // as filled in, slot included, with a message and a way round it.
+        [Fact]
+        public async Task IndexPostShouldComeBackWithAMessageWhenThePersonCheckDidNotPass()
+        {
+            var formGuard = new Mock<IFormGuard>();
+            formGuard.Setup(g => g.CheckAsync(It.IsAny<HttpContext>(), "booking")).ReturnsAsync(FormGuardResult.ChallengeFailed);
+            var controller = BuildController(out _, out _, out var bookingsService, out _, formGuard: formGuard);
+            var model = ValidModel();
+
+            var result = await controller.Index(model);
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(model.SlotId, returnedModel.SlotId);
+            var error = SingleModelError(controller);
+            Assert.Contains("could not confirm that you are a person", error);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, error);
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                Times.Never);
+        }
+
         // Too many photos, one too large, a file that is not a picture: the customer can put that
         // right, so the form comes back saying which.
         [Fact]

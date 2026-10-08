@@ -12,6 +12,8 @@
     using Microsoft.Extensions.Logging.Abstractions;
     using Microsoft.Extensions.Primitives;
 
+    using Moq;
+
     using Xunit;
 
     // The two cheap marks of a program filling in a public form: a hidden text box with
@@ -21,6 +23,13 @@
     {
         private readonly AdjustableClock clock = new AdjustableClock(new DateTimeOffset(2026, 10, 8, 10, 0, 0, TimeSpan.Zero));
         private readonly IDataProtectionProvider keys = new EphemeralDataProtectionProvider();
+        private readonly Mock<ITurnstileVerifier> turnstile = new Mock<ITurnstileVerifier>();
+
+        public FormGuardTests()
+        {
+            // Unless a test says otherwise, the "are you a person" check passes.
+            this.turnstile.Setup(t => t.VerifyAsync(It.IsAny<HttpContext>(), It.IsAny<string>())).ReturnsAsync(true);
+        }
 
         [Fact]
         public async Task AFormSentAfterAFewSecondsWithTheHiddenBoxEmptyPasses()
@@ -78,7 +87,7 @@
         [Fact]
         public async Task AStampSignedWithOtherKeysIsAutomated()
         {
-            var foreignStamp = new FormGuard(new EphemeralDataProtectionProvider(), this.clock, Settings(null), NullLogger<FormGuard>.Instance)
+            var foreignStamp = new FormGuard(new EphemeralDataProtectionProvider(), this.clock, this.turnstile.Object, Settings(null), NullLogger<FormGuard>.Instance)
                 .CreateStamp(Get());
 
             this.clock.Advance(TimeSpan.FromMinutes(2));
@@ -130,12 +139,43 @@
             Assert.Equal(FormGuardResult.Passed, await guard.CheckAsync(Post(stamp), "booking"));
         }
 
+        // Turnstile is asked last and only for a submission the two free checks let through. It
+        // is told which form the submission is for, because a token is good for one form only.
+        [Fact]
+        public async Task ASubmissionTheTurnstileCheckTurnsDownIsAChallengeFailureNotAProgram()
+        {
+            this.turnstile.Setup(t => t.VerifyAsync(It.IsAny<HttpContext>(), FormNames.Booking)).ReturnsAsync(false);
+            FormGuard guard = this.BuildGuard();
+            var stamp = guard.CreateStamp(Get());
+
+            this.clock.Advance(TimeSpan.FromSeconds(30));
+
+            Assert.Equal(FormGuardResult.ChallengeFailed, await guard.CheckAsync(Post(stamp), FormNames.Booking));
+            Assert.Equal(FormGuardResult.Passed, await guard.CheckAsync(Post(stamp), FormNames.Contact));
+        }
+
+        // A submission the hidden box or the clock has already caught costs no call to Cloudflare.
+        [Fact]
+        public async Task TurnstileIsNotAskedAboutASubmissionAlreadyCaught()
+        {
+            FormGuard guard = this.BuildGuard();
+            var stamp = guard.CreateStamp(Get());
+
+            Assert.Equal(FormGuardResult.Automated, await guard.CheckAsync(Post(stamp), FormNames.Contact));
+
+            this.clock.Advance(TimeSpan.FromSeconds(30));
+
+            Assert.Equal(FormGuardResult.Automated, await guard.CheckAsync(Post(stamp, honeypot: "x"), FormNames.Contact));
+            Assert.Equal(FormGuardResult.Automated, await guard.CheckAsync(Post("not-a-stamp"), FormNames.Contact));
+            this.turnstile.Verify(t => t.VerifyAsync(It.IsAny<HttpContext>(), It.IsAny<string>()), Times.Never);
+        }
+
         // The full-stack tests send a form the instant they have fetched it, so their host sets
         // the minimum to nothing.
         [Fact]
         public async Task TheMinimumTimeComesFromConfiguration()
         {
-            var guard = new FormGuard(this.keys, this.clock, Settings("0"), NullLogger<FormGuard>.Instance);
+            var guard = new FormGuard(this.keys, this.clock, this.turnstile.Object, Settings("0"), NullLogger<FormGuard>.Instance);
             var stamp = guard.CreateStamp(Get());
 
             Assert.Equal(FormGuardResult.Passed, await guard.CheckAsync(Post(stamp), "contact"));
@@ -173,7 +213,7 @@
 
         private FormGuard BuildGuard()
         {
-            return new FormGuard(this.keys, this.clock, Settings(null), NullLogger<FormGuard>.Instance);
+            return new FormGuard(this.keys, this.clock, this.turnstile.Object, Settings(null), NullLogger<FormGuard>.Instance);
         }
 
         private sealed class AdjustableClock : TimeProvider

@@ -108,3 +108,16 @@ select.form-control {
   height: 1px;
   overflow: hidden;
 }
+
+/* Cloudflare's "are you a person" check (the _FormGuard partial), just above a form's button. Its
+   full shape stretches to the width it is given, so it is given no more than a text box's worth.
+   Where a form is narrower than the 300px that shape needs, the partial asks for the compact one. */
+.form-turnstile {
+  margin-top: var(--spacing-2);
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-turnstile-hint {
+  margin-bottom: 0;
+}

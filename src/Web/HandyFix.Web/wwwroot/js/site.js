@@ -68,6 +68,23 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
+        // A public form carries Cloudflare's "are you a person" check (the _FormGuard partial),
+        // which puts a token into the form when it has finished. Sent without one, the form would
+        // only come back with an error, so it is held here and the hint under the check is shown.
+        const challenge = form.querySelector('.cf-turnstile');
+        if (challenge) {
+            const token = form.querySelector('[name="cf-turnstile-response"]');
+            const hint = form.querySelector('.form-turnstile-hint');
+            if (!token || !token.value) {
+                event.preventDefault();
+                if (hint) hint.hidden = false;
+                challenge.scrollIntoView({ block: 'center' });
+                return;
+            }
+
+            if (hint) hint.hidden = true;
+        }
+
         form.dataset.submitting = 'true';
         form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
             button.classList.add('is-submitting');

@@ -21,6 +21,11 @@ services:
       # applications). Empty means the real info@ inbox; staging sets its own
       # so test enquiries do not land there.
       Admin__NotificationEmail: ${ADMIN_NOTIFICATION_EMAIL:-}
+      # Cloudflare Turnstile, the "are you a person" check on the public
+      # forms. Outside Development the forms fail without both keys, on
+      # purpose, so set them in .env before deploying a build that has it.
+      Turnstile__SiteKey: ${TURNSTILE_SITE_KEY}
+      Turnstile__SecretKey: ${TURNSTILE_SECRET_KEY}
       # No real Stripe account yet -- lets staging demo the full booking
       # flow via the sandbox bypass. Remove this and set Stripe__SecretKey
       # instead once a real (test-mode) Stripe account exists.

@@ -938,3 +938,15 @@
 .slots-message-full-width {
   grid-column: span 2;
 }
+
+/* The "are you a person" check (the _FormGuard partial) sits centred over the centred payment
+   button, in its full shape and in its compact one. The step it is in spaces its rows itself, so
+   the check and the button under it bring no margin of their own. */
+.booking-page .form-turnstile {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.booking-page .form-turnstile ~ .submit-container-centered {
+  margin-top: 0;
+}

@@ -27,17 +27,20 @@
 
         private readonly IDataProtector protector;
         private readonly TimeProvider timeProvider;
+        private readonly ITurnstileVerifier turnstile;
         private readonly IConfiguration configuration;
         private readonly ILogger<FormGuard> logger;
 
         public FormGuard(
             IDataProtectionProvider dataProtectionProvider,
             TimeProvider timeProvider,
+            ITurnstileVerifier turnstile,
             IConfiguration configuration,
             ILogger<FormGuard> logger)
         {
             this.protector = dataProtectionProvider.CreateProtector("HandyFix.Web.FormGuard.Stamp.v1");
             this.timeProvider = timeProvider;
+            this.turnstile = turnstile;
             this.configuration = configuration;
             this.logger = logger;
         }
@@ -56,28 +59,35 @@
             return this.protector.Protect(this.timeProvider.GetUtcNow().UtcTicks.ToString(CultureInfo.InvariantCulture));
         }
 
-        public Task<FormGuardResult> CheckAsync(HttpContext httpContext, string form)
+        public async Task<FormGuardResult> CheckAsync(HttpContext httpContext, string form)
         {
             IFormCollection posted = httpContext.Request.Form;
 
             if (!string.IsNullOrEmpty(posted[HoneypotFieldName].ToString()))
             {
-                return Task.FromResult(this.Automated(form, "the hidden field was filled in"));
+                return this.Automated(form, "the hidden field was filled in");
             }
 
             DateTimeOffset? shownAt = this.ReadStamp(posted[StampFieldName].ToString());
             if (shownAt == null)
             {
-                return Task.FromResult(this.Automated(form, "the stamp was missing or not one of ours"));
+                return this.Automated(form, "the stamp was missing or not one of ours");
             }
 
             TimeSpan taken = this.timeProvider.GetUtcNow() - shownAt.Value;
             if (taken < TimeSpan.FromSeconds(this.MinimumSeconds()))
             {
-                return Task.FromResult(this.Automated(form, "it was sent faster than a person types"));
+                return this.Automated(form, "it was sent faster than a person types");
             }
 
-            return Task.FromResult(FormGuardResult.Passed);
+            // Last, because it is the one check that costs a call to another service: a
+            // submission the two free checks above have already caught never gets this far.
+            if (!await this.turnstile.VerifyAsync(httpContext, form))
+            {
+                return FormGuardResult.ChallengeFailed;
+            }
+
+            return FormGuardResult.Passed;
         }
 
         private int MinimumSeconds()

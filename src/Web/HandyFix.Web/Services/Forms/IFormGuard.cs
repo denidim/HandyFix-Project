@@ -14,7 +14,8 @@
         // mistaken for a program.
         string CreateStamp(HttpContext httpContext);
 
-        // "form" names the form in the log ("contact", "booking").
+        // "form" is one of FormNames: it names the form in the log, and is the action its
+        // Turnstile widget was shown with.
         Task<FormGuardResult> CheckAsync(HttpContext httpContext, string form);
     }
 }

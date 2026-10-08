@@ -184,6 +184,11 @@ namespace HandyFix.Web
             services.AddTransient<IFormGuard, FormGuard>();
             services.AddRateLimiter(RateLimits.Configure);
 
+            // Five seconds to ask Cloudflare about a Turnstile token. If no answer comes the
+            // submission is let through (TurnstileVerifier says why), so this is also the longest
+            // a visitor waits on it.
+            services.AddHttpClient<ITurnstileVerifier, TurnstileVerifier>(client => client.Timeout = TimeSpan.FromSeconds(5));
+
             // Background workers
             services.AddHostedService<StaleBookingCleanupService>();
         }

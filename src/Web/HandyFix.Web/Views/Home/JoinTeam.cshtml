@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Home.JoinTeamInputModel
+@using HandyFix.Web.Services.Forms
 
 <div class="page-container services-page">
     <!-- Header & Breadcrumbs -->
@@ -33,7 +34,6 @@
     <div class="glass-card rounded-xl p-4 p-md-5">
         <form id="joinTeamForm" asp-controller="Home" asp-action="JoinTeam" method="post" class="d-flex flex-column gap-3">
             <div asp-validation-summary="All" class="validation-summary"></div>
-            <partial name="_FormGuard" />
 
             <div class="row">
                 <!-- Name -->
@@ -122,6 +122,8 @@
                 <textarea asp-for="AboutYou" class="form-control resize-none" rows="5" placeholder="Recent work, qualifications or certifications, and the areas you can cover..."></textarea>
                 <span asp-validation-for="AboutYou" class="validation-error"></span>
             </div>
+
+            <partial name="_FormGuard" model="@FormNames.JoinTeam" />
 
             <!-- Submit Button -->
             <div class="pt-2">
