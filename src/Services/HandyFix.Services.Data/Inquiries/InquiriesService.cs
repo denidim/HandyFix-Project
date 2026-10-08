@@ -16,6 +16,8 @@ namespace HandyFix.Services.Data.Inquiries
 
     public class InquiriesService : IInquiriesService
     {
+        private static readonly TimeSpan DuplicateWindow = TimeSpan.FromMinutes(10);
+
         private readonly IDeletableEntityRepository<Inquiry> inquiryRepository;
         private readonly IDeletableEntityRepository<InquiryImage> imageRepository;
         private readonly IImageService imageService;
@@ -30,6 +32,20 @@ namespace HandyFix.Services.Data.Inquiries
             this.imageService = imageService;
         }
 
+        // The same person sending the same words again within a few minutes is one enquiry sent
+        // twice: a double click, a Back and resend, a page reloaded on the "send again?" prompt.
+        // It is thanked like the first and not saved again. A second enquiry that says anything
+        // different is a new enquiry, however soon it comes.
+        public async Task<bool> IsRecentDuplicateAsync(ContactInputModel model)
+        {
+            DateTime since = DateTime.UtcNow - DuplicateWindow;
+            var email = (model.Email ?? string.Empty).Trim().ToLower();
+            var message = BuildMessage(model);
+
+            return await this.inquiryRepository.All()
+                .AnyAsync(x => x.CreatedOn >= since && x.Email.ToLower() == email && x.Message == message);
+        }
+
         public async Task CreateInquiryAsync(ContactInputModel model, IReadOnlyList<string> imageUrls)
         {
             var inquiry = new Inquiry
@@ -37,12 +53,7 @@ namespace HandyFix.Services.Data.Inquiries
                 Name = model.Name,
                 Email = model.Email,
                 PhoneNumber = model.PhoneNumber,
-                // The Contact form sends its category as a separate field, validated separately
-                // from the visitor's own text; it's stored as a prefix so the admin Enquiries list
-                // reads the same as it always has. Join Our Team sends no category.
-                Message = string.IsNullOrWhiteSpace(model.Category)
-                    ? model.Message
-                    : $"[Category: {model.Category.Trim()}] {model.Message}",
+                Message = BuildMessage(model),
             };
 
             await this.inquiryRepository.AddAsync(inquiry);
@@ -127,6 +138,16 @@ namespace HandyFix.Services.Data.Inquiries
         public async Task<int> GetTotalCountAsync()
         {
             return await this.inquiryRepository.All().CountAsync();
+        }
+
+        // The Contact form sends its category as a separate field, validated separately from the
+        // visitor's own text; it's stored as a prefix so the admin Enquiries list reads the same
+        // as it always has. Join Our Team sends no category.
+        private static string BuildMessage(ContactInputModel model)
+        {
+            return string.IsNullOrWhiteSpace(model.Category)
+                ? model.Message
+                : $"[Category: {model.Category.Trim()}] {model.Message}";
         }
     }
 }

@@ -112,6 +112,62 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal("Zack", results.Last().Name);
         }
 
+        // A double click on Send, or a resend after Back, used to save the enquiry twice. The same
+        // email with the same words inside ten minutes is the first enquiry again; anything
+        // different is a new one, however soon it comes (PROJECT_STATE.md Section 3cb). On Sqlite,
+        // so the comparison is the one a real database makes.
+        [Fact]
+        public async Task IsRecentDuplicateAsyncShouldKnowTheSameEnquirySentAgain()
+        {
+            using var connection = new SqliteConnection("DataSource=:memory:");
+            using ApplicationDbContext dbContext = SqliteContext(connection);
+            InquiriesService service = BuildService(dbContext);
+
+            ContactInputModel Enquiry(string email = "jane@example.com", string message = "Kitchen tap is dripping.", string category = "Plumbing") =>
+                new ContactInputModel { Name = "Jane Doe", Email = email, PhoneNumber = "07123456789", Message = message, Category = category };
+
+            Assert.False(await service.IsRecentDuplicateAsync(Enquiry()));
+
+            await service.CreateInquiryAsync(Enquiry(), new List<string>());
+
+            Assert.True(await service.IsRecentDuplicateAsync(Enquiry()));
+            Assert.True(await service.IsRecentDuplicateAsync(Enquiry(email: " Jane@Example.COM ")));
+
+            Assert.False(await service.IsRecentDuplicateAsync(Enquiry(message: "Kitchen tap is dripping. It is the cold one.")));
+            Assert.False(await service.IsRecentDuplicateAsync(Enquiry(email: "john@example.com")));
+            Assert.False(await service.IsRecentDuplicateAsync(Enquiry(category: "Handyman")));
+        }
+
+        [Fact]
+        public async Task IsRecentDuplicateAsyncShouldTreatTheSameWordsLaterAsANewEnquiry()
+        {
+            using var connection = new SqliteConnection("DataSource=:memory:");
+            using ApplicationDbContext dbContext = SqliteContext(connection);
+            InquiriesService service = BuildService(dbContext);
+            var model = new ContactInputModel { Name = "Jane Doe", Email = "jane@example.com", PhoneNumber = "07123456789", Message = "Kitchen tap is dripping." };
+
+            await service.CreateInquiryAsync(model, new List<string>());
+            dbContext.Inquiries.Single().CreatedOn = DateTime.UtcNow.AddMinutes(-11);
+            await dbContext.SaveChangesAsync();
+
+            Assert.False(await service.IsRecentDuplicateAsync(model));
+        }
+
+        // A deleted enquiry is gone: sending the same words again after it was deleted is new.
+        [Fact]
+        public async Task IsRecentDuplicateAsyncShouldNotCountADeletedEnquiry()
+        {
+            using var connection = new SqliteConnection("DataSource=:memory:");
+            using ApplicationDbContext dbContext = SqliteContext(connection);
+            InquiriesService service = BuildService(dbContext);
+            var model = new ContactInputModel { Name = "Jane Doe", Email = "jane@example.com", PhoneNumber = "07123456789", Message = "Kitchen tap is dripping." };
+
+            await service.CreateInquiryAsync(model, new List<string>());
+            await service.DeleteAsync(dbContext.Inquiries.Single().Id);
+
+            Assert.False(await service.IsRecentDuplicateAsync(model));
+        }
+
         // "Delete Permanent" used to set IsDeleted and keep the row: the name, email, phone number
         // and message stayed in the database, hidden from every page, and the photos stayed in
         // storage (PROJECT_STATE.md Section 3cb). On Sqlite, because the photo rows point at the

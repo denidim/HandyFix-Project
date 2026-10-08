@@ -134,8 +134,15 @@ namespace HandyFix.Web.Controllers
                 return this.View(model);
             }
 
-            IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
-            await this.inquiriesService.CreateInquiryAsync(model, imageUrls);
+            // The same enquiry sent a second time (a double click, a resend after Back) is thanked
+            // like the first and not saved again. Asked before the photos go to storage, so a
+            // repeat does not upload them twice either.
+            if (!await this.inquiriesService.IsRecentDuplicateAsync(model))
+            {
+                IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
+                await this.inquiriesService.CreateInquiryAsync(model, imageUrls);
+            }
+
             this.TempData["SuccessMessage"] = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
 
             return this.RedirectToAction("Contact");
@@ -160,8 +167,14 @@ namespace HandyFix.Web.Controllers
             }
 
             // Saved as an enquiry with no photos, so applications reach the existing admin
-            // Enquiries list without a table of their own - see JoinTeamInputModel.
-            await this.inquiriesService.CreateInquiryAsync(model.ToContactInputModel(), Array.Empty<string>());
+            // Enquiries list without a table of their own - see JoinTeamInputModel. The same
+            // application sent twice is saved once, as on the Contact form.
+            ContactInputModel application = model.ToContactInputModel();
+            if (!await this.inquiriesService.IsRecentDuplicateAsync(application))
+            {
+                await this.inquiriesService.CreateInquiryAsync(application, Array.Empty<string>());
+            }
+
             this.TempData["SuccessMessage"] = "Thanks for applying! We've received your details and will be in touch soon.";
 
             return this.RedirectToAction("JoinTeam");

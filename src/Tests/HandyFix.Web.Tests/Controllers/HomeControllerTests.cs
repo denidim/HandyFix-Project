@@ -105,6 +105,70 @@
         }
 
         [Fact]
+        public async Task ContactPostShouldUploadThePhotosSaveTheEnquiryAndRedirect()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var controller = BuildController(inquiriesService, imageService: ImageServiceReturning("https://photos.example/inquiries/a.jpg"));
+            var model = ValidContact();
+
+            var result = await controller.Contact(model);
+
+            Assert.Equal("Contact", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Contains("has been received", Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(model, It.Is<IReadOnlyList<string>>(urls => urls.Single() == "https://photos.example/inquiries/a.jpg")),
+                Times.Once);
+        }
+
+        // The same enquiry sent again, by a double click or a resend, is thanked like the first
+        // and saved once. The photos are not uploaded a second time either (PROJECT_STATE
+        // Section 3cb).
+        [Fact]
+        public async Task ContactPostShouldThankTheVisitorWithoutSavingTheSameEnquiryTwice()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            inquiriesService.Setup(s => s.IsRecentDuplicateAsync(It.IsAny<ContactInputModel>())).ReturnsAsync(true);
+            var imageService = ImageServiceReturning("https://photos.example/inquiries/a.jpg");
+            var controller = BuildController(inquiriesService, imageService: imageService);
+
+            var result = await controller.Contact(ValidContact());
+
+            Assert.Equal("Contact", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Contains("has been received", Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
+                Times.Never);
+            imageService.Verify(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task JoinTeamPostShouldThankTheApplicantWithoutSavingTheSameApplicationTwice()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            inquiriesService
+                .Setup(s => s.IsRecentDuplicateAsync(It.Is<ContactInputModel>(c => c.Message.StartsWith(JoinTeamInputModel.MessagePrefix))))
+                .ReturnsAsync(true);
+            var controller = BuildController(inquiriesService);
+            var model = new JoinTeamInputModel
+            {
+                Name = "Jane Smith",
+                Email = "jane@example.com",
+                PhoneNumber = "07000000000",
+                Trade = "Plumbing",
+                YearsExperience = 8,
+                Availability = "Full-time",
+            };
+
+            var result = await controller.JoinTeam(model);
+
+            Assert.Equal("JoinTeam", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Contains("Thanks for applying", Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
+                Times.Never);
+        }
+
+        [Fact]
         public async Task ContactGetShouldPreselectTheCategoryOfTheRequestedService()
         {
             var servicesService = new Mock<IServicesService>();
@@ -251,20 +315,38 @@
             return servicesService;
         }
 
+        private static ContactInputModel ValidContact() => new ContactInputModel
+        {
+            Name = "Jane Doe",
+            Email = "jane@example.com",
+            PhoneNumber = "07700 900123",
+            Message = "Kitchen tap is dripping.",
+            Category = "Plumbing",
+        };
+
+        private static Mock<IImageService> ImageServiceReturning(params string[] urls)
+        {
+            var imageService = new Mock<IImageService>();
+            imageService
+                .Setup(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ReturnsAsync(urls.ToList());
+            return imageService;
+        }
+
         private static HomeController BuildController(
             Mock<IInquiriesService> inquiriesService = null,
             Mock<IServicesService> servicesService = null,
-            Mock<ICategoriesService> categoriesService = null)
+            Mock<ICategoriesService> categoriesService = null,
+            Mock<IImageService> imageService = null)
         {
             var reviewsService = new Mock<IReviewsService>();
-            var imageService = new Mock<IImageService>();
 
             var controller = new HomeController(
                 reviewsService.Object,
                 (inquiriesService ?? new Mock<IInquiriesService>()).Object,
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
-                imageService.Object,
+                (imageService ?? ImageServiceReturning()).Object,
                 new ConfigurationBuilder().Build());
 
             var httpContext = new DefaultHttpContext();

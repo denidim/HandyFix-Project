@@ -45,6 +45,47 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    // One click, one submission. A form that is being sent is marked, and until the next page
+    // arrives a second submit of it is stopped and its button shows a spinner (buttons.css). A
+    // double click on "Send" used to save an enquiry twice (PROJECT_STATE Section 3cb).
+    //
+    // This listens on the document, so it runs after the handlers on the form itself. A form
+    // with errors never gets here: jQuery Validation stops the event at the form. One whose
+    // "are you sure?" was answered no arrives cancelled and is left alone. The button is marked,
+    // not disabled: a disabled button changes its look, and the booking page manages that state
+    // itself.
+    document.addEventListener('submit', function (event) {
+        // Read as attributes: form.method and form.target give a field of that name if there is one.
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        if ((form.getAttribute('method') || 'get').toLowerCase() !== 'post') return;
+        const target = form.getAttribute('target');
+        if (form.hasAttribute('data-no-submit-lock') || (target && target !== '_self')) return;
+        if (event.defaultPrevented) return;
+
+        if (form.dataset.submitting) {
+            event.preventDefault();
+            return;
+        }
+
+        form.dataset.submitting = 'true';
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
+            button.classList.add('is-submitting');
+            button.setAttribute('aria-busy', 'true');
+        });
+    });
+
+    // Back from the next page, a browser can show this page as it was left, marks and all.
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('form[data-submitting]').forEach(function (form) {
+            delete form.dataset.submitting;
+            form.querySelectorAll('.is-submitting').forEach(function (button) {
+                button.classList.remove('is-submitting');
+                button.removeAttribute('aria-busy');
+            });
+        });
+    });
+
     const heroForm = document.getElementById("hero-booking-form");
     if (!heroForm) return;
 

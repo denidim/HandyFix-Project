@@ -45,6 +45,21 @@ starts with `[Job Application]`, so applications reach this list without a table
 The rules are the shared attributes in `HandyFix.Web.ViewModels/Validation/`, the same ones the
 booking form uses; `WORKFLOW_BOOKINGS.md` Step 2 says how they reach the browser.
 
+### The same enquiry sent twice is saved once
+
+Two things stop a double click on Send from making two rows:
+
+- **In the page**, `site.js` marks any POST form once it is sent, stops further submits of it until
+  the next page arrives, and shows a spinner on its button. This covers every form on the site,
+  admin included. A form can opt out with a `data-no-submit-lock` attribute.
+- **On the server**, `InquiriesService.IsRecentDuplicateAsync` asks whether an enquiry with the
+  same email and the exact same message was saved in the last ten minutes. If so the visitor gets
+  the same thank-you and nothing is saved or uploaded again. `HomeController` asks before the
+  photos go to storage.
+
+A second enquiry that says anything different is always a new enquiry, however soon it comes:
+people do send a correction straight after the first.
+
 **There is no status, response, or "read" field on `Inquiry` at all** — confirmed directly from the
 entity. This is exactly why the admin list has no status filter, unlike Bookings and Reviews: there
 is genuinely nothing to filter on. `InquirySortField` only has two members, `CreatedOn` and `Name`.

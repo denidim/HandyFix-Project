@@ -81,3 +81,38 @@
   display: block;
   width: 100%;
 }
+
+/* A form that has been sent. site.js marks its submit button until the next page arrives, so a
+   second click cannot send it twice. The button is not disabled: the mark keeps its look and adds
+   a spinner, and the script is what stops the second send. */
+button.is-submitting,
+input.is-submitting {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+button.is-submitting::after {
+  content: "";
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  margin-left: var(--spacing-2);
+  vertical-align: -0.15em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: submit-spin 0.7s linear infinite;
+}
+
+@keyframes submit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.is-submitting::after {
+    animation-duration: 2.5s;
+  }
+}

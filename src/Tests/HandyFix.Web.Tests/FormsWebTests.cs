@@ -9,6 +9,10 @@
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
+    using HandyFix.Data;
+
+    using Microsoft.Extensions.DependencyInjection;
+
     using Xunit;
 
     // The three public forms through the whole stack: what the page gives the browser, and what
@@ -123,6 +127,52 @@
             Assert.Contains("at least 20 characters", content);
         }
 
+        // A double click on Send used to save an enquiry twice. The same email and words again
+        // are thanked and saved once; different words are a new enquiry.
+        [Fact]
+        public async Task TheSameEnquirySentTwiceIsThankedTwiceAndSavedOnce()
+        {
+            var client = this.server.CreateClient();
+            Dictionary<string, string> enquiry = ValidEnquiry("The outside tap drips whenever it rains hard.");
+
+            var first = await PostFormAsync(client, "/Contact", enquiry);
+            var second = await PostFormAsync(client, "/Contact", enquiry);
+
+            Assert.Contains("Request Received!", await first.Content.ReadAsStringAsync());
+            Assert.Contains("Request Received!", await second.Content.ReadAsStringAsync());
+            Assert.Equal(1, this.CountEnquiries("The outside tap drips whenever it rains hard."));
+
+            var different = await PostFormAsync(client, "/Contact", ValidEnquiry("The outside tap drips whenever it rains hard. Also the hose."));
+
+            Assert.Contains("Request Received!", await different.Content.ReadAsStringAsync());
+            Assert.Equal(2, this.CountEnquiries("The outside tap drips whenever it rains hard."));
+        }
+
+        [Fact]
+        public async Task TheSameApplicationSentTwiceIsSavedOnce()
+        {
+            var client = this.server.CreateClient();
+            var application = new Dictionary<string, string>
+            {
+                ["Name"] = "Sam Fitter",
+                ["Email"] = "sam.fitter@example.com",
+                ["PhoneNumber"] = "07700 900456",
+                ["Trade"] = "Plumbing",
+                ["YearsExperience"] = "12",
+                ["Availability"] = "Full-time",
+                ["HasOwnTools"] = "true",
+                ["HasOwnTransport"] = "true",
+                ["AboutYou"] = "Twelve years fitting bathrooms around Epsom and Ewell.",
+            };
+
+            var first = await PostFormAsync(client, "/JoinOurTeam", application);
+            var second = await PostFormAsync(client, "/JoinOurTeam", application);
+
+            Assert.Contains("Application Received!", await first.Content.ReadAsStringAsync());
+            Assert.Contains("Application Received!", await second.Content.ReadAsStringAsync());
+            Assert.Equal(1, this.CountEnquiries("Twelve years fitting bathrooms around Epsom and Ewell."));
+        }
+
         // A form's hidden fields (the antiforgery token among them) as a browser would send them
         // back, with the given fields on top.
         internal static async Task<HttpResponseMessage> PostFormAsync(HttpClient client, string url, Dictionary<string, string> fields)
@@ -154,6 +204,15 @@
             return hidden;
         }
 
+        private static Dictionary<string, string> ValidEnquiry(string message) => new Dictionary<string, string>
+        {
+            ["Name"] = "Jane Doe",
+            ["Email"] = "jane.doe@example.com",
+            ["PhoneNumber"] = "07700 900123",
+            ["Category"] = "Plumbing",
+            ["Message"] = message,
+        };
+
         private static Dictionary<string, string> ValidBooking() => new Dictionary<string, string>
         {
             ["CustomerFirstName"] = "Ada",
@@ -166,5 +225,13 @@
             ["SlotId"] = Guid.NewGuid().ToString(),
             ["ServiceId"] = Guid.NewGuid().ToString(),
         };
+
+        // Enquiries in the test host's own database whose message holds this text.
+        private int CountEnquiries(string text)
+        {
+            using IServiceScope scope = this.server.Services.CreateScope();
+            ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            return dbContext.Inquiries.Count(x => x.Message.Contains(text));
+        }
     }
 }
