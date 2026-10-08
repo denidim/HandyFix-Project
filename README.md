@@ -105,7 +105,8 @@ dotnet user-secrets set "Stripe:SecretKey" "sk_test_..."
 dotnet user-secrets set "Stripe:PublishableKey" "pk_test_..."
 dotnet user-secrets set "Stripe:WebhookSecret" "whsec_..."
 dotnet user-secrets set "Brevo:ApiKey" "xkeysib-..."
-dotnet user-secrets set "Admin:SeedPassword" "<a strong password you choose>"
+dotnet user-secrets set "Admin:SeedEmail" "<the email you will sign in with>"
+dotnet user-secrets set "Admin:SeedPassword" "<a password of at least 10 characters>"
 dotnet user-secrets set "CloudflareR2:AccessKeyId" "..."
 dotnet user-secrets set "CloudflareR2:SecretAccessKey" "..."
 dotnet user-secrets set "CloudflareR2:ServiceUrl" "..."
@@ -113,9 +114,11 @@ dotnet user-secrets set "CloudflareR2:PublicUrl" "..."
 dotnet user-secrets set "CloudflareR2:BucketName" "..."
 ```
 
-In staging/production these are supplied as environment variables instead (`Admin__SeedPassword`, `CloudflareR2__AccessKeyId`, etc. — double underscore is ASP.NET Core's section separator), injected via GitHub Actions repo secrets at deploy time, never committed.
+In staging/production these are supplied as environment variables instead (`Admin__SeedPassword`, `CloudflareR2__AccessKeyId`, etc. — double underscore is ASP.NET Core's section separator), read from a `.env` file that lives on the server only and is never committed ([docs/WORKFLOW_DEPLOYMENT.md](docs/WORKFLOW_DEPLOYMENT.md)).
 
-If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to Mock/Sandbox mode (Stripe) or a no-op sender (Brevo) **only in Development** — both throw on startup outside Development, so a missing key can't silently ship a broken (or, for Stripe, fake-successful) production flow. `Admin:SeedPassword` follows the same rule: unset outside Development throws; unset in Development seeds a fixed dev-only fallback password, never used elsewhere.
+If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to Mock/Sandbox mode (Stripe) or a no-op sender (Brevo) **only in Development** — both throw on startup outside Development, so a missing key can't silently ship a broken (or, for Stripe, fake-successful) production flow. `Admin:SeedEmail` and `Admin:SeedPassword` follow the same rule: unset outside Development throws; unset in Development seeds fixed dev-only fallbacks, never used elsewhere.
+
+**The two `Admin:Seed*` settings are read once in a database's life**: at the first start, which makes the admin account. Setting or changing them later changes nothing. After that the admin changes the password and the login email in the admin panel, on the Account page ([docs/WORKFLOW_ADMIN_ACCOUNT.md](docs/WORKFLOW_ADMIN_ACCOUNT.md)).
 
 ---
 
@@ -130,6 +133,8 @@ If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to Mock/San
 - **[docs/WORKFLOW_REVIEWS.md](docs/WORKFLOW_REVIEWS.md)** — admin approve/delete and the config gate that controls public display.
 - **[docs/WORKFLOW_ENQUIRIES.md](docs/WORKFLOW_ENQUIRIES.md)** — contact-form submissions and job applications: the emails they send, list, view, delete.
 - **[docs/WORKFLOW_FORMS.md](docs/WORKFLOW_FORMS.md)** — what a public form submission goes through: rate limit, hidden-field and time checks, Cloudflare Turnstile, and the site's own error pages.
+- **[docs/WORKFLOW_EMAIL.md](docs/WORKFLOW_EMAIL.md)** — every email the site sends, from which address and to whom, and the email settings per environment.
+- **[docs/WORKFLOW_ADMIN_ACCOUNT.md](docs/WORKFLOW_ADMIN_ACCOUNT.md)** — the admin account: where it comes from, what protects its login, changing its password and email, and resetting a forgotten password.
 - **[docs/WORKFLOW_DEPLOYMENT.md](docs/WORKFLOW_DEPLOYMENT.md)** — the staging CI/CD pipeline, public-repo-safe (no real hosts/credentials).
 
 ---

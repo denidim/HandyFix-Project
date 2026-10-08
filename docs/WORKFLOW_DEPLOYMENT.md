@@ -94,10 +94,11 @@ Names only — real values live in `.env` on the server, itself gitignored, gene
 | Variable | Maps to app config key |
 | --- | --- |
 | `DB_CONNECTION_STRING` | `ConnectionStrings:DefaultConnection` |
-| `ADMIN_SEED_PASSWORD` | `Admin:SeedPassword` |
+| `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD` | `Admin:SeedEmail` / `Admin:SeedPassword` — the admin account's login email and password. **Read at the first start of a database only**; see "Startup sequence" below. |
 | `BREVO_API_KEY` | `Brevo:ApiKey` |
-| `EMAIL_BOOKINGS_FROM_ADDRESS` / `EMAIL_SYSTEM_FROM_ADDRESS` | `Email:BookingsFromAddress` / `Email:SystemFromAddress` |
-| `ADMIN_NOTIFICATION_EMAIL` | `Admin:NotificationEmail` — where notices to the company go (paid deposits, enquiries, job applications). Empty means `info@` on the real domain; staging sets its own. |
+| `EMAIL_BOOKINGS_FROM_ADDRESS` / `EMAIL_SYSTEM_FROM_ADDRESS` | `Email:BookingsFromAddress` / `Email:SystemFromAddress` — empty on staging and on the live site, which means `bookings@` on the real domain. |
+| `EMAIL_SUBJECT_PREFIX` | `Email:SubjectPrefix` — a mark in front of every subject. `[STAGING]` on staging; empty on the live site. |
+| `ADMIN_NOTIFICATION_EMAIL` | `Admin:NotificationEmail` — where notices to the company go (paid deposits, enquiries, job applications). Empty means `info@` on the real domain; staging sets a role address of its own. `WORKFLOW_EMAIL.md` has every email setting in one table. |
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | `Turnstile:SiteKey` / `Turnstile:SecretKey` — the person check on the public forms. **The form pages fail without both** outside Development; see `WORKFLOW_FORMS.md`. |
 | `STAGING_HOSTNAME`, `BASIC_AUTH_USER`, `BASIC_AUTH_HASH` | consumed by the `caddy` service, not `web` |
 
@@ -165,9 +166,17 @@ On every boot, before the app starts serving requests:
    it **does** run in Staging, deliberately, so a freshly-deployed staging box has a working booking
    flow without any manual admin steps).
 
-**`AdminUserSeeder` fails app startup entirely outside Development if `Admin:SeedPassword` is
-unset** — it throws before `app.Run()`, and only Development falls back to a hardcoded password
-with a warning. This is the exact CI/startup failure mode covered in the troubleshooting table below.
+**`AdminUserSeeder` makes the admin account at the one start that finds no administrator, from
+`Admin:SeedEmail` and `Admin:SeedPassword`.** At that start, outside Development, it fails app
+startup entirely if either is unset — it throws before `app.Run()`, naming the missing setting —
+and only Development falls back to values written in the seeder, with a warning. This is the exact
+CI/startup failure mode covered in the troubleshooting table below.
+
+**At every later start it does nothing, and neither setting is read.** Changing
+`ADMIN_SEED_PASSWORD` on a server whose database already has its admin changes nothing: the
+password and the login email are changed in the admin panel, on the Account page. So for a new
+database, the live site's above all, both are chosen **before** its first start.
+`WORKFLOW_ADMIN_ACCOUNT.md` has the whole account.
 
 ---
 
@@ -178,7 +187,8 @@ with a warning. This is the exact CI/startup failure mode covered in the trouble
 | CI fails at the "Test" step | A real test regression — the deploy step never runs when this happens, by design. Fix the test before anything reaches staging. |
 | Deploy step succeeds but the site doesn't change | Check the SSH script actually found `docker-compose.staging.yml` at `/opt/handyfix/deploy` on the server — a missing/misnamed file used to fail silently before `set -euo pipefail` was added. |
 | You edited `docker-compose.staging.yml`/`Caddyfile`/env-var mappings in the repo, pushed, deploy shows green, but the behavior didn't change | **Not a pipeline failure** — see "What's actually automated, and what isn't" above. The SSH step never syncs these files from the repo; it restarted containers using the server's existing, unchanged copy. You have to update the server's copy yourself. |
-| App container crashes on boot in Staging | Almost always `Admin:SeedPassword` (`ADMIN_SEED_PASSWORD` in `.env`) missing or unset — see the startup sequence above. |
+| App container crashes on boot against a new, empty database | Almost always `Admin:SeedEmail` or `Admin:SeedPassword` (`ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` in `.env`) missing, or a password under 10 characters — the log names which. See the startup sequence above. A database that already has its admin needs neither. |
+| `ADMIN_SEED_PASSWORD` was changed in `.env` and the old password still signs in | By design: it is read at the first start only. Change the password on the admin panel's Account page. |
 | Caddy won't start / Basic Auth rejects a known-correct password | The hash in `BASIC_AUTH_HASH` doesn't match — regenerate with `docker run --rm caddy:2-alpine caddy hash-password --plaintext '<password>'` and update `.env`. |
 | SSH deploy step fails with a key error | `STAGING_SSH_KEY` secret is missing, malformed, or the corresponding public key isn't authorized on the staging host. |
 | Photo uploads fail on staging | `CloudflareR2:*` is configured as of 2026-08-05 (see above) — if this still happens, check the server's actual `.env` and `docker-compose.staging.yml` directly rather than assuming the repo version is what's running. |
