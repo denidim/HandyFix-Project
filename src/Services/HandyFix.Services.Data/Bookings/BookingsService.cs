@@ -277,7 +277,7 @@ namespace HandyFix.Services.Data.Bookings
                     // deliberately says nothing about it (see PaymentsService).
                     var technicianBlock = booking.Technician != null
                         ? $@"<p>Your technician for this visit is <strong>{EmailText.Encode(NameFormat.Full(booking.Technician.FirstName, booking.Technician.LastName))}</strong>
-                             (<a href=""tel:{EmailText.Encode(booking.Technician.PhoneNumber)}"">{EmailText.Encode(booking.Technician.PhoneNumber)}</a>).</p>"
+                             (<a href=""tel:{EmailText.PhoneLink(booking.Technician.PhoneNumber)}"">{EmailText.Encode(booking.Technician.PhoneNumber)}</a>).</p>"
                         : "<p>A professional technician is scheduled for your address at the selected slot.</p>";
 
                     // Send Booking Confirmed email

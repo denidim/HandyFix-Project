@@ -1,5 +1,6 @@
 ﻿namespace HandyFix.Services.Data.Common
 {
+    using System.Linq;
     using System.Net;
 
     // Text typed into a form, made safe to put into an email's HTML. The emails are built as
@@ -16,6 +17,13 @@
         public static string EncodeLines(string text)
         {
             return Encode(text).Replace("\r\n", "\n").Replace("\n", "<br />");
+        }
+
+        // For the address of a tel: link: the number without the spaces it is written with, which
+        // a link's address may not hold. The number shown beside the link keeps them.
+        public static string PhoneLink(string phone)
+        {
+            return Encode(string.Concat((phone ?? string.Empty).Where(c => !char.IsWhiteSpace(c))));
         }
     }
 }
