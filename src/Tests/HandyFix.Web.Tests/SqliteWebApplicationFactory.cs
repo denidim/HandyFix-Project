@@ -33,6 +33,13 @@
     /// </summary>
     public class SqliteWebApplicationFactory : WebApplicationFactory<Program>
     {
+        // The administrator this host seeds. Set here because a Development host also reads the
+        // developer's own user secrets: left to those, the admin's login would be one thing on
+        // the developer's machine and another on the CI runner (PROJECT_STATE.md Section 3cc).
+        public const string AdminEmail = "owner@example.com";
+
+        public const string AdminPassword = "correct horse battery";
+
         // Held open for the lifetime of the factory: a Sqlite in-memory database exists only as
         // long as at least one connection to it is open, so closing this would drop the schema
         // and the seeded data between requests.
@@ -61,6 +68,8 @@
                     [FormGuard.MinimumSecondsKey] = "0",
                     [RateLimits.FormPostsKey] = "100000",
                     [RateLimits.SlotLookupsKey] = "100000",
+                    ["Admin:SeedEmail"] = AdminEmail,
+                    ["Admin:SeedPassword"] = AdminPassword,
                 }));
 
             builder.ConfigureServices(services =>

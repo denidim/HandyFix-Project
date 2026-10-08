@@ -15,6 +15,10 @@
 
         public const string Booking = "booking";
 
+        // Not a customer's form, but as public as the other three: anyone can open it and it
+        // sends an email (PROJECT_STATE.md Section 3cc).
+        public const string ForgotPassword = "forgot-password";
+
         // What a person is told when the Turnstile check did not pass. It is said out loud, with
         // a way round it, because a person can fail it: a slow connection, a blocked widget.
         public const string ChallengeFailedMessage =

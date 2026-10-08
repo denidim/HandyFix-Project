@@ -38,5 +38,9 @@
         public const string CompanyIncorporatedOn = "2020-06-09";
 
         public const string AdministratorRoleName = "Administrator";
+
+        // The shortest password an account may be given. The login page is public and the owner
+        // chooses the admin password himself (PROJECT_STATE.md Section 3cc).
+        public const int PasswordMinimumLength = 10;
     }
 }

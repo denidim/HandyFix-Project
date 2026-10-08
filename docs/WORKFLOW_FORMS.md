@@ -6,6 +6,12 @@ and the database, in the order it happens, and what the visitor sees at each ste
 
 Full history and reasoning: `PROJECT_STATE.md` Section 3cb.
 
+**A fourth form carries the same guard: "Forgot password?"** on the login page. It is not a
+customer's form, but anyone can open it and each send is an email to the owner. Checks 1 to 5 below
+apply to it as written, with two differences: its rate limit is the account allowance it shares
+with signing in, not the forms' one, and a submission the guard drops gets the page's usual
+"an email may be on its way" answer. `WORKFLOW_ADMIN_ACCOUNT.md` has the rest.
+
 ---
 
 ## The order of checks

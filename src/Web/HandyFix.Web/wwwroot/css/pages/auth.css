@@ -75,3 +75,13 @@
 .auth-footer a:hover {
   text-decoration: underline;
 }
+
+/* Good news above an auth form: a reset link is on its way, the password has been changed. */
+.auth-notice {
+  margin: 0 0 var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-lg);
+  background-color: rgba(78, 222, 163, 0.2);
+  color: var(--on-surface);
+  font-size: var(--fs-body-md);
+}

@@ -14,6 +14,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Data.Reviews;
@@ -24,12 +25,14 @@ namespace HandyFix.Web
     using HandyFix.Services.Messaging;
     using HandyFix.Web.BackgroundServices;
     using HandyFix.Web.Services;
+    using HandyFix.Web.Services.Accounts;
     using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels;
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.HttpOverrides;
+    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -61,6 +64,10 @@ namespace HandyFix.Web
 
             services.AddDefaultIdentity<ApplicationUser>(IdentityOptionsProvider.GetIdentityOptions)
                 .AddRoles<ApplicationRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+
+            // How long an emailed password reset link works. Identity's own default is a day.
+            services.Configure<DataProtectionTokenProviderOptions>(
+                options => options.TokenLifespan = TimeSpan.FromHours(AdminAccountService.ResetLinkHours));
 
             services.Configure<CookiePolicyOptions>(
                 options =>
@@ -109,7 +116,10 @@ namespace HandyFix.Web
                 {
                     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
                 }).AddRazorRuntimeCompilation();
-            services.AddRazorPages();
+            // Only the Identity pages the site uses can be opened; the rest of what the Identity UI
+            // package brings answer 404 (IdentityPages says which and why).
+            services.AddRazorPages(options => options.Conventions.AddAreaFolderRouteModelConvention(
+                IdentityPages.Area, "/", IdentityPages.CloseAllButOurs));
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddSingleton(configuration);
@@ -148,7 +158,10 @@ namespace HandyFix.Web
                 var apiKey = configuration["Brevo:ApiKey"];
                 if (!string.IsNullOrWhiteSpace(apiKey))
                 {
-                    return new BrevoEmailSender(apiKey);
+                    // Staging sends from the live site's address, so it marks its subjects.
+                    IEmailSender brevo = new BrevoEmailSender(apiKey);
+                    var subjectPrefix = EmailSettings.SubjectPrefix(configuration);
+                    return subjectPrefix == null ? brevo : new SubjectPrefixEmailSender(brevo, subjectPrefix);
                 }
 
                 Microsoft.AspNetCore.Hosting.IWebHostEnvironment env = sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
@@ -183,6 +196,10 @@ namespace HandyFix.Web
             services.TryAddSingleton(TimeProvider.System);
             services.AddTransient<IFormGuard, FormGuard>();
             services.AddRateLimiter(RateLimits.Configure);
+
+            // The admin account: changing its password and login email, and resetting a forgotten
+            // password by email (PROJECT_STATE Section 3cc).
+            services.AddTransient<IAdminAccountService, AdminAccountService>();
 
             // Five seconds to ask Cloudflare about a Turnstile token. If no answer comes the
             // submission is let through (TurnstileVerifier says why), so this is also the longest

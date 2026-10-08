@@ -22,7 +22,7 @@
 <div class="mx-auto admin-form-container">
     <div class="rounded-xl shadow-sm p-5 p-md-5 admin-card">
         <form asp-area="Administration" asp-controller="Services" asp-action="Create" method="post" enctype="multipart/form-data" id="serviceForm" class="d-flex flex-column gap-5">
-            <div class="row">
+            <div class="row gy-4">
                 <!-- Service Name -->
                 <div class="col-md-6 form-group">
                     <label asp-for="Name" class="form-label font-label-sm text-on-surface-variant mb-2">Service Name</label>
@@ -46,7 +46,7 @@
                 <span asp-validation-for="Description" class="text-danger small"></span>
             </div>
 
-            <div class="row">
+            <div class="row gy-4">
                 <!-- Base Price -->
                 <div class="col-md-6 form-group">
                     <label asp-for="BasePrice" class="form-label font-label-sm text-on-surface-variant mb-2">Base Price (£)</label>
@@ -67,7 +67,7 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row gy-4">
                 <!-- Display Order -->
                 <div class="col-md-6 form-group">
                     <label asp-for="DisplayOrder" class="form-label font-label-sm text-on-surface-variant mb-2">Display Order</label>

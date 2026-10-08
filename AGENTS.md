@@ -249,3 +249,37 @@ model (feature branches, required reviewers) would add ceremony without adding s
   at the start of a new session, when the user asks "what's next") and say so if `dev` has drifted
   meaningfully ahead of `main` unmerged. Don't wait to be asked — this rule exists specifically
   because it's easy to forget mid-work, which is exactly when it's most useful to be reminded.
+
+---
+
+## 13. Writing to the user
+
+**Write to the user the way you would say it out loud to a colleague.** This covers everything
+typed in the chat: answers, status reports, plans, questions.
+
+- **Say what happened, with a person in the sentence.** Who did what, in everyday words.
+- **Start with the verdict.** "Everything works, nothing for you to do" comes first. Details after,
+  and only the ones that matter.
+- **Leave out what needs no action.** A detail from a log that changes nothing for the user does
+  not belong in the reply. Reporting it to look thorough only sends the reader hunting for a
+  problem that is not there.
+- **Translate, do not copy.** Logs, tool output and your own working notes are written in a
+  machine's words. Turn them into what actually happened before they reach the user.
+- **One question at a time**, and make it one that a single word can answer.
+
+The difference, from the day this section was written:
+
+| Do not write | Write |
+| --- | --- |
+| "One request for an address that is not the login is in the log. It got the usual answer and nothing was sent, which is how it should behave." | "At some point a wrong email was typed on the 'Forgot password?' page. The site sent no email for it, which is correct. Nothing for you to do." |
+
+The first is a log entry read aloud: nobody is in it, every thing has the machine's name for it,
+and there is no way to tell whether anything has to be done. The second says what happened.
+
+This does not change the commit format (Section 6) or the documentation conventions (Section 10).
+It is about talking to the person.
+
+*Why:* on 2026-10-08, after a long piece of work, the report to the user read like the first column
+from top to bottom. The user said they were spending more time decoding the writing than
+understanding it, and had to ask what one sentence meant. Work that the user cannot follow is not
+finished, however well it was tested.

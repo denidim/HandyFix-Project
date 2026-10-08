@@ -89,6 +89,20 @@
             Assert.Contains("mobile-cta-bar", await (await client.GetAsync("/Contact")).Content.ReadAsStringAsync());
         }
 
+        // The same button sat on top of the login page's password box on a phone. The sign-in
+        // pages are the admin's; "Book Now" there is addressed to nobody (PROJECT_STATE.md Section 3cc).
+        [Theory]
+        [InlineData("/Identity/Account/Login")]
+        [InlineData("/Identity/Account/ForgotPassword")]
+        [InlineData("/Identity/Account/ResetPassword?userId=someone&code=c29tZXRoaW5n")]
+        public async Task TheFloatingBookNowButtonIsLeftOffTheSignInPages(string url)
+        {
+            var response = await this.server.CreateClient().GetAsync(url);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.DoesNotContain("mobile-cta-bar", await response.Content.ReadAsStringAsync());
+        }
+
         [Fact]
         public async Task BookingForAPostcodeWeDoNotCoverIsTurnedDownWithTheWayForward()
         {

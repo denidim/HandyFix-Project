@@ -60,12 +60,15 @@
             Assert.Contains("<title>", responseContent);
         }
 
+        // The Identity UI package's own "manage your account" pages used to answer here: a
+        // redirect to the login page for a visitor, the stock pages for a signed-in admin. They
+        // are closed now; AdminAccountWebTests has the whole list (PROJECT_STATE.md Section 3cc).
         [Fact]
-        public async Task AccountManagePageRequiresAuthorization()
+        public async Task AccountManagePageIsNotThere()
         {
             var client = this.server.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
             var response = await client.GetAsync("Identity/Account/Manage");
-            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
         [Fact]
