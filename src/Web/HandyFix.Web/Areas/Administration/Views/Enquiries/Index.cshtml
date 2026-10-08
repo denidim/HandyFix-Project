@@ -26,6 +26,11 @@
     </div>
 </div>
 
+@if (this.TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4" role="alert">@this.TempData["SuccessMessage"]</div>
+}
+
 <!-- Bento-Style Table Container -->
 <div class="rounded-xl overflow-hidden shadow-sm admin-card">
     <div class="table-responsive">
@@ -103,39 +108,6 @@
                 }
             </tbody>
         </table>
-    </div>
-</div>
-
-<!-- Contextual Stats Summary (Bento Grid elements) -->
-<div class="bento-grid bento-grid-3 mt-5">
-    <div class="glass-card p-4 rounded-xl d-flex align-items-center gap-3 admin-stat-card">
-        <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary flex-shrink-0 dim-48 tint-secondary">
-            <span class="material-symbols-outlined fs-24">speed</span>
-        </div>
-        <div>
-            <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Avg. Response Time</p>
-            <p class="font-headline-sm mb-0 fs-18 font-bold text-primary">2.4 Hours</p>
-        </div>
-    </div>
-
-    <div class="glass-card p-4 rounded-xl d-flex align-items-center gap-3 admin-stat-card">
-        <div class="rounded-circle d-flex align-items-center justify-content-center text-on-tertiary-container flex-shrink-0 dim-48 tint-success">
-            <span class="material-symbols-outlined fs-24 icon-fill">check_circle</span>
-        </div>
-        <div>
-            <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Resolution Rate</p>
-            <p class="font-headline-sm mb-0 fs-18 font-bold text-primary">94%</p>
-        </div>
-    </div>
-
-    <div class="glass-card p-4 rounded-xl d-flex align-items-center gap-3 admin-stat-card">
-        <div class="rounded-circle d-flex align-items-center justify-content-center text-danger flex-shrink-0 dim-48 tint-error-soft">
-            <span class="material-symbols-outlined fs-24">warning</span>
-        </div>
-        <div>
-            <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Urgent Requests</p>
-            <p class="font-headline-sm mb-0 fs-18 font-bold text-danger">3 Tickets</p>
-        </div>
     </div>
 </div>
 

@@ -1,4 +1,4 @@
-# ✉️ Enquiries — Contact-Form Submissions
+# ✉️ Enquiries — Contact-Form Submissions and Job Applications
 
 The simplest admin area in the app: list, view details, delete. No status workflow, because the
 underlying data has nothing to put a status on.
@@ -30,8 +30,9 @@ layer and "Inquiries" when naming the actual C# types, matching the code itself.
 
 ## What an enquiry is
 
-Created only from the public `Contact` form (`HomeController.Contact()` POST) — there is no other
-way an `Inquiry` row gets created.
+Created from two public forms: `Contact` (`HomeController.Contact()` POST) and Join Our Team
+(`HomeController.JoinTeam()` POST), which saves a job application as an enquiry whose message
+starts with `[Job Application]`, so applications reach this list without a table of their own.
 
 | Field | Rule |
 | --- | --- |
@@ -51,10 +52,31 @@ is genuinely nothing to filter on. `InquirySortField` only has two members, `Cre
 
 `EnquiriesController.Index(sortField, descending)` — sortable by submission date or name, same
 clickable-header pattern as every other admin list. `Details(id)` shows the full message and any
-uploaded photos. `Delete(id)` is a soft delete.
+uploaded photos.
 
 No approve/respond/mark-read action exists. Responding to an enquiry happens outside the app
 entirely (phone/email, using the contact details on the row).
+
+### "Delete Permanent" is a real delete
+
+Unlike almost everything else in the app, deleting an enquiry is **not** a soft delete. An enquiry
+is a person's name, email, phone number and message, and the button has to mean what it says for a
+request to erase someone's data to be met from the admin panel. `InquiriesService.DeleteAsync`:
+
+1. removes the enquiry's photos from Cloudflare R2 (`IImageService.DeleteImagesAsync`),
+2. then hard-deletes the `InquiryImage` rows and the `Inquiry` row in one save.
+
+The photos go first on purpose. If storage cannot be reached, the delete stops there, nothing is
+removed from the database, and the admin lands back on the enquiry with a message and can press the
+button again; removing an object that is already gone succeeds, so a second try is safe. The other
+order could leave photos in storage that no row points at any more.
+
+The object to remove is worked out from the saved address (`CloudflareR2Service.GetObjectKey`):
+whatever follows the bucket's public address. An address that is not a web address (an upload path
+from before photos went to R2) is skipped.
+
+Rows deleted before `PROJECT_STATE.md` Section 3cb were only soft-deleted and are still in the
+table, hidden. They exist in development and staging databases only; production starts empty.
 
 ---
 

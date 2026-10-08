@@ -86,5 +86,26 @@ namespace HandyFix.Services
 
             return urls;
         }
+
+        public async Task DeleteImagesAsync(IEnumerable<string> imageUrls)
+        {
+            if (imageUrls == null)
+            {
+                return;
+            }
+
+            foreach (var url in imageUrls)
+            {
+                try
+                {
+                    await this.r2Service.DeleteFileAsync(url);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogError(ex, "Failed to delete image {ImageUrl}", url);
+                    throw;
+                }
+            }
+        }
     }
 }

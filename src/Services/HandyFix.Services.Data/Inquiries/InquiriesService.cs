@@ -7,6 +7,7 @@ namespace HandyFix.Services.Data.Inquiries
 
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
+    using HandyFix.Services;
     using HandyFix.Services.Mapping;
     using HandyFix.Web.ViewModels.Administration.Enquiries;
     using HandyFix.Web.ViewModels.Home;
@@ -17,13 +18,16 @@ namespace HandyFix.Services.Data.Inquiries
     {
         private readonly IDeletableEntityRepository<Inquiry> inquiryRepository;
         private readonly IDeletableEntityRepository<InquiryImage> imageRepository;
+        private readonly IImageService imageService;
 
         public InquiriesService(
             IDeletableEntityRepository<Inquiry> inquiryRepository,
-            IDeletableEntityRepository<InquiryImage> imageRepository)
+            IDeletableEntityRepository<InquiryImage> imageRepository,
+            IImageService imageService)
         {
             this.inquiryRepository = inquiryRepository;
             this.imageRepository = imageRepository;
+            this.imageService = imageService;
         }
 
         public async Task CreateInquiryAsync(ContactInputModel model, IReadOnlyList<string> imageUrls)
@@ -87,16 +91,37 @@ namespace HandyFix.Services.Data.Inquiries
                 .FirstOrDefaultAsync();
         }
 
+        // A real delete, not the soft one the repository does by default: an enquiry is a person's
+        // name, email, phone number and message, and "Delete Permanent" has to mean it for a
+        // request to erase them to be met from the admin panel (PROJECT_STATE Section 3cb).
         public async Task DeleteAsync(Guid id)
         {
             Inquiry inquiry = await this.inquiryRepository.All()
                 .FirstOrDefaultAsync(x => x.Id == id);
 
-            if (inquiry != null)
+            if (inquiry == null)
             {
-                this.inquiryRepository.Delete(inquiry);
-                await this.inquiryRepository.SaveChangesAsync();
+                return;
             }
+
+            List<InquiryImage> images = await this.imageRepository.AllWithDeleted()
+                .Where(x => x.InquiryId == id)
+                .ToListAsync();
+
+            // The photos leave storage first. If that fails, it throws and the rows stay, so the
+            // admin can try again; the other order could leave photos that nothing points at.
+            await this.imageService.DeleteImagesAsync(images.Select(x => x.ImageUrl));
+
+            foreach (InquiryImage image in images)
+            {
+                this.imageRepository.HardDelete(image);
+            }
+
+            this.inquiryRepository.HardDelete(inquiry);
+
+            // Both repositories share one context, so this one save removes the photo rows and
+            // the enquiry together.
+            await this.inquiryRepository.SaveChangesAsync();
         }
 
         public async Task<int> GetTotalCountAsync()
