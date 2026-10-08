@@ -16,6 +16,7 @@
 
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -153,7 +154,8 @@
                 servicesService.Object,
                 categoriesService.Object,
                 new Mock<IImageService>().Object,
-                configuration);
+                configuration,
+                NullLogger<HomeController>.Instance);
         }
     }
 }

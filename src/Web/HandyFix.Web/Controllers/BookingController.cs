@@ -18,6 +18,7 @@ namespace HandyFix.Web.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
 
     [AllowAnonymous]
     public class BookingController : BaseController
@@ -30,19 +31,22 @@ namespace HandyFix.Web.Controllers
         private readonly IBookingsService bookingsService;
         private readonly IImageService imageService;
         private readonly IServiceAreasService serviceAreasService;
+        private readonly ILogger<BookingController> logger;
 
         public BookingController(
             IServicesService servicesService,
             IAvailabilityService availabilityService,
             IBookingsService bookingsService,
             IImageService imageService,
-            IServiceAreasService serviceAreasService)
+            IServiceAreasService serviceAreasService,
+            ILogger<BookingController> logger)
         {
             this.servicesService = servicesService;
             this.availabilityService = availabilityService;
             this.bookingsService = bookingsService;
             this.imageService = imageService;
             this.serviceAreasService = serviceAreasService;
+            this.logger = logger;
         }
 
         [HttpGet]
@@ -137,9 +141,28 @@ namespace HandyFix.Web.Controllers
                     $"Sorry, we don't take online bookings for {UkPostcode.GetOutwardCode(model.Postcode)} yet. Send us an enquiry or call {GlobalConstants.BusinessPhone}, and we'll tell you whether we can come out to you.");
             }
 
+            IReadOnlyList<string> imageUrls;
             try
             {
-                IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "bookings");
+                imageUrls = await this.imageService.UploadImagesAsync(model.Images, "bookings");
+            }
+            catch (ImageUploadValidationException ex)
+            {
+                // The customer's to put right: too many photos, one too large, not a picture.
+                return await this.RedisplayBookingForm(model, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // Storage is out of reach, which is not the customer's to fix and not a reason to
+                // lose a booking: it is taken without its photos. This used to stop the booking,
+                // and a storage that was not set up showed its own error text to the customer
+                // (PROJECT_STATE Section 3cb).
+                this.logger.LogError(ex, "Booking photos could not be stored; taking the booking without them");
+                imageUrls = Array.Empty<string>();
+            }
+
+            try
+            {
                 Booking booking = await this.bookingsService.CreateBookingAsync(model, imageUrls);
 
                 // Redirect to Stripe checkout

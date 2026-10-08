@@ -18,6 +18,7 @@
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -185,6 +186,48 @@
             var model = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
             Assert.Equal(new[] { "KT9", "KT10" }, model.ServedPostcodeDistricts);
             Assert.False(model.PostcodeNotServed);
+        }
+
+        // Too many photos, one too large, a file that is not a picture: the customer can put that
+        // right, so the form comes back saying which.
+        [Fact]
+        public async Task IndexPostShouldComeBackWithTheReasonWhenAPhotoIsNotOneWeTake()
+        {
+            var controller = BuildController(out _, out _, out var bookingsService, out var imageService);
+            imageService
+                .Setup(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ThrowsAsync(new ImageUploadValidationException("A maximum of 5 images can be uploaded at once."));
+
+            var result = await controller.Index(ValidModel());
+
+            Assert.IsType<ViewResult>(result);
+            Assert.Equal("A maximum of 5 images can be uploaded at once.", SingleModelError(controller));
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                Times.Never);
+        }
+
+        // Storage out of reach is not the customer's to fix and not a reason to lose a booking.
+        // It used to stop the booking, and a storage that was not set up showed its own error
+        // text, settings section and all, to the customer (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task IndexPostShouldTakeTheBookingWithoutItsPhotosWhenStorageCannotBeReached()
+        {
+            var controller = BuildController(out _, out _, out var bookingsService, out var imageService);
+            imageService
+                .Setup(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("Cloudflare R2 is not fully configured. Missing one or more required settings in CloudflareR2 section."));
+            var booking = new Booking();
+            bookingsService
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.Is<IReadOnlyList<string>>(urls => urls.Count == 0), It.IsAny<string>()))
+                .ReturnsAsync(booking);
+
+            var result = await controller.Index(ValidModel());
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Pay", redirect.ActionName);
+            Assert.Equal(booking.Id, redirect.RouteValues["bookingId"]);
+            Assert.Empty(controller.ModelState.SelectMany(entry => entry.Value.Errors));
         }
 
         [Fact]
@@ -466,7 +509,8 @@
                 availabilityService.Object,
                 bookingsService.Object,
                 imageService.Object,
-                serviceAreasService.Object);
+                serviceAreasService.Object,
+                NullLogger<BookingController>.Instance);
         }
     }
 }

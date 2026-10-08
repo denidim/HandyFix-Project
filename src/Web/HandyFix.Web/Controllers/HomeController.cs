@@ -20,6 +20,7 @@ namespace HandyFix.Web.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging;
 
     [AllowAnonymous]
     public class HomeController : BaseController
@@ -32,6 +33,7 @@ namespace HandyFix.Web.Controllers
         private readonly ICategoriesService categoriesService;
         private readonly IImageService imageService;
         private readonly IConfiguration configuration;
+        private readonly ILogger<HomeController> logger;
 
         public HomeController(
             IReviewsService reviewsService,
@@ -39,7 +41,8 @@ namespace HandyFix.Web.Controllers
             IServicesService servicesService,
             ICategoriesService categoriesService,
             IImageService imageService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<HomeController> logger)
         {
             this.reviewsService = reviewsService;
             this.inquiriesService = inquiriesService;
@@ -47,6 +50,7 @@ namespace HandyFix.Web.Controllers
             this.categoriesService = categoriesService;
             this.imageService = imageService;
             this.configuration = configuration;
+            this.logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -129,9 +133,7 @@ namespace HandyFix.Web.Controllers
         {
             if (!this.ModelState.IsValid)
             {
-                this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
-                await this.SetContactCategoriesAsync();
-                return this.View(model);
+                return await this.RedisplayContactFormAsync(model);
             }
 
             // The same enquiry sent a second time (a double click, a resend after Back) is thanked
@@ -139,11 +141,35 @@ namespace HandyFix.Web.Controllers
             // repeat does not upload them twice either.
             if (!await this.inquiriesService.IsRecentDuplicateAsync(model))
             {
-                IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
+                IReadOnlyList<string> imageUrls;
+                try
+                {
+                    imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
+                }
+                catch (ImageUploadValidationException ex)
+                {
+                    // The visitor's to put right: too many photos, one too large, a file that is
+                    // not a picture. The form comes back with what they typed and the reason.
+                    this.ModelState.AddModelError(nameof(model.Images), ex.Message);
+                    return await this.RedisplayContactFormAsync(model);
+                }
+                catch (Exception ex)
+                {
+                    // Storage is out of reach, which is not the visitor's to fix. The enquiry is
+                    // worth more than its photos: it is saved without them, and the notice to the
+                    // company says photos were lost. This used to end in an error page with
+                    // nothing saved (PROJECT_STATE Section 3cb).
+                    this.logger.LogError(ex, "Enquiry photos could not be stored; saving the enquiry without them");
+                    imageUrls = Array.Empty<string>();
+                    model.PhotosNotSaved = model.Images?.Count(f => f.Length > 0) ?? 0;
+                }
+
                 await this.inquiriesService.CreateInquiryAsync(model, imageUrls);
             }
 
-            this.TempData["SuccessMessage"] = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
+            this.TempData["SuccessMessage"] = model.PhotosNotSaved > 0
+                ? "Thank you! Your enquiry has been received, but your photos could not be uploaded this time. Our team will contact you shortly and will ask for them if they are needed."
+                : "Thank you! Your enquiry has been received. Our team will contact you shortly.";
 
             return this.RedirectToAction("Contact");
         }
@@ -266,6 +292,13 @@ namespace HandyFix.Web.Controllers
                 .Concat(services.Where(s => !s.IsPopular))
                 .Take(PopularServicesCount)
                 .ToList();
+        }
+
+        private async Task<IActionResult> RedisplayContactFormAsync(ContactInputModel model)
+        {
+            this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
+            await this.SetContactCategoriesAsync();
+            return this.View(model);
         }
 
         private void SetJoinTeamMetadata()

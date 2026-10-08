@@ -6,6 +6,7 @@ namespace HandyFix.Web.ViewModels.Home
     using HandyFix.Web.ViewModels.Validation;
 
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc.ModelBinding;
 
     public class ContactInputModel
     {
@@ -38,5 +39,10 @@ namespace HandyFix.Web.ViewModels.Home
         public string Category { get; set; }
 
         public List<IFormFile> Images { get; set; } = new List<IFormFile>();
+
+        // Set by the server, never read from the form: how many attached photos could not be
+        // put into storage, so the notice to the company can say they were lost.
+        [BindNever]
+        public int PhotosNotSaved { get; set; }
     }
 }

@@ -18,6 +18,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.ViewFeatures;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -139,6 +140,59 @@
                 s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
                 Times.Never);
             imageService.Verify(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        // Too many photos, one too large, a file that is not a picture: the visitor can put that
+        // right, so the form comes back with the reason. It used to end in an error page with
+        // everything they had typed gone (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task ContactPostShouldComeBackWithTheReasonWhenAPhotoIsNotOneWeTake()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var imageService = new Mock<IImageService>();
+            imageService
+                .Setup(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ThrowsAsync(new ImageUploadValidationException("File \"notes.pdf\" has an unsupported type \"application/pdf\". Allowed types: JPEG, PNG, WEBP."));
+            var controller = BuildController(inquiriesService, categoriesService: CategoriesMock("Plumbing"), imageService: imageService);
+            var model = ValidContact();
+
+            var result = await controller.Contact(model);
+
+            Assert.Same(model, Assert.IsType<ViewResult>(result).Model);
+            Assert.Contains("unsupported type", controller.ModelState[nameof(ContactInputModel.Images)].Errors.Single().ErrorMessage);
+            Assert.NotNull(controller.ViewData["ContactCategories"]);
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
+                Times.Never);
+        }
+
+        // Storage out of reach is not the visitor's to fix. The enquiry is worth more than its
+        // photos, so it is saved without them and both sides are told.
+        [Fact]
+        public async Task ContactPostShouldSaveTheEnquiryWithoutItsPhotosWhenStorageCannotBeReached()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var imageService = new Mock<IImageService>();
+            imageService
+                .Setup(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("Cloudflare R2 is not fully configured. Missing one or more required settings in CloudflareR2 section."));
+            var controller = BuildController(inquiriesService, imageService: imageService);
+            var model = ValidContact();
+            model.Images = new List<IFormFile> { PhotoOf(2048), PhotoOf(4096), PhotoOf(0) };
+
+            var result = await controller.Contact(model);
+
+            Assert.Equal("Contact", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(
+                    It.Is<ContactInputModel>(c => c.PhotosNotSaved == 2),
+                    It.Is<IReadOnlyList<string>>(urls => urls.Count == 0)),
+                Times.Once);
+
+            var message = Assert.IsType<string>(controller.TempData["SuccessMessage"]);
+            Assert.Contains("has been received", message);
+            Assert.Contains("photos could not be uploaded", message);
+            Assert.DoesNotContain("Cloudflare", message);
         }
 
         [Fact]
@@ -324,6 +378,13 @@
             Category = "Plumbing",
         };
 
+        private static IFormFile PhotoOf(long bytes)
+        {
+            var photo = new Mock<IFormFile>();
+            photo.SetupGet(f => f.Length).Returns(bytes);
+            return photo.Object;
+        }
+
         private static Mock<IImageService> ImageServiceReturning(params string[] urls)
         {
             var imageService = new Mock<IImageService>();
@@ -347,7 +408,8 @@
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
                 (imageService ?? ImageServiceReturning()).Object,
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(),
+                NullLogger<HomeController>.Instance);
 
             var httpContext = new DefaultHttpContext();
             controller.ControllerContext = new ControllerContext
