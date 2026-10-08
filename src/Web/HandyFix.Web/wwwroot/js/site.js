@@ -45,6 +45,21 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    // The first click on a send button must count. Pressing the mouse on the button used to take
+    // the focus out of the field that had it. That field then checked itself again, and if its
+    // message went away the form got shorter and the button moved up from under the mouse
+    // before it was let go: no click happened, and the visitor had to click a second time. It
+    // showed after a correction made without a key press (pasted, or filled in by the browser),
+    // which leaves the message up until the field loses focus (PROJECT_STATE Section 3cb).
+    // Keeping the focus where it is means nothing moves between the press and the release; the
+    // form is checked as a whole when it is sent.
+    document.addEventListener('mousedown', function (event) {
+        const button = event.target instanceof Element ? event.target.closest('button, input[type="submit"]') : null;
+        if (button && button.form && button.type === 'submit') {
+            event.preventDefault();
+        }
+    });
+
     // One click, one submission. A form that is being sent is marked, and until the next page
     // arrives a second submit of it is stopped and its button shows a spinner (buttons.css). A
     // double click on "Send" used to save an enquiry twice (PROJECT_STATE Section 3cb).
