@@ -25,6 +25,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Messaging;
     using HandyFix.Web.BackgroundServices;
     using HandyFix.Web.Services;
+    using HandyFix.Web.Services.Accounts;
     using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels;
 
@@ -110,7 +111,10 @@ namespace HandyFix.Web
                 {
                     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
                 }).AddRazorRuntimeCompilation();
-            services.AddRazorPages();
+            // Only the Identity pages the site uses can be opened; the rest of what the Identity UI
+            // package brings answer 404 (IdentityPages says which and why).
+            services.AddRazorPages(options => options.Conventions.AddAreaFolderRouteModelConvention(
+                IdentityPages.Area, "/", IdentityPages.CloseAllButOurs));
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddSingleton(configuration);
