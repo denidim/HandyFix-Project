@@ -21,6 +21,18 @@ namespace HandyFix.Services.Data.ServiceAreas
         Task UpdateAsync(Guid id, ServiceAreaAdminInputModel model);
 
         /// <summary>
+        /// Every postcode district some area lists, each once, in order.
+        /// </summary>
+        Task<IReadOnlyList<string>> GetServedPostcodeDistrictsAsync();
+
+        /// <summary>
+        /// Whether a booking can be taken for this postcode: its district is one some area lists.
+        /// True for any postcode when no area lists a district, so an empty setup cannot turn
+        /// every booking away.
+        /// </summary>
+        Task<bool> IsPostcodeServedAsync(string postcode);
+
+        /// <summary>
         /// Permanently removes the area and its FAQs. Hard delete on purpose: the unique index on
         /// ServiceArea.Slug is not filtered on IsDeleted, so a soft-deleted row keeps occupying its
         /// slug and blocks both the seeder and the admin form from ever reusing it.

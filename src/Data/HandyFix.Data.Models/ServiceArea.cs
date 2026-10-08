@@ -47,6 +47,12 @@ namespace HandyFix.Data.Models
 
         public int DisplayOrder { get; set; }
 
+        // The postcode districts this area covers, as "KT5, KT6, KT7". The booking form takes a
+        // booking only for a postcode in a district some area lists. Optional: an area with none
+        // adds nothing to that check.
+        [MaxLength(200, ErrorMessage = "The {0} field cannot exceed 200 characters.")]
+        public string PostcodeDistricts { get; set; }
+
         public virtual ICollection<ServiceAreaFaq> Faqs { get; set; }
     }
 }

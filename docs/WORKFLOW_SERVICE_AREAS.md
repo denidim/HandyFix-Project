@@ -12,8 +12,26 @@ Create or edit the area at **`/Administration/ServiceAreas`**.
 
 > The admin area in this project is routed as `Administration`, not `Admin`. `/Admin/...` will 404.
 
-Fields: Name, Slug, Region, Drive Time, Display Order, Featured flag, Intro Copy, Local
-Neighbourhoods Copy, and a dynamic list of FAQs.
+Fields: Name, Slug, Region, Drive Time, Display Order, Postcode Districts, Featured flag, Intro
+Copy, Local Neighbourhoods Copy, and a dynamic list of FAQs.
+
+### Postcode Districts decide where bookings are taken
+
+A district is the first half of a postcode: the `KT9` of `KT9 2QN`. Each area lists the ones it
+covers, with commas between them (`KT5, KT6, KT7`); the list page shows them in its Postcodes
+column. Typing is tidied on save, and the field can be left empty.
+
+The public booking page takes a booking **only for a postcode whose district some area lists**.
+Anyone else is shown an enquiry link and the phone number instead of the payment step
+(`WORKFLOW_BOOKINGS.md`, Step 2). So:
+
+- To start taking bookings somewhere new, add its district to the nearest area. It does not need
+  an area page of its own: Ashtead's `KT21` sits on the Epsom area.
+- Deleting an area removes its districts from the check with it.
+- If no area lists any district, the check is off and every postcode is accepted.
+
+The 15 seeded areas start with the lists in `ServiceAreasSeeder.cs`; a database that already had
+them got the same lists from the `AddPostcodeDistrictsToServiceArea` migration.
 
 Saving auto-propagates to every consumer, because they all query `IServiceAreasService` live:
 
@@ -26,6 +44,7 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 | Pricing & Category local-area badges | `ServicesController` |
 | `LocalBusiness` / `FAQPage` / `BreadcrumbList` JSON-LD | `Areas/Details.cshtml` |
 | `sitemap.xml` | `SeoController.Sitemap` (generated, never static) |
+| Which postcodes the booking page accepts | `IServiceAreasService.IsPostcodeServedAsync` |
 
 ### Things worth knowing
 
@@ -49,12 +68,19 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 applies a global `HasQueryFilter(e => !e.IsDeleted)` to every deletable entity. A soft-deleted area
 therefore still occupies its slug at the database level while being invisible to every query.
 
-If areas were soft-deleted, then on the next boot `ServiceAreasSeeder` — which looks the area up by
-slug, sees nothing, and inserts — would hit a unique-index violation, and **the app would fail to
-start** because seeding runs inside `Program.Configure`. Recovery would mean hand-deleting the row
-in SQL.
+If areas were soft-deleted, a deleted area's slug could never be used again: adding an area with
+that slug would fail at the database, on a row no admin page can show. Recovery would mean
+hand-deleting the row in SQL.
 
 For the same reason, the admin form validates slug uniqueness with `AllWithDeleted()`, not `All()`.
+
+### The seeder fills an empty table, once
+
+`ServiceAreasSeeder` adds its 15 areas and their questions **only when the ServiceAreas table is
+empty**. After that it does nothing: an area deleted here stays deleted, and an area whose
+questions were all removed stays without them. Editing the seeder's list has no effect on a
+database that already has areas; use this admin page. (Until `PROJECT_STATE.md` Section 3cb it
+added back any seeded area it could not find, at every start.)
 
 ---
 

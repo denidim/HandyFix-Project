@@ -45,6 +45,79 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    // The first click on a send button must count. Pressing the mouse on the button used to take
+    // the focus out of the field that had it. That field then checked itself again, and if its
+    // message went away the form got shorter and the button moved up from under the mouse
+    // before it was let go: no click happened, and the visitor had to click a second time. It
+    // showed after a correction made without a key press (pasted, or filled in by the browser),
+    // which leaves the message up until the field loses focus (PROJECT_STATE Section 3cb).
+    // Keeping the focus where it is means nothing moves between the press and the release; the
+    // form is checked as a whole when it is sent.
+    document.addEventListener('mousedown', function (event) {
+        const button = event.target instanceof Element ? event.target.closest('button, input[type="submit"]') : null;
+        if (button && button.form && button.type === 'submit') {
+            event.preventDefault();
+        }
+    });
+
+    // One click, one submission. A form that is being sent is marked, and until the next page
+    // arrives a second submit of it is stopped and its button shows a spinner (buttons.css). A
+    // double click on "Send" used to save an enquiry twice (PROJECT_STATE Section 3cb).
+    //
+    // This listens on the document, so it runs after the handlers on the form itself. A form
+    // with errors never gets here: jQuery Validation stops the event at the form. One whose
+    // "are you sure?" was answered no arrives cancelled and is left alone. The button is marked,
+    // not disabled: a disabled button changes its look, and the booking page manages that state
+    // itself.
+    document.addEventListener('submit', function (event) {
+        // Read as attributes: form.method and form.target give a field of that name if there is one.
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        if ((form.getAttribute('method') || 'get').toLowerCase() !== 'post') return;
+        const target = form.getAttribute('target');
+        if (form.hasAttribute('data-no-submit-lock') || (target && target !== '_self')) return;
+        if (event.defaultPrevented) return;
+
+        if (form.dataset.submitting) {
+            event.preventDefault();
+            return;
+        }
+
+        // A public form carries Cloudflare's "are you a person" check (the _FormGuard partial),
+        // which puts a token into the form when it has finished. Sent without one, the form would
+        // only come back with an error, so it is held here and the hint under the check is shown.
+        const challenge = form.querySelector('.cf-turnstile');
+        if (challenge) {
+            const token = form.querySelector('[name="cf-turnstile-response"]');
+            const hint = form.querySelector('.form-turnstile-hint');
+            if (!token || !token.value) {
+                event.preventDefault();
+                if (hint) hint.hidden = false;
+                challenge.scrollIntoView({ block: 'center' });
+                return;
+            }
+
+            if (hint) hint.hidden = true;
+        }
+
+        form.dataset.submitting = 'true';
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
+            button.classList.add('is-submitting');
+            button.setAttribute('aria-busy', 'true');
+        });
+    });
+
+    // Back from the next page, a browser can show this page as it was left, marks and all.
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('form[data-submitting]').forEach(function (form) {
+            delete form.dataset.submitting;
+            form.querySelectorAll('.is-submitting').forEach(function (button) {
+                button.classList.remove('is-submitting');
+                button.removeAttribute('aria-busy');
+            });
+        });
+    });
+
     const heroForm = document.getElementById("hero-booking-form");
     if (!heroForm) return;
 

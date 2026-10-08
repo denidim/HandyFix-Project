@@ -7,6 +7,7 @@ namespace HandyFix.Services.Data.Payments
 
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
+    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Payment;
@@ -15,16 +16,13 @@ namespace HandyFix.Services.Data.Payments
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
 
     using Stripe;
     using Stripe.Checkout;
 
     public class PaymentsService : IPaymentsService
     {
-        private const string DefaultAdminNotificationEmail = "info@plumbing-handyman-surrey.co.uk";
-        private const string DefaultBookingsFromAddress = "bookings@plumbing-handyman-surrey.co.uk";
-        private const string DefaultSystemFromAddress = "bookings@plumbing-handyman-surrey.co.uk";
-
         private readonly IDeletableEntityRepository<Payment> paymentRepository;
         private readonly IDeletableEntityRepository<PaymentStatus> paymentStatusRepository;
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
@@ -32,6 +30,7 @@ namespace HandyFix.Services.Data.Payments
         private readonly IEmailSender emailSender;
         private readonly IConfiguration configuration;
         private readonly IWebHostEnvironment environment;
+        private readonly ILogger<PaymentsService> logger;
 
         public PaymentsService(
             IDeletableEntityRepository<Payment> paymentRepository,
@@ -40,7 +39,8 @@ namespace HandyFix.Services.Data.Payments
             IDeletableEntityRepository<BookingStatus> bookingStatusRepository,
             IEmailSender emailSender,
             IConfiguration configuration,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            ILogger<PaymentsService> logger)
         {
             this.paymentRepository = paymentRepository;
             this.paymentStatusRepository = paymentStatusRepository;
@@ -49,6 +49,7 @@ namespace HandyFix.Services.Data.Payments
             this.emailSender = emailSender;
             this.configuration = configuration;
             this.environment = environment;
+            this.logger = logger;
 
             var secretKey = this.configuration["Stripe:SecretKey"];
             if (!string.IsNullOrWhiteSpace(secretKey))
@@ -153,21 +154,14 @@ namespace HandyFix.Services.Data.Payments
                 ? booking.AvailabilitySlot.StartTime.ToString("dd MMM yyyy 'at' HH:mm")
                 : "To be confirmed";
 
-            // Both addresses default to the real domain's bookings@ mailbox and are overridable via
-            // configuration -- Brevo (and any real email provider) rejects sends from an unverified
-            // sender, so staging/local testing needs to point these at an address that's actually
-            // verified in the Brevo account until the domain itself is verified there.
-            var bookingsFromAddress = this.configuration["Email:BookingsFromAddress"];
-            if (string.IsNullOrWhiteSpace(bookingsFromAddress))
-            {
-                bookingsFromAddress = DefaultBookingsFromAddress;
-            }
-
-            var systemFromAddress = this.configuration["Email:SystemFromAddress"];
-            if (string.IsNullOrWhiteSpace(systemFromAddress))
-            {
-                systemFromAddress = DefaultSystemFromAddress;
-            }
+            // The deposit is paid and the booking approved by now, so neither send is allowed to
+            // throw: a failure here used to end the customer's return from Stripe on an error page,
+            // straight after paying. It is logged, and the other email still goes
+            // (PROJECT_STATE Section 3cb). What the customer typed is encoded before it goes into
+            // either email's HTML.
+            var customerName = EmailText.Encode($"{booking.CustomerFirstName} {booking.CustomerLastName}");
+            var address = EmailText.Encode(booking.Address);
+            serviceNames = EmailText.Encode(serviceNames);
 
             // No technician line here on purpose. A technician is assigned by an admin after the
             // deposit clears, so this email would always read "Not yet assigned" - which looks
@@ -175,49 +169,49 @@ namespace HandyFix.Services.Data.Payments
             // "CONFIRMED" email instead (BookingsService.UpdateStatusAsync).
             var clientSubject = "Your Plumbing Handyman Surrey Booking is Confirmed!";
             var clientBody = $@"
-                <h3>Hi {booking.CustomerFirstName},</h3>
+                <h3>Hi {EmailText.Encode(booking.CustomerFirstName)},</h3>
                 <p>Great news! Your deposit of £{payment.Amount:F2} has been received and your booking is now confirmed.</p>
                 <ul>
                     <li><strong>Booking Reference:</strong> {booking.Id}</li>
                     <li><strong>Service(s):</strong> {serviceNames}</li>
                     <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
-                    <li><strong>Address:</strong> {booking.Address}</li>
+                    <li><strong>Address:</strong> {address}</li>
                 </ul>
                 <p>We'll confirm your assigned technician shortly.</p>
                 <p>We look forward to helping you. Thank you for choosing Plumbing Handyman Surrey!</p>";
 
-            await this.emailSender.SendEmailAsync(
-                bookingsFromAddress,
-                "Plumbing Handyman Surrey",
+            await this.emailSender.TrySendEmailAsync(
+                this.logger,
+                "deposit paid, to the customer",
+                EmailSettings.BookingsFromAddress(this.configuration),
+                EmailSettings.CustomerFromName,
                 booking.Email,
                 clientSubject,
                 clientBody);
-
-            var adminEmail = this.configuration["Admin:NotificationEmail"];
-            if (string.IsNullOrWhiteSpace(adminEmail))
-            {
-                adminEmail = DefaultAdminNotificationEmail;
-            }
 
             var adminSubject = $"New Confirmed Booking - {booking.CustomerFirstName} {booking.CustomerLastName}";
             var adminBody = $@"
                 <h3>A booking deposit has just been paid.</h3>
                 <ul>
                     <li><strong>Booking Reference:</strong> {booking.Id}</li>
-                    <li><strong>Customer:</strong> {booking.CustomerFirstName} {booking.CustomerLastName} ({booking.Email}, {booking.PhoneNumber})</li>
+                    <li><strong>Customer:</strong> {customerName} ({EmailText.Encode(booking.Email)}, {EmailText.Encode(booking.PhoneNumber)})</li>
                     <li><strong>Service(s):</strong> {serviceNames}</li>
                     <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
-                    <li><strong>Address:</strong> {booking.Address}</li>
+                    <li><strong>Address:</strong> {address}</li>
                     <li><strong>Deposit Paid:</strong> £{payment.Amount:F2}</li>
                 </ul>
                 <p>Please review and assign a technician if one isn't already set.</p>";
 
-            await this.emailSender.SendEmailAsync(
-                systemFromAddress,
-                "Plumbing Handyman Surrey Website",
-                adminEmail,
+            // Reply-To is the customer, so pressing Reply on this notice answers them.
+            await this.emailSender.TrySendEmailAsync(
+                this.logger,
+                "deposit paid, notice to the company",
+                EmailSettings.SystemFromAddress(this.configuration),
+                EmailSettings.WebsiteFromName,
+                EmailSettings.AdminNotificationAddress(this.configuration),
                 adminSubject,
-                adminBody);
+                adminBody,
+                replyTo: booking.Email);
         }
 
         public async Task CancelPaymentAsync(string checkoutSessionId)

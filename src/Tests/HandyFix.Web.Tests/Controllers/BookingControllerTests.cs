@@ -9,14 +9,17 @@
     using HandyFix.Services;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -67,7 +70,8 @@
             Assert.Equal("Lovelace", returnedModel.CustomerLastName);
             Assert.Equal("ada@example.com", returnedModel.Email);
             Assert.Equal("07700900123", returnedModel.PhoneNumber);
-            Assert.Equal("1 Analytical Engine Way, KT9 1AA", returnedModel.Address);
+            Assert.Equal("1 Analytical Engine Way, Chessington", returnedModel.Address);
+            Assert.Equal("KT9 1AA", returnedModel.Postcode);
             Assert.Equal("The kitchen tap has been dripping for a week.", returnedModel.ProblemDescription);
 
             // And the form has to be usable again, which means its dropdowns get repopulated.
@@ -75,6 +79,41 @@
             Assert.Single(returnedModel.AvailableDates);
             servicesService.Verify(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()), Times.Once);
             availabilityService.Verify(x => x.GetAvailableDatesAsync(It.IsAny<int>()), Times.Once);
+        }
+
+        // A form that comes back used to open on today with no slot chosen, so the customer
+        // picked the day and the time a second time. It opens on the day of the slot they had
+        // (PROJECT_STATE Section 3cb). A slot lost to someone else is cleared first, and then
+        // there is no day to go back to.
+        [Fact]
+        public async Task IndexPostShouldReopenTheFormOnTheDayOfTheSlotTheCustomerHadChosen()
+        {
+            var controller = BuildController(out _, out var availabilityService, out var bookingsService, out _);
+            var model = ValidModel();
+            availabilityService.Setup(x => x.GetSlotDateAsync(model.SlotId)).ReturnsAsync(new DateTime(2026, 10, 20));
+            controller.ModelState.AddModelError(nameof(BookingInputModel.Email), "Please enter a full email address, for example name@example.com.");
+
+            var result = await controller.Index(model);
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(new DateTime(2026, 10, 20), returnedModel.SelectedDate);
+            Assert.Equal(model.SlotId, returnedModel.SlotId);
+        }
+
+        [Fact]
+        public async Task IndexPostShouldNotGoBackToTheDayOfASlotThatWasTaken()
+        {
+            var controller = BuildController(out _, out var availabilityService, out var bookingsService, out _);
+            bookingsService
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()))
+                .ThrowsAsync(new SlotUnavailableException("Slot already booked."));
+
+            var result = await controller.Index(ValidModel());
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(Guid.Empty, returnedModel.SlotId);
+            Assert.Null(returnedModel.SelectedDate);
+            availabilityService.Verify(x => x.GetSlotDateAsync(It.IsAny<Guid>()), Times.Never);
         }
 
         [Fact]
@@ -137,6 +176,142 @@
 
             // No point paying Cloudflare to store photos for a booking that was never valid.
             imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        // A booking is a paid deposit for a visit. A postcode outside the districts the service
+        // areas list is turned down before anything is saved, with the way forward: an enquiry
+        // or a call (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task IndexPostShouldTurnDownAPostcodeOutsideTheAreasWeCover()
+        {
+            var serviceAreasService = new Mock<IServiceAreasService>();
+            serviceAreasService.Setup(x => x.IsPostcodeServedAsync("m1 1ae")).ReturnsAsync(false);
+            var controller = BuildController(out _, out _, out var bookingsService, out var imageService, serviceAreasService);
+
+            var model = ValidModel();
+            model.Postcode = "m1 1ae";
+
+            var result = await controller.Index(model);
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.True(returnedModel.PostcodeNotServed);
+            Assert.Equal(new[] { "KT9", "KT10" }, returnedModel.ServedPostcodeDistricts);
+
+            var error = SingleModelError(controller);
+            Assert.Contains("M1", error);
+            Assert.Contains("enquiry", error);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, error);
+
+            // What the visitor typed and chose survives, slot included: nothing is wrong with it.
+            Assert.Equal(model.SlotId, returnedModel.SlotId);
+            Assert.Equal("Ada", returnedModel.CustomerFirstName);
+
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                Times.Never);
+            imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task IndexGetShouldGiveThePageTheDistrictsWeCover()
+        {
+            var controller = BuildController(out _, out _, out _, out _);
+
+            var result = await controller.Index(categorySlug: null, date: null, selectedServiceId: null);
+
+            var model = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(new[] { "KT9", "KT10" }, model.ServedPostcodeDistricts);
+            Assert.False(model.PostcodeNotServed);
+        }
+
+        // A submission with a program's mark on it. The other forms answer one with their usual
+        // thank-you; a booking's success is the payment page, which cannot be faked, so the form
+        // comes back with a message that gives nothing away and still tells a person how to book
+        // (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task IndexPostShouldNotBookForAProgramAndSayNothingOfWhy()
+        {
+            var formGuard = new Mock<IFormGuard>();
+            formGuard.Setup(g => g.CheckAsync(It.IsAny<HttpContext>(), "booking")).ReturnsAsync(FormGuardResult.Automated);
+            var controller = BuildController(out _, out _, out var bookingsService, out var imageService, formGuard: formGuard);
+
+            var result = await controller.Index(ValidModel());
+
+            Assert.IsType<ViewResult>(result);
+            var error = SingleModelError(controller);
+            Assert.Contains("We could not take this booking online", error);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, error);
+            Assert.DoesNotContain("robot", error, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("automat", error, StringComparison.OrdinalIgnoreCase);
+
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                Times.Never);
+            imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        // The "are you a person" check did not pass. A person can land here, so the form comes back
+        // as filled in, slot included, with a message and a way round it.
+        [Fact]
+        public async Task IndexPostShouldComeBackWithAMessageWhenThePersonCheckDidNotPass()
+        {
+            var formGuard = new Mock<IFormGuard>();
+            formGuard.Setup(g => g.CheckAsync(It.IsAny<HttpContext>(), "booking")).ReturnsAsync(FormGuardResult.ChallengeFailed);
+            var controller = BuildController(out _, out _, out var bookingsService, out _, formGuard: formGuard);
+            var model = ValidModel();
+
+            var result = await controller.Index(model);
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(model.SlotId, returnedModel.SlotId);
+            var error = SingleModelError(controller);
+            Assert.Contains("could not confirm that you are a person", error);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, error);
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                Times.Never);
+        }
+
+        // Too many photos, one too large, a file that is not a picture: the customer can put that
+        // right, so the form comes back saying which.
+        [Fact]
+        public async Task IndexPostShouldComeBackWithTheReasonWhenAPhotoIsNotOneWeTake()
+        {
+            var controller = BuildController(out _, out _, out var bookingsService, out var imageService);
+            imageService
+                .Setup(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ThrowsAsync(new ImageUploadValidationException("A maximum of 5 images can be uploaded at once."));
+
+            var result = await controller.Index(ValidModel());
+
+            Assert.IsType<ViewResult>(result);
+            Assert.Equal("A maximum of 5 images can be uploaded at once.", SingleModelError(controller));
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                Times.Never);
+        }
+
+        // Storage out of reach is not the customer's to fix and not a reason to lose a booking.
+        // It used to stop the booking, and a storage that was not set up showed its own error
+        // text, settings section and all, to the customer (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task IndexPostShouldTakeTheBookingWithoutItsPhotosWhenStorageCannotBeReached()
+        {
+            var controller = BuildController(out _, out _, out var bookingsService, out var imageService);
+            imageService
+                .Setup(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("Cloudflare R2 is not fully configured. Missing one or more required settings in CloudflareR2 section."));
+            var booking = new Booking();
+            bookingsService
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.Is<IReadOnlyList<string>>(urls => urls.Count == 0), It.IsAny<string>()))
+                .ReturnsAsync(booking);
+
+            var result = await controller.Index(ValidModel());
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Pay", redirect.ActionName);
+            Assert.Equal(booking.Id, redirect.RouteValues["bookingId"]);
+            Assert.Empty(controller.ModelState.SelectMany(entry => entry.Value.Errors));
         }
 
         [Fact]
@@ -361,7 +536,8 @@
             CustomerLastName = "Lovelace",
             Email = "ada@example.com",
             PhoneNumber = "07700900123",
-            Address = "1 Analytical Engine Way, KT9 1AA",
+            Address = "1 Analytical Engine Way, Chessington",
+            Postcode = "KT9 1AA",
             ProblemDescription = "The kitchen tap has been dripping for a week.",
             SlotId = Guid.NewGuid(),
             ServiceId = Guid.NewGuid(),
@@ -381,12 +557,25 @@
             out Mock<IServicesService> servicesService,
             out Mock<IAvailabilityService> availabilityService,
             out Mock<IBookingsService> bookingsService,
-            out Mock<IImageService> imageService)
+            out Mock<IImageService> imageService,
+            Mock<IServiceAreasService> serviceAreasService = null,
+            Mock<IFormGuard> formGuard = null)
         {
             servicesService = new Mock<IServicesService>();
             availabilityService = new Mock<IAvailabilityService>();
             bookingsService = new Mock<IBookingsService>();
             imageService = new Mock<IImageService>();
+
+            // Unless a test says otherwise, every postcode is one we cover.
+            if (serviceAreasService == null)
+            {
+                serviceAreasService = new Mock<IServiceAreasService>();
+                serviceAreasService.Setup(x => x.IsPostcodeServedAsync(It.IsAny<string>())).ReturnsAsync(true);
+            }
+
+            serviceAreasService
+                .Setup(x => x.GetServedPostcodeDistrictsAsync())
+                .ReturnsAsync(new List<string> { "KT9", "KT10" });
 
             servicesService
                 .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
@@ -404,7 +593,10 @@
                 servicesService.Object,
                 availabilityService.Object,
                 bookingsService.Object,
-                imageService.Object);
+                imageService.Object,
+                serviceAreasService.Object,
+                (formGuard ?? new Mock<IFormGuard>()).Object,
+                NullLogger<BookingController>.Instance);
         }
     }
 }

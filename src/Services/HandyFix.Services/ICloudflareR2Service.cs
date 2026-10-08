@@ -6,5 +6,7 @@ namespace HandyFix.Services
     public interface ICloudflareR2Service
     {
         Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string folder);
+
+        Task DeleteFileAsync(string fileUrl);
     }
 }

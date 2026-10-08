@@ -9,6 +9,12 @@ namespace HandyFix.Services.Data.Inquiries
 
     public interface IInquiriesService
     {
+        /// <summary>
+        /// Whether an enquiry with this email and this exact message was saved in the last ten
+        /// minutes, which makes this one the same enquiry sent again.
+        /// </summary>
+        Task<bool> IsRecentDuplicateAsync(ContactInputModel model);
+
         Task CreateInquiryAsync(ContactInputModel model, IReadOnlyList<string> imageUrls);
 
         Task<IEnumerable<T>> GetAllAsync<T>(

@@ -1,5 +1,6 @@
 namespace HandyFix.Web
 {
+    using System;
     using System.Reflection;
 
     using HandyFix.Data;
@@ -23,6 +24,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Messaging;
     using HandyFix.Web.BackgroundServices;
     using HandyFix.Web.Services;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels;
 
     using Microsoft.AspNetCore.Builder;
@@ -33,6 +35,7 @@ namespace HandyFix.Web
     using Microsoft.EntityFrameworkCore.Diagnostics;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
 
     using WebOptimizer;
@@ -175,6 +178,17 @@ namespace HandyFix.Web
                         "services"),
                     sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ImageStorageService>>()));
 
+            // Abuse protection on the public forms (PROJECT_STATE Section 3cb). The clock is a
+            // service so a test can set the time a form was shown and the time it came back.
+            services.TryAddSingleton(TimeProvider.System);
+            services.AddTransient<IFormGuard, FormGuard>();
+            services.AddRateLimiter(RateLimits.Configure);
+
+            // Five seconds to ask Cloudflare about a Turnstile token. If no answer comes the
+            // submission is let through (TurnstileVerifier says why), so this is also the longest
+            // a visitor waits on it.
+            services.AddHttpClient<ITurnstileVerifier, TurnstileVerifier>(client => client.Timeout = TimeSpan.FromSeconds(5));
+
             // Background workers
             services.AddHostedService<StaleBookingCleanupService>();
         }
@@ -209,7 +223,7 @@ namespace HandyFix.Web
                 DevelopmentCapacitySeeder.SeedAsync(serviceScope.ServiceProvider, app.Environment).GetAwaiter().GetResult();
             }
 
-            MappingConfig.RegisterMappings(typeof(ErrorViewModel).GetTypeInfo().Assembly);
+            MappingConfig.RegisterMappings(typeof(StatusPageViewModel).GetTypeInfo().Assembly);
 
             if (app.Environment.IsDevelopment())
             {
@@ -218,9 +232,21 @@ namespace HandyFix.Web
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
+                // ErrorsController, not HomeController: the page that says something broke must
+                // not need the services that may be what broke.
+                app.UseExceptionHandler("/StatusPage/500");
                 app.UseHsts();
             }
+
+            // A response that ends in an error status with nothing in it (a page that is not
+            // there, a form sent too often, a form whose token expired) is shown as the site's
+            // own page for that status, which keeps the status. Without this the visitor got the
+            // browser's blank error screen. Only for a request that asked for a page: a script
+            // fetching data, a crawler probing for files and a payment provider calling back get
+            // the bare status as before, and cost no page render (PROJECT_STATE Section 3cb).
+            app.UseWhen(
+                context => AsksForAPage(context.Request),
+                branch => branch.UseStatusCodePagesWithReExecute("/StatusPage/{0}"));
 
             app.UseHttpsRedirection();
             app.UseWebOptimizer();
@@ -241,12 +267,30 @@ namespace HandyFix.Web
 
             app.UseRouting();
 
+            // After routing, because the limits are set per action ([EnableRateLimiting]) and the
+            // limiter has to know which action a request is for.
+            app.UseRateLimiter();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute("areaRoute", "{area:exists}/{controller=Home}/{action=Index}/{id?}");
             app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             app.MapRazorPages();
+        }
+
+        // A browser navigating to a page says it will take HTML; nothing else does.
+        private static bool AsksForAPage(HttpRequest request)
+        {
+            foreach (var accept in request.Headers.Accept)
+            {
+                if (accept != null && accept.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

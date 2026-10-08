@@ -95,6 +95,36 @@ optionally uploads photos of the problem, and submits.
 **The booking has no technician at this point, deliberately.** The deposit confirmation email says
 *"We'll confirm your assigned technician shortly"* rather than naming anyone — assignment is step 3.
 
+### What the form checks before any of that
+
+The rules live as attributes on `BookingInputModel`, in `HandyFix.Web.ViewModels/Validation/`. Each
+is a `RegularExpressionAttribute`, so ASP.NET Core writes the pattern into the page and the browser
+shows the message as the customer types; the server checks the same pattern again on submit. The
+Contact and Join Our Team forms use the same attributes.
+
+| Field | Rule |
+| --- | --- |
+| First and last name | letters, with spaces, hyphens and apostrophes (`[PersonName]`) |
+| Email | a full address with a domain ending, `name@example.com` (`[StrictEmail]`) |
+| Phone | a UK mobile or landline, the UK way or with `+44` (`[UkPhone]`) |
+| Address | the street and town, 5 to 280 characters |
+| Postcode | a whole UK postcode, in a box of its own (`[UkPostcode]`) |
+| Description | at least 20 characters, and not mostly web links (`[NotMostlyLinks]`, server only) |
+
+A pattern has to mean the same in .NET and in JavaScript: no named groups, no look-behind, and
+`[0-9]` instead of `\d`. `FormsWebTests` checks that each field's pattern reaches the page.
+
+**The postcode decides whether the booking is taken at all.** Its district (the `KT9` of
+`KT9 2QN`) must be one that some service area lists in its Postcode Districts field
+(`/Administration/ServiceAreas`, see `WORKFLOW_SERVICE_AREAS.md`). Otherwise nothing is saved and
+no deposit is asked for: the customer sees a notice with an enquiry link, the phone number and
+WhatsApp. The page checks as the postcode is typed, so most people find out before filling in the
+rest; `BookingController` checks again on submit, which is the one that counts. If **no** area
+lists any district, the check is off and every postcode is accepted.
+
+The booking keeps one address: `BookingsService.JoinAddressAndPostcode` adds the postcode to the
+street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
+
 ### Things worth knowing
 
 - **Double-booking is prevented at the database, not in the UI.** `AvailabilitySlot.RowVersion` is a
@@ -106,6 +136,22 @@ optionally uploads photos of the problem, and submits.
   walked away would lock an hour forever.
 - **Both Stripe paths are handled.** The webhook and the browser redirect can both fire for the same
   session; an idempotency guard ensures confirmation emails send strictly once.
+- **An email that cannot be sent never undoes what it was about.** Each of the three booking
+  emails (received, deposit paid, confirmed) goes out after its save and through
+  `TrySendEmailAsync`, which logs a failure (`Email not sent: deposit paid, to the customer`) and
+  carries on. Before `PROJECT_STATE.md` Section 3cb a failed send showed the customer "an error
+  occurred while saving your booking" for a booking that had been saved, or an error page on the
+  way back from paying. The paid-deposit notice to the company has the customer as its Reply-To.
+- **A form that comes back opens where the customer left it.** Whatever sent it back (a field the
+  rules refuse, a postcode we do not cover, a photo too large, the person check), the page opens on
+  the day of the slot they had chosen and its script picks that slot again if it is still free
+  (`IAvailabilityService.GetSlotDateAsync`, `keptSlotId` in the page). The one exception is a slot
+  somebody else took meanwhile: it is cleared, and the customer picks another.
+- **Photos never cost a booking.** A photo the site does not take (more than 5, over 15 MB, not
+  JPEG/PNG/WEBP) brings the form back with the reason. If storage itself cannot be reached, the
+  booking is taken without its photos and the failure is logged.
+- **What the customer typed reaches an email as text.** The emails are HTML built as strings;
+  names, the address and the rest go through `EmailText.Encode` first.
 
 **Code:** `BookingsService.CreateBookingAsync`, `Controllers/BookingController.cs`,
 `Controllers/PaymentController.cs`, `PaymentsService`,
@@ -151,7 +197,8 @@ preserves its technician — moving a job to a different hour does not change wh
 
 From the same booking Details page:
 
-- **Approve** → status `Approved`, and sends the **"Your HandyFix Booking is CONFIRMED!"** email.
+- **Approve** → status `Approved`, and sends the **"Your Plumbing Handyman Surrey Booking is
+  CONFIRMED!"** email.
   **This is the one customer email that names the technician** (name + a tappable `tel:` link),
   falling back to a generic line if none is assigned — so assign in step 3 *before* approving.
 - **Complete** → status `Completed`, once the job is done.
@@ -172,8 +219,10 @@ Seeded statuses: `Pending`, `Approved`, `InProgress`, `Completed`, `Cancelled`, 
 | The technician dropdown is empty | No active technicians. Add one at `/Administration/Technicians`. |
 | A technician can't be deleted | They have bookings. Deactivate instead — that's the intended retire path. |
 | The confirmation email didn't name a technician | The booking was approved before a technician was assigned. Assign first, then approve. |
+| A customer says no email arrived | Look in the application log for `Email not sent`. The booking itself is unaffected; the usual causes are a sender address Brevo has not verified, or a wrong API key. |
 | A slot is stuck as booked with no real customer | Wait up to 5 minutes for the cleanup sweep, or Release it manually on the Calendar. |
-| Admin success banners don't appear | Known pre-existing quirk: `CheckConsentNeeded` withholds the TempData cookie until cookie consent is accepted. Accept the banner. |
+| A customer in our area is told "we don't take online bookings for KT21 yet" | No service area lists that district. Add it to the nearest area's Postcode Districts at `/Administration/ServiceAreas`. |
+| The Proceed to Payment button stays grey | A field is empty, the description is under 20 characters, or the postcode is outside the districts we cover (its notice says so). |
 
 ---
 

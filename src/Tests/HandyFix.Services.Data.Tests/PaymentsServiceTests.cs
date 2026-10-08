@@ -15,6 +15,7 @@ namespace HandyFix.Services.Data.Tests
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -73,7 +74,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_9999");
 
             // Verify payment update
@@ -163,7 +164,7 @@ namespace HandyFix.Services.Data.Tests
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new[] { new System.Collections.Generic.KeyValuePair<string, string>("Admin:NotificationEmail", "owner@handyfix.co.uk") })
                 .Build();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, configuration, Mock.Of<IWebHostEnvironment>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, configuration, Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
 
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_email_test");
 
@@ -177,7 +178,8 @@ namespace HandyFix.Services.Data.Tests
                     "john@example.com",
                     It.IsAny<string>(),
                     It.Is<string>(body => body.Contains("Leak Fix") && !body.Contains("Alex Smith")),
-                    null),
+                    null,
+                    It.IsAny<string>()),
                 Times.Once);
 
             emailSenderMock.Verify(
@@ -187,7 +189,8 @@ namespace HandyFix.Services.Data.Tests
                     "owner@handyfix.co.uk",
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    null),
+                    null,
+                    It.IsAny<string>()),
                 Times.Once);
         }
 
@@ -236,7 +239,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
 
             // Stripe retries webhooks; the success handler and the Success redirect can
             // also both fire for the same session. Neither should be able to corrupt state
@@ -260,7 +263,8 @@ namespace HandyFix.Services.Data.Tests
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    null),
+                    null,
+                    It.IsAny<string>()),
                 Times.Exactly(2));
 
             emailSenderMock.Verify(
@@ -270,7 +274,8 @@ namespace HandyFix.Services.Data.Tests
                     "john@example.com",
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    null),
+                    null,
+                    It.IsAny<string>()),
                 Times.Once);
 
             // No admin config supplied, so the default admin mailbox should have been used.
@@ -281,7 +286,8 @@ namespace HandyFix.Services.Data.Tests
                     "info@plumbing-handyman-surrey.co.uk",
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    null),
+                    null,
+                    It.IsAny<string>()),
                 Times.Once);
         }
 
@@ -318,7 +324,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
 
             // Customer clicks "Pay" twice (e.g. hits back and retries) before completing
             // either Stripe checkout.
@@ -364,7 +370,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             await service.CancelPaymentAsync(checkoutSessionId);
 
             var updatedPayment = dbContext.Payments.First(x => x.Id == payment.Id);
@@ -404,7 +410,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
             await service.CancelPaymentAsync(checkoutSessionId);
 
             var updatedPayment = dbContext.Payments.First(x => x.Id == payment.Id);
@@ -441,7 +447,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
 
             // Only the stale bookings' pending payments should be cancelled; the paid
             // one must be left alone even though it's in the id list, and the pending
@@ -538,7 +544,7 @@ namespace HandyFix.Services.Data.Tests
                 var environment = new Mock<IWebHostEnvironment>();
                 environment.SetupGet(x => x.EnvironmentName).Returns(environmentName);
 
-                return new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, new Mock<IEmailSender>().Object, configuration, environment.Object);
+                return new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, new Mock<IEmailSender>().Object, configuration, environment.Object, NullLogger<PaymentsService>.Instance);
             }
         }
 
@@ -559,7 +565,7 @@ namespace HandyFix.Services.Data.Tests
                 using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
                 using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
 
-                var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, new Mock<IEmailSender>().Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>());
+                var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, new Mock<IEmailSender>().Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
 
                 await Assert.ThrowsAnyAsync<Exception>(
                     () => service.HandleWebhookEventAsync("{\"id\":\"evt_forged\"}", string.Empty));

@@ -11,6 +11,7 @@
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Services;
 
@@ -18,6 +19,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.ViewFeatures;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -102,6 +104,242 @@
                         c.Message.Contains("NVQ Level 3 qualified.")),
                     It.Is<IReadOnlyList<string>>(urls => urls.Count == 0)),
                 Times.Once);
+        }
+
+        [Fact]
+        public async Task ContactPostShouldUploadThePhotosSaveTheEnquiryAndRedirect()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var controller = BuildController(inquiriesService, imageService: ImageServiceReturning("https://photos.example/inquiries/a.jpg"));
+            var model = ValidContact();
+
+            var result = await controller.Contact(model);
+
+            Assert.Equal("Contact", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Contains("has been received", Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(model, It.Is<IReadOnlyList<string>>(urls => urls.Single() == "https://photos.example/inquiries/a.jpg")),
+                Times.Once);
+        }
+
+        // The same enquiry sent again, by a double click or a resend, is thanked like the first
+        // and saved once. The photos are not uploaded a second time either (PROJECT_STATE
+        // Section 3cb).
+        [Fact]
+        public async Task ContactPostShouldThankTheVisitorWithoutSavingTheSameEnquiryTwice()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            inquiriesService.Setup(s => s.IsRecentDuplicateAsync(It.IsAny<ContactInputModel>())).ReturnsAsync(true);
+            var imageService = ImageServiceReturning("https://photos.example/inquiries/a.jpg");
+            var controller = BuildController(inquiriesService, imageService: imageService);
+
+            var result = await controller.Contact(ValidContact());
+
+            Assert.Equal("Contact", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Contains("has been received", Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
+                Times.Never);
+            imageService.Verify(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        // A submission with a program's mark on it (the hidden box filled in, or sent faster than
+        // anyone types) gets the very same reply as a real one, and nothing is saved, uploaded or
+        // looked up for it (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task ContactPostShouldAnswerAProgramLikeAPersonAndSaveNothing()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var imageService = ImageServiceReturning("https://photos.example/inquiries/a.jpg");
+            var controller = BuildController(inquiriesService, imageService: imageService, formGuard: GuardAnswering(FormGuardResult.Automated));
+
+            var result = await controller.Contact(ValidContact());
+
+            Assert.Equal("Contact", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Equal(
+                "Thank you! Your enquiry has been received. Our team will contact you shortly.",
+                Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.VerifyNoOtherCalls();
+            imageService.Verify(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task JoinTeamPostShouldAnswerAProgramLikeAPersonAndSaveNothing()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var controller = BuildController(inquiriesService, formGuard: GuardAnswering(FormGuardResult.Automated));
+            var model = new JoinTeamInputModel
+            {
+                Name = "Jane Smith",
+                Email = "jane@example.com",
+                PhoneNumber = "07000000000",
+                Trade = "Plumbing",
+                YearsExperience = 8,
+                Availability = "Full-time",
+            };
+
+            var result = await controller.JoinTeam(model);
+
+            Assert.Equal("JoinTeam", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Contains("Thanks for applying", Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.VerifyNoOtherCalls();
+        }
+
+        // The "are you a person" check did not pass. A person can land here (a slow connection, a
+        // blocked widget), so unlike a program's mark this one is said out loud: the form comes
+        // back as typed with a message and a way round it, and nothing is saved.
+        [Fact]
+        public async Task ContactPostShouldComeBackWithAMessageWhenThePersonCheckDidNotPass()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var controller = BuildController(
+                inquiriesService,
+                categoriesService: CategoriesMock("Plumbing"),
+                formGuard: GuardAnswering(FormGuardResult.ChallengeFailed));
+            var model = ValidContact();
+
+            var result = await controller.Contact(model);
+
+            Assert.Same(model, Assert.IsType<ViewResult>(result).Model);
+            var message = controller.ModelState[string.Empty].Errors.Single().ErrorMessage;
+            Assert.Contains("could not confirm that you are a person", message);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, message);
+            Assert.Null(controller.TempData["SuccessMessage"]);
+            inquiriesService.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task JoinTeamPostShouldComeBackWithAMessageWhenThePersonCheckDidNotPass()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var controller = BuildController(inquiriesService, formGuard: GuardAnswering(FormGuardResult.ChallengeFailed));
+            var model = new JoinTeamInputModel
+            {
+                Name = "Jane Smith",
+                Email = "jane@example.com",
+                PhoneNumber = "07000000000",
+                Trade = "Plumbing",
+                YearsExperience = 8,
+                Availability = "Full-time",
+            };
+
+            var result = await controller.JoinTeam(model);
+
+            Assert.Same(model, Assert.IsType<ViewResult>(result).Model);
+            Assert.Contains("could not confirm that you are a person", controller.ModelState[string.Empty].Errors.Single().ErrorMessage);
+            Assert.Equal("Join Our Team - Careers", controller.ViewData["Title"]);
+            inquiriesService.VerifyNoOtherCalls();
+        }
+
+        // Each form tells the guard which form it is: that name is what its Turnstile token is
+        // good for.
+        [Fact]
+        public async Task TheHomeFormsShouldEachTellTheGuardWhichFormTheyAre()
+        {
+            Mock<IFormGuard> formGuard = GuardAnswering(FormGuardResult.Passed);
+            var controller = BuildController(formGuard: formGuard);
+
+            await controller.Contact(ValidContact());
+            await controller.JoinTeam(new JoinTeamInputModel { Name = "Jane Smith", Email = "jane@example.com", PhoneNumber = "07000000000", Trade = "Plumbing", YearsExperience = 8, Availability = "Full-time" });
+
+            formGuard.Verify(g => g.CheckAsync(It.IsAny<HttpContext>(), "contact"), Times.Once);
+            formGuard.Verify(g => g.CheckAsync(It.IsAny<HttpContext>(), "join-team"), Times.Once);
+        }
+
+        // The form's own rules come first: a submission they refuse comes back with its messages
+        // whoever sent it, and the guard is not asked.
+        [Fact]
+        public async Task ContactPostShouldShowValidationMessagesBeforeTheGuardIsAsked()
+        {
+            Mock<IFormGuard> formGuard = GuardAnswering(FormGuardResult.Automated);
+            var controller = BuildController(categoriesService: CategoriesMock("Plumbing"), formGuard: formGuard);
+            controller.ModelState.AddModelError(nameof(ContactInputModel.Email), "Please enter a full email address, for example name@example.com.");
+
+            var result = await controller.Contact(ValidContact());
+
+            Assert.IsType<ViewResult>(result);
+            Assert.Null(controller.TempData["SuccessMessage"]);
+            formGuard.Verify(g => g.CheckAsync(It.IsAny<HttpContext>(), It.IsAny<string>()), Times.Never);
+        }
+
+        // Too many photos, one too large, a file that is not a picture: the visitor can put that
+        // right, so the form comes back with the reason. It used to end in an error page with
+        // everything they had typed gone (PROJECT_STATE Section 3cb).
+        [Fact]
+        public async Task ContactPostShouldComeBackWithTheReasonWhenAPhotoIsNotOneWeTake()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var imageService = new Mock<IImageService>();
+            imageService
+                .Setup(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ThrowsAsync(new ImageUploadValidationException("File \"notes.pdf\" has an unsupported type \"application/pdf\". Allowed types: JPEG, PNG, WEBP."));
+            var controller = BuildController(inquiriesService, categoriesService: CategoriesMock("Plumbing"), imageService: imageService);
+            var model = ValidContact();
+
+            var result = await controller.Contact(model);
+
+            Assert.Same(model, Assert.IsType<ViewResult>(result).Model);
+            Assert.Contains("unsupported type", controller.ModelState[nameof(ContactInputModel.Images)].Errors.Single().ErrorMessage);
+            Assert.NotNull(controller.ViewData["ContactCategories"]);
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
+                Times.Never);
+        }
+
+        // Storage out of reach is not the visitor's to fix. The enquiry is worth more than its
+        // photos, so it is saved without them and both sides are told.
+        [Fact]
+        public async Task ContactPostShouldSaveTheEnquiryWithoutItsPhotosWhenStorageCannotBeReached()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            var imageService = new Mock<IImageService>();
+            imageService
+                .Setup(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("Cloudflare R2 is not fully configured. Missing one or more required settings in CloudflareR2 section."));
+            var controller = BuildController(inquiriesService, imageService: imageService);
+            var model = ValidContact();
+            model.Images = new List<IFormFile> { PhotoOf(2048), PhotoOf(4096), PhotoOf(0) };
+
+            var result = await controller.Contact(model);
+
+            Assert.Equal("Contact", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(
+                    It.Is<ContactInputModel>(c => c.PhotosNotSaved == 2),
+                    It.Is<IReadOnlyList<string>>(urls => urls.Count == 0)),
+                Times.Once);
+
+            var message = Assert.IsType<string>(controller.TempData["SuccessMessage"]);
+            Assert.Contains("has been received", message);
+            Assert.Contains("photos could not be uploaded", message);
+            Assert.DoesNotContain("Cloudflare", message);
+        }
+
+        [Fact]
+        public async Task JoinTeamPostShouldThankTheApplicantWithoutSavingTheSameApplicationTwice()
+        {
+            var inquiriesService = new Mock<IInquiriesService>();
+            inquiriesService
+                .Setup(s => s.IsRecentDuplicateAsync(It.Is<ContactInputModel>(c => c.Message.StartsWith(JoinTeamInputModel.MessagePrefix))))
+                .ReturnsAsync(true);
+            var controller = BuildController(inquiriesService);
+            var model = new JoinTeamInputModel
+            {
+                Name = "Jane Smith",
+                Email = "jane@example.com",
+                PhoneNumber = "07000000000",
+                Trade = "Plumbing",
+                YearsExperience = 8,
+                Availability = "Full-time",
+            };
+
+            var result = await controller.JoinTeam(model);
+
+            Assert.Equal("JoinTeam", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Contains("Thanks for applying", Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+            inquiriesService.Verify(
+                s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
+                Times.Never);
         }
 
         [Fact]
@@ -251,21 +489,56 @@
             return servicesService;
         }
 
+        private static ContactInputModel ValidContact() => new ContactInputModel
+        {
+            Name = "Jane Doe",
+            Email = "jane@example.com",
+            PhoneNumber = "07700 900123",
+            Message = "Kitchen tap is dripping.",
+            Category = "Plumbing",
+        };
+
+        private static Mock<IFormGuard> GuardAnswering(FormGuardResult result)
+        {
+            var formGuard = new Mock<IFormGuard>();
+            formGuard.Setup(g => g.CheckAsync(It.IsAny<HttpContext>(), It.IsAny<string>())).ReturnsAsync(result);
+            return formGuard;
+        }
+
+        private static IFormFile PhotoOf(long bytes)
+        {
+            var photo = new Mock<IFormFile>();
+            photo.SetupGet(f => f.Length).Returns(bytes);
+            return photo.Object;
+        }
+
+        private static Mock<IImageService> ImageServiceReturning(params string[] urls)
+        {
+            var imageService = new Mock<IImageService>();
+            imageService
+                .Setup(s => s.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
+                .ReturnsAsync(urls.ToList());
+            return imageService;
+        }
+
         private static HomeController BuildController(
             Mock<IInquiriesService> inquiriesService = null,
             Mock<IServicesService> servicesService = null,
-            Mock<ICategoriesService> categoriesService = null)
+            Mock<ICategoriesService> categoriesService = null,
+            Mock<IImageService> imageService = null,
+            Mock<IFormGuard> formGuard = null)
         {
             var reviewsService = new Mock<IReviewsService>();
-            var imageService = new Mock<IImageService>();
 
             var controller = new HomeController(
                 reviewsService.Object,
                 (inquiriesService ?? new Mock<IInquiriesService>()).Object,
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
-                imageService.Object,
-                new ConfigurationBuilder().Build());
+                (imageService ?? ImageServiceReturning()).Object,
+                (formGuard ?? new Mock<IFormGuard>()).Object,
+                new ConfigurationBuilder().Build(),
+                NullLogger<HomeController>.Instance);
 
             var httpContext = new DefaultHttpContext();
             controller.ControllerContext = new ControllerContext

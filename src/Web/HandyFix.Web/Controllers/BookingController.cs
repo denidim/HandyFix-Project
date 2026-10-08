@@ -4,17 +4,25 @@ namespace HandyFix.Web.Controllers
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Services.Forms;
+    using HandyFix.Web.ViewModels;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
+    using HandyFix.Web.ViewModels.Validation;
 
     using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.RateLimiting;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
 
     [AllowAnonymous]
     public class BookingController : BaseController
@@ -26,17 +34,26 @@ namespace HandyFix.Web.Controllers
         private readonly IAvailabilityService availabilityService;
         private readonly IBookingsService bookingsService;
         private readonly IImageService imageService;
+        private readonly IServiceAreasService serviceAreasService;
+        private readonly IFormGuard formGuard;
+        private readonly ILogger<BookingController> logger;
 
         public BookingController(
             IServicesService servicesService,
             IAvailabilityService availabilityService,
             IBookingsService bookingsService,
-            IImageService imageService)
+            IImageService imageService,
+            IServiceAreasService serviceAreasService,
+            IFormGuard formGuard,
+            ILogger<BookingController> logger)
         {
             this.servicesService = servicesService;
             this.availabilityService = availabilityService;
             this.bookingsService = bookingsService;
             this.imageService = imageService;
+            this.serviceAreasService = serviceAreasService;
+            this.formGuard = formGuard;
+            this.logger = logger;
         }
 
         [HttpGet]
@@ -78,20 +95,22 @@ namespace HandyFix.Web.Controllers
                     SelectedCategorySlug = categorySlug,
                     SelectedDate = date,
                     SelectedServiceId = selectedServiceId,
+                    ServedPostcodeDistricts = await this.serviceAreasService.GetServedPostcodeDistrictsAsync(),
                 };
 
                 this.ViewData["MetaDescription"] = "Book a plumbing or handyman appointment online across Surrey and South London. Pick a service, choose an available slot, and secure it with a deposit.";
 
                 return this.View(model);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return this.View("Error");
+                return this.SomethingWentWrong(ex);
             }
         }
 
         [HttpGet]
         [Route("Booking/GetSlots")]
+        [EnableRateLimiting(RateLimits.SlotLookupsPolicy)]
         public async Task<IActionResult> GetSlots(string date)
         {
             if (string.IsNullOrWhiteSpace(date) || !DateTime.TryParse(date, out DateTime parsedDate))
@@ -104,14 +123,16 @@ namespace HandyFix.Web.Controllers
                 IEnumerable<AvailabilitySlotViewModel> slots = await this.availabilityService.GetAllSlotsForDateAsync<AvailabilitySlotViewModel>(parsedDate);
                 return this.Json(slots);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                this.logger.LogError(ex, "The time slots for a date could not be loaded");
                 return this.StatusCode(500, new { message = "An error occurred while loading time slots." });
             }
         }
 
         [HttpPost]
         [Route("Booking")]
+        [EnableRateLimiting(RateLimits.FormsPolicy)]
         public async Task<IActionResult> Index(BookingInputModel model)
         {
             if (!this.ModelState.IsValid)
@@ -119,9 +140,58 @@ namespace HandyFix.Web.Controllers
                 return await this.RedisplayBookingForm(model);
             }
 
+            // A submission that carries a program's mark. The other forms answer one with their
+            // usual thank-you; a booking's success is the payment page, which cannot be faked, so
+            // this comes back with a message that says nothing about why and still gives a
+            // person a way to book.
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, FormNames.Booking);
+            if (guard == FormGuardResult.Automated)
+            {
+                return await this.RedisplayBookingForm(
+                    model,
+                    $"We could not take this booking online. Please call us or message us on WhatsApp on {GlobalConstants.BusinessPhone}.");
+            }
+
+            // The "are you a person" check did not pass. A person can land here, so the form
+            // comes back as filled in, slot included, with a message and a fresh check.
+            if (guard == FormGuardResult.ChallengeFailed)
+            {
+                return await this.RedisplayBookingForm(model, FormNames.ChallengeFailedMessage);
+            }
+
+            // Before anything is saved or a deposit asked for: a postcode outside the districts
+            // the service areas list is a job we may not be able to reach. The page says so as
+            // the postcode is typed; this is the check a visitor cannot skip.
+            if (!await this.serviceAreasService.IsPostcodeServedAsync(model.Postcode))
+            {
+                model.PostcodeNotServed = true;
+                return await this.RedisplayBookingForm(
+                    model,
+                    $"Sorry, we don't take online bookings for {UkPostcode.GetOutwardCode(model.Postcode)} yet. Send us an enquiry or call {GlobalConstants.BusinessPhone}, and we'll tell you whether we can come out to you.");
+            }
+
+            IReadOnlyList<string> imageUrls;
             try
             {
-                IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "bookings");
+                imageUrls = await this.imageService.UploadImagesAsync(model.Images, "bookings");
+            }
+            catch (ImageUploadValidationException ex)
+            {
+                // The customer's to put right: too many photos, one too large, not a picture.
+                return await this.RedisplayBookingForm(model, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // Storage is out of reach, which is not the customer's to fix and not a reason to
+                // lose a booking: it is taken without its photos. This used to stop the booking,
+                // and a storage that was not set up showed its own error text to the customer
+                // (PROJECT_STATE Section 3cb).
+                this.logger.LogError(ex, "Booking photos could not be stored; taking the booking without them");
+                imageUrls = Array.Empty<string>();
+            }
+
+            try
+            {
                 Booking booking = await this.bookingsService.CreateBookingAsync(model, imageUrls);
 
                 // Redirect to Stripe checkout
@@ -145,6 +215,18 @@ namespace HandyFix.Web.Controllers
             }
         }
 
+        // The site's own "something went wrong" page, with the status that says so. These spots
+        // used to show a leftover developer page and write nothing to the log, so a booking page
+        // that failed left no trace of why (PROJECT_STATE Section 3cb).
+        private IActionResult SomethingWentWrong(Exception ex)
+        {
+            this.logger.LogError(ex, "A booking page could not be shown");
+
+            ViewResult page = this.View("StatusPage", StatusPageViewModel.For(StatusCodes.Status500InternalServerError));
+            page.StatusCode = StatusCodes.Status500InternalServerError;
+            return page;
+        }
+
         private async Task<IActionResult> RedisplayBookingForm(BookingInputModel model, string errorMessage = null)
         {
             if (errorMessage != null)
@@ -154,7 +236,18 @@ namespace HandyFix.Web.Controllers
 
             model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
             model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
+            model.ServedPostcodeDistricts = await this.serviceAreasService.GetServedPostcodeDistrictsAsync();
             model.SelectedServiceId = model.ServiceId;
+
+            // The page opens again on the day the customer had chosen, and its script picks their
+            // slot again if it is still free. It used to open on today with no slot, so a form
+            // that came back for any reason (a postcode we do not cover, a photo too large, the
+            // person check not finished) meant choosing the day and the time a second time. A
+            // slot lost to someone else arrives here already cleared, and stays cleared.
+            if (model.SlotId != Guid.Empty)
+            {
+                model.SelectedDate = await this.availabilityService.GetSlotDateAsync(model.SlotId);
+            }
 
             // The tabs are not part of what the form posts, so the category comes back from the
             // service. Without it the page reopened on Plumbing and swapped a handyman service
@@ -178,9 +271,9 @@ namespace HandyFix.Web.Controllers
 
                 return this.View(booking);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return this.View("Error");
+                return this.SomethingWentWrong(ex);
             }
         }
     }

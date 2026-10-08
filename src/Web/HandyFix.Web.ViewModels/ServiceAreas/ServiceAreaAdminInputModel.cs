@@ -6,6 +6,7 @@ namespace HandyFix.Web.ViewModels.ServiceAreas
 
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.Validation;
 
     public class ServiceAreaAdminInputModel : IMapFrom<ServiceArea>
     {
@@ -44,6 +45,15 @@ namespace HandyFix.Web.ViewModels.ServiceAreas
 
         [Display(Name = "Featured area")]
         public bool IsFeatured { get; set; }
+
+        // Optional. The booking form takes a booking only for a postcode in a district some area
+        // lists, so this is what decides where the site accepts bookings.
+        [Display(Name = "Postcode districts")]
+        [MaxLength(200, ErrorMessage = "Postcode districts cannot exceed 200 characters.")]
+        [RegularExpression(
+            UkPostcode.DistrictListPattern,
+            ErrorMessage = "List the districts with commas between them, for example KT5, KT6, KT7. A district is the first half of a postcode.")]
+        public string PostcodeDistricts { get; set; }
 
         [Required(ErrorMessage = "Intro copy is required.")]
         [MinLength(20, ErrorMessage = "Intro copy must be at least 20 characters.")]

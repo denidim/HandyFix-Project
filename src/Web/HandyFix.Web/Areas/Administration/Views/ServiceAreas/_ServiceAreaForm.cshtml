@@ -59,6 +59,15 @@
         </div>
 
         <div class="form-group">
+            <label asp-for="PostcodeDistricts" class="form-label font-label-sm text-on-surface-variant mb-2">Postcode Districts</label>
+            <input asp-for="PostcodeDistricts" class="form-control py-3 admin-form-control form-pad-standard" maxlength="200" placeholder="KT5, KT6, KT7" />
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">
+                The first half of the postcodes this area covers, with commas between them. The booking page only takes a booking for a postcode in a district listed on some area; anyone else is asked to send an enquiry or call. Leave empty if this area adds none.
+            </span>
+            <span asp-validation-for="PostcodeDistricts" class="text-danger small"></span>
+        </div>
+
+        <div class="form-group">
             <label asp-for="IntroCopy" class="form-label font-label-sm text-on-surface-variant mb-2">Intro Copy</label>
             <textarea asp-for="IntroCopy" class="form-control admin-form-control form-pad-standard resize-none" rows="3" maxlength="2000" required></textarea>
             <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Opening paragraph on the area page. Write something specific and true about working in this town.</span>

@@ -273,6 +273,30 @@
   color: var(--secondary);
 }
 
+/* The card sets display: flex, which would otherwise beat the hidden attribute. */
+.reassuring-info-card[hidden] {
+  display: none;
+}
+
+/* The same card when it stops the booking: the postcode is outside the areas we cover. */
+.reassuring-info-card.is-blocking {
+  background: var(--error-container);
+  border-color: var(--error);
+}
+
+.reassuring-info-card.is-blocking .reassuring-info-icon {
+  color: var(--error);
+}
+
+/* The hint beside the postcode box. */
+.booking-field-hint {
+  font-size: var(--fs-label-sm);
+  color: var(--on-surface-variant);
+  line-height: 1.55;
+  margin: 0;
+  align-self: center;
+}
+
 /* Custom Calendar Widget */
 .custom-calendar-card {
   background: var(--surface-container-lowest);
@@ -452,6 +476,12 @@
 .stylish-input-card:focus-within {
   border-color: var(--secondary);
   box-shadow: 0 0 0 3px rgba(57, 184, 253, 0.15);
+}
+
+/* The rows inside a form card. The markup's space-y-6 class had no rule behind it, so each row's
+   label sat right under the row above. */
+.stylish-input-card.space-y-6 > * + * {
+  margin-top: var(--spacing-6);
 }
 
 /* Centred Proceed to Payment Button Container */
@@ -907,4 +937,16 @@
 
 .slots-message-full-width {
   grid-column: span 2;
+}
+
+/* The "are you a person" check (the _FormGuard partial) sits centred over the centred payment
+   button, in its full shape and in its compact one. The step it is in spaces its rows itself, so
+   the check and the button under it bring no margin of their own. */
+.booking-page .form-turnstile {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.booking-page .form-turnstile ~ .submit-container-centered {
+  margin-top: 0;
 }

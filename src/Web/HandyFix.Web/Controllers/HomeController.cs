@@ -2,7 +2,6 @@ namespace HandyFix.Web.Controllers
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
     using System.Threading.Tasks;
@@ -12,6 +11,7 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Services.Forms;
     using HandyFix.Web.ViewModels;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Reviews;
@@ -19,19 +19,28 @@ namespace HandyFix.Web.Controllers
 
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.RateLimiting;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging;
 
     [AllowAnonymous]
     public class HomeController : BaseController
     {
         private const int PopularServicesCount = 4;
 
+        // One wording each, whatever happened behind it: saved, a repeat of one just saved, or
+        // dropped as a program's. A reply that differed would say which.
+        private const string EnquiryReceivedMessage = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
+        private const string ApplicationReceivedMessage = "Thanks for applying! We've received your details and will be in touch soon.";
+
         private readonly IReviewsService reviewsService;
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
         private readonly IImageService imageService;
+        private readonly IFormGuard formGuard;
         private readonly IConfiguration configuration;
+        private readonly ILogger<HomeController> logger;
 
         public HomeController(
             IReviewsService reviewsService,
@@ -39,14 +48,18 @@ namespace HandyFix.Web.Controllers
             IServicesService servicesService,
             ICategoriesService categoriesService,
             IImageService imageService,
-            IConfiguration configuration)
+            IFormGuard formGuard,
+            IConfiguration configuration,
+            ILogger<HomeController> logger)
         {
             this.reviewsService = reviewsService;
             this.inquiriesService = inquiriesService;
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
             this.imageService = imageService;
+            this.formGuard = formGuard;
             this.configuration = configuration;
+            this.logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -125,18 +138,65 @@ namespace HandyFix.Web.Controllers
 
         [HttpPost]
         [Route("Contact")]
+        [EnableRateLimiting(RateLimits.FormsPolicy)]
         public async Task<IActionResult> Contact(ContactInputModel model)
         {
             if (!this.ModelState.IsValid)
             {
-                this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
-                await this.SetContactCategoriesAsync();
-                return this.View(model);
+                return await this.RedisplayContactFormAsync(model);
             }
 
-            IReadOnlyList<string> imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
-            await this.inquiriesService.CreateInquiryAsync(model, imageUrls);
-            this.TempData["SuccessMessage"] = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
+            // A submission that carries a program's mark gets the same thank-you as a real one and
+            // is not saved, uploaded or emailed about: the program learns nothing from the reply.
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, FormNames.Contact);
+            if (guard == FormGuardResult.Automated)
+            {
+                this.TempData["SuccessMessage"] = EnquiryReceivedMessage;
+                return this.RedirectToAction("Contact");
+            }
+
+            // The "are you a person" check did not pass. A person can land here, so it is said
+            // out loud: the form comes back as typed, with a message and a fresh check.
+            if (guard == FormGuardResult.ChallengeFailed)
+            {
+                this.ModelState.AddModelError(string.Empty, FormNames.ChallengeFailedMessage);
+                return await this.RedisplayContactFormAsync(model);
+            }
+
+            // The same enquiry sent a second time (a double click, a resend after Back) is thanked
+            // like the first and not saved again. Asked before the photos go to storage, so a
+            // repeat does not upload them twice either.
+            if (!await this.inquiriesService.IsRecentDuplicateAsync(model))
+            {
+                IReadOnlyList<string> imageUrls;
+                try
+                {
+                    imageUrls = await this.imageService.UploadImagesAsync(model.Images, "inquiries");
+                }
+                catch (ImageUploadValidationException ex)
+                {
+                    // The visitor's to put right: too many photos, one too large, a file that is
+                    // not a picture. The form comes back with what they typed and the reason.
+                    this.ModelState.AddModelError(nameof(model.Images), ex.Message);
+                    return await this.RedisplayContactFormAsync(model);
+                }
+                catch (Exception ex)
+                {
+                    // Storage is out of reach, which is not the visitor's to fix. The enquiry is
+                    // worth more than its photos: it is saved without them, and the notice to the
+                    // company says photos were lost. This used to end in an error page with
+                    // nothing saved (PROJECT_STATE Section 3cb).
+                    this.logger.LogError(ex, "Enquiry photos could not be stored; saving the enquiry without them");
+                    imageUrls = Array.Empty<string>();
+                    model.PhotosNotSaved = model.Images?.Count(f => f.Length > 0) ?? 0;
+                }
+
+                await this.inquiriesService.CreateInquiryAsync(model, imageUrls);
+            }
+
+            this.TempData["SuccessMessage"] = model.PhotosNotSaved > 0
+                ? "Thank you! Your enquiry has been received, but your photos could not be uploaded this time. Our team will contact you shortly and will ask for them if they are needed."
+                : EnquiryReceivedMessage;
 
             return this.RedirectToAction("Contact");
         }
@@ -151,6 +211,7 @@ namespace HandyFix.Web.Controllers
 
         [HttpPost]
         [Route("JoinOurTeam")]
+        [EnableRateLimiting(RateLimits.FormsPolicy)]
         public async Task<IActionResult> JoinTeam(JoinTeamInputModel model)
         {
             if (!this.ModelState.IsValid)
@@ -159,10 +220,31 @@ namespace HandyFix.Web.Controllers
                 return this.View(model);
             }
 
+            // As on the Contact form: a program's submission is thanked and dropped.
+            FormGuardResult guard = await this.formGuard.CheckAsync(this.HttpContext, FormNames.JoinTeam);
+            if (guard == FormGuardResult.Automated)
+            {
+                this.TempData["SuccessMessage"] = ApplicationReceivedMessage;
+                return this.RedirectToAction("JoinTeam");
+            }
+
+            if (guard == FormGuardResult.ChallengeFailed)
+            {
+                this.ModelState.AddModelError(string.Empty, FormNames.ChallengeFailedMessage);
+                this.SetJoinTeamMetadata();
+                return this.View(model);
+            }
+
             // Saved as an enquiry with no photos, so applications reach the existing admin
-            // Enquiries list without a table of their own - see JoinTeamInputModel.
-            await this.inquiriesService.CreateInquiryAsync(model.ToContactInputModel(), Array.Empty<string>());
-            this.TempData["SuccessMessage"] = "Thanks for applying! We've received your details and will be in touch soon.";
+            // Enquiries list without a table of their own - see JoinTeamInputModel. The same
+            // application sent twice is saved once, as on the Contact form.
+            ContactInputModel application = model.ToContactInputModel();
+            if (!await this.inquiriesService.IsRecentDuplicateAsync(application))
+            {
+                await this.inquiriesService.CreateInquiryAsync(application, Array.Empty<string>());
+            }
+
+            this.TempData["SuccessMessage"] = ApplicationReceivedMessage;
 
             return this.RedirectToAction("JoinTeam");
         }
@@ -236,13 +318,6 @@ namespace HandyFix.Web.Controllers
             return this.View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return this.View(
-                new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
-        }
-
         // The home page's grid holds four. The services an admin marked popular come first, in
         // list order; with fewer than four marked, the next services in the list fill the rest,
         // so the grid is never part-empty (PROJECT_STATE Section 3ca).
@@ -253,6 +328,13 @@ namespace HandyFix.Web.Controllers
                 .Concat(services.Where(s => !s.IsPopular))
                 .Take(PopularServicesCount)
                 .ToList();
+        }
+
+        private async Task<IActionResult> RedisplayContactFormAsync(ContactInputModel model)
+        {
+            this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
+            await this.SetContactCategoriesAsync();
+            return this.View(model);
         }
 
         private void SetJoinTeamMetadata()

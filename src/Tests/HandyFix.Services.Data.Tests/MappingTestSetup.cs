@@ -16,7 +16,7 @@ namespace HandyFix.Services.Data.Tests
         [ModuleInitializer]
         internal static void RegisterMappings()
         {
-            MappingConfig.RegisterMappings(typeof(ErrorViewModel).Assembly);
+            MappingConfig.RegisterMappings(typeof(StatusPageViewModel).Assembly);
         }
     }
 }

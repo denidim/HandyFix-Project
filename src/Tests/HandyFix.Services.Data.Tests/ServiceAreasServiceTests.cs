@@ -267,6 +267,104 @@ namespace HandyFix.Services.Data.Tests
             Assert.False(await service.SlugExistsAsync("guildford", excludeAreaId: area.Id));
         }
 
+        // The booking form takes a booking only for a postcode in a district some area lists
+        // (PROJECT_STATE.md Section 3cb).
+        [Fact]
+        public async Task CreateAndUpdateAsyncShouldSaveThePostcodeDistrictsTidied()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            var service = new ServiceAreasService(
+                new EfDeletableEntityRepository<ServiceArea>(dbContext),
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+
+            var input = BuildInput("surbiton", "Surbiton", faqCount: 1);
+            input.PostcodeDistricts = "kt5,KT6 ,  kt7";
+            var id = await service.CreateAsync(input);
+
+            Assert.Equal("KT5, KT6, KT7", dbContext.ServiceAreas.Single(x => x.Id == id).PostcodeDistricts);
+
+            // An emptied box is no list, not an empty text.
+            input.PostcodeDistricts = "  ";
+            await service.UpdateAsync(id, input);
+
+            Assert.Null(dbContext.ServiceAreas.Single(x => x.Id == id).PostcodeDistricts);
+        }
+
+        [Fact]
+        public async Task GetServedPostcodeDistrictsAsyncShouldGiveEveryAreasDistrictsOnceInOrder()
+        {
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5, KT6", "KT1, KT6", null, string.Empty);
+            var service = new ServiceAreasService(
+                new EfDeletableEntityRepository<ServiceArea>(dbContext),
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+
+            Assert.Equal(new[] { "KT1", "KT5", "KT6" }, await service.GetServedPostcodeDistrictsAsync());
+        }
+
+        [Theory]
+        [InlineData("KT5 8AB", true)]
+        [InlineData("kt11aa", true)]
+        [InlineData("KT9 2QN", false)]
+        [InlineData("M1 1AE", false)]
+        public async Task IsPostcodeServedAsyncShouldAskWhetherSomeAreaListsTheDistrict(string postcode, bool expected)
+        {
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5, KT6", "KT1");
+            var service = new ServiceAreasService(
+                new EfDeletableEntityRepository<ServiceArea>(dbContext),
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+
+            Assert.Equal(expected, await service.IsPostcodeServedAsync(postcode));
+        }
+
+        // With no district on any area the check has nothing to go on. It is off, so an empty
+        // setup cannot turn every booking away.
+        [Fact]
+        public async Task IsPostcodeServedAsyncShouldAcceptEveryPostcodeWhenNoAreaListsADistrict()
+        {
+            using ApplicationDbContext dbContext = ContextWithAreasCovering(null, string.Empty);
+            var service = new ServiceAreasService(
+                new EfDeletableEntityRepository<ServiceArea>(dbContext),
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+
+            Assert.True(await service.IsPostcodeServedAsync("M1 1AE"));
+        }
+
+        // A deleted area's districts stop counting the moment it is gone.
+        [Fact]
+        public async Task IsPostcodeServedAsyncShouldNotCountADeletedAreasDistricts()
+        {
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5", "KT9");
+            var service = new ServiceAreasService(
+                new EfDeletableEntityRepository<ServiceArea>(dbContext),
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+
+            Guid chessington = dbContext.ServiceAreas.Single(x => x.PostcodeDistricts == "KT9").Id;
+            await service.DeleteAsync(chessington);
+
+            Assert.False(await service.IsPostcodeServedAsync("KT9 2QN"));
+            Assert.True(await service.IsPostcodeServedAsync("KT5 8AB"));
+        }
+
+        private static ApplicationDbContext ContextWithAreasCovering(params string[] districtLists)
+        {
+            var dbContext = new ApplicationDbContext(
+                new DbContextOptionsBuilder<ApplicationDbContext>()
+                    .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options);
+
+            for (var i = 0; i < districtLists.Length; i++)
+            {
+                ServiceArea area = CreateArea($"area-{i}", $"Area {i}", isFeatured: false, displayOrder: i);
+                area.PostcodeDistricts = districtLists[i];
+                dbContext.ServiceAreas.Add(area);
+            }
+
+            dbContext.SaveChanges();
+            return dbContext;
+        }
+
         private static ServiceAreaAdminInputModel BuildInput(string slug, string name, int faqCount)
         {
             var model = new ServiceAreaAdminInputModel

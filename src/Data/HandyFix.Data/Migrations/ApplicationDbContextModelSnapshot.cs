@@ -705,6 +705,10 @@ namespace HandyFix.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("PostcodeDistricts")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("Region")
                         .IsRequired()
                         .HasMaxLength(100)

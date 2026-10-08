@@ -1,0 +1,43 @@
+@using HandyFix.Web.Services.Forms
+@model string
+@inject IFormGuard Guard
+@inject ITurnstileVerifier Turnstile
+@* What tells a person's submission from a program's (PROJECT_STATE Section 3cb). Rendered inside
+   each public form, just above its button, with the form's name from FormNames as the model.
+
+   The text box is moved off the page by forms.css and skipped by the Tab key: no person fills it
+   in, a program filling in every field does. The stamp says when the form was first shown.
+
+   The Turnstile widget is Cloudflare's "are you a person" check. Its script finds the div, does
+   its work in the browser and adds a token to the form, which the server asks Cloudflare about.
+   It is left out when there are no keys, which is allowed in Development only. *@
+@{
+    var siteKey = Turnstile.SiteKey;
+}
+<div class="form-extra" aria-hidden="true">
+    <label for="form-reference">Leave this field empty</label>
+    <input type="text" id="form-reference" name="@FormGuard.HoneypotFieldName" value="" tabindex="-1" autocomplete="off" />
+</div>
+<input type="hidden" name="@FormGuard.StampFieldName" value="@Guard.CreateStamp(this.Context)" />
+@if (siteKey != null)
+{
+    <div class="form-turnstile">
+        <div class="cf-turnstile" data-sitekey="@siteKey" data-action="@Model" data-theme="light" data-size="flexible"></div>
+        <script>
+            // The widget is never narrower than 300px, and on a phone the inside of a form is.
+            // There it is asked for in its compact shape instead. This runs as the page is read,
+            // before Cloudflare's script (below, deferred) draws the widget.
+            (function () {
+                var box = document.currentScript.parentElement;
+                if (box.clientWidth < 300) {
+                    box.querySelector('.cf-turnstile').setAttribute('data-size', 'compact');
+                }
+            })();
+        </script>
+        @* Shown by site.js when the form is sent before the check above has finished. *@
+        <p class="validation-error form-turnstile-hint" role="alert" hidden>
+            The check above has not finished yet. Please give it a moment and try again. If it does not appear at all, call us or message us on WhatsApp on @GlobalConstants.BusinessPhone.
+        </p>
+    </div>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+}

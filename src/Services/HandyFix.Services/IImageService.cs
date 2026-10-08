@@ -8,5 +8,7 @@ namespace HandyFix.Services
     public interface IImageService
     {
         Task<IReadOnlyList<string>> UploadImagesAsync(IEnumerable<IFormFile> images, string folder);
+
+        Task DeleteImagesAsync(IEnumerable<string> imageUrls);
     }
 }

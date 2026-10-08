@@ -9,10 +9,12 @@ namespace HandyFix.Services.Data.Bookings
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Availability;
+    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
+    using HandyFix.Web.ViewModels.Validation;
 
     using Mapster;
 
@@ -20,12 +22,10 @@ namespace HandyFix.Services.Data.Bookings
     using Microsoft.EntityFrameworkCore.ChangeTracking;
     using Microsoft.EntityFrameworkCore.Storage;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging;
 
     public class BookingsService : IBookingsService
     {
-        private const string DefaultBookingsFromAddress = "bookings@plumbing-handyman-surrey.co.uk";
-        private const string DefaultSystemFromAddress = "bookings@plumbing-handyman-surrey.co.uk";
-
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
         private readonly IDeletableEntityRepository<Service> serviceRepository;
         private readonly IDeletableEntityRepository<AvailabilitySlot> slotRepository;
@@ -37,6 +37,7 @@ namespace HandyFix.Services.Data.Bookings
         private readonly IDbQueryRunner dbQueryRunner;
         private readonly IEmailSender emailSender;
         private readonly IConfiguration configuration;
+        private readonly ILogger<BookingsService> logger;
 
         public BookingsService(
             IDeletableEntityRepository<Booking> bookingRepository,
@@ -49,7 +50,8 @@ namespace HandyFix.Services.Data.Bookings
             IPaymentsService paymentsService,
             IDbQueryRunner dbQueryRunner,
             IEmailSender emailSender,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<BookingsService> logger)
         {
             this.bookingRepository = bookingRepository;
             this.serviceRepository = serviceRepository;
@@ -62,6 +64,27 @@ namespace HandyFix.Services.Data.Bookings
             this.dbQueryRunner = dbQueryRunner;
             this.emailSender = emailSender;
             this.configuration = configuration;
+            this.logger = logger;
+        }
+
+        // The form takes the postcode in a box of its own so it can be checked. A booking has one
+        // address, so the two are joined here, with the postcode written the standard way
+        // ("KT9 2QN"). A visitor who typed the postcode into the address as well gets it once.
+        public static string JoinAddressAndPostcode(string address, string postcode)
+        {
+            var street = (address ?? string.Empty).Trim().TrimEnd(',').TrimEnd();
+            var normalized = UkPostcode.Normalize(postcode);
+            if (normalized == null)
+            {
+                return street;
+            }
+
+            var streetCompact = new string(street.Where(c => !char.IsWhiteSpace(c)).ToArray());
+            var postcodeCompact = normalized.Replace(" ", string.Empty);
+
+            return streetCompact.Contains(postcodeCompact, StringComparison.OrdinalIgnoreCase)
+                ? street
+                : $"{street}, {normalized}";
         }
 
         public async Task<Booking> CreateBookingAsync(
@@ -90,6 +113,7 @@ namespace HandyFix.Services.Data.Bookings
 
             var totalAmount = selectedServices.Sum(x => x.BasePrice);
             var depositAmount = 50.00m; // Flat booking deposit
+            var address = JoinAddressAndPostcode(model.Address, model.Postcode);
 
             // 1. Build the booking object framework completely in-memory
             var booking = new Booking
@@ -98,7 +122,7 @@ namespace HandyFix.Services.Data.Bookings
                 CustomerLastName = model.CustomerLastName,
                 Email = model.Email,
                 PhoneNumber = model.PhoneNumber,
-                Address = model.Address,
+                Address = address,
                 ProblemDescription = model.ProblemDescription,
                 StatusId = pendingStatus.Id,
                 UserId = userId,
@@ -153,31 +177,31 @@ namespace HandyFix.Services.Data.Bookings
                 await this.imageRepository.SaveChangesAsync();
             }
 
-            // 5. Send booking confirmation email safely
+            // 5. Tell the customer the booking was received. The booking and its slot are saved by
+            // now, so a send that fails is logged and the customer goes on to pay: an exception
+            // here used to show "an error occurred while saving your booking" for a booking that
+            // had been saved, and a second try then lost the slot to the first one.
+            // What the customer typed is encoded before it goes into the email's HTML.
             var subject = "Your Plumbing Handyman Surrey Booking Inquiry has been Received!";
             var body = $@"
-            <h3>Hello {model.CustomerFirstName} {model.CustomerLastName},</h3>
+            <h3>Hello {EmailText.Encode(model.CustomerFirstName)} {EmailText.Encode(model.CustomerLastName)},</h3>
             <p>Thank you for choosing <strong>Plumbing Handyman Surrey</strong>. We have received your booking request details:</p>
             <ul>
                 <li><strong>Booking Reference:</strong> {booking.Id}</li>
-                <li><strong>Service(s):</strong> {string.Join(", ", selectedServices.Select(s => s.Name))}</li>
+                <li><strong>Service(s):</strong> {EmailText.Encode(string.Join(", ", selectedServices.Select(s => s.Name)))}</li>
                 <li><strong>Scheduled Time:</strong> {slot.StartTime:dd MMM yyyy 'at' HH:mm}</li>
-                <li><strong>Address:</strong> {model.Address}</li>
+                <li><strong>Address:</strong> {EmailText.Encode(address)}</li>
             </ul>
             <p>To secure this appointment slot, please pay the deposit of £{depositAmount.ToString("F2")} on the next screen.</p>
             <p>Once paid, we will confirm your technician assignment.</p>
             <br />
             <p>Best Regards,<br/><strong>The Plumbing Handyman Surrey Team</strong></p>";
 
-            var systemFromAddress = this.configuration["Email:SystemFromAddress"];
-            if (string.IsNullOrWhiteSpace(systemFromAddress))
-            {
-                systemFromAddress = DefaultSystemFromAddress;
-            }
-
-            await this.emailSender.SendEmailAsync(
-                systemFromAddress,
-                "Plumbing Handyman Surrey",
+            await this.emailSender.TrySendEmailAsync(
+                this.logger,
+                "booking received, to the customer",
+                EmailSettings.SystemFromAddress(this.configuration),
+                EmailSettings.CustomerFromName,
                 model.Email,
                 subject,
                 body);
@@ -251,27 +275,25 @@ namespace HandyFix.Services.Data.Bookings
                     // admin approves, the assignment has been made. The deposit confirmation
                     // deliberately says nothing about it (see PaymentsService).
                     var technicianBlock = booking.Technician != null
-                        ? $@"<p>Your technician for this visit is <strong>{booking.Technician.FirstName} {booking.Technician.LastName}</strong>
-                             (<a href=""tel:{booking.Technician.PhoneNumber}"">{booking.Technician.PhoneNumber}</a>).</p>"
+                        ? $@"<p>Your technician for this visit is <strong>{EmailText.Encode(booking.Technician.FirstName)} {EmailText.Encode(booking.Technician.LastName)}</strong>
+                             (<a href=""tel:{EmailText.Encode(booking.Technician.PhoneNumber)}"">{EmailText.Encode(booking.Technician.PhoneNumber)}</a>).</p>"
                         : "<p>A professional technician is scheduled for your address at the selected slot.</p>";
 
                     // Send Booking Confirmed email
                     var subject = "Your Plumbing Handyman Surrey Booking is CONFIRMED!";
                     var body = $@"
-                        <h3>Hi {booking.CustomerFirstName},</h3>
+                        <h3>Hi {EmailText.Encode(booking.CustomerFirstName)},</h3>
                         <p>We are pleased to inform you that your booking reference <strong>{booking.Id}</strong> is officially confirmed.</p>
                         {technicianBlock}
                         <p>Thank you for choosing Plumbing Handyman Surrey!</p>";
 
-                    var bookingsFromAddress = this.configuration["Email:BookingsFromAddress"];
-                    if (string.IsNullOrWhiteSpace(bookingsFromAddress))
-                    {
-                        bookingsFromAddress = DefaultBookingsFromAddress;
-                    }
-
-                    await this.emailSender.SendEmailAsync(
-                        bookingsFromAddress,
-                        "Plumbing Handyman Surrey",
+                    // The status is saved by now. A send that fails is logged, not thrown: the
+                    // admin's page would otherwise fail on a booking that had in fact been approved.
+                    await this.emailSender.TrySendEmailAsync(
+                        this.logger,
+                        "booking confirmed, to the customer",
+                        EmailSettings.BookingsFromAddress(this.configuration),
+                        EmailSettings.CustomerFromName,
                         booking.Email,
                         subject,
                         body);

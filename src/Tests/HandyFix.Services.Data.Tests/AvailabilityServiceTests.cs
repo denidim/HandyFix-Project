@@ -38,6 +38,29 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal(bookingId, updatedSlot.BookingId);
         }
 
+        // The booking page opens again on the day of the slot a customer had chosen when their
+        // form comes back to them (PROJECT_STATE.md Section 3cb).
+        [Fact]
+        public async Task GetSlotDateAsyncShouldGiveTheDayASlotIsOn()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+
+            DateTime day = DateTime.Today.AddDays(5);
+            var slot = new AvailabilitySlot { StartTime = day.AddHours(14), EndTime = day.AddHours(15) };
+            dbContext.AvailabilitySlots.Add(slot);
+            await dbContext.SaveChangesAsync();
+
+            var service = new AvailabilityService(slotRepository);
+
+            Assert.Equal(day, await service.GetSlotDateAsync(slot.Id));
+            Assert.Null(await service.GetSlotDateAsync(Guid.NewGuid()));
+            Assert.Null(await service.GetSlotDateAsync(Guid.Empty));
+        }
+
         [Fact]
         public async Task GetAvailableDatesAsyncShouldReturnCorrectDates()
         {

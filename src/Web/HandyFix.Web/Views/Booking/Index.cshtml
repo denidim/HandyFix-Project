@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Booking.BookingInputModel
+@using HandyFix.Web.Services.Forms
 @using System.Globalization
 @using HandyFix.Web.ViewModels.Services
 @{
@@ -163,31 +164,60 @@
                         <div class="grid-2-col gap-4">
                             <div class="form-group">
                                 <label asp-for="CustomerFirstName" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">First Name</label>
-                                <input asp-for="CustomerFirstName" class="form-control" placeholder="John" required />
+                                <input asp-for="CustomerFirstName" class="form-control" placeholder="John" autocomplete="given-name" required />
                                 <span asp-validation-for="CustomerFirstName" class="text-danger small"></span>
                             </div>
                             <div class="form-group">
                                 <label asp-for="CustomerLastName" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Last Name</label>
-                                <input asp-for="CustomerLastName" class="form-control" placeholder="Doe" required />
+                                <input asp-for="CustomerLastName" class="form-control" placeholder="Doe" autocomplete="family-name" required />
                                 <span asp-validation-for="CustomerLastName" class="text-danger small"></span>
                             </div>
                         </div>
                         <div class="grid-2-col gap-4">
                             <div class="form-group">
                                 <label asp-for="Email" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Email Address</label>
-                                <input asp-for="Email" class="form-control" type="email" placeholder="john.doe@example.com" required />
+                                <input asp-for="Email" class="form-control" type="email" placeholder="john.doe@example.com" autocomplete="email" required />
                                 <span asp-validation-for="Email" class="text-danger small"></span>
                             </div>
                             <div class="form-group">
                                 <label asp-for="PhoneNumber" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Phone Number</label>
-                                <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="07123456789" required />
+                                <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="07700 900123" autocomplete="tel" required />
                                 <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                             </div>
                         </div>
                         <div class="form-group">
                             <label asp-for="Address" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Property Address</label>
-                            <textarea asp-for="Address" class="form-control resize-none" placeholder="Full street address, city, postcode" rows="3" required></textarea>
+                            <textarea asp-for="Address" class="form-control resize-none" placeholder="House number, street and town" rows="2" autocomplete="street-address" required></textarea>
                             <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                        <div class="grid-2-col gap-4">
+                            <div class="form-group">
+                                <label asp-for="Postcode" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">Postcode</label>
+                                <input asp-for="Postcode" class="form-control" placeholder="KT9 2QN" autocomplete="postal-code" autocapitalize="characters" maxlength="10" required />
+                                <span asp-validation-for="Postcode" class="text-danger small"></span>
+                            </div>
+                            <p class="booking-field-hint">We use your postcode to check that you are in an area we cover.</p>
+                        </div>
+
+                        @* Shown by the script as soon as a whole postcode outside our districts is
+                           typed, and by the server if a booking for one is sent anyway
+                           (PROJECT_STATE Section 3cb). The script adds the chosen service to the
+                           enquiry link. *@
+                        <div class="reassuring-info-card is-blocking" id="postcode-not-served" role="alert" hidden="@(!Model.PostcodeNotServed)">
+                            <span class="material-symbols-outlined reassuring-info-icon" aria-hidden="true">location_off</span>
+                            <div>
+                                <p class="reassuring-info-text">
+                                    Sorry, we don't take online bookings for <strong id="postcode-not-served-district">this postcode</strong> yet. Send us an enquiry or call, and we'll tell you whether we can come out to you.
+                                </p>
+                                <div class="reassuring-info-actions">
+                                    <a asp-controller="Home" asp-action="Contact" id="postcode-enquiry-link" class="btn btn-primary reassuring-info-btn">
+                                        <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+                                        <span>Send an Enquiry</span>
+                                    </a>
+                                    <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="reassuring-info-call">or call @GlobalConstants.BusinessPhone</a>
+                                    <a href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener" class="reassuring-info-call">or message us on WhatsApp</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -213,6 +243,8 @@
                             <div id="booking-image-previews" class="image-preview-grid mt-3"></div>
                         </div>
                     </div>
+
+                    <partial name="_FormGuard" model="@FormNames.Booking" />
 
                     <!-- Centred Submit Button (Proceed to Payment) -->
                     <div class="submit-container-centered">
@@ -288,6 +320,37 @@
             const step1IncompleteHint = document.getElementById("step1-incomplete-hint");
             const enquiryLink = document.getElementById("slot-enquiry-link");
             const enquiryBaseHref = enquiryLink.getAttribute("href");
+
+            // Postcode: bookings are taken only in the districts the service areas list. The
+            // server has the last word (BookingController); this tells the visitor as soon as
+            // the postcode is typed, before the rest of the form is filled in.
+            const postcodeInput = document.getElementById("Postcode");
+            const postcodeNotice = document.getElementById("postcode-not-served");
+            const postcodeNoticeDistrict = document.getElementById("postcode-not-served-district");
+            const postcodeEnquiryLink = document.getElementById("postcode-enquiry-link");
+            const servedDistricts = @Json.Serialize(Model.ServedPostcodeDistricts);
+            const wholePostcode = /^[A-Z]{1,2}[0-9][A-Z0-9]?[0-9][A-Z]{2}$/;
+
+            // "KT9" for "kt9 2qn", or null while the postcode is still being typed.
+            function postcodeDistrict() {
+                const compact = postcodeInput.value.replace(/\s+/g, "").toUpperCase();
+                return wholePostcode.test(compact) ? compact.slice(0, -3) : null;
+            }
+
+            // An empty list means no area lists a district, and then the check is off. A few
+            // London districts carry a letter ("SW1A"); those count as their district ("SW1").
+            function isPostcodeServed() {
+                const district = postcodeDistrict();
+                if (!district || servedDistricts.length === 0) return true;
+                const withoutLetter = /[A-Z]$/.test(district) ? district.slice(0, -1) : district;
+                return servedDistricts.includes(district) || servedDistricts.includes(withoutLetter);
+            }
+
+            function updatePostcodeNotice() {
+                const served = isPostcodeServed();
+                postcodeNotice.hidden = served;
+                if (!served) postcodeNoticeDistrict.textContent = postcodeDistrict();
+            }
 
             // Sidebar Elements
             const summaryService = document.getElementById("summary-service");
@@ -389,7 +452,9 @@
                     if (dateInput.value) params.set("date", dateInput.value);
                 }
                 const query = params.toString();
-                enquiryLink.setAttribute("href", query ? `${enquiryBaseHref}?${query}` : enquiryBaseHref);
+                const href = query ? `${enquiryBaseHref}?${query}` : enquiryBaseHref;
+                enquiryLink.setAttribute("href", href);
+                postcodeEnquiryLink.setAttribute("href", href);
             }
 
             serviceSelect.addEventListener("change", updateSummaryPrice);
@@ -403,6 +468,11 @@
             if (!initialDateStr) {
                 initialDateStr = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
             }
+
+            // When a sent form comes back to the customer, the slot they had chosen. The page
+            // opens on that slot's day (BookingController) and picks the slot again once the
+            // day's slots have loaded, if it is still free (PROJECT_STATE Section 3cb).
+            let keptSlotId = @Json.Serialize(Model.SlotId == Guid.Empty ? string.Empty : Model.SlotId.ToString());
 
             let calCurrentDate = new Date(initialDateStr); // Month navigator pointer
             let selectedDateStr = initialDateStr; 
@@ -507,12 +577,20 @@
 
                 fetch(`/Booking/GetSlots?date=${dateStr}`)
                     .then(res => {
+                        // 429: more days looked at in a minute than one visitor is allowed
+                        // (RateLimits.SlotLookupsPolicy). It passes by itself, so say that.
+                        if (res.status === 429) throw new Error("too-many-lookups");
                         if (!res.ok) throw new Error("Failed to load slots");
                         return res.json();
                     })
                     .then(slots => {
                         slotsContainer.innerHTML = "";
                         hiddenSlotInput.value = "";
+
+                        // The slot to pick again, once: the one the customer had chosen when the
+                        // form came back to them, if this is its day.
+                        const slotToRestore = dateStr === initialDateStr ? keptSlotId : "";
+                        keptSlotId = "";
 
                         if (!slots || slots.length === 0) {
                             slotsCountBadge.textContent = "0 Available";
@@ -550,6 +628,11 @@
                                     updateSummaryDateTime();
                                     checkFormValidity();
                                 });
+
+                                if (slotToRestore && slot.id.toLowerCase() === slotToRestore.toLowerCase()) {
+                                    btn.classList.add("selected");
+                                    hiddenSlotInput.value = slot.id;
+                                }
                             } else {
                                 btn.className = "slot-selection-btn slot-unavailable";
                                 btn.disabled = true;
@@ -566,6 +649,13 @@
                     })
                     .catch(err => {
                         console.error(err);
+                        hiddenSlotInput.value = "";
+                        checkFormValidity();
+                        if (err.message === "too-many-lookups") {
+                            slotsCountBadge.textContent = "Please wait";
+                            slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100 slots-message-full-width'>You have looked at a lot of days in a short while. Please wait a minute, then pick the day again.</div>";
+                            return;
+                        }
                         slotsCountBadge.textContent = "Error";
                         slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100 slots-message-full-width'>Error loading slots.</div>";
                     });
@@ -592,10 +682,11 @@
                 const email = document.getElementById("Email")?.value.trim();
                 const phone = document.getElementById("PhoneNumber")?.value.trim();
                 const address = document.getElementById("Address")?.value.trim();
-                const isStep2Done = Boolean(isStep1Done && firstName && lastName && email && phone && address);
+                const postcode = postcodeInput.value.trim();
+                const isStep2Done = Boolean(isStep1Done && firstName && lastName && email && phone && address && postcode && isPostcodeServed());
 
                 const problemDesc = document.getElementById("ProblemDescription")?.value.trim();
-                const isStep3Done = Boolean(isStep2Done && problemDesc && problemDesc.length >= 10);
+                const isStep3Done = Boolean(isStep2Done && problemDesc && problemDesc.length >= 20);
 
                 // Check scroll position
                 const scrollPos = window.scrollY + 250;
@@ -657,17 +748,21 @@
                 const email = document.getElementById("Email")?.value.trim();
                 const phone = document.getElementById("PhoneNumber")?.value.trim();
                 const address = document.getElementById("Address")?.value.trim();
+                const postcode = postcodeInput.value.trim();
                 const problemDesc = document.getElementById("ProblemDescription")?.value.trim();
 
-                const isFormValid = isStep1Done && firstName && lastName && email && phone && address && problemDesc && problemDesc.length >= 10;
+                // 20 is the description's minimum on the server (BookingInputModel). A postcode
+                // outside our districts keeps the button off: its notice says what to do instead.
+                const isFormValid = isStep1Done && firstName && lastName && email && phone && address && postcode && isPostcodeServed() && problemDesc && problemDesc.length >= 20;
 
+                updatePostcodeNotice();
                 submitBtn.disabled = !isFormValid;
                 step1IncompleteHint.classList.toggle("d-none", isStep1Done);
                 updateStepperState();
             }
 
             // Input Event Listeners
-            const inputsToWatch = ["CustomerFirstName", "CustomerLastName", "Email", "PhoneNumber", "Address", "ProblemDescription"];
+            const inputsToWatch = ["CustomerFirstName", "CustomerLastName", "Email", "PhoneNumber", "Address", "Postcode", "ProblemDescription"];
             inputsToWatch.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener("input", checkFormValidity);

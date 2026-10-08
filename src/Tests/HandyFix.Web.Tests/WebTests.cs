@@ -231,8 +231,9 @@
             // The phone, WhatsApp link and email live once in GlobalConstants (PROJECT_STATE Section
             // 3bu). Before that a made-up number was typed by hand into 12 views in three spellings,
             // one of them an old-brand number the rename had missed. The header and footer are on
-            // every page, so every page must carry the real links. "07123456789" by itself stays
-            // allowed: the booking form shows it as an example of what a customer types.
+            // every page, so every page must carry the real links. The forms' example of what a
+            // customer types is 07700 900123, from the range Ofcom keeps for made-up numbers, so
+            // it can never be anyone's.
             var client = this.server.CreateClient();
             var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();

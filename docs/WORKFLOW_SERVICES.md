@@ -12,9 +12,11 @@ How a service gets created, priced, and given a hero image — and the one part 
 > for a service via a dropdown.
 
 The three categories that exist (`Plumbing`, `Handyman`, `Small Building & Refurbishments`) come from
-`src/Data/HandyFix.Data/Seeding/ServiceCategoriesSeeder.cs`, which only **inserts** — it never
-updates a row that already exists by name. Changing a category's name, description, or adding a
-fourth category means **editing the seeder and restarting the app**, not a form submission.
+`src/Data/HandyFix.Data/Seeding/ServiceCategoriesSeeder.cs`, which runs at every start: it adds a
+category that is missing and writes its own name, description and slug over one that exists.
+Changing a category's name, description, or adding a fourth category means **editing the seeder
+and restarting the app**, not a form submission. (Services are different: their seeder fills an
+empty table once and then leaves them to the admin panel, see Step 2.)
 
 `ICategoriesService.CreateAsync(name, description)` exists in the service layer but has **no caller
 anywhere in the app** — it's reachable from a test, not from any admin action. Don't assume it's
@@ -77,14 +79,22 @@ It leaves every public list and the booking page, its own page answers 404, the 
 stops showing it among the typical jobs, and it no longer counts towards its category's "from"
 price. It stays in the admin list with an Inactive badge, and bookings already made keep it.
 
-### Starting values come from a migration and the seeder, once
+### The seeder fills an empty table, once
 
-`ServicesSeeder` runs on every start and overwrites price, duration and category on existing rows
-(`PROJECT_STATE.md` Section 3ak; roadmap L3 item 9 is the fix). It does **not** touch Display Order
-or the Popular tick on a row that exists: it sets them only when it inserts one. Databases that
-already had the services got their starting values from the migration
-`AddDisplayOrderAndIsPopularToService`, which runs once. So what an admin sets in the panel
-survives a deploy.
+`ServicesSeeder` puts its list of services into the Services table **only when the table is
+empty**, deleted rows counted. That is a new database: production's first start, a fresh clone, a
+test. From then on the catalogue belongs to the admin panel, and the seeder never adds, changes or
+restores a service. What an admin sets, renames or deletes survives every deploy.
+
+- **A change to the seeder's list does not reach a database that already has services.** Make it
+  in the admin panel on each environment, or write a migration, as
+  `AddDisplayOrderAndIsPopularToService` did for the starting Display Order and Popular values.
+- **Why it is this strict** (`PROJECT_STATE.md` Section 3cb): the seeder used to look each service
+  up by name at every start. A renamed service came back under its old name, a deleted one made
+  the insert hit the unique index on `Slug` and stopped the site from starting, and price,
+  duration and category were written over whatever an admin had set.
+- One part still runs at every start: a service with no `ServiceImage` row gets one, pointing at
+  the path its picture would have (Step 3).
 
 ### The admin controller names its controller and area when it redirects
 
@@ -122,8 +132,8 @@ case both call it rather than rebuilding the string (the admin controller used t
 inline before the Phase 3 thin-controller pass moved the whole image-update flow into the service —
 see `PROJECT_STATE.md` Section 3aa). What's left, genuinely unable to reach that method:
 
-1. `src/Data/HandyFix.Data/Seeding/ServicesSeeder.cs:79` — back-fills `ServiceImage` rows for seeded
-   services that don't have one yet. Can't call the helper: `HandyFix.Data` doesn't (and
+1. `src/Data/HandyFix.Data/Seeding/ServicesSeeder.cs`, its last loop — back-fills `ServiceImage` rows
+   for services that don't have one yet. Can't call the helper: `HandyFix.Data` doesn't (and
    architecturally shouldn't) depend on `HandyFix.Services`.
 2. `ServiceViewModel`'s Mapster fallback — if a service has no `ImageUrl` row at all, falls back to
    this path by convention.
@@ -169,6 +179,7 @@ coverage-diagram key.
 | A new service sits in the wrong place in a list | Its Display Order. 100 is the shared default; a lower number moves it up. |
 | The home page shows a service nobody ticked as popular | Fewer than four are ticked, so the list fills the grid. Tick four. |
 | A service's page answers 404 | It is switched off (Active unticked) or deleted. |
+| A service added to `ServicesSeeder.cs` never appears | The table already has services, so the seeder does nothing. Add it in the admin panel. |
 | "Another service already has this name" on a name that is nowhere in the list | A deleted service had it. Its row is kept for past bookings, and its slug with it. Use a different name. |
 | Category tile image doesn't show | It's a manual file drop (`{slug}-category-hero.webp`), not an admin upload — confirm the file actually exists on disk. |
 

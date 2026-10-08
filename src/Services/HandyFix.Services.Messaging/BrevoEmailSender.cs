@@ -23,7 +23,7 @@ namespace HandyFix.Services.Messaging
             this.apiKey = apiKey;
         }
 
-        public async Task SendEmailAsync(string from, string fromName, string to, string subject, string htmlContent, IEnumerable<EmailAttachment> attachments = null)
+        public async Task SendEmailAsync(string from, string fromName, string to, string subject, string htmlContent, IEnumerable<EmailAttachment> attachments = null, string replyTo = null)
         {
             if (string.IsNullOrWhiteSpace(subject) && string.IsNullOrWhiteSpace(htmlContent))
             {
@@ -34,6 +34,7 @@ namespace HandyFix.Services.Messaging
             {
                 Sender = new BrevoContact { Email = from, Name = fromName },
                 To = new[] { new BrevoContact { Email = to } },
+                ReplyTo = string.IsNullOrWhiteSpace(replyTo) ? null : new BrevoContact { Email = replyTo.Trim() },
                 Subject = subject,
                 HtmlContent = htmlContent,
                 Attachment = attachments?.Any() == true
@@ -65,6 +66,10 @@ namespace HandyFix.Services.Messaging
 
             [JsonPropertyName("to")]
             public BrevoContact[] To { get; set; }
+
+            [JsonPropertyName("replyTo")]
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            public BrevoContact ReplyTo { get; set; }
 
             [JsonPropertyName("subject")]
             public string Subject { get; set; }

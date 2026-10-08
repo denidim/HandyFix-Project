@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Home.JoinTeamInputModel
+@using HandyFix.Web.Services.Forms
 
 <div class="page-container services-page">
     <!-- Header & Breadcrumbs -->
@@ -39,7 +40,7 @@
                 <div class="col-md-6 mb-3 mb-md-0">
                     <div class="form-field">
                         <label class="form-label fw-semibold" asp-for="Name">Full Name</label>
-                        <input asp-for="Name" class="form-control" placeholder="John Doe" required />
+                        <input asp-for="Name" class="form-control" placeholder="John Doe" autocomplete="name" required />
                         <span asp-validation-for="Name" class="validation-error"></span>
                     </div>
                 </div>
@@ -47,7 +48,7 @@
                 <div class="col-md-6">
                     <div class="form-field">
                         <label class="form-label fw-semibold" asp-for="Email">Email Address</label>
-                        <input asp-for="Email" class="form-control" type="email" placeholder="john@example.com" required />
+                        <input asp-for="Email" class="form-control" type="email" placeholder="john@example.com" autocomplete="email" required />
                         <span asp-validation-for="Email" class="validation-error"></span>
                     </div>
                 </div>
@@ -58,7 +59,7 @@
                 <div class="col-md-6 mb-3 mb-md-0">
                     <div class="form-field">
                         <label class="form-label fw-semibold" asp-for="PhoneNumber">Phone Number</label>
-                        <input asp-for="PhoneNumber" class="form-control" placeholder="+44 7123 456789" required />
+                        <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="07700 900123" autocomplete="tel" required />
                         <span asp-validation-for="PhoneNumber" class="validation-error"></span>
                     </div>
                 </div>
@@ -121,6 +122,8 @@
                 <textarea asp-for="AboutYou" class="form-control resize-none" rows="5" placeholder="Recent work, qualifications or certifications, and the areas you can cover..."></textarea>
                 <span asp-validation-for="AboutYou" class="validation-error"></span>
             </div>
+
+            <partial name="_FormGuard" model="@FormNames.JoinTeam" />
 
             <!-- Submit Button -->
             <div class="pt-2">
