@@ -41,6 +41,63 @@ namespace HandyFix.Services.Data.Tests
             Assert.True(technician.IsActive);
         }
 
+        // One name is enough for the roster (PROJECT_STATE.md Section 3cd). A last name left out,
+        // or typed as spaces, is kept as no value, and the name shown is the first name alone
+        // with no space hanging after it.
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public async Task CreateAsyncShouldTakeATechnicianWithAFirstNameAlone(string lastName)
+        {
+            using var dbContext = NewDbContext();
+            using var techniciansRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var bookingsRepo = new EfDeletableEntityRepository<Booking>(dbContext);
+
+            var service = new TechniciansService(techniciansRepo, bookingsRepo);
+
+            var id = await service.CreateAsync(new TechnicianAdminInputModel
+            {
+                FirstName = "Zapryan",
+                LastName = lastName,
+                PhoneNumber = "020 3951 5915",
+                IsActive = true,
+            });
+
+            Assert.Null(dbContext.Technicians.Single(x => x.Id == id).LastName);
+            Assert.Equal("Zapryan", Assert.Single(await service.GetAllAsync<TechnicianAdminListViewModel>()).FullName);
+            Assert.Equal("Zapryan", Assert.Single(await service.GetAssignableAsync<TechnicianOptionViewModel>()).FullName);
+            Assert.Equal("Zapryan", (await service.GetByIdAsync<TechnicianAdminInputModel>(id)).FullName);
+        }
+
+        [Fact]
+        public async Task UpdateAsyncShouldDropALastNameThatWasCleared()
+        {
+            using var dbContext = NewDbContext();
+            using var techniciansRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var bookingsRepo = new EfDeletableEntityRepository<Booking>(dbContext);
+
+            var technician = new Technician { FirstName = "John", LastName = "Doe", PhoneNumber = "07000000000" };
+            dbContext.Technicians.Add(technician);
+            await dbContext.SaveChangesAsync();
+
+            var service = new TechniciansService(techniciansRepo, bookingsRepo);
+
+            await service.UpdateAsync(technician.Id, new TechnicianAdminInputModel
+            {
+                Id = technician.Id,
+                FirstName = "Zapryan",
+                LastName = null,
+                PhoneNumber = "020 3951 5915",
+                IsActive = true,
+            });
+
+            Technician updated = dbContext.Technicians.Single(x => x.Id == technician.Id);
+
+            Assert.Equal("Zapryan", updated.FirstName);
+            Assert.Null(updated.LastName);
+        }
+
         [Fact]
         public async Task UpdateAsyncShouldChangeDetailsAndActiveFlag()
         {

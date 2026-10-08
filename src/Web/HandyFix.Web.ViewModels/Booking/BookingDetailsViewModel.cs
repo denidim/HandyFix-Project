@@ -4,6 +4,7 @@ namespace HandyFix.Web.ViewModels.Booking
     using System.Collections.Generic;
     using System.Linq;
 
+    using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
     using HandyFix.Web.ViewModels.Administration.Technicians;
@@ -62,7 +63,7 @@ namespace HandyFix.Web.ViewModels.Booking
                 .Map(dest => dest.ScheduledTime, src => src.AvailabilitySlot != null ? src.AvailabilitySlot.StartTime : default)
                 .Map(dest => dest.ScheduledEndTime, src => src.AvailabilitySlot != null ? src.AvailabilitySlot.EndTime : default)
                 .Map(dest => dest.CreatedOn, src => src.CreatedOn)
-                .Map(dest => dest.TechnicianName, src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}" : "Not Assigned")
+                .Map(dest => dest.TechnicianName, src => src.Technician != null ? NameFormat.Full(src.Technician.FirstName, src.Technician.LastName) : "Not Assigned")
                 .Map(dest => dest.PaymentStatus, src => src.Payments != null && src.Payments.Any() ? src.Payments.OrderByDescending(p => p.CreatedOn).First().Status.Name : "Unpaid")
                 .Map(dest => dest.Services, src => src.BookingServices != null ? src.BookingServices.Select(x => x.Service.Name) : new List<string>())
                 .Map(dest => dest.ImageUrls, src => src.Images != null ? src.Images.Select(x => x.ImageUrl) : new List<string>());

@@ -3,6 +3,7 @@ namespace HandyFix.Web.ViewModels.Administration.Technicians
     using System;
     using System.ComponentModel.DataAnnotations;
 
+    using HandyFix.Common;
     using HandyFix.Services.Mapping;
 
     using IMapFromTechnician = HandyFix.Services.Mapping.IMapFrom<HandyFix.Data.Models.Technician>;
@@ -16,7 +17,8 @@ namespace HandyFix.Web.ViewModels.Administration.Technicians
         [Display(Name = "First Name")]
         public string FirstName { get; set; }
 
-        [Required(ErrorMessage = "Last name is required.")]
+        // Not required: one name is enough to tell a customer who is coming. A box left empty
+        // reaches here as null, which the length rule lets through.
         [StringLength(100, MinimumLength = 2, ErrorMessage = "Last name must be between 2 and 100 characters.")]
         [Display(Name = "Last Name")]
         public string LastName { get; set; }
@@ -32,5 +34,7 @@ namespace HandyFix.Web.ViewModels.Administration.Technicians
 
         [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
+
+        public string FullName => NameFormat.Full(this.FirstName, this.LastName);
     }
 }

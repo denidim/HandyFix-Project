@@ -5,6 +5,7 @@ namespace HandyFix.Services.Data.Bookings
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data.Common;
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
@@ -275,7 +276,7 @@ namespace HandyFix.Services.Data.Bookings
                     // admin approves, the assignment has been made. The deposit confirmation
                     // deliberately says nothing about it (see PaymentsService).
                     var technicianBlock = booking.Technician != null
-                        ? $@"<p>Your technician for this visit is <strong>{EmailText.Encode(booking.Technician.FirstName)} {EmailText.Encode(booking.Technician.LastName)}</strong>
+                        ? $@"<p>Your technician for this visit is <strong>{EmailText.Encode(NameFormat.Full(booking.Technician.FirstName, booking.Technician.LastName))}</strong>
                              (<a href=""tel:{EmailText.Encode(booking.Technician.PhoneNumber)}"">{EmailText.Encode(booking.Technician.PhoneNumber)}</a>).</p>"
                         : "<p>A professional technician is scheduled for your address at the selected slot.</p>";
 

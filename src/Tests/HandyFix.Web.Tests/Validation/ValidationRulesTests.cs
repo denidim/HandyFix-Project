@@ -4,6 +4,7 @@
     using System.ComponentModel.DataAnnotations;
     using System.Linq;
 
+    using HandyFix.Web.ViewModels.Administration.Technicians;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.ServiceAreas;
@@ -320,6 +321,25 @@
                     nameof(JoinTeamInputModel.AboutYou),
                 },
                 InvalidFields(model));
+        }
+
+        // The technician form in the admin panel: a last name is not asked for, so one name is
+        // enough for the roster, but one that is given still has to be a name
+        // (PROJECT_STATE.md Section 3cd).
+        [Theory]
+        [InlineData(null, true)]
+        [InlineData("Stone", true)]
+        [InlineData("S", false)]
+        public void TheTechnicianFormShouldNotAskForALastName(string lastName, bool allowed)
+        {
+            var model = new TechnicianAdminInputModel
+            {
+                FirstName = "Zapryan",
+                LastName = lastName,
+                PhoneNumber = "020 3951 5915",
+            };
+
+            Assert.Equal(allowed, !InvalidFields(model).Any());
         }
 
         private static ServiceAreaAdminInputModel AreaWithDistricts(string districts)

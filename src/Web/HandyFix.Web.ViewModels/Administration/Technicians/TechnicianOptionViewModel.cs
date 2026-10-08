@@ -2,6 +2,7 @@ namespace HandyFix.Web.ViewModels.Administration.Technicians
 {
     using System;
 
+    using HandyFix.Common;
     using HandyFix.Data.Models;
 
     using IMapFromTechnician = HandyFix.Services.Mapping.IMapFrom<HandyFix.Data.Models.Technician>;
@@ -20,6 +21,6 @@ namespace HandyFix.Web.ViewModels.Administration.Technicians
 
         public bool IsActive { get; set; }
 
-        public string FullName => $"{this.FirstName} {this.LastName}";
+        public string FullName => NameFormat.Full(this.FirstName, this.LastName);
     }
 }

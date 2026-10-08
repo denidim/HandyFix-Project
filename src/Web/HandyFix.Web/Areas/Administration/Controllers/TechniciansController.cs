@@ -40,7 +40,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
             await this.techniciansService.CreateAsync(model);
 
-            this.TempData["SuccessMessage"] = $"Technician \"{model.FirstName} {model.LastName}\" was added. They can now be assigned to bookings.";
+            this.TempData["SuccessMessage"] = $"Technician \"{model.FullName}\" was added. They can now be assigned to bookings.";
             return this.RedirectToAction(nameof(this.Index));
         }
 
@@ -78,8 +78,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             await this.techniciansService.UpdateAsync(model.Id.Value, model);
 
             this.TempData["SuccessMessage"] = existing.IsActive && !model.IsActive
-                ? $"Technician \"{model.FirstName} {model.LastName}\" was deactivated. Existing bookings keep their assignment, but they can't be assigned to new ones."
-                : $"Technician \"{model.FirstName} {model.LastName}\" was updated.";
+                ? $"Technician \"{model.FullName}\" was deactivated. Existing bookings keep their assignment, but they can't be assigned to new ones."
+                : $"Technician \"{model.FullName}\" was updated.";
 
             return this.RedirectToAction(nameof(this.Index));
         }
@@ -96,8 +96,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             var deleted = await this.techniciansService.DeleteAsync(id);
 
             this.TempData[deleted ? "SuccessMessage" : "ErrorMessage"] = deleted
-                ? $"Technician \"{technician.FirstName} {technician.LastName}\" was deleted."
-                : $"\"{technician.FirstName} {technician.LastName}\" has bookings assigned and can't be deleted - deactivate them instead so past jobs keep their history.";
+                ? $"Technician \"{technician.FullName}\" was deleted."
+                : $"\"{technician.FullName}\" has bookings assigned and can't be deleted - deactivate them instead so past jobs keep their history.";
 
             return this.RedirectToAction(nameof(this.Index));
         }
