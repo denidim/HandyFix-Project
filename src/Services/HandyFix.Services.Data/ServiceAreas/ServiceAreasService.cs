@@ -9,6 +9,7 @@ namespace HandyFix.Services.Data.ServiceAreas
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
     using HandyFix.Web.ViewModels.ServiceAreas;
+    using HandyFix.Web.ViewModels.Validation;
 
     using Microsoft.EntityFrameworkCore;
 
@@ -84,6 +85,7 @@ namespace HandyFix.Services.Data.ServiceAreas
                 IsFeatured = model.IsFeatured,
                 IntroCopy = model.IntroCopy,
                 LocalNeighbourhoodsCopy = model.LocalNeighbourhoodsCopy,
+                PostcodeDistricts = NormalizeDistricts(model.PostcodeDistricts),
             };
 
             await this.areasRepository.AddAsync(area);
@@ -110,10 +112,35 @@ namespace HandyFix.Services.Data.ServiceAreas
             area.IsFeatured = model.IsFeatured;
             area.IntroCopy = model.IntroCopy;
             area.LocalNeighbourhoodsCopy = model.LocalNeighbourhoodsCopy;
+            area.PostcodeDistricts = NormalizeDistricts(model.PostcodeDistricts);
 
             await this.areasRepository.SaveChangesAsync();
 
             await this.ReplaceFaqsAsync(id, model.Faqs);
+        }
+
+        public async Task<IReadOnlyList<string>> GetServedPostcodeDistrictsAsync()
+        {
+            List<string> lists = await this.areasRepository.All()
+                .Where(x => x.PostcodeDistricts != null && x.PostcodeDistricts != string.Empty)
+                .Select(x => x.PostcodeDistricts)
+                .ToListAsync();
+
+            return lists
+                .SelectMany(UkPostcode.ParseDistricts)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
+        }
+
+        public async Task<bool> IsPostcodeServedAsync(string postcode)
+        {
+            IReadOnlyList<string> districts = await this.GetServedPostcodeDistrictsAsync();
+
+            // With no district listed on any area there is nothing to check against, and the
+            // check is off. Turning every booking away because a list is empty would be worse
+            // than taking one from too far.
+            return districts.Count == 0 || UkPostcode.IsInDistricts(postcode, districts);
         }
 
         public async Task DeleteAsync(Guid id)
@@ -161,6 +188,13 @@ namespace HandyFix.Services.Data.ServiceAreas
         private static string NormalizeSlug(string slug)
         {
             return string.IsNullOrWhiteSpace(slug) ? string.Empty : slug.Trim().ToLowerInvariant();
+        }
+
+        // "kt5,KT6 , kt7" is saved as "KT5, KT6, KT7"; an empty box as no list at all.
+        private static string NormalizeDistricts(string districts)
+        {
+            IReadOnlyList<string> parsed = UkPostcode.ParseDistricts(districts);
+            return parsed.Count == 0 ? null : string.Join(", ", parsed);
         }
 
         public IEnumerable<ServiceAreaFaqValidationError> PruneAndValidateFaqs(ServiceAreaAdminInputModel model)

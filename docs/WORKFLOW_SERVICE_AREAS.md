@@ -12,8 +12,26 @@ Create or edit the area at **`/Administration/ServiceAreas`**.
 
 > The admin area in this project is routed as `Administration`, not `Admin`. `/Admin/...` will 404.
 
-Fields: Name, Slug, Region, Drive Time, Display Order, Featured flag, Intro Copy, Local
-Neighbourhoods Copy, and a dynamic list of FAQs.
+Fields: Name, Slug, Region, Drive Time, Display Order, Postcode Districts, Featured flag, Intro
+Copy, Local Neighbourhoods Copy, and a dynamic list of FAQs.
+
+### Postcode Districts decide where bookings are taken
+
+A district is the first half of a postcode: the `KT9` of `KT9 2QN`. Each area lists the ones it
+covers, with commas between them (`KT5, KT6, KT7`); the list page shows them in its Postcodes
+column. Typing is tidied on save, and the field can be left empty.
+
+The public booking page takes a booking **only for a postcode whose district some area lists**.
+Anyone else is shown an enquiry link and the phone number instead of the payment step
+(`WORKFLOW_BOOKINGS.md`, Step 2). So:
+
+- To start taking bookings somewhere new, add its district to the nearest area. It does not need
+  an area page of its own: Ashtead's `KT21` sits on the Epsom area.
+- Deleting an area removes its districts from the check with it.
+- If no area lists any district, the check is off and every postcode is accepted.
+
+The 15 seeded areas start with the lists in `ServiceAreasSeeder.cs`; a database that already had
+them got the same lists from the `AddPostcodeDistrictsToServiceArea` migration.
 
 Saving auto-propagates to every consumer, because they all query `IServiceAreasService` live:
 
@@ -26,6 +44,7 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 | Pricing & Category local-area badges | `ServicesController` |
 | `LocalBusiness` / `FAQPage` / `BreadcrumbList` JSON-LD | `Areas/Details.cshtml` |
 | `sitemap.xml` | `SeoController.Sitemap` (generated, never static) |
+| Which postcodes the booking page accepts | `IServiceAreasService.IsPostcodeServedAsync` |
 
 ### Things worth knowing
 

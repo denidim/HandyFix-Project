@@ -38,6 +38,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 0,
                     IsFeatured = true,
                     DisplayOrder = 1,
+                    Districts = "KT9",
                     IntroCopy = "Chessington is where it all starts for us - our technicians are dispatched from right here, so it's usually our fastest turnaround area for both handyman and plumbing work.",
                     NeighbourhoodsCopy = "From the family estates around Hook and Malden Rushett to the flats near Chessington World of Adventures and the older housing along Garrison Lane, we know the mix of properties that make up Chessington inside out.",
                     Faqs = new[]
@@ -54,6 +55,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 8,
                     IsFeatured = false,
                     DisplayOrder = 2,
+                    Districts = "KT5, KT6, KT7",
                     IntroCopy = "Surbiton's blend of Victorian conservation-area streets and riverside apartments means every job is a little different, and our technicians are equipped for both.",
                     NeighbourhoodsCopy = "We regularly work on the grand Victorian terraces around Maple Road and St Mark's Hill, the mansion flats near Surbiton station, and the quieter family homes towards Berrylands and Tolworth.",
                     Faqs = new[]
@@ -70,6 +72,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 10,
                     IsFeatured = true,
                     DisplayOrder = 3,
+                    Districts = "KT1, KT2, KT3",
                     IntroCopy = "From the Victorian terraces around Norbiton to the riverside flats by Kingston Bridge and the family homes stretching out towards Coombe and Berrylands, our local technicians already know the mix of properties that make up Kingston. One call books the right person for the job.",
                     NeighbourhoodsCopy = "We're on your side of the borough already - most Kingston bookings are slotted the same week, with no travel charge and no call-out fee within our standard service area.",
                     Faqs = new[]
@@ -86,6 +89,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 10,
                     IsFeatured = false,
                     DisplayOrder = 4,
+                    Districts = "KT4, KT17, KT19",
                     IntroCopy = "Worcester Park and Ewell's rows of well-kept 1930s semis are some of the most consistent handyman and plumbing work we take on - reliable properties, straightforward access, and usually a quick turnaround.",
                     NeighbourhoodsCopy = "Whether it's a semi off Green Lane in Worcester Park or a family home near Ewell Village and Bourne Hall, we know the layout of these estates well enough to arrive prepared.",
                     Faqs = new[]
@@ -102,6 +106,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 12,
                     IsFeatured = true,
                     DisplayOrder = 5,
+                    Districts = "KT17, KT18, KT19, KT21",
                     IntroCopy = "Epsom has been one of our busiest areas for years, from the terraces near the town centre to the larger detached homes out towards the Downs and the racecourse.",
                     NeighbourhoodsCopy = "We're familiar with everything from the Victorian streets around Epsom station to the newer developments near Nonsuch Park and the period homes bordering Epsom Common.",
                     Faqs = new[]
@@ -118,6 +123,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 15,
                     IsFeatured = true,
                     DisplayOrder = 6,
+                    Districts = "SM1, SM2, SM3, SM5, SM6",
                     IntroCopy = "Sutton's mix of busy high-street flats and the leafier streets towards Cheam and Belmont keeps our technicians well practised across almost every job type.",
                     NeighbourhoodsCopy = "From the Victorian terraces near Sutton station to the larger family homes around Rosehill and Benhilton, we've built up a good working knowledge of the area.",
                     Faqs = new[]
@@ -134,6 +140,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 15,
                     IsFeatured = false,
                     DisplayOrder = 7,
+                    Districts = "SM7, KT20",
                     IntroCopy = "Banstead's mix of large detached homes and village-edge cottages means jobs here are often bigger in scope, and our technicians carry the range of parts to match.",
                     NeighbourhoodsCopy = "We know the leafy roads around Banstead Downs and the High Street, as well as the newer executive homes towards Nork and Tattenham Corner.",
                     Faqs = new[]
@@ -150,6 +157,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 15,
                     IsFeatured = false,
                     DisplayOrder = 8,
+                    Districts = "KT8, KT10",
                     IntroCopy = "Cobham's mix of period cottages around the village, larger family homes along Fairmile and Downside, and the newer executive developments near Stoke D'Abernon all come with their own maintenance quirks. Esher shares much of that same character, from the streets near Sandown Park to the homes towards Claygate and West End.",
                     NeighbourhoodsCopy = "Our technicians carry the range of tools and parts to handle a large executive home or a village cottage without a second visit, and materials for higher-spec fixtures are always agreed with you up front.",
                     Faqs = new[]
@@ -166,6 +174,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 15,
                     IsFeatured = false,
                     DisplayOrder = 9,
+                    Districts = "KT22, KT23",
                     IntroCopy = "Leatherhead sits right on our route down the A24, so it's an easy area for us to reach quickly, whatever the job.",
                     NeighbourhoodsCopy = "Our technicians regularly work on the period homes around Leatherhead town centre, the riverside properties near the River Mole, and the family estates towards Fetcham and the Oxshott borders.",
                     Faqs = new[]
@@ -182,6 +191,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 20,
                     IsFeatured = false,
                     DisplayOrder = 10,
+                    Districts = "SW19, SW20, SM4",
                     IntroCopy = "Wimbledon's grand Victorian houses and the busy flats around the Broadway and station keep our plumbing and carpentry teams equally busy.",
                     NeighbourhoodsCopy = "We're well practised on the large period homes near Wimbledon Village and the Common, as well as the denser housing around South Wimbledon and Merton Park.",
                     Faqs = new[]
@@ -198,6 +208,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 20,
                     IsFeatured = true,
                     DisplayOrder = 11,
+                    Districts = "KT11",
                     IntroCopy = "Cobham's mix of period cottages around the village, larger family homes along Fairmile and Downside, and the newer executive developments near Stoke D'Abernon all come with their own maintenance quirks - from listed-building-sensitive repairs to keeping a large garden and outbuildings in order. Our technicians carry the range of tools and parts to handle both without a second visit.",
                     NeighbourhoodsCopy = "Materials for higher-spec fixtures are sourced and agreed with you up front, so a premium finish never means a surprise on the invoice.",
                     Faqs = new[]
@@ -214,6 +225,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 22,
                     IsFeatured = false,
                     DisplayOrder = 12,
+                    Districts = "KT12, KT13",
                     IntroCopy = "Walton-on-Thames and Weybridge's riverside setting brings a steady mix of premium apartments and larger family homes, many changing hands or tenants often enough that a reliable local handyman matters.",
                     NeighbourhoodsCopy = "We regularly work along the riverside developments near Walton Bridge, the period housing around Weybridge village, and the newer estates towards St George's Hill.",
                     Faqs = new[]
@@ -230,6 +242,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 25,
                     IsFeatured = false,
                     DisplayOrder = 13,
+                    Districts = "RH1, RH2",
                     IntroCopy = "Reigate's mix of period homes near the town centre and larger properties towards the hill keeps our technicians on their toes, and it's an area we're keen to build a stronger presence in.",
                     NeighbourhoodsCopy = "From the Georgian and Victorian houses around Reigate High Street to the family homes towards Redhill and Merstham, we cover the full spread of property types here.",
                     Faqs = new[]
@@ -246,6 +259,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 25,
                     IsFeatured = false,
                     DisplayOrder = 14,
+                    Districts = "RH4, RH5",
                     IntroCopy = "Dorking's market-town character means a lot of older housing stock, and our technicians are experienced at working carefully around period features without slowing the job down.",
                     NeighbourhoodsCopy = "We cover the historic streets around Dorking High Street, the surrounding villages towards Box Hill, and the newer estates on the town's edges.",
                     Faqs = new[]
@@ -262,6 +276,7 @@ namespace HandyFix.Data.Seeding
                     DriveTimeMinutes = 23,
                     IsFeatured = true,
                     DisplayOrder = 15,
+                    Districts = "GU1, GU2, GU4",
                     IntroCopy = "Guildford is the largest town in our Surrey coverage, from the historic streets around the castle and High Street to the newer estates on the outskirts - and we're ready to take on the full range of handyman and plumbing work it brings.",
                     NeighbourhoodsCopy = "We work across the period terraces near the town centre, the family homes towards Merrow and Burpham, and the newer developments around Park Barn.",
                     Faqs = new[]
@@ -293,6 +308,10 @@ namespace HandyFix.Data.Seeding
                     LocalNeighbourhoodsCopy = item.NeighbourhoodsCopy,
                     IsFeatured = item.IsFeatured,
                     DisplayOrder = item.DisplayOrder,
+
+                    // The districts each area starts with. Databases that already had the areas
+                    // got the same lists from the AddPostcodeDistrictsToServiceArea migration.
+                    PostcodeDistricts = item.Districts,
                 };
 
                 var displayOrder = 1;

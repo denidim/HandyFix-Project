@@ -16,7 +16,7 @@
     // Areas are seeded into an empty table and are the admin's from then on, like the services
     // (PROJECT_STATE.md Section 3cb). On Sqlite, so the foreign key between an area and its
     // questions is a real one.
-    public class ServiceAreasSeederTests : IDisposable
+    public sealed class ServiceAreasSeederTests : IDisposable
     {
         private readonly SqliteConnection connection;
         private readonly ApplicationDbContext dbContext;
@@ -47,6 +47,18 @@
             Assert.All(
                 this.dbContext.ServiceAreas.Include(a => a.Faqs).ToList(),
                 area => Assert.Equal(new[] { 1, 2 }, area.Faqs.Select(f => f.DisplayOrder).OrderBy(o => o)));
+        }
+
+        // Each area starts with the postcode districts it covers, which is what the booking form
+        // checks a postcode against.
+        [Fact]
+        public async Task SeedAsyncShouldGiveEveryAreaItsPostcodeDistricts()
+        {
+            await this.SeedAsync();
+
+            Assert.DoesNotContain(this.dbContext.ServiceAreas, a => string.IsNullOrWhiteSpace(a.PostcodeDistricts));
+            Assert.Equal("KT9", this.dbContext.ServiceAreas.Single(a => a.Slug == "chessington").PostcodeDistricts);
+            Assert.Equal("SW19, SW20, SM4", this.dbContext.ServiceAreas.Single(a => a.Slug == "wimbledon").PostcodeDistricts);
         }
 
         // The admin panel deletes an area for good. The seeder looked each area up by slug and

@@ -16,7 +16,7 @@
     // The catalogue is seeded into an empty table and never touched again: from then on it is the
     // admin's (PROJECT_STATE.md Section 3cb). These run on Sqlite, not InMemory, because the fault
     // they guard was a unique-index violation, and InMemory enforces no indexes.
-    public class ServicesSeederTests : IDisposable
+    public sealed class ServicesSeederTests : IDisposable
     {
         private readonly SqliteConnection connection;
         private readonly ApplicationDbContext dbContext;

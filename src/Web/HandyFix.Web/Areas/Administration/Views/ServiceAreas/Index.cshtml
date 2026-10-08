@@ -73,6 +73,7 @@
                     <th class="px-4 py-3 font-label-sm uppercase">Area</th>
                     <th class="px-4 py-3 font-label-sm uppercase">Region</th>
                     <th class="px-4 py-3 font-label-sm uppercase">Drive Time</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">Postcodes</th>
                     <th class="px-4 py-3 font-label-sm uppercase">FAQs</th>
                     <th class="px-4 py-3 font-label-sm uppercase">Status</th>
                     <th class="px-4 py-3 font-label-sm uppercase text-right">Actions</th>
@@ -99,6 +100,7 @@
                                 <span class="px-3 py-1 rounded-full font-label-sm tint-neutral">@area.Region</span>
                             </td>
                             <td class="px-4 py-3 font-body-md text-primary">@area.DriveTimeMinutes mins</td>
+                            <td class="px-4 py-3 font-body-md text-on-surface-variant">@(string.IsNullOrWhiteSpace(area.PostcodeDistricts) ? "None listed" : area.PostcodeDistricts)</td>
                             <td class="px-4 py-3 font-body-md text-on-surface-variant">@area.FaqCount</td>
                             <td class="px-4 py-3">
                                 @if (area.IsFeatured)
@@ -131,7 +133,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center p-4 text-muted">No service areas found. Add one to get started.</td>
+                        <td colspan="7" class="text-center p-4 text-muted">No service areas found. Add one to get started.</td>
                     </tr>
                 }
             </tbody>

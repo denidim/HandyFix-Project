@@ -26,6 +26,8 @@ namespace HandyFix.Web.ViewModels.ServiceAreas
 
         public bool IsFeatured { get; set; }
 
+        public string PostcodeDistricts { get; set; }
+
         public int FaqCount { get; set; }
 
         public void CreateMappings(TypeAdapterConfig config)
