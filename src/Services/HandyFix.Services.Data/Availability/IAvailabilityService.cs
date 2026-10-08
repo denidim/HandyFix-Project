@@ -16,6 +16,12 @@ namespace HandyFix.Services.Data.Availability
 
         Task<IEnumerable<AvailabilitySlot>> GetAllSlotsForDayAsync(DateTime date);
 
+        /// <summary>
+        /// The day a slot is on, or null if there is no such slot. The booking page opens again
+        /// on that day when a customer's form comes back to them.
+        /// </summary>
+        Task<DateTime?> GetSlotDateAsync(Guid slotId);
+
         Task<bool> BookSlotAsync(Guid slotId, Guid bookingId);
 
         Task<bool> BlockSlotAsync(Guid slotId);

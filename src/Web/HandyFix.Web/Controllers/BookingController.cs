@@ -239,6 +239,16 @@ namespace HandyFix.Web.Controllers
             model.ServedPostcodeDistricts = await this.serviceAreasService.GetServedPostcodeDistrictsAsync();
             model.SelectedServiceId = model.ServiceId;
 
+            // The page opens again on the day the customer had chosen, and its script picks their
+            // slot again if it is still free. It used to open on today with no slot, so a form
+            // that came back for any reason (a postcode we do not cover, a photo too large, the
+            // person check not finished) meant choosing the day and the time a second time. A
+            // slot lost to someone else arrives here already cleared, and stays cleared.
+            if (model.SlotId != Guid.Empty)
+            {
+                model.SelectedDate = await this.availabilityService.GetSlotDateAsync(model.SlotId);
+            }
+
             // The tabs are not part of what the form posts, so the category comes back from the
             // service. Without it the page reopened on Plumbing and swapped a handyman service
             // for the plumbing default, at the plumbing rate (PROJECT_STATE Section 3ca).

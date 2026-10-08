@@ -142,6 +142,11 @@ street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
   carries on. Before `PROJECT_STATE.md` Section 3cb a failed send showed the customer "an error
   occurred while saving your booking" for a booking that had been saved, or an error page on the
   way back from paying. The paid-deposit notice to the company has the customer as its Reply-To.
+- **A form that comes back opens where the customer left it.** Whatever sent it back (a field the
+  rules refuse, a postcode we do not cover, a photo too large, the person check), the page opens on
+  the day of the slot they had chosen and its script picks that slot again if it is still free
+  (`IAvailabilityService.GetSlotDateAsync`, `keptSlotId` in the page). The one exception is a slot
+  somebody else took meanwhile: it is cleared, and the customer picks another.
 - **Photos never cost a booking.** A photo the site does not take (more than 5, over 15 MB, not
   JPEG/PNG/WEBP) brings the form back with the reason. If storage itself cannot be reached, the
   booking is taken without its photos and the failure is logged.

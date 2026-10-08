@@ -469,6 +469,11 @@
                 initialDateStr = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
             }
 
+            // When a sent form comes back to the customer, the slot they had chosen. The page
+            // opens on that slot's day (BookingController) and picks the slot again once the
+            // day's slots have loaded, if it is still free (PROJECT_STATE Section 3cb).
+            let keptSlotId = @Json.Serialize(Model.SlotId == Guid.Empty ? string.Empty : Model.SlotId.ToString());
+
             let calCurrentDate = new Date(initialDateStr); // Month navigator pointer
             let selectedDateStr = initialDateStr; 
             dateInput.value = selectedDateStr;
@@ -582,6 +587,11 @@
                         slotsContainer.innerHTML = "";
                         hiddenSlotInput.value = "";
 
+                        // The slot to pick again, once: the one the customer had chosen when the
+                        // form came back to them, if this is its day.
+                        const slotToRestore = dateStr === initialDateStr ? keptSlotId : "";
+                        keptSlotId = "";
+
                         if (!slots || slots.length === 0) {
                             slotsCountBadge.textContent = "0 Available";
                             slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100 slots-message-full-width'>No availability on this date. Please pick another date.</div>";
@@ -618,6 +628,11 @@
                                     updateSummaryDateTime();
                                     checkFormValidity();
                                 });
+
+                                if (slotToRestore && slot.id.toLowerCase() === slotToRestore.toLowerCase()) {
+                                    btn.classList.add("selected");
+                                    hiddenSlotInput.value = slot.id;
+                                }
                             } else {
                                 btn.className = "slot-selection-btn slot-unavailable";
                                 btn.disabled = true;

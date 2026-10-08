@@ -81,6 +81,41 @@
             availabilityService.Verify(x => x.GetAvailableDatesAsync(It.IsAny<int>()), Times.Once);
         }
 
+        // A form that comes back used to open on today with no slot chosen, so the customer
+        // picked the day and the time a second time. It opens on the day of the slot they had
+        // (PROJECT_STATE Section 3cb). A slot lost to someone else is cleared first, and then
+        // there is no day to go back to.
+        [Fact]
+        public async Task IndexPostShouldReopenTheFormOnTheDayOfTheSlotTheCustomerHadChosen()
+        {
+            var controller = BuildController(out _, out var availabilityService, out var bookingsService, out _);
+            var model = ValidModel();
+            availabilityService.Setup(x => x.GetSlotDateAsync(model.SlotId)).ReturnsAsync(new DateTime(2026, 10, 20));
+            controller.ModelState.AddModelError(nameof(BookingInputModel.Email), "Please enter a full email address, for example name@example.com.");
+
+            var result = await controller.Index(model);
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(new DateTime(2026, 10, 20), returnedModel.SelectedDate);
+            Assert.Equal(model.SlotId, returnedModel.SlotId);
+        }
+
+        [Fact]
+        public async Task IndexPostShouldNotGoBackToTheDayOfASlotThatWasTaken()
+        {
+            var controller = BuildController(out _, out var availabilityService, out var bookingsService, out _);
+            bookingsService
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()))
+                .ThrowsAsync(new SlotUnavailableException("Slot already booked."));
+
+            var result = await controller.Index(ValidModel());
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(Guid.Empty, returnedModel.SlotId);
+            Assert.Null(returnedModel.SelectedDate);
+            availabilityService.Verify(x => x.GetSlotDateAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
         [Fact]
         public async Task IndexPostShouldReopenTheFormOnTheCategoryOfTheChosenService()
         {

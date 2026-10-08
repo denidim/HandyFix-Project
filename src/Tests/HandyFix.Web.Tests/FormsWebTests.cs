@@ -110,6 +110,43 @@
             Assert.Matches("name=\"Postcode\"[^>]*value=\"m1 1ae\"", content);
         }
 
+        // Through the whole stack, with a real slot from the test database: the page that comes
+        // back tells its script the slot's day and the slot, so the calendar opens there and the
+        // slot is picked again.
+        [Fact]
+        public async Task ABookingFormThatComesBackOpensOnTheDayAndSlotTheCustomerHadChosen()
+        {
+            Guid slotId;
+            DateTime slotDay;
+            using (IServiceScope scope = this.server.Services.CreateScope())
+            {
+                ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var slot = dbContext.AvailabilitySlots.Where(s => !s.IsBooked && !s.IsBlocked).OrderByDescending(s => s.StartTime).First();
+                slotId = slot.Id;
+                slotDay = slot.StartTime.Date;
+            }
+
+            var client = this.server.CreateClient();
+            Dictionary<string, string> fields = ValidBooking();
+            fields["SlotId"] = slotId.ToString();
+            fields["Postcode"] = "m1 1ae";
+
+            var response = await PostFormAsync(client, "/Booking", fields);
+
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.Contains("let initialDateStr = \"" + slotDay.ToString("yyyy-MM-dd") + "\";", content);
+            Assert.Contains("let keptSlotId = \"" + slotId + "\";", content);
+        }
+
+        // A page opened fresh has no slot to go back to.
+        [Fact]
+        public async Task ABookingPageOpenedFreshHasNoSlotToPickAgain()
+        {
+            var content = await (await this.server.CreateClient().GetAsync("/Booking")).Content.ReadAsStringAsync();
+
+            Assert.Contains("let keptSlotId = \"\";", content);
+        }
+
         [Fact]
         public async Task BookingWithDetailsTheRulesRefuseComesBackWithEachMessage()
         {
