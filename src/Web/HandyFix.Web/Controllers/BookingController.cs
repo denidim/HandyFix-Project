@@ -12,12 +12,15 @@ namespace HandyFix.Web.Controllers
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Services.Forms;
+    using HandyFix.Web.ViewModels;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
     using HandyFix.Web.ViewModels.Validation;
 
     using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.RateLimiting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 
@@ -99,14 +102,15 @@ namespace HandyFix.Web.Controllers
 
                 return this.View(model);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return this.View("Error");
+                return this.SomethingWentWrong(ex);
             }
         }
 
         [HttpGet]
         [Route("Booking/GetSlots")]
+        [EnableRateLimiting(RateLimits.SlotLookupsPolicy)]
         public async Task<IActionResult> GetSlots(string date)
         {
             if (string.IsNullOrWhiteSpace(date) || !DateTime.TryParse(date, out DateTime parsedDate))
@@ -119,14 +123,16 @@ namespace HandyFix.Web.Controllers
                 IEnumerable<AvailabilitySlotViewModel> slots = await this.availabilityService.GetAllSlotsForDateAsync<AvailabilitySlotViewModel>(parsedDate);
                 return this.Json(slots);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                this.logger.LogError(ex, "The time slots for a date could not be loaded");
                 return this.StatusCode(500, new { message = "An error occurred while loading time slots." });
             }
         }
 
         [HttpPost]
         [Route("Booking")]
+        [EnableRateLimiting(RateLimits.FormsPolicy)]
         public async Task<IActionResult> Index(BookingInputModel model)
         {
             if (!this.ModelState.IsValid)
@@ -202,6 +208,18 @@ namespace HandyFix.Web.Controllers
             }
         }
 
+        // The site's own "something went wrong" page, with the status that says so. These spots
+        // used to show a leftover developer page and write nothing to the log, so a booking page
+        // that failed left no trace of why (PROJECT_STATE Section 3cb).
+        private IActionResult SomethingWentWrong(Exception ex)
+        {
+            this.logger.LogError(ex, "A booking page could not be shown");
+
+            ViewResult page = this.View("StatusPage", StatusPageViewModel.For(StatusCodes.Status500InternalServerError));
+            page.StatusCode = StatusCodes.Status500InternalServerError;
+            return page;
+        }
+
         private async Task<IActionResult> RedisplayBookingForm(BookingInputModel model, string errorMessage = null)
         {
             if (errorMessage != null)
@@ -236,9 +254,9 @@ namespace HandyFix.Web.Controllers
 
                 return this.View(booking);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return this.View("Error");
+                return this.SomethingWentWrong(ex);
             }
         }
     }

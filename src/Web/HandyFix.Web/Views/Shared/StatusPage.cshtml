@@ -1,0 +1,32 @@
+@model StatusPageViewModel
+@{
+    this.ViewData["Title"] = Model.Title;
+}
+
+@* The site's own page for a request that ended in an error status: not found, sent too often,
+   expired, broken (PROJECT_STATE Section 3cb). The status code itself is set by whoever shows it. *@
+<div class="page-container services-page">
+    <section class="services-header">
+        <div class="services-header-content text-center">
+            <h1 class="services-hero-title">@Model.Heading</h1>
+            <p class="services-subtitle">@Model.Message</p>
+        </div>
+    </section>
+
+    <div class="info-canvas">
+        <div class="glass-card rounded-xl p-4 p-md-5 text-center">
+            <div class="d-flex flex-wrap align-items-center justify-content-center gap-3">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined" aria-hidden="true">home</span>
+                    <span>Back to the home page</span>
+                </a>
+                <a asp-route="ServicesList" class="btn btn-outline-primary">Our services</a>
+                <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary">Contact us</a>
+            </div>
+            <p class="font-body-md text-on-surface-variant mt-4 mb-0">
+                Or call <a href="tel:@GlobalConstants.BusinessPhoneInternational">@GlobalConstants.BusinessPhone</a>,
+                or <a href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener">message us on WhatsApp</a>.
+            </p>
+        </div>
+    </div>
+</div>

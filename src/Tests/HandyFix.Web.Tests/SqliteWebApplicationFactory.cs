@@ -51,10 +51,17 @@
             builder.UseEnvironment(Environments.Development);
 
             // A test sends a form the instant it has fetched it, which is exactly what the form
-            // guard takes for a program (PROJECT_STATE.md Section 3cb). So this host asks for no
-            // minimum time; the tests of the guard itself put the real one back.
+            // guard takes for a program, and a class of tests sends more forms in a second than
+            // one visitor is allowed in ten minutes (PROJECT_STATE.md Section 3cb). So this host
+            // asks for no minimum time and all but lifts the limit; the tests of the guard and of
+            // the limit put the real values back.
             builder.ConfigureAppConfiguration((context, configuration) => configuration.AddInMemoryCollection(
-                new Dictionary<string, string> { [FormGuard.MinimumSecondsKey] = "0" }));
+                new Dictionary<string, string>
+                {
+                    [FormGuard.MinimumSecondsKey] = "0",
+                    [RateLimits.FormPostsKey] = "100000",
+                    [RateLimits.SlotLookupsKey] = "100000",
+                }));
 
             builder.ConfigureServices(services =>
             {

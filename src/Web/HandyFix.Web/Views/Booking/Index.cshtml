@@ -570,6 +570,9 @@
 
                 fetch(`/Booking/GetSlots?date=${dateStr}`)
                     .then(res => {
+                        // 429: more days looked at in a minute than one visitor is allowed
+                        // (RateLimits.SlotLookupsPolicy). It passes by itself, so say that.
+                        if (res.status === 429) throw new Error("too-many-lookups");
                         if (!res.ok) throw new Error("Failed to load slots");
                         return res.json();
                     })
@@ -629,6 +632,13 @@
                     })
                     .catch(err => {
                         console.error(err);
+                        hiddenSlotInput.value = "";
+                        checkFormValidity();
+                        if (err.message === "too-many-lookups") {
+                            slotsCountBadge.textContent = "Please wait";
+                            slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100 slots-message-full-width'>You have looked at a lot of days in a short while. Please wait a minute, then pick the day again.</div>";
+                            return;
+                        }
                         slotsCountBadge.textContent = "Error";
                         slotsContainer.innerHTML = "<div class='text-danger p-3 text-center w-100 slots-message-full-width'>Error loading slots.</div>";
                     });

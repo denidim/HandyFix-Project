@@ -2,7 +2,6 @@ namespace HandyFix.Web.Controllers
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
     using System.Threading.Tasks;
@@ -20,6 +19,7 @@ namespace HandyFix.Web.Controllers
 
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.RateLimiting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
 
@@ -138,6 +138,7 @@ namespace HandyFix.Web.Controllers
 
         [HttpPost]
         [Route("Contact")]
+        [EnableRateLimiting(RateLimits.FormsPolicy)]
         public async Task<IActionResult> Contact(ContactInputModel model)
         {
             if (!this.ModelState.IsValid)
@@ -202,6 +203,7 @@ namespace HandyFix.Web.Controllers
 
         [HttpPost]
         [Route("JoinOurTeam")]
+        [EnableRateLimiting(RateLimits.FormsPolicy)]
         public async Task<IActionResult> JoinTeam(JoinTeamInputModel model)
         {
             if (!this.ModelState.IsValid)
@@ -299,13 +301,6 @@ namespace HandyFix.Web.Controllers
             this.ViewData["Title"] = "Cookie Policy";
             this.ViewData["MetaDescription"] = "How Plumbing Handyman Surrey uses cookies on this website.";
             return this.View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return this.View(
-                new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
         }
 
         // The home page's grid holds four. The services an admin marked popular come first, in
