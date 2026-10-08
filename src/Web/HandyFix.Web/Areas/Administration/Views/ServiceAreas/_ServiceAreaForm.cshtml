@@ -11,7 +11,7 @@
 
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-        <div class="row">
+        <div class="row gy-4">
             <div class="col-md-6 form-group">
                 <label asp-for="Name" class="form-label font-label-sm text-on-surface-variant mb-2">Area Name</label>
                 <input asp-for="Name" id="area-name" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row gy-4">
             <div class="col-md-4 form-group">
                 <label asp-for="Region" class="form-label font-label-sm text-on-surface-variant mb-2">Region</label>
                 <input asp-for="Region" class="form-control py-3 admin-form-control form-pad-standard" list="region-suggestions" maxlength="100" required />
