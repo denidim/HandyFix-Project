@@ -33,10 +33,12 @@ services:
       # purpose, so set them in .env before deploying a build that has it.
       Turnstile__SiteKey: ${TURNSTILE_SITE_KEY}
       Turnstile__SecretKey: ${TURNSTILE_SECRET_KEY}
-      # No real Stripe account yet -- lets staging demo the full booking
-      # flow via the sandbox bypass. Remove this and set Stripe__SecretKey
-      # instead once a real (test-mode) Stripe account exists.
-      Stripe__AllowSandboxOutsideDevelopment: "true"
+      # Stripe in test mode: the key of a Stripe sandbox, never a live one, so
+      # a booking made on staging charges nobody. The webhook secret belongs
+      # to that sandbox's webhook, the one that points at this server. The
+      # booking pages fail without the key, on purpose.
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET}
       # CloudflareR2:* settings for photo uploads.
       CloudflareR2__AccessKeyId: ${R2_ACCESS_KEY_ID}
       CloudflareR2__SecretAccessKey: ${R2_SECRET_ACCESS_KEY}
