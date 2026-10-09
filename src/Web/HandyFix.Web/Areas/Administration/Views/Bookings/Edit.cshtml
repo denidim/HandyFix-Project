@@ -1,0 +1,70 @@
+@model HandyFix.Web.ViewModels.Booking.JobEditInputModel
+@using HandyFix.Common
+@using HandyFix.Web.ViewModels.Booking
+@{
+    var reference = BookingReference.Short(Model.Id);
+    this.ViewData["Title"] = $"Edit Job {reference}";
+}
+
+<!-- Breadcrumbs & Header Actions -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
+    <nav class="breadcrumb-nav flex-wrap mb-0" aria-label="breadcrumb">
+        <a asp-area="Administration" asp-controller="Dashboard" asp-action="Index">Admin</a>
+        <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+        <a asp-area="Administration" asp-controller="Bookings" asp-action="Index">Jobs</a>
+        <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+        <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@Model.Id">Job #@reference</a>
+        <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+        <span class="breadcrumb-current">Edit the Details</span>
+    </nav>
+    <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span>Back to the Job</span>
+    </a>
+</div>
+
+<div class="mb-5">
+    <h2 class="admin-page-title">Edit the Details of Job #@reference</h2>
+    <p class="font-body-md text-on-surface-variant admin-page-subtitle">Put right a name, a phone number, an address, the service or what the job is. The day and time are changed with "Move" on the job's page.</p>
+</div>
+
+<div class="rounded-xl shadow-sm p-5 p-md-5 admin-card">
+    <form asp-area="Administration" asp-controller="Bookings" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="d-flex flex-column gap-5" id="job-edit-form">
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <partial name="_JobCustomerFields" model="Model" />
+
+        @if (!Model.CameFromWebsite)
+        {
+            <!-- A website booking has no such box: the site set it, and it stays "Website" -->
+            <div class="row gy-4">
+                <div class="col-md-6 form-group">
+                    <label asp-for="Source" class="form-label font-label-sm text-on-surface-variant mb-2">Came From</label>
+                    <select asp-for="Source" class="form-control py-3 admin-form-control form-pad-standard" required>
+                        @foreach (var source in JobDetailsInputModel.WrittenInSources)
+                        {
+                            <option value="@source" selected="@(Model.Source == source)">@source</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Source" class="text-danger small"></span>
+                </div>
+            </div>
+        }
+
+        <partial name="_JobWorkFields" model="Model" />
+
+        <div class="pt-4 d-flex flex-column flex-md-row align-items-center justify-content-end gap-3 form-actions-row">
+            <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline font-button-text admin-btn-outline btn-py3-px8">Cancel</a>
+            <button class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg btn-py3-px8" type="submit">
+                <span class="material-symbols-outlined">save</span>
+                <span>Save the Details</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -29,12 +29,18 @@ namespace HandyFix.Services.Data.Bookings
     {
         private const int MaxCancelReasonLength = 500;
 
+        // How a "Details changed" history line starts, and the sentence in it that keeps what
+        // the job was described as before.
+        private const string DetailsChangedPrefix = "Details changed.";
+        private const string DescriptionSentence = "The job was described as: \"{0}\"";
+
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
         private readonly IDeletableEntityRepository<Service> serviceRepository;
         private readonly IDeletableEntityRepository<AvailabilitySlot> slotRepository;
         private readonly IDeletableEntityRepository<BookingStatus> statusRepository;
         private readonly IDeletableEntityRepository<BookingImage> imageRepository;
         private readonly IDeletableEntityRepository<Technician> technicianRepository;
+        private readonly IDeletableEntityRepository<BookingService> bookingServiceRepository;
         private readonly IAvailabilityService availabilityService;
         private readonly IPaymentsService paymentsService;
         private readonly IDbQueryRunner dbQueryRunner;
@@ -49,6 +55,7 @@ namespace HandyFix.Services.Data.Bookings
             IDeletableEntityRepository<BookingStatus> statusRepository,
             IDeletableEntityRepository<BookingImage> imageRepository,
             IDeletableEntityRepository<Technician> technicianRepository,
+            IDeletableEntityRepository<BookingService> bookingServiceRepository,
             IAvailabilityService availabilityService,
             IPaymentsService paymentsService,
             IDbQueryRunner dbQueryRunner,
@@ -62,6 +69,7 @@ namespace HandyFix.Services.Data.Bookings
             this.statusRepository = statusRepository;
             this.imageRepository = imageRepository;
             this.technicianRepository = technicianRepository;
+            this.bookingServiceRepository = bookingServiceRepository;
             this.availabilityService = availabilityService;
             this.paymentsService = paymentsService;
             this.dbQueryRunner = dbQueryRunner;
@@ -644,6 +652,207 @@ namespace HandyFix.Services.Data.Bookings
             };
         }
 
+        public async Task<JobEditResult> EditDetailsAsync(JobEditInputModel model)
+        {
+            Booking booking = await this.bookingRepository.All()
+                .Include(x => x.Status)
+                .Include(x => x.Technician)
+                .Include(x => x.BookingServices)
+                .FirstOrDefaultAsync(x => x.Id == model.Id);
+            if (booking == null)
+            {
+                return new JobEditResult { Outcome = JobEditOutcome.BookingNotFound };
+            }
+
+            // Asked again here, not only by the page that shows the button: a job cancelled
+            // while the form sat open keeps the details it was cancelled with.
+            if (!BookingRules.CanEditDetails(booking.Status?.Name))
+            {
+                return new JobEditResult { Outcome = JobEditOutcome.NotAllowed };
+            }
+
+            var firstName = NullIfBlank(model.CustomerFirstName);
+            var lastName = NullIfBlank(model.CustomerLastName);
+            var phoneNumber = NullIfBlank(model.PhoneNumber);
+            var email = NullIfBlank(model.Email);
+            var address = NullIfBlank(model.Address);
+            var description = NullIfBlank(model.ProblemDescription);
+
+            if (firstName == null || phoneNumber == null)
+            {
+                throw new InvalidOperationException("A job needs a first name and a phone number.");
+            }
+
+            // The site emails a website customer: when the deposit is paid and when a technician
+            // is picked. That job keeps an address to email.
+            var cameFromWebsite = booking.Source == BookingSource.Website;
+            if (cameFromWebsite && email == null)
+            {
+                return new JobEditResult { Outcome = JobEditOutcome.EmailNeeded };
+            }
+
+            // A website booking stays one, whatever the form sends. A written-in job can be moved
+            // between the other ways a job arrives and never to "Website": with no deposit and no
+            // slot it would sit in the list looking like a paid booking's twin.
+            BookingSource source = booking.Source;
+            if (!cameFromWebsite)
+            {
+                if (model.Source == null || !JobDetailsInputModel.WrittenInSources.Contains(model.Source.Value))
+                {
+                    return new JobEditResult { Outcome = JobEditOutcome.SourceNeeded };
+                }
+
+                source = model.Source.Value;
+            }
+
+            // A job has one service or none. The one it has is compared by its id, so a job
+            // booked with a service that was deleted since keeps it when the form is saved as
+            // it stands, and nothing is looked up that the admin did not change. A line taken off
+            // earlier is left out by name: the query does not load one, but a context that took
+            // it off itself still holds it in the job's list.
+            BookingService serviceLine = booking.BookingServices
+                .Where(x => !x.IsDeleted)
+                .OrderBy(x => x.CreatedOn)
+                .FirstOrDefault();
+            var serviceChanged = model.ServiceId != serviceLine?.ServiceId;
+            Service newService = null;
+            if (serviceChanged && model.ServiceId.HasValue)
+            {
+                newService = await this.serviceRepository.All().FirstOrDefaultAsync(x => x.Id == model.ServiceId.Value);
+                if (newService == null)
+                {
+                    return new JobEditResult { Outcome = JobEditOutcome.ServiceNotFound };
+                }
+            }
+
+            // What changed, twice over: in a word each for the line the admin is shown, and in a
+            // sentence each, with what the box held before, for the job's history.
+            var changed = new List<string>();
+            var sentences = new List<string>();
+
+            if (IsDifferent(booking.CustomerFirstName, firstName))
+            {
+                changed.Add("first name");
+                sentences.Add(JobHistory.Was("First name", booking.CustomerFirstName, "empty"));
+                booking.CustomerFirstName = firstName;
+            }
+
+            if (IsDifferent(booking.CustomerLastName, lastName))
+            {
+                changed.Add("last name");
+                sentences.Add(JobHistory.Was("Last name", booking.CustomerLastName, "empty"));
+                booking.CustomerLastName = lastName;
+            }
+
+            if (IsDifferent(booking.PhoneNumber, phoneNumber))
+            {
+                changed.Add("phone number");
+                sentences.Add(JobHistory.Was("Phone number", booking.PhoneNumber, "empty"));
+                booking.PhoneNumber = phoneNumber;
+            }
+
+            var emailChanged = IsDifferent(booking.Email, email);
+            if (emailChanged)
+            {
+                changed.Add("email");
+                sentences.Add(JobHistory.Was("Email", booking.Email, "empty"));
+                booking.Email = email;
+            }
+
+            if (IsDifferent(booking.Address, address))
+            {
+                changed.Add("address");
+                sentences.Add(JobHistory.Was("Address", booking.Address, "not written down"));
+                booking.Address = address;
+            }
+
+            if (serviceChanged)
+            {
+                // Asked for among deleted services too, so the line can name the one it was.
+                var oldServiceName = serviceLine == null
+                    ? null
+                    : await this.serviceRepository.AllWithDeleted()
+                        .Where(x => x.Id == serviceLine.ServiceId)
+                        .Select(x => x.Name)
+                        .FirstOrDefaultAsync();
+
+                changed.Add("service");
+                sentences.Add(JobHistory.Was("Service", oldServiceName, "not picked"));
+
+                if (newService == null)
+                {
+                    this.bookingServiceRepository.Delete(serviceLine);
+                }
+                else if (serviceLine == null)
+                {
+                    // Added through its own repository, not through the job's list: a new object
+                    // found on a job that is already loaded, and arriving with a key, is taken
+                    // for a row that exists and updated instead of inserted (BookingHistoryEntry
+                    // has the same story).
+                    await this.bookingServiceRepository.AddAsync(new BookingService
+                    {
+                        BookingId = booking.Id,
+                        ServiceId = newService.Id,
+                        PriceAtBooking = newService.BasePrice,
+                        Quantity = 1,
+                    });
+                }
+                else
+                {
+                    serviceLine.ServiceId = newService.Id;
+                    serviceLine.PriceAtBooking = newService.BasePrice;
+                }
+
+                // The service's price is the job's estimate. What the job came to and what has
+                // been paid are left alone.
+                booking.TotalAmount = newService?.BasePrice;
+            }
+
+            if (booking.Source != source)
+            {
+                changed.Add("where it came from");
+                sentences.Add($"Where it came from was {booking.Source}.");
+                booking.Source = source;
+            }
+
+            // Last, because it is the one box that can be long: it gets what is left of the line.
+            if (IsDifferent(booking.ProblemDescription, description))
+            {
+                var room = JobHistory.LineRoom
+                    - DetailsChangedPrefix.Length
+                    - sentences.Sum(x => x.Length + 1)
+                    - DescriptionSentence.Length;
+
+                changed.Add("what the job is");
+                sentences.Add(booking.ProblemDescription == null
+                    ? "The job had no description."
+                    : string.Format(DescriptionSentence, JobHistory.Shorten(booking.ProblemDescription, room)));
+                booking.ProblemDescription = description;
+            }
+
+            if (changed.Count == 0)
+            {
+                return new JobEditResult { Outcome = JobEditOutcome.Unchanged };
+            }
+
+            booking.History.Add(JobHistory.Line(DetailsChangedPrefix + " " + string.Join(" ", sentences)));
+            await this.bookingRepository.SaveChangesAsync();
+
+            // Saving a new address sends nothing. The emails the site sent this customer before
+            // went to the old one, and the admin's page says so.
+            var emailChangedOnWebsiteBooking = cameFromWebsite && emailChanged;
+
+            return new JobEditResult
+            {
+                Outcome = JobEditOutcome.Saved,
+                Changed = changed,
+                EmailChangedOnWebsiteBooking = emailChangedOnWebsiteBooking,
+                TechnicianName = emailChangedOnWebsiteBooking && booking.Technician != null
+                    ? NameFormat.Full(booking.Technician.FirstName, booking.Technician.LastName)
+                    : null,
+            };
+        }
+
         public async Task<bool> SaveNotesAsync(Guid bookingId, string notes)
         {
             Booking booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
@@ -805,6 +1014,12 @@ namespace HandyFix.Services.Data.Bookings
         private static bool IsAPrice(decimal amount)
         {
             return amount > 0m && amount <= 100000m;
+        }
+
+        // An empty box and a box never filled in are the same thing to the admin.
+        private static bool IsDifferent(string held, string typed)
+        {
+            return !string.Equals(held ?? string.Empty, typed ?? string.Empty, StringComparison.Ordinal);
         }
 
         // The one customer email that names the technician, sent when an admin picks one. It used
