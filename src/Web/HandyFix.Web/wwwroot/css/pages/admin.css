@@ -694,6 +694,73 @@
   font-size: 9px;
 }
 
+/* The calendar's day arrows, one each side of "Jobs on" and "Slots for". Unlit: a quiet grey
+   ring. Lit, when the day it leads to has something to show: filled, with a halo that stays
+   and a ring that beats outwards, so it is seen without being looked for. */
+.day-arrow {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-full);
+  background-color: transparent;
+  color: var(--outline);
+  text-decoration: none;
+  transition: background-color var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal);
+}
+
+.day-arrow .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.day-arrow:hover,
+.day-arrow:focus-visible {
+  border-color: var(--secondary);
+  color: var(--secondary);
+  text-decoration: none;
+}
+
+.day-arrow-lit {
+  border-color: var(--secondary);
+  background-color: var(--secondary);
+  color: var(--on-secondary);
+  box-shadow: 0 0 0 4px rgba(0, 101, 145, 0.25), 0 3px 8px rgba(0, 101, 145, 0.45);
+}
+
+.day-arrow-lit:hover,
+.day-arrow-lit:focus-visible {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.day-arrow-lit::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border: 2px solid var(--secondary);
+  border-radius: var(--radius-full);
+  opacity: 0;
+  pointer-events: none;
+  animation: day-arrow-beat 1.8s ease-out infinite;
+}
+
+@keyframes day-arrow-beat {
+  0% { transform: scale(1); opacity: 0.75; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+/* For someone who has asked their device for less movement: the halo alone. */
+@media (prefers-reduced-motion: reduce) {
+  .day-arrow-lit::after {
+    animation: none;
+  }
+}
+
 .slot-tag-available { background-color: rgba(78, 222, 163, 0.2); color: var(--on-tertiary-container); }
 .slot-tag-booked { background-color: rgba(57, 184, 253, 0.2); color: var(--on-secondary-container); }
 .slot-tag-blocked { background-color: var(--outline-variant); color: var(--on-surface-variant); }

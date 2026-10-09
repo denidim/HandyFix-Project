@@ -17,5 +17,9 @@ namespace HandyFix.Web.ViewModels.Administration.Calendar
         /// slot, so the slots alone would show its hour as free.
         /// </summary>
         public IEnumerable<BookingDetailsViewModel> Jobs { get; set; } = new List<BookingDetailsViewModel>();
+
+        public CalendarNeighbourDayViewModel PreviousDay { get; set; } = new CalendarNeighbourDayViewModel();
+
+        public CalendarNeighbourDayViewModel NextDay { get; set; } = new CalendarNeighbourDayViewModel();
     }
 }

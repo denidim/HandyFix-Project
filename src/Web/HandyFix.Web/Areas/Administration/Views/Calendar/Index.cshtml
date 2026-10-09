@@ -1,8 +1,25 @@
 @model HandyFix.Web.ViewModels.Administration.Calendar.CalendarIndexViewModel
 @using HandyFix.Common
+@using HandyFix.Web.ViewModels.Administration.Calendar
 @{
     this.ViewData["Title"] = "Manage Calendar Slots";
     var targetDate = Model.TargetDate;
+
+    // One arrow beside a heading: a day back or a day on. It is lit when the day it leads to has
+    // something for that heading's list (jobs for "Jobs on", slots for "Slots for"), and it
+    // works either way (PROJECT_STATE.md Section 3ch).
+    void DayArrow(string id, CalendarNeighbourDayViewModel day, bool lit, string direction, string what)
+    {
+        var says = day.Date.ToString("ddd d MMM") + (lit ? ": has " : ": no ") + what;
+
+        // A plain link, its address worked out here: a tag helper inside a helper like this one
+        // would have to be awaited.
+        var address = this.Url.Action("Index", "Calendar", new { area = "Administration", date = day.Date.ToString("yyyy-MM-dd") });
+
+        <a href="@address" id="@id" class="day-arrow @(lit ? "day-arrow-lit" : string.Empty)" title="@says" aria-label="@((direction == "left" ? "The day before, " : "The day after, ") + says)">
+            <span class="material-symbols-outlined">chevron_@direction</span>
+        </a>
+    }
 }
 
 <!-- Sticky Header -->
@@ -35,13 +52,17 @@
     <!-- Left Column: the day's jobs, then its slots -->
     <div class="col-lg-7 mb-4">
         <!-- Every job on this day, written-in ones too: those hold no slot below -->
-        <div class="d-flex align-items-center justify-content-between mb-4">
+        @* gap-3: room for the lit arrow's ring to beat without reaching the button. *@
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
             <h2 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
                 <span class="material-symbols-outlined text-secondary">engineering</span>
+                @{ DayArrow("jobs-day-before", Model.PreviousDay, Model.PreviousDay.HasJobs, "left", "jobs"); }
                 <span>Jobs on @targetDate.ToString("dd MMM yyyy")</span>
+                @{ DayArrow("jobs-day-after", Model.NextDay, Model.NextDay.HasJobs, "right", "jobs"); }
             </h2>
             <a asp-area="Administration" asp-controller="Bookings" asp-action="Create" asp-route-date="@targetDate.ToString("yyyy-MM-dd")" class="btn btn-secondary font-button-text admin-btn-compact d-flex align-items-center gap-2">
-                <span class="material-symbols-outlined fs-18">add</span>
+                @* No plus on a phone: with it the button reached the arrow beside it. *@
+                <span class="material-symbols-outlined fs-18 d-none d-md-inline-block">add</span>
                 <span>Write a job in</span>
             </a>
         </div>
@@ -71,10 +92,12 @@
             }
         </div>
 
-        <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
             <h2 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
                 <span class="material-symbols-outlined text-secondary">schedule</span>
+                @{ DayArrow("slots-day-before", Model.PreviousDay, Model.PreviousDay.HasSlots, "left", "slots"); }
                 <span>Slots for @targetDate.ToString("dd MMM yyyy")</span>
+                @{ DayArrow("slots-day-after", Model.NextDay, Model.NextDay.HasSlots, "right", "slots"); }
             </h2>
             <div class="d-flex gap-3 text-on-surface-variant font-bold fs-11">
                 <span class="d-flex align-items-center gap-1"><span class="legend-dot legend-dot-available"></span> Available</span>

@@ -889,17 +889,15 @@ namespace HandyFix.Services.Data.Bookings
 
         public async Task<IEnumerable<T>> GetJobsForDayAsync<T>(DateTime day)
         {
-            DateTime from = day.Date;
-            DateTime to = from.AddDays(1);
-
-            // Every job that is on or done that day, written-in ones too. A cancelled or
-            // abandoned job is left out: the admin opens the day to see who is going where.
-            return await this.bookingRepository.All()
-                .Where(x => x.ScheduledStart >= from && x.ScheduledStart < to)
-                .Where(x => x.Status.Name != "Cancelled" && x.Status.Name != "Abandoned")
+            return await this.JobsOnDay(day)
                 .OrderBy(x => x.ScheduledStart)
                 .To<T>()
                 .ToListAsync();
+        }
+
+        public async Task<bool> HasJobsOnDayAsync(DateTime day)
+        {
+            return await this.JobsOnDay(day).AnyAsync();
         }
 
         public async Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan)
@@ -1057,6 +1055,19 @@ namespace HandyFix.Services.Data.Bookings
         private static string AsCompared(string text)
         {
             return (text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Trim();
+        }
+
+        // Every job that is on or done that day, written-in ones too. A cancelled or abandoned job
+        // is left out: the admin opens the day to see who is going where. The day's list and the
+        // arrow that says the day has jobs both read this, so a lit arrow never opens an empty list.
+        private IQueryable<Booking> JobsOnDay(DateTime day)
+        {
+            DateTime from = day.Date;
+            DateTime to = from.AddDays(1);
+
+            return this.bookingRepository.All()
+                .Where(x => x.ScheduledStart >= from && x.ScheduledStart < to)
+                .Where(x => x.Status.Name != "Cancelled" && x.Status.Name != "Abandoned");
         }
 
         // The one customer email that names the technician, sent when an admin picks one. It used

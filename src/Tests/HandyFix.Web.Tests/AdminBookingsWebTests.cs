@@ -905,6 +905,39 @@
             Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync("/Administration/Reviews")).StatusCode);
         }
 
+        // The calendar had only a date box to get from one day to another. Each of its two lists
+        // now has an arrow a day back and a day on, lit when the day it leads to has something
+        // for that list, and the menu has the calendar straight after the jobs
+        // (PROJECT_STATE.md Section 3ch).
+        [Fact]
+        public async Task TheCalendarsArrowsStepADayAndLightUpForADayThatHasJobsOrSlots()
+        {
+            using var site = new Site();
+            HttpClient admin = await site.SignedInAdminAsync();
+
+            // A day years away, where nothing is seeded: a job is written in on the day after it.
+            DateTime day = DateTime.Today.AddYears(3);
+            await site.WriteAJobInAsync(admin, day.AddDays(1).AddHours(15));
+
+            var page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(day))).Content.ReadAsStringAsync());
+            Assert.Matches(Arrow("jobs-day-after", lit: true, day.AddDays(1), "has jobs"), page);
+            Assert.Matches(Arrow("jobs-day-before", lit: false, day.AddDays(-1), "no jobs"), page);
+            Assert.Matches(Arrow("slots-day-after", lit: false, day.AddDays(1), "no slots"), page);
+            Assert.Matches(Arrow("slots-day-before", lit: false, day.AddDays(-1), "no slots"), page);
+
+            // The day before one that has slots, and the day after it.
+            DateTime slotDay = site.AFreeSlot().StartTime.Date;
+            page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(slotDay.AddDays(-1)))).Content.ReadAsStringAsync());
+            Assert.Matches(Arrow("slots-day-after", lit: true, slotDay, "has slots"), page);
+            page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(slotDay.AddDays(1)))).Content.ReadAsStringAsync());
+            Assert.Matches(Arrow("slots-day-before", lit: true, slotDay, "has slots"), page);
+
+            // On a phone the button beside the arrow has no plus, which reached the arrow.
+            Assert.Matches("d-none d-md-inline-block\">add</span>\\s*<span>Write a job in</span>", page);
+
+            Assert.Matches("Jobs\\s*</a>\\s*<a\\b[^>]*href=\"/Administration/Calendar\"", page);
+        }
+
         // "Unblock" in the admin calendar did nothing: it called the method that frees a slot
         // from its booking, which leaves the block where it is. Each calendar button also
         // answers now with what it did.
@@ -947,6 +980,18 @@
         private static string JobPage(Guid id) => JobsPage + "/Details/" + id;
 
         private static string EditPage(Guid id) => JobsPage + "/Edit/" + id;
+
+        private static string CalendarDay(DateTime day) => "/Administration/Calendar?date=" + day.ToString("yyyy-MM-dd");
+
+        // One of the calendar's four day arrows, as it should stand in the page: where it leads,
+        // whether it is lit, and what it says when pointed at.
+        private static string Arrow(string id, bool lit, DateTime leadsTo, string says)
+        {
+            return "<a\\b(?=[^>]*id=\"" + id + "\")"
+                + "(?=[^>]*class=\"day-arrow" + (lit ? " day-arrow-lit" : "\\s*") + "\")"
+                + "(?=[^>]*href=\"" + Regex.Escape(CalendarDay(leadsTo)) + "\")"
+                + "(?=[^>]*title=\"[^\"]*: " + says + "\")[^>]*>";
+        }
 
         // The two labels at the top of a job's page: where the work stands, and the money.
         private static (string Job, string Money) LabelsOn(string page)

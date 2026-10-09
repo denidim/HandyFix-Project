@@ -75,6 +75,11 @@ namespace HandyFix.Services.Data.Availability
                 .ToListAsync();
         }
 
+        public async Task<bool> HasSlotsOnDayAsync(DateTime date)
+        {
+            return await this.slotRepository.All().AnyAsync(x => x.StartTime.Date == date.Date);
+        }
+
         public async Task<DateTime?> GetSlotDateAsync(Guid slotId)
         {
             DateTime? startTime = await this.slotRepository.All()

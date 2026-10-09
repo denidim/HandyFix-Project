@@ -11,6 +11,10 @@
             <span class="material-symbols-outlined">calendar_month</span>
             Jobs
         </a>
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Calendar" asp-action="Index">
+            <span class="material-symbols-outlined">access_time</span>
+            Availability Slot
+        </a>
         <a class="admin-nav-link" asp-area="Administration" asp-controller="Services" asp-action="Index">
             <span class="material-symbols-outlined">plumbing</span>
             Services
@@ -26,10 +30,6 @@
         <a class="admin-nav-link" asp-area="Administration" asp-controller="Enquiries" asp-action="Index">
             <span class="material-symbols-outlined">mail</span>
             Enquiries
-        </a>
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="Calendar" asp-action="Index">
-            <span class="material-symbols-outlined">access_time</span>
-            Availability Slot
         </a>
         @* No "Reviews" link: no review can reach the site until the Google import is built
            (PROJECT_STATE.md Sections 3n and 3ch). The page is still at /Administration/Reviews. *@
