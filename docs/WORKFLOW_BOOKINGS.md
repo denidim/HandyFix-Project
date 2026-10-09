@@ -23,8 +23,9 @@ then goes the same way as any other:
         the admin picks a technician  →  the job is done, with its final price
         →  each payment is written on the job  →  done, and paid in full
 
-        on the way: it can be moved, it can be cancelled (with the reason),
-        notes can be kept on it, and every change leaves a line in its history
+        on the way: its details can be put right, it can be moved, it can be
+        cancelled (with the reason), notes can be kept on it, and every change
+        leaves a line in its history
 ```
 
 **Two labels on every job**, kept apart because they move separately (`HandyFix.Common/JobLabels.cs`):
@@ -243,6 +244,9 @@ What makes it different from a website booking, each on purpose:
 name, phone number, email and message filled in and "Enquiry" picked. An enquiry has one name box;
 its first word is taken as the first name. The enquiry itself stays where it is.
 
+A box typed wrongly is put right afterwards with **Edit the Details** on the job's page (see
+"Editing the details" below); the day and time, with **Move**.
+
 **Code:** `BookingsService.CreateWrittenInJobAsync`, `JobInputModel`,
 `BookingsController.Create`, `Areas/Administration/Views/Bookings/Create.cshtml`.
 
@@ -332,7 +336,36 @@ The final price of a done job can be put right afterwards (**Change the Final Pr
 
 ---
 
-## On the way — cancelling, moving, notes, history
+## On the way — editing the details, cancelling, moving, notes, history
+
+### Editing the details
+
+**Edit the Details**, in the job's own details card, opens a form filled in with what the job
+holds now: the first and last name, the phone number, the email, the address, the service and
+what the job is. The admin changes the box that is wrong and saves.
+
+| Rule | Why |
+| --- | --- |
+| **The day and time are not on the form.** | "Move" changes them and looks after the calendar. A second way to change the time would let the job and the calendar disagree. |
+| **A job that is booked or done can be edited; a cancelled or abandoned one cannot.** | A wrong phone number matters until the job is paid for, and a wrong address after that. A job that fell away is a record of what happened. |
+| **A website booking keeps an email, and stays a website booking.** | The site emails that customer, so the email cannot be left empty. Its form has no "Came from" box, and one sent anyway is ignored. A written-in job's email stays optional, and where it came from can be changed to anything but "Website". |
+| **Saving sends no email**, whatever changed. | When it is a website booking's email that changed, the line the admin is left with says the earlier emails went to the old address. If a technician is already picked it says how to send their name again: set the technician to "Unassigned", save, then pick them again. Picking the same technician a second time sends nothing. |
+| **A new service changes the estimate** to that service's price. Taking the service off takes the estimate off. | The service's price is what the estimate is. The final price and the payments were typed in or paid for the job itself, and are left alone. |
+| **A service no longer on the list stays on the job** when other boxes are saved. | A job booked with a service that was deleted or switched off since shows it as *"The service it has now (no longer offered)"*, already picked. Without that the list would open on "Not picked" and correcting a phone number would take the service off the job. |
+| **Saved as it stands, nothing changes** and no history line is written. | The page says *"Nothing was changed: the details are as they were."* A box counts as changed only when its words do: spaces at its end, or line breaks written another way, are not a change, and a description that was not changed stays exactly as the customer typed it. |
+
+**The history line keeps what each box held before**, because the page shows what it holds now:
+*"Details changed. Phone number was 07700 900456. Address was not written down."* A correction
+that was itself wrong can be undone from it. A name, a number or an address is kept up to 80
+characters; a rewritten description gets what is left of the line, which holds 700.
+
+**The boxes and their rules are shared with "Write a job in"**: `JobDetailsInputModel` holds them
+for both forms, and the two partial views `_JobCustomerFields` and `_JobWorkFields` draw them for
+both pages, so the two cannot come to disagree about what a name or a phone number may be.
+
+**Code:** `BookingsService.EditDetailsAsync`, `BookingRules.CanEditDetails`,
+`JobEditInputModel`, `BookingsController.Edit`,
+`Areas/Administration/Views/Bookings/Edit.cshtml`, `JobHistory.Was`.
 
 ### Cancelling
 
@@ -373,7 +406,7 @@ page a customer can open and in no email.
 ### History
 
 Every change adds a line at the foot of the job's page, oldest first: booked or written in, the
-deposit, the technician, moved, done, each payment, cancelled, the refund tick. A line is written
+deposit, the technician, details changed, moved, done, each payment, cancelled, the refund tick. A line is written
 by the same code that makes the change (`JobHistory`), and nothing ever edits or deletes one. A
 job made before this has no lines for what happened before.
 
@@ -393,6 +426,9 @@ job made before this has no lines for what happened before.
 | A technician can't be deleted | They have bookings. Deactivate instead — that's the intended retire path. |
 | A job's page has no technician dropdown | It is a website booking whose deposit is not paid yet, or the job is done, cancelled or abandoned. The line under "Technician" says which. |
 | An hour is still on sale though a job is written in at it | Expected: a written-in job takes no slot. Block the hour in the calendar; the slot's own line says which job is at it. |
+| A phone number, a name or an address on a job is wrong | **Edit the Details** on the job's page. The history keeps what it was before. |
+| A job's page has no "Edit the Details" button | The job is cancelled or abandoned, and keeps the details it ended with. |
+| The edit form's service list shows "The service it has now (no longer offered)" | The job was booked with a service that was deleted or switched off since. Leave it picked to keep it; pick another to change it. |
 | A cancelled job reads "No date kept" | It was cancelled or abandoned before jobs kept their own date. Nothing can bring it back. |
 | A job says "Part paid" | Money has come in and more is owed, or the final price has not been typed in yet. "Paid in full" needs a final price. |
 | The customer of a written-in job got no email | None is ever sent for a written-in job, whatever is on it. |
