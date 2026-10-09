@@ -44,8 +44,21 @@ jobs:
             ghcr.io/denidim/handyfix-web:latest
             ghcr.io/denidim/handyfix-web:${{ github.sha }}
 
+      # The server's copies of these two used to be put there by hand, and a change
+      # pushed here did nothing until somebody remembered to copy it over. The .env
+      # beside them is not copied: it holds the secrets and lives on the server only.
+      - name: Copy the compose file and the Caddyfile to the server
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: root
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: "deploy/docker-compose.staging.yml,deploy/caddy/staging/Caddyfile"
+          target: /opt/handyfix/deploy
+          strip_components: 1
+
       - name: Deploy to staging
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: root
@@ -55,4 +68,19 @@ jobs:
             cd /opt/handyfix/deploy
             docker compose -f docker-compose.staging.yml pull
             docker compose -f docker-compose.staging.yml up -d
+
+            # Caddy reads its Caddyfile when it starts, so one that has just been
+            # copied over is taken up here, without dropping a connection. Tried a
+            # few times because a Caddy that "up" has only just started needs a
+            # moment before it answers.
+            reloaded=no
+            for attempt in 1 2 3 4 5; do
+              if docker compose -f docker-compose.staging.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile; then
+                reloaded=yes
+                break
+              fi
+              sleep 2
+            done
+            [ "$reloaded" = yes ]
+
             docker image prune -f

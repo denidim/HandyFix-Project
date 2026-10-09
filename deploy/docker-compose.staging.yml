@@ -1,6 +1,9 @@
 # Runs on the staging web host. Pulls the image built by
 # .github/workflows/deploy-dev.yml -- never built locally here.
 #
+# That workflow copies this file and caddy/staging/Caddyfile to the server at
+# every deploy, so the copy there cannot fall behind this one.
+#
 # All secret values come from a .env file that lives next to this file on
 # the server ONLY (never committed -- see docs/private/INFRASTRUCTURE.md
 # for the real values). docker compose reads a .env file in the same
@@ -12,6 +15,15 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
+      # The container's own clock is UTC, an hour behind the UK all summer.
+      # With this, "now" and "today" in the code are a UK clock's, as they are
+      # on a developer's machine: a slot that has started stops being offered
+      # at once, and not an hour later.
+      TZ: Europe/London
+      # Where the keys that sign the login cookie, the form tokens and the
+      # password reset links are kept: the volume below, so they outlive the
+      # container. Kept inside it, every deploy made new ones.
+      DataProtection__KeysPath: /keys
       ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING}
       # The admin account's login email and password. Both are read at one
       # start only, the first start of a database, which makes the account.
@@ -45,6 +57,8 @@ services:
       CloudflareR2__ServiceUrl: ${R2_SERVICE_URL}
       CloudflareR2__PublicUrl: ${R2_PUBLIC_URL}
       CloudflareR2__BucketName: ${R2_BUCKET_NAME}
+    volumes:
+      - dataprotection_keys:/keys
     networks:
       - internal
 
@@ -59,7 +73,10 @@ services:
       BASIC_AUTH_USER: ${BASIC_AUTH_USER}
       BASIC_AUTH_HASH: ${BASIC_AUTH_HASH}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # The folder, not the file. A single file is mounted by what it is on
+      # the disk at that moment, so a Caddyfile replaced by a deploy would
+      # stay invisible to a running Caddy; a folder is looked into afresh.
+      - ./caddy/staging:/etc/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:
@@ -73,3 +90,4 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  dataprotection_keys:
