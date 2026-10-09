@@ -130,9 +130,37 @@ optionally uploads photos of the problem, and submits.
    the slot — **both inside one transaction**. If the slot was taken in the meantime the whole
    thing rolls back and the customer is returned to the form with *"This slot was just taken by
    someone else, please pick another"*, keeping every other field and uploaded photo they entered.
-2. The customer is redirected to Stripe Checkout for a **flat £50 deposit** (`Payment/Pay`).
-3. On success, `PaymentsService.ProcessPaymentSuccessAsync` marks the payment `DepositPaid`, moves
-   the booking to **`Approved`**, and emails the customer and the admin.
+2. The customer is redirected to Stripe's own payment page for a **flat £50 deposit**
+   (`Payment/Pay`). The page has their email filled in and ends by itself after about half an
+   hour. Only a booking still waiting for its deposit gets one (`BookingRules.CanPayDeposit`).
+3. The site hears that the page was paid in two ways: the customer comes back from it
+   (`Payment/Success`), and Stripe calls the site itself (the webhook, `api/payment/webhook`).
+   Both go through `PaymentsService.ConfirmCheckoutAsync`, which **asks Stripe whether the page
+   was paid** and believes nothing else. If it was, the payment becomes `DepositPaid`, the booking
+   moves to **`Approved`**, and the customer and the company are emailed. Whichever of the two
+   arrives second finds it done and changes nothing.
+
+**The site believes Stripe, never the browser.** The address a customer comes back to has the
+payment page's id in it, and so does the address of Stripe's page, so anyone who has opened that
+page could type the first. Until `PROJECT_STATE.md` Section 3cg that confirmed the booking unpaid.
+`IStripeGateway` is the one place the site talks to Stripe (open a page, ask about a page, close a
+page, read a message); the tests put a stand-in there.
+
+**What a customer without a paid booking sees** is decided in one place, `PaymentController.Cancel`,
+which Stripe's "back" link, `Payment/Pay` and `Booking/Confirmed` all send them to:
+
+| Where the booking stands | The page says |
+| --- | --- |
+| Waiting for its deposit | "Payment Cancelled", with **Retry Payment** |
+| Dropped for want of its deposit | "Booking No Longer Held", with **Book Again** |
+| Dropped, and its deposit arrived afterwards | "We Received Your Deposit": we will contact you to confirm your visit, or call us |
+| Cancelled | "This Booking Was Cancelled": the 24-hour rule for the deposit, with **Book Again** |
+| Deposit paid and the booking on | sent on to "Booking Confirmed" |
+
+The wording of the two middle pages is the business owner's own.
+
+`Booking/Confirmed/{id}` shows "Booking Confirmed" only for a website booking whose deposit is in
+(`BookingRules.IsConfirmed`).
 
 **That email is the first one the customer gets.** Nothing is sent when the form is submitted: a
 booking that is never paid is abandoned fifteen minutes later (below), and "we have received your
@@ -181,8 +209,22 @@ street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
   **5 minutes**, finds `Pending` bookings older than **15 minutes** with no completed payment, flips
   them to **`Abandoned`** and releases their slots. Without this, a customer who opened Stripe and
   walked away would lock an hour forever.
-- **Both Stripe paths are handled.** The webhook and the browser redirect can both fire for the same
-  session; an idempotency guard ensures confirmation emails send strictly once.
+- **A payment page is closed at Stripe before its hour goes back on sale**
+  (`PaymentsService.CloseCheckoutsAsync`). The sweep does it before it drops a booking, an admin's
+  "Cancel" does it for a booking still waiting for its deposit, and "Retry Payment" does it to the
+  earlier page before opening a new one. Three answers are possible: closed, and the booking is
+  dropped; **paid in the moment before**, and the booking is confirmed and keeps its hour; Stripe
+  not reached, and the sweep leaves the booking alone until its next run. Stripe will not let a
+  page end sooner than 30 minutes by itself, which is why the site closes it.
+- **Money never switches a booking back on.** If a deposit still arrives for a booking that was
+  dropped or cancelled, it is written on the job, the booking stays as it was, and the company
+  gets an email headed "Action needed": ring the customer, then write the job in again or send
+  the deposit back in Stripe. The customer is emailed nothing; their page says the company will
+  be in touch. The site closes payment pages itself (above), so this should all but never happen.
+- **A refused call to the webhook is logged** (`A call to the Stripe webhook was refused`) and
+  answered with a bare 400. If that line appears for Stripe's own calls, the webhook secret on the
+  server does not match the one on the webhook's page in Stripe, and paid deposits are being heard
+  of only when the customer comes back.
 - **An email that cannot be sent never undoes what it was about.** Each of the three booking
   emails (deposit paid to the customer, deposit paid to the company, technician picked) goes out
   after its save and through `TrySendEmailAsync`, which logs a failure (`Email not sent: deposit
