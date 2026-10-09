@@ -73,6 +73,55 @@
             Assert.Null(world.DbContext.Bookings.Single().Address);
         }
 
+        // Found on staging, on a booking made by hand on the website: its form, saved untouched,
+        // answered "Changed: what the job is" and left a history line. The website keeps a
+        // description as the customer typed it, with the spaces or the empty line at its end,
+        // and a browser sends a text box back with its own line breaks. Neither is a change.
+        [Theory]
+        [InlineData("The kitchen tap drips.  ", "The kitchen tap drips.  ")]
+        [InlineData("The kitchen tap drips.\r\n", "The kitchen tap drips.\r\n")]
+        [InlineData("  The kitchen tap drips.", "The kitchen tap drips.")]
+        [InlineData("The kitchen tap drips.\nSo does the bath tap.", "The kitchen tap drips.\r\nSo does the bath tap.")]
+        [InlineData("The kitchen tap drips.\r\nSo does the bath tap.", "The kitchen tap drips.\nSo does the bath tap.")]
+        public async Task ADescriptionKeptWithSpacesOrOtherLineBreaksIsNotAChange(string kept, string sentBack)
+        {
+            using var world = new BookingWorld();
+            Booking booking = await world.SeedPaidBookingAsync();
+            booking.ProblemDescription = kept;
+            booking.CustomerFirstName = "Ada ";
+            await world.DbContext.SaveChangesAsync();
+            var lines = world.HistoryOf(booking).Count;
+            JobEditInputModel form = world.EditFormOf(booking);
+            form.ProblemDescription = sentBack;
+
+            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+
+            Assert.Equal(JobEditOutcome.Unchanged, result.Outcome);
+            Assert.Equal(lines, world.HistoryOf(booking).Count);
+
+            // And it is left exactly as the customer typed it.
+            Assert.Equal(kept, world.DbContext.Bookings.Single().ProblemDescription);
+            Assert.Equal("Ada ", world.DbContext.Bookings.Single().CustomerFirstName);
+        }
+
+        // Another box changed on the same booking: the description is still not one of them.
+        [Fact]
+        public async Task ADescriptionKeptWithSpacesIsLeftAloneWhenAnotherBoxChanges()
+        {
+            using var world = new BookingWorld();
+            Booking booking = await world.SeedPaidBookingAsync();
+            booking.ProblemDescription = "The kitchen tap drips.\r\n\r\n";
+            await world.DbContext.SaveChangesAsync();
+            JobEditInputModel form = world.EditFormOf(booking);
+            form.PhoneNumber = "07700 900999";
+
+            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+
+            Assert.Equal(new[] { "phone number" }, result.Changed);
+            Assert.Equal("The kitchen tap drips.\r\n\r\n", world.DbContext.Bookings.Single().ProblemDescription);
+            Assert.Equal("Details changed. Phone number was 07700 900123.", world.HistoryOf(booking).Last());
+        }
+
         [Theory]
         [InlineData("Pending", true)]
         [InlineData("Approved", true)]

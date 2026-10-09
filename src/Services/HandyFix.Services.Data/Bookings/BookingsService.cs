@@ -1016,10 +1016,20 @@ namespace HandyFix.Services.Data.Bookings
             return amount > 0m && amount <= 100000m;
         }
 
-        // An empty box and a box never filled in are the same thing to the admin.
+        // Whether the admin changed a box. An empty box and one never filled in are the same
+        // thing, and so are two texts that differ only in the spaces around them or in how their
+        // line breaks are written: the website keeps a description as the customer typed it,
+        // spaces at the end and all, and a browser sends a text box back with line breaks of its
+        // own. Compared letter for letter, a website booking's form saved as it stood counted
+        // as a rewritten description and left a history line (PROJECT_STATE.md Section 3cf).
         private static bool IsDifferent(string held, string typed)
         {
-            return !string.Equals(held ?? string.Empty, typed ?? string.Empty, StringComparison.Ordinal);
+            return !string.Equals(AsCompared(held), AsCompared(typed), StringComparison.Ordinal);
+        }
+
+        private static string AsCompared(string text)
+        {
+            return (text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Trim();
         }
 
         // The one customer email that names the technician, sent when an admin picks one. It used
