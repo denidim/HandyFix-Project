@@ -65,6 +65,11 @@ services:
       # 443 only. Cloudflare speaks HTTPS to this server and turns a visitor's
       # plain-HTTP request into HTTPS itself, so nothing needs port 80 here.
       - "443:443"
+    environment:
+      # BEFORE LAUNCH ONLY: the password every page asks for until the site is
+      # opened (the Caddyfile says why). Both go when it launches.
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:?set BASIC_AUTH_USER in .env}
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?set BASIC_AUTH_HASH in .env}
     volumes:
       # The folder, not the file. A single file is mounted by what it is on
       # the disk at that moment, so a Caddyfile replaced by a deploy would
