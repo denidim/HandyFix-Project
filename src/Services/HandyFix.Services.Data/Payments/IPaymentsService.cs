@@ -23,6 +23,28 @@ namespace HandyFix.Services.Data.Payments
         Task<decimal> GetTotalRevenueAsync();
 
         /// <summary>
+        /// Writes a payment on a job: "Card", "Cash" or "Bank transfer". False, with nothing
+        /// changed, when the job is missing, cancelled or abandoned, or the amount or the way it
+        /// was paid is not one the site takes.
+        /// </summary>
+        Task<bool> AddPaymentAsync(Guid bookingId, decimal amount, string method);
+
+        /// <summary>
+        /// Takes a payment the admin wrote off the job again. The website deposit cannot be.
+        /// </summary>
+        Task<bool> RemovePaymentAsync(Guid bookingId, Guid paymentId);
+
+        /// <summary>
+        /// Ticks, or unticks, "deposit refunded" on a cancelled job.
+        /// </summary>
+        Task<bool> SetDepositRefundedAsync(Guid bookingId, bool refunded);
+
+        /// <summary>
+        /// A job's money list: every payment that came in, oldest first.
+        /// </summary>
+        Task<IEnumerable<T>> GetMoneyListAsync<T>(Guid bookingId);
+
+        /// <summary>
         /// Owns the sandbox-bypass-vs-real-Stripe-Checkout decision entirely: sandbox is always
         /// allowed in Development, and outside it only via the explicit
         /// Stripe:AllowSandboxOutsideDevelopment opt-in (so staging can demo the booking flow

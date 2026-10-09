@@ -533,7 +533,7 @@ namespace HandyFix.Services.Data.Tests
 
             // The concurrency conflict must be absorbed internally rather than
             // bubbling up as an unhandled exception to the controller.
-            await bookingsService.CancelBookingAsync(booking.Id);
+            await bookingsService.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
 
             var bookingInDb = dbContext.Bookings.First(x => x.Id == booking.Id);
             var slotInDb = dbContext.AvailabilitySlots.First(x => x.Id == slot.Id);
@@ -855,27 +855,28 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal(0m, stats.MonthlyRevenue);
         }
 
+        // A cancelled or abandoned job keeps its date now (PROJECT_STATE.md Section 3ce). While
+        // it lost its date with its slot it fell out of both figures by accident; it has to be
+        // left out by name.
         [Fact]
-        public async Task GetStatusOptionsAsyncShouldReturnNamesAlphabetically()
+        public void GetSummaryStatsShouldLeaveOutJobsThatWereCancelledOrAbandoned()
         {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
 
-            using var dbContext = new ApplicationDbContext(options);
-            using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
+            var bookings = new List<BookingDetailsViewModel>
+            {
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 90m },
+                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 90m, FinalPrice = 135m },
+                new BookingDetailsViewModel { StatusName = "Cancelled", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 500m },
+                new BookingDetailsViewModel { StatusName = "Abandoned", ScheduledTime = DateTime.Today, TotalAmount = 700m },
+            };
 
-            dbContext.BookingStatuses.AddRange(
-                new BookingStatus { Name = "Pending" },
-                new BookingStatus { Name = "Completed" },
-                new BookingStatus { Name = "Approved" });
-            dbContext.SaveChanges();
+            BookingSummaryStats stats = service.GetSummaryStats(bookings);
 
-            var service = new BookingsService(null, null, null, bookingStatusRepo, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            Assert.Equal(2, stats.TodaysAppointmentsCount);
 
-            IEnumerable<string> result = await service.GetStatusOptionsAsync();
-
-            Assert.Equal(new[] { "Approved", "Completed", "Pending" }, result);
+            // The estimate for the job still to do, the final price for the one that is done.
+            Assert.Equal(225m, stats.MonthlyRevenue);
         }
 
         /// <summary>

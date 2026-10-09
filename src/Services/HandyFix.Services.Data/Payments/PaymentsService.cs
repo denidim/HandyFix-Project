@@ -138,12 +138,122 @@ namespace HandyFix.Services.Data.Payments
                 }
             }
 
+            if (!alreadyProcessed && booking != null)
+            {
+                booking.History.Add(JobHistory.Line($"Deposit of {JobHistory.Pounds(payment.Amount)} paid on the website."));
+            }
+
             await this.paymentRepository.SaveChangesAsync();
 
             if (!alreadyProcessed && booking != null)
             {
                 await this.SendBookingConfirmationEmailsAsync(booking, payment);
             }
+        }
+
+        // A payment the admin writes on a job: how the rest was paid, in person or by transfer.
+        // Every payment is one line on the job, so its page always shows what is still owed
+        // (PROJECT_STATE.md Section 3ce). The website deposit is not written in here: the site
+        // records that one by itself, above.
+        public async Task<bool> AddPaymentAsync(Guid bookingId, decimal amount, string method)
+        {
+            if (amount <= 0m || amount > 100000m || !PaymentMethods.All.Contains(method))
+            {
+                return false;
+            }
+
+            Booking booking = await this.bookingRepository.All()
+                .Include(x => x.Status)
+                .Include(x => x.Payments).ThenInclude(p => p.Status)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
+            PaymentStatus completedStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Completed");
+
+            if (booking == null
+                || completedStatus == null
+                || !BookingRules.CanTakePayment(booking.Status?.Name, booking.Source == BookingSource.Website, HasPayment(booking, "DepositPaid")))
+            {
+                return false;
+            }
+
+            await this.paymentRepository.AddAsync(new Payment
+            {
+                BookingId = bookingId,
+                Amount = amount,
+                Provider = "Manual",
+                Method = method,
+                StatusId = completedStatus.Id,
+            });
+            booking.History.Add(JobHistory.Line($"Payment of {JobHistory.Pounds(amount)} written on the job: {method}."));
+
+            await this.paymentRepository.SaveChangesAsync();
+            return true;
+        }
+
+        // For a line typed in by mistake. Only a payment the admin wrote can be taken off; the
+        // deposit paid on the website is what Stripe says it is.
+        public async Task<bool> RemovePaymentAsync(Guid bookingId, Guid paymentId)
+        {
+            Payment payment = await this.paymentRepository.All()
+                .Include(x => x.Status)
+                .Include(x => x.Booking)
+                .FirstOrDefaultAsync(x => x.Id == paymentId && x.BookingId == bookingId);
+
+            if (payment == null || payment.Status?.Name != "Completed" || payment.Booking == null)
+            {
+                return false;
+            }
+
+            this.paymentRepository.Delete(payment);
+            payment.Booking.History.Add(JobHistory.Line($"Payment of {JobHistory.Pounds(payment.Amount)} ({payment.Method}) taken off the job."));
+
+            await this.paymentRepository.SaveChangesAsync();
+            return true;
+        }
+
+        // The tick on a cancelled job that says its deposit went back. The refund itself is made
+        // by hand in Stripe; this is the record that it was. A deposit marked refunded no longer
+        // counts as money in, on the job or in the revenue figure.
+        public async Task<bool> SetDepositRefundedAsync(Guid bookingId, bool refunded)
+        {
+            Booking booking = await this.bookingRepository.All()
+                .Include(x => x.Status)
+                .Include(x => x.Payments).ThenInclude(p => p.Status)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
+            PaymentStatus paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
+            PaymentStatus refundedStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Refunded");
+
+            if (booking == null
+                || paidStatus == null
+                || refundedStatus == null
+                || !BookingRules.CanMarkDepositRefunded(booking.Status?.Name, HasPayment(booking, "DepositPaid") || HasPayment(booking, "Refunded")))
+            {
+                return false;
+            }
+
+            Payment deposit = booking.Payments.FirstOrDefault(p => p.Status != null && p.Status.Name == (refunded ? "DepositPaid" : "Refunded"));
+            if (deposit == null)
+            {
+                // It already stands the way it was asked to.
+                return true;
+            }
+
+            deposit.StatusId = refunded ? refundedStatus.Id : paidStatus.Id;
+            booking.History.Add(JobHistory.Line(refunded ? "Deposit marked as refunded." : "Deposit marked as not refunded."));
+
+            await this.paymentRepository.SaveChangesAsync();
+            return true;
+        }
+
+        // What came in and stayed, and a deposit that was sent back, oldest first. Payments a
+        // customer started on the website and never finished are not money and are left out.
+        public async Task<IEnumerable<T>> GetMoneyListAsync<T>(Guid bookingId)
+        {
+            return await this.paymentRepository.All()
+                .Where(x => x.BookingId == bookingId)
+                .Where(x => x.Status.Name == "DepositPaid" || x.Status.Name == "Completed" || x.Status.Name == "Refunded")
+                .OrderBy(x => x.CreatedOn)
+                .To<T>()
+                .ToListAsync();
         }
 
         private async Task SendBookingConfirmationEmailsAsync(Booking booking, Payment payment)
@@ -383,6 +493,12 @@ namespace HandyFix.Services.Data.Payments
                     await this.CancelPaymentAsync(session.Id);
                 }
             }
+        }
+
+        // The booking's payments have to be loaded with their statuses for this to say anything.
+        private static bool HasPayment(Booking booking, string statusName)
+        {
+            return booking.Payments != null && booking.Payments.Any(p => p.Status != null && p.Status.Name == statusName);
         }
     }
 }

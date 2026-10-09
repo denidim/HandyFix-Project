@@ -145,6 +145,32 @@ namespace HandyFix.Services.Data.Availability
             }
         }
 
+        // "Unblock" in the admin calendar. It used to go through ReleaseSlotAsync, which frees a
+        // slot from its booking and leaves the block where it was, so a blocked hour, or a day
+        // blocked with "Block Entire Day", could never be opened again
+        // (PROJECT_STATE.md Section 3ce).
+        public async Task<bool> UnblockSlotAsync(Guid slotId)
+        {
+            AvailabilitySlot slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == slotId);
+            if (slot == null)
+            {
+                return false;
+            }
+
+            slot.IsBlocked = false;
+
+            try
+            {
+                await this.slotRepository.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Another request already changed this slot between our read and write.
+                return false;
+            }
+        }
+
         public async Task BlockDateAsync(DateTime date)
         {
             DateTime targetDate = date.Date;

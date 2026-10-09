@@ -38,7 +38,7 @@
         [Fact]
         public async Task CreateBookingAsyncShouldSendNoEmail()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             List<SentEmail> sent = world.CaptureEmails();
 
             Booking booking = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
@@ -54,7 +54,7 @@
         [Fact]
         public async Task ProcessPaymentSuccessAsyncShouldMarkThePaymentPaidAndTellTheCompanyWhenTheCustomersEmailFails()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             var checkoutSessionId = await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
             world.EmailsFail(to: "ada@example.com");
 
@@ -78,7 +78,7 @@
         [Fact]
         public async Task TheDepositEmailsShouldCarryTextNotHtmlAndLetTheCompanyReplyToTheCustomer()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             var checkoutSessionId = await world.SeedPendingPaymentAsync("<a href=\"https://evil.example\">12 Main Rd</a>");
             List<SentEmail> sent = world.CaptureEmails();
 
@@ -103,7 +103,7 @@
         [Fact]
         public async Task TheDepositEmailsShouldCarryTheShortReferenceTheAdminPagesShow()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             var checkoutSessionId = await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
             Guid bookingId = world.DbContext.Bookings.Single().Id;
             List<SentEmail> sent = world.CaptureEmails();
@@ -123,7 +123,7 @@
         [InlineData("Stone", "<strong>Zapryan Stone</strong>")]
         public async Task PickingATechnicianShouldEmailTheCustomerTheNameAndLinkTheNumber(string lastName, string expectedName)
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             Technician technician = world.AddTechnician("Zapryan", lastName);
             List<SentEmail> sent = world.CaptureEmails();
@@ -148,7 +148,7 @@
         [Fact]
         public async Task TheTechnicianEmailShouldCarryWhatTheCustomerTypedAsText()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync("<b>12 Main Rd</b> & Sons, Sutton");
             Technician technician = world.AddTechnician("Zapryan");
             List<SentEmail> sent = world.CaptureEmails();
@@ -166,7 +166,7 @@
         [Fact]
         public async Task PickingATechnicianShouldKeepTheTechnicianAndSayTheEmailWasNotSentWhenItCannotBeSent()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             Technician technician = world.AddTechnician("Zapryan");
             world.EmailsFail();
@@ -184,7 +184,7 @@
         [Fact]
         public async Task PickingATechnicianShouldBeRefusedUntilTheDepositIsPaid()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
             Booking booking = world.DbContext.Bookings.Single();
             Technician technician = world.AddTechnician("Zapryan");
@@ -205,7 +205,7 @@
         [InlineData("Abandoned")]
         public async Task PickingATechnicianShouldBeRefusedOnABookingThatIsClosed(string status)
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             world.SetStatus(booking, status);
             Technician technician = world.AddTechnician("Zapryan");
@@ -222,7 +222,7 @@
         [Fact]
         public async Task PickingTheSameTechnicianAgainShouldChangeNothingAndSendNoSecondEmail()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             Technician technician = world.AddTechnician("Zapryan");
             List<SentEmail> sent = world.CaptureEmails();
@@ -239,7 +239,7 @@
         [Fact]
         public async Task PickingAnotherTechnicianShouldEmailTheCustomerTheNewName()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             Technician first = world.AddTechnician("Zapryan");
             Technician second = world.AddTechnician("Sam", "Reed", "07700 900456");
@@ -259,7 +259,7 @@
         [Fact]
         public async Task TakingTheTechnicianOffShouldSendNoEmail()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             Technician technician = world.AddTechnician("Zapryan");
             await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
@@ -278,7 +278,7 @@
         [Fact]
         public async Task PickingATechnicianWhoIsNotOnTheRosterShouldChangeNothing()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             List<SentEmail> sent = world.CaptureEmails();
 
@@ -292,7 +292,7 @@
         [Fact]
         public async Task PickingATechnicianForABookingThatDoesNotExistShouldSaySo()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
 
             TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(Guid.NewGuid(), null);
 
@@ -302,10 +302,10 @@
         [Fact]
         public async Task CompleteBookingAsyncShouldCompleteABookingWhoseDepositIsPaid()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
 
-            var completed = await world.Bookings.CompleteBookingAsync(booking.Id);
+            var completed = await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
 
             Assert.True(completed);
             Assert.Equal("Completed", world.StatusOf(booking));
@@ -315,11 +315,11 @@
         [Fact]
         public async Task CompleteBookingAsyncShouldRefuseABookingStillWaitingForItsDeposit()
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
             Booking booking = world.DbContext.Bookings.Single();
 
-            var completed = await world.Bookings.CompleteBookingAsync(booking.Id);
+            var completed = await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
 
             Assert.False(completed);
             Assert.Equal("Pending", world.StatusOf(booking));
@@ -331,11 +331,11 @@
         [InlineData("Completed")]
         public async Task CompleteBookingAsyncShouldRefuseABookingThatIsClosed(string status)
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             world.SetStatus(booking, status);
 
-            var completed = await world.Bookings.CompleteBookingAsync(booking.Id);
+            var completed = await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
 
             Assert.False(completed);
             Assert.Equal(status, world.StatusOf(booking));
@@ -346,7 +346,7 @@
         [InlineData(true)]
         public async Task CancelBookingAsyncShouldCancelAnOpenBookingAndFreeItsSlot(bool depositPaid)
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             if (depositPaid)
             {
                 await world.SeedPaidBookingAsync();
@@ -358,7 +358,7 @@
 
             Booking booking = world.DbContext.Bookings.Single();
 
-            var cancelled = await world.Bookings.CancelBookingAsync(booking.Id);
+            var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
 
             Assert.True(cancelled);
             Assert.Equal("Cancelled", world.StatusOf(booking));
@@ -373,208 +373,15 @@
         [InlineData("Abandoned")]
         public async Task CancelBookingAsyncShouldRefuseABookingThatIsClosed(string status)
         {
-            using var world = new World();
+            using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             world.SetStatus(booking, status);
 
-            var cancelled = await world.Bookings.CancelBookingAsync(booking.Id);
+            var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
 
             Assert.False(cancelled);
             Assert.Equal(status, world.StatusOf(booking));
             Assert.True(world.DbContext.AvailabilitySlots.Single().IsBooked);
-        }
-
-        private sealed class SentEmail
-        {
-            public string To { get; set; }
-
-            public string Subject { get; set; }
-
-            public string Body { get; set; }
-
-            public string ReplyTo { get; set; }
-        }
-
-        // A database with the statuses, one service and one free slot, and the two services
-        // wired to it with a mocked email sender.
-        private sealed class World : IDisposable
-        {
-            private readonly Service service;
-            private readonly AvailabilitySlot slot;
-
-            public World()
-            {
-                this.DbContext = new ApplicationDbContext(
-                    new DbContextOptionsBuilder<ApplicationDbContext>()
-                        .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                        .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
-                        .Options);
-
-                this.DbContext.BookingStatuses.AddRange(
-                    new BookingStatus { Name = "Pending" },
-                    new BookingStatus { Name = "Approved" },
-                    new BookingStatus { Name = "Completed" },
-                    new BookingStatus { Name = "Cancelled" },
-                    new BookingStatus { Name = "Abandoned" });
-                this.DbContext.PaymentStatuses.AddRange(
-                    new PaymentStatus { Name = "Pending" },
-                    new PaymentStatus { Name = "DepositPaid" });
-
-                var category = new ServiceCategory { Name = "Plumbing", Description = "Plumbing", Slug = "plumbing" };
-                this.DbContext.ServiceCategories.Add(category);
-
-                this.service = new Service { Name = "Leak Fix", Description = "Repair a leak", Slug = "leak-fix", BasePrice = 90.00m, CategoryId = category.Id };
-                this.DbContext.Services.Add(this.service);
-
-                this.slot = new AvailabilitySlot { StartTime = DateTime.Today.AddDays(1).AddHours(9), EndTime = DateTime.Today.AddDays(1).AddHours(10) };
-                this.DbContext.AvailabilitySlots.Add(this.slot);
-                this.DbContext.SaveChanges();
-
-                IConfiguration configuration = new ConfigurationBuilder().Build();
-                var bookingRepo = new EfDeletableEntityRepository<Booking>(this.DbContext);
-                var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(this.DbContext);
-                var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(this.DbContext);
-
-                this.Payments = new PaymentsService(
-                    new EfDeletableEntityRepository<Payment>(this.DbContext),
-                    new EfDeletableEntityRepository<PaymentStatus>(this.DbContext),
-                    bookingRepo,
-                    bookingStatusRepo,
-                    this.EmailSender.Object,
-                    configuration,
-                    Mock.Of<IWebHostEnvironment>(),
-                    NullLogger<PaymentsService>.Instance);
-
-                this.Bookings = new BookingsService(
-                    bookingRepo,
-                    new EfDeletableEntityRepository<Service>(this.DbContext),
-                    slotRepo,
-                    bookingStatusRepo,
-                    new EfDeletableEntityRepository<BookingImage>(this.DbContext),
-                    new EfDeletableEntityRepository<Technician>(this.DbContext),
-                    new AvailabilityService(slotRepo),
-                    this.Payments,
-                    new DbQueryRunner(this.DbContext),
-                    this.EmailSender.Object,
-                    configuration,
-                    NullLogger<BookingsService>.Instance);
-            }
-
-            public ApplicationDbContext DbContext { get; }
-
-            public Mock<IEmailSender> EmailSender { get; } = new Mock<IEmailSender>();
-
-            public BookingsService Bookings { get; }
-
-            public PaymentsService Payments { get; }
-
-            public DateTime SlotStart => this.slot.StartTime;
-
-            public void Dispose() => this.DbContext.Dispose();
-
-            public BookingInputModel BookingFor(string address) => new BookingInputModel
-            {
-                CustomerFirstName = "Ada",
-                CustomerLastName = "Lovelace",
-                Email = "ada@example.com",
-                PhoneNumber = "07700 900123",
-                Address = address,
-                Postcode = "SM1 1AA",
-                ProblemDescription = "The kitchen tap has been dripping for a week.",
-                SlotId = this.slot.Id,
-                ServiceId = this.service.Id,
-            };
-
-            // A booking waiting for its deposit, as it is when the customer comes back from paying.
-            public async Task<string> SeedPendingPaymentAsync(string address)
-            {
-                var booking = new Booking
-                {
-                    CustomerFirstName = "Ada",
-                    CustomerLastName = "Lovelace",
-                    Email = "ada@example.com",
-                    PhoneNumber = "07700 900123",
-                    Address = address,
-                    ProblemDescription = "The kitchen tap has been dripping for a week.",
-                    StatusId = this.DbContext.BookingStatuses.Single(s => s.Name == "Pending").Id,
-                };
-                this.DbContext.Bookings.Add(booking);
-                this.DbContext.BookingServices.Add(new BookingService { BookingId = booking.Id, ServiceId = this.service.Id, PriceAtBooking = 90.00m, Quantity = 1 });
-                this.slot.IsBooked = true;
-                this.slot.BookingId = booking.Id;
-
-                var payment = new Payment
-                {
-                    BookingId = booking.Id,
-                    Amount = 50.00m,
-                    Provider = "Stripe",
-                    CheckoutSessionId = "cs_test_" + Guid.NewGuid().ToString("N"),
-                    StatusId = this.DbContext.PaymentStatuses.Single(s => s.Name == "Pending").Id,
-                };
-                this.DbContext.Payments.Add(payment);
-                await this.DbContext.SaveChangesAsync();
-                return payment.CheckoutSessionId;
-            }
-
-            // A booking with its deposit paid, as it stands when the admin opens it: made the
-            // way the site makes one, by the payment coming in.
-            public async Task<Booking> SeedPaidBookingAsync(string address = "12 Main Rd, Sutton")
-            {
-                var checkoutSessionId = await this.SeedPendingPaymentAsync(address);
-                await this.Payments.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_1");
-                return this.DbContext.Bookings.Single();
-            }
-
-            public Technician AddTechnician(string firstName, string lastName = null, string phoneNumber = "020 3951 5915")
-            {
-                var technician = new Technician { FirstName = firstName, LastName = lastName, PhoneNumber = phoneNumber };
-                this.DbContext.Technicians.Add(technician);
-                this.DbContext.SaveChanges();
-                return technician;
-            }
-
-            public void SetStatus(Booking booking, string status)
-            {
-                booking.StatusId = this.DbContext.BookingStatuses.Single(s => s.Name == status).Id;
-                this.DbContext.SaveChanges();
-            }
-
-            public string StatusOf(Booking booking) =>
-                this.DbContext.Bookings.Include(b => b.Status).Single(b => b.Id == booking.Id).Status.Name;
-
-            // Every send fails, or only the ones to one address.
-            public void EmailsFail(string to = null)
-            {
-                this.EmailSender
-                    .Setup(x => x.SendEmailAsync(
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.Is<string>(address => to == null || address == to),
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<IEnumerable<EmailAttachment>>(),
-                        It.IsAny<string>()))
-                    .ThrowsAsync(new InvalidOperationException("Brevo email send failed (500): try later"));
-            }
-
-            public List<SentEmail> CaptureEmails()
-            {
-                var sent = new List<SentEmail>();
-                this.EmailSender
-                    .Setup(x => x.SendEmailAsync(
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<IEnumerable<EmailAttachment>>(),
-                        It.IsAny<string>()))
-                    .Callback<string, string, string, string, string, IEnumerable<EmailAttachment>, string>(
-                        (from, fromName, to, subject, body, attachments, replyTo) =>
-                            sent.Add(new SentEmail { To = to, Subject = subject, Body = body, ReplyTo = replyTo }))
-                    .Returns(Task.CompletedTask);
-                return sent;
-            }
         }
     }
 }

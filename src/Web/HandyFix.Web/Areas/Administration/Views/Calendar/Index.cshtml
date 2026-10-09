@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Administration.Calendar.CalendarIndexViewModel
+@using HandyFix.Common
 @{
     this.ViewData["Title"] = "Manage Calendar Slots";
     var targetDate = Model.TargetDate;
@@ -20,9 +21,56 @@
     </div>
 </div>
 
+@if (this.TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4" role="alert">@this.TempData["SuccessMessage"]</div>
+}
+
+@if (this.TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mb-4" role="alert">@this.TempData["ErrorMessage"]</div>
+}
+
 <div class="row">
-    <!-- Left Column: Daily Slots List -->
+    <!-- Left Column: the day's jobs, then its slots -->
     <div class="col-lg-7 mb-4">
+        <!-- Every job on this day, written-in ones too: those hold no slot below -->
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h2 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">engineering</span>
+                <span>Jobs on @targetDate.ToString("dd MMM yyyy")</span>
+            </h2>
+            <a asp-area="Administration" asp-controller="Bookings" asp-action="Create" asp-route-date="@targetDate.ToString("yyyy-MM-dd")" class="btn btn-secondary font-button-text admin-btn-compact d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined fs-18">add</span>
+                <span>Write a job in</span>
+            </a>
+        </div>
+
+        <div class="admin-card p-4 d-flex flex-column gap-3 mb-5" id="calendar-jobs">
+            @if (Model.Jobs.Any())
+            {
+                @foreach (var job in Model.Jobs)
+                {
+                    <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@job.Id" class="d-flex align-items-center justify-content-between p-3 rounded-lg border text-no-decoration calendar-job-row">
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="text-center slot-time-col">
+                                <p class="font-headline-sm mb-0 text-primary fs-18 font-bold">@job.ScheduledTime.ToString("HH:mm")</p>
+                            </div>
+                            <div>
+                                <p class="font-body-md text-primary font-bold mb-0">@job.CustomerName <span class="text-on-surface-variant fs-13">#@BookingReference.Short(job.Id)</span></p>
+                                <p class="text-on-surface-variant mb-0 fs-13">@(job.Services.Any() ? string.Join(", ", job.Services) : "No service picked") &middot; @(job.TechnicianId != null ? job.TechnicianName : "No technician yet") &middot; @job.Source</p>
+                            </div>
+                        </div>
+                        <span class="status-badge @(job.JobLabel == JobLabels.Done ? "tint-success" : "tint-secondary")">@job.JobLabel</span>
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="text-center p-3 text-muted font-body-md">No jobs on this day.</div>
+            }
+        </div>
+
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h2 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
                 <span class="material-symbols-outlined text-secondary">schedule</span>
@@ -59,7 +107,9 @@
                                 @if (slot.IsBooked)
                                 {
                                     <span class="rounded slot-tag slot-tag-booked mb-1">Booked</span>
-                                    <p class="font-body-md text-primary mb-0 fs-13">Ref #@slot.BookingId.ToString().Substring(0, 8).ToUpper()</p>
+                                    <p class="font-body-md text-primary mb-0 fs-13">
+                                        <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@slot.BookingId">Job #@BookingReference.Short(slot.BookingId.Value)</a>
+                                    </p>
                                 }
                                 else if (slot.IsBlocked)
                                 {
@@ -69,7 +119,24 @@
                                 else
                                 {
                                     <span class="rounded slot-tag slot-tag-available mb-1">Available</span>
-                                    <p class="font-body-md text-primary mb-0 fs-13">Standard Open Slot</p>
+
+                                    // A job that was written in holds no slot, so its hour is still on sale.
+                                    var jobsAtThisHour = Model.Jobs.Where(j => j.ScheduledTime == slot.StartTime).ToList();
+                                    if (jobsAtThisHour.Any())
+                                    {
+                                        <p class="font-body-md text-primary mb-0 fs-13 calendar-slot-warning">
+                                            Still on sale, though
+                                            @foreach (var jobAtThisHour in jobsAtThisHour)
+                                            {
+                                                <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@jobAtThisHour.Id">#@BookingReference.Short(jobAtThisHour.Id)</a>
+                                            }
+                                            @(jobsAtThisHour.Count == 1 ? "is" : "are") at this hour. Block it if nobody else should be booked then.
+                                        </p>
+                                    }
+                                    else
+                                    {
+                                        <p class="font-body-md text-primary mb-0 fs-13">Standard Open Slot</p>
+                                    }
                                 }
                             </div>
                         </div>
@@ -77,7 +144,7 @@
                         <div class="d-flex align-items-center gap-2">
                             @if (slot.IsBooked)
                             {
-                                <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post" class="m-0">
+                                <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post" class="m-0" onsubmit="return confirm('Put this hour back on sale? The job that holds it keeps its day and time, and another customer could then book the same hour.');">
                                     <input type="hidden" name="id" value="@slot.Id" />
                                     <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
                                     <button type="submit" class="btn btn-sm font-button-text slot-action-btn">Release</button>
@@ -85,7 +152,7 @@
                             }
                             else if (slot.IsBlocked)
                             {
-                                <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post" class="m-0">
+                                <form asp-area="Administration" asp-controller="Calendar" asp-action="UnblockSlot" method="post" class="m-0">
                                     <input type="hidden" name="id" value="@slot.Id" />
                                     <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
                                     <button type="submit" class="btn btn-sm font-button-text slot-action-btn">Unblock</button>

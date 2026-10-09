@@ -42,10 +42,10 @@
             <div class="dashboard-stat-card-icon-wrapper tint-black-soft">
                 <span class="material-symbols-outlined text-primary">calendar_today</span>
             </div>
-            <span class="font-label-sm font-bold px-2 py-1 rounded tint-info">@Model.PendingBookingsCount Pending</span>
+            <span class="font-label-sm font-bold px-2 py-1 rounded tint-info">@Model.PendingBookingsCount waiting for a deposit</span>
         </div>
         <div>
-            <p class="dashboard-stat-card-label">Total Bookings</p>
+            <p class="dashboard-stat-card-label">Total Jobs</p>
             <h2 class="dashboard-stat-card-value">@Model.TotalBookingsCount</h2>
         </div>
     </div>
@@ -95,7 +95,7 @@
                 <div class="action-btn-circle">
                     <span class="material-symbols-outlined">event_note</span>
                 </div>
-                <span class="font-button-text text-primary">Manage Bookings</span>
+                <span class="font-button-text text-primary">Jobs</span>
             </a>
             <a asp-area="Administration" asp-controller="Services" asp-action="Index" class="action-btn-card">
                 <div class="action-btn-circle">

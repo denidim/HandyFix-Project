@@ -323,6 +323,183 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* The job page, in reading order: the job's details, what the admin does to it,
+   then its money, notes and history. On a phone that is the order down the page, so
+   the buttons come straight after the details and not under the history. On a wide
+   screen the buttons take a column of their own on the right, beside both. */
+.job-page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "details"
+    "actions"
+    "rest";
+}
+
+.job-page-details {
+  grid-area: details;
+}
+
+.job-page-actions {
+  grid-area: actions;
+}
+
+.job-page-rest {
+  grid-area: rest;
+}
+
+@media (min-width: 992px) {
+  .job-page-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-areas:
+      "details actions"
+      "rest actions";
+    column-gap: var(--spacing-6);
+    align-items: start;
+  }
+}
+
+/* The job page: the money list and the history are lists of lines, each a date,
+   what happened, and an amount where there is one. */
+.job-ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.job-ledger-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr auto auto;
+  gap: var(--spacing-3);
+  align-items: center;
+  padding: var(--spacing-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 15px;
+}
+
+.job-history-row {
+  grid-template-columns: 10.5rem 1fr;
+  align-items: start;
+}
+
+.job-ledger-date {
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.job-ledger-what {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.job-ledger-amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A deposit that was sent back: still on the list, no longer counted. */
+.job-ledger-struck {
+  color: var(--on-surface-variant);
+  text-decoration: line-through;
+}
+
+.job-ledger-action {
+  min-width: 4.5rem;
+  text-align: right;
+}
+
+.job-totals {
+  margin: 0;
+}
+
+.job-totals-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) 0;
+  font-size: 15px;
+}
+
+.job-totals-row dt {
+  color: var(--on-surface-variant);
+  font-weight: 400;
+}
+
+.job-totals-row dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.job-totals-owed {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--spacing-1);
+  padding-top: var(--spacing-3);
+}
+
+@media (max-width: 576px) {
+  .job-ledger-row,
+  .job-history-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .job-ledger-date {
+    grid-column: 1 / -1;
+  }
+
+  .job-history-row .job-ledger-what {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A button that opens the form under it (move, cancel, change the price): a
+   <details>, so it works with no script. The arrow a <summary> draws by default is
+   gone because the summary is laid out as a button. */
+.job-disclosure > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.job-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.job-disclosure[open] > summary {
+  background-color: var(--surface-container);
+}
+
+/* Why a job was called off, above everything else on its page. */
+.job-cancelled-box {
+  border-left: 4px solid var(--error) !important;
+}
+
+/* The note under the day and time on the "Write a job in" form. */
+.job-form-note {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-left: 4px solid var(--secondary);
+  background-color: var(--surface-container-low);
+  border-radius: var(--radius-lg);
+}
+
+/* A job in the admin calendar's list for the day: the whole row opens the job. */
+.calendar-job-row {
+  background-color: var(--surface-container-lowest);
+  transition: background-color var(--transition-normal);
+}
+
+.calendar-job-row:hover {
+  background-color: var(--surface-container-low);
+}
+
+/* An hour that is still on sale while a written-in job is at it. */
+.calendar-slot-warning {
+  max-width: 22rem;
+  font-weight: 600;
+}
+
 /* Search input with a leading icon, used on every list page's header. */
 .admin-search-wrap {
   max-width: 320px;

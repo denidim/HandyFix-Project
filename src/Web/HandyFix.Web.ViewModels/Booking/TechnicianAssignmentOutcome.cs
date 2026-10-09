@@ -24,5 +24,11 @@
         /// The technician is saved, and the email to the customer could not be sent.
         /// </summary>
         AssignedButEmailNotSent = 6,
+
+        /// <summary>
+        /// The technician is saved on a job the admin wrote in. The site sends no email for
+        /// those: the admin tells the customer.
+        /// </summary>
+        AssignedNoEmailForWrittenInJob = 7,
     }
 }

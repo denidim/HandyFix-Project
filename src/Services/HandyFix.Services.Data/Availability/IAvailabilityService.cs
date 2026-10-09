@@ -28,6 +28,11 @@ namespace HandyFix.Services.Data.Availability
 
         Task<bool> ReleaseSlotAsync(Guid slotId);
 
+        /// <summary>
+        /// Opens a blocked slot again. False when there is no such slot.
+        /// </summary>
+        Task<bool> UnblockSlotAsync(Guid slotId);
+
         Task BlockDateAsync(DateTime date);
 
         Task GenerateSlotsForRangeAsync(DateTime startDate, DateTime endDate);

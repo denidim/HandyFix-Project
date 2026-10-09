@@ -1,7 +1,7 @@
 @model HandyFix.Web.ViewModels.Booking.BookingListViewModel
 @using HandyFix.Common
 @{
-    this.ViewData["Title"] = "Manage Bookings";
+    this.ViewData["Title"] = "Jobs";
 
     var bookings = Model.Bookings;
 }
@@ -16,15 +16,19 @@
 <!-- Sticky Header -->
 <div class="d-flex flex-col flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <div>
-        <h1 class="admin-page-title">Bookings Management</h1>
-        <p class="font-label-sm text-on-surface-variant mt-1 admin-page-subtitle">Track and manage service appointments</p>
+        <h1 class="admin-page-title">Jobs</h1>
+        <p class="font-label-sm text-on-surface-variant mt-1 admin-page-subtitle">Every job, booked on the website or written in by hand</p>
     </div>
-    <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center flex-wrap gap-3">
+        <a asp-area="Administration" asp-controller="Bookings" asp-action="Create" class="btn btn-primary font-button-text admin-btn-compact d-flex align-items-center gap-2" id="write-a-job-in">
+            <span class="material-symbols-outlined fs-18">add</span>
+            <span>Write a job in</span>
+        </a>
         <form method="get" asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="m-0">
             <input type="hidden" name="sortField" value="@Model.SortField" />
             <input type="hidden" name="descending" value="@(Model.Descending.ToString())" />
-            <select name="status" class="admin-status-filter font-body-md" onchange="this.form.submit()">
-                <option value="">All Statuses</option>
+            <select name="status" class="admin-status-filter font-body-md" onchange="this.form.submit()" aria-label="Show jobs that are">
+                <option value="">All jobs</option>
                 @foreach (var statusOption in Model.StatusOptions)
                 {
                     <option value="@statusOption" selected="@(Model.StatusFilter == statusOption)">@statusOption</option>
@@ -38,11 +42,16 @@
     </div>
 </div>
 
+@if (this.TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4" role="alert">@this.TempData["SuccessMessage"]</div>
+}
+
 <!-- Quick Stats -->
 <div class="bento-grid bento-grid-3 mb-5">
     <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between admin-stat-card">
         <div>
-            <p class="font-label-sm text-on-surface-variant mb-1">Today's Appointments</p>
+            <p class="font-label-sm text-on-surface-variant mb-1">Today's Jobs</p>
             <h3 class="font-headline-md mb-0 fs-headline-md font-bold text-primary">@Model.TodaysAppointmentsCount</h3>
         </div>
         <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary dim-48 tint-secondary">
@@ -62,7 +71,7 @@
 
     <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between admin-stat-card">
         <div>
-            <p class="font-label-sm text-on-surface-variant mb-1">Monthly Revenue</p>
+            <p class="font-label-sm text-on-surface-variant mb-1">This Month's Jobs, in Pounds</p>
             <h3 class="font-headline-md mb-0 fs-headline-md font-bold text-primary">£@Model.MonthlyRevenue.ToString("N2")</h3>
         </div>
         <div class="rounded-circle d-flex align-items-center justify-content-center text-on-tertiary-container dim-48 tint-success">
@@ -71,18 +80,28 @@
     </div>
 </div>
 
-<!-- Bookings List Table -->
+<!-- Jobs List Table -->
 <div class="rounded-xl overflow-hidden shadow-sm admin-card">
     <div class="px-4 py-3 d-flex align-items-center justify-content-between admin-table-toolbar">
-        <h3 class="font-headline-sm text-primary mb-0">All Bookings</h3>
+        <h3 class="font-headline-sm text-primary mb-0">@(string.IsNullOrWhiteSpace(Model.StatusFilter) ? "All Jobs" : Model.StatusFilter + " Jobs")</h3>
     </div>
 
     <div class="table-responsive">
         <table class="w-full text-left table mb-0 admin-table">
             <thead>
                 <tr class="admin-table-head">
-                    <th class="px-4 py-3 font-label-sm uppercase">Ref ID</th>
-                    <th class="px-4 py-3 font-label-sm uppercase">
+                    <th class="px-3 py-3 font-label-sm uppercase">
+                        <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
+                           asp-route-sortField="CreatedOn" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
+                           class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn ? "active" : "")">
+                            Ref, Came In
+                            @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)
+                            {
+                                <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
+                            }
+                        </a>
+                    </th>
+                    <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
                            asp-route-sortField="CustomerName" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName ? "active" : "")">
@@ -93,43 +112,32 @@
                             }
                         </a>
                     </th>
-                    <th class="px-4 py-3 font-label-sm uppercase">
+                    <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
                            asp-route-sortField="AppointmentTime" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime ? "active" : "")">
-                            Scheduled Date
+                            Day and Time
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime)
                             {
                                 <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
                             }
                         </a>
                     </th>
-                    <th class="px-4 py-3 font-label-sm uppercase">Technician</th>
-                    <th class="px-4 py-3 font-label-sm uppercase">
-                        <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="CreatedOn" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
-                           class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn ? "active" : "")">
-                            Submitted On
-                            @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)
-                            {
-                                <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
-                            }
-                        </a>
-                    </th>
-                    <th class="px-4 py-3 font-label-sm uppercase">Amount</th>
-                    <th class="px-4 py-3 font-label-sm uppercase">
+                    <th class="px-3 py-3 font-label-sm uppercase">Technician</th>
+                    <th class="px-3 py-3 font-label-sm uppercase">Price</th>
+                    <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
                            asp-route-sortField="Status" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.Status)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.Status ? "active" : "")">
-                            Booking Status
+                            The Job
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.Status)
                             {
                                 <span class="material-symbols-outlined fs-16">@(Model.Descending ? "arrow_downward" : "arrow_upward")</span>
                             }
                         </a>
                     </th>
-                    <th class="px-4 py-3 font-label-sm uppercase">Payment</th>
-                    <th class="px-4 py-3 font-label-sm uppercase text-right">Actions</th>
+                    <th class="px-3 py-3 font-label-sm uppercase">The Money</th>
+                    <th class="px-3 py-3 font-label-sm uppercase text-right" aria-label="Open the job"></th>
                 </tr>
             </thead>
             <tbody id="bookings-table-body" class="bg-white">
@@ -137,34 +145,48 @@
                 {
                     @foreach (var booking in bookings)
                     {
-                        var initials = $"{booking.CustomerFirstName[0]}{booking.CustomerLastName[0]}";
+                        // A job that was written in may have a first name and nothing else.
+                        var initials = string.Concat(booking.CustomerFirstName?.FirstOrDefault(), booking.CustomerLastName?.FirstOrDefault());
 
-                        var statusBadgeClass = booking.StatusName == "Pending" ? "tint-neutral" :
-                                           booking.StatusName == "Cancelled" ? "tint-error" :
-                                           booking.StatusName == "Completed" ? "tint-success" :
-                                           "tint-secondary";
+                        var jobBadgeClass = booking.JobLabel == JobLabels.Done ? "tint-success" :
+                                            booking.JobLabel == JobLabels.Cancelled ? "tint-error" :
+                                            booking.JobLabel == JobLabels.Abandoned ? "tint-neutral" :
+                                            "tint-secondary";
 
-                        var submittedOn = UkTime.FromUtc(booking.CreatedOn);
+                        var cameIn = UkTime.FromUtc(booking.CreatedOn);
 
-                        var paymentText = booking.IsDepositPaid ? "Paid" : "Unpaid";
-                        var paymentDotClass = booking.IsDepositPaid ? "payment-dot-paid" : "payment-dot-unpaid";
-                        var paymentTextClass = booking.IsDepositPaid ? "text-on-tertiary-container" : "text-outline";
+                        var moneyIn = booking.Paid > 0;
+                        var paymentDotClass = moneyIn ? "payment-dot-paid" : "payment-dot-unpaid";
+                        var paymentTextClass = moneyIn ? "text-on-tertiary-container" : "text-outline";
 
                         <tr class="align-middle admin-table-row">
-                            <td class="px-4 py-3 font-body-md font-bold text-secondary select-all">#@BookingReference.Short(booking.Id)</td>
-                            <td class="px-4 py-3">
+                            <td class="px-3 py-3">
+                                <p class="font-body-md font-bold text-secondary select-all mb-0">#@BookingReference.Short(booking.Id)</p>
+                                <p class="text-on-surface-variant mb-0 fs-11 text-nowrap">@booking.Source &middot; @cameIn.ToString("dd MMM")</p>
+                            </td>
+                            <td class="px-3 py-3">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="rounded-circle d-flex align-items-center justify-content-center text-on-secondary-container font-bold fs-11 avatar-badge dim-32 tint-secondary-fixed">
                                         @initials.ToUpper()
                                     </div>
                                     <div>
-                                        <p class="font-body-md font-bold mb-0 text-primary">@booking.CustomerFirstName @booking.CustomerLastName</p>
+                                        <p class="font-body-md font-bold mb-0 text-primary">@booking.CustomerName</p>
                                         <p class="text-on-surface-variant mb-0 fs-11">@booking.Address</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 font-body-md text-primary">@booking.ScheduledTime.ToString("MMM dd, yyyy")</td>
-                            <td class="px-4 py-3 font-body-md">
+                            <td class="px-3 py-3">
+                                @if (booking.HasDate)
+                                {
+                                    <p class="font-body-md text-primary mb-0 text-nowrap">@booking.ScheduledTime.ToString("ddd dd MMM yyyy")</p>
+                                    <p class="text-on-surface-variant mb-0 fs-11">@booking.ScheduledTime.ToString("hh:mm tt")</p>
+                                }
+                                else
+                                {
+                                    <span class="text-outline text-nowrap">No date kept</span>
+                                }
+                            </td>
+                            <td class="px-3 py-3 font-body-md text-nowrap">
                                 @if (booking.TechnicianId != null)
                                 {
                                     <span class="text-primary">@booking.TechnicianName</span>
@@ -179,22 +201,31 @@
                                     <span class="text-outline">None</span>
                                 }
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="font-body-md text-primary mb-0">@submittedOn.ToString("MMM dd, yyyy")</p>
-                                <p class="text-on-surface-variant mb-0 fs-11">@submittedOn.ToString("hh:mm tt")</p>
+                            <td class="px-3 py-3 font-body-md font-bold text-primary text-nowrap">
+                                @if (booking.Price > 0)
+                                {
+                                    <span>£@booking.Price.ToString("F2")</span>
+                                    @if (!booking.FinalPrice.HasValue)
+                                    {
+                                        <p class="text-on-surface-variant mb-0 fs-11 fw-normal">estimate</p>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-outline fw-normal">Not set</span>
+                                }
                             </td>
-                            <td class="px-4 py-3 font-body-md font-bold text-primary">£@booking.TotalAmount.ToString("F2")</td>
-                            <td class="px-4 py-3">
-                                <span class="px-3 py-1 rounded-full font-label-sm font-bold @statusBadgeClass">@booking.StatusName</span>
+                            <td class="px-3 py-3">
+                                <span class="px-3 py-1 rounded-full font-label-sm font-bold text-nowrap @jobBadgeClass">@booking.JobLabel</span>
                             </td>
-                            <td class="px-4 py-3">
-                                <span class="d-flex align-items-center gap-1.5 font-label-sm font-bold @paymentTextClass">
-                                    <span class="rounded-circle payment-dot @paymentDotClass"></span>
-                                    <span>@paymentText</span>
+                            <td class="px-3 py-3">
+                                <span class="d-flex align-items-center gap-2 font-label-sm font-bold text-nowrap @paymentTextClass">
+                                    <span class="rounded-circle payment-dot flex-shrink-0 @paymentDotClass"></span>
+                                    <span>@booking.MoneyLabel</span>
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-right">
-                                <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@booking.Id" class="btn btn-secondary font-button-text admin-btn-compact">Details</a>
+                            <td class="px-3 py-3 text-right">
+                                <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@booking.Id" class="btn btn-secondary font-button-text admin-btn-compact">Open</a>
                             </td>
                         </tr>
                     }
@@ -202,7 +233,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="9" class="text-center p-4 text-muted">No appointments booked yet.</td>
+                        <td colspan="8" class="text-center p-4 text-muted">@(string.IsNullOrWhiteSpace(Model.StatusFilter) ? "No jobs yet." : "No jobs with this label.")</td>
                     </tr>
                 }
             </tbody>

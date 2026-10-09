@@ -27,6 +27,8 @@ namespace HandyFix.Services.Data.Bookings
 
     public class BookingsService : IBookingsService
     {
+        private const int MaxCancelReasonLength = 500;
+
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
         private readonly IDeletableEntityRepository<Service> serviceRepository;
         private readonly IDeletableEntityRepository<AvailabilitySlot> slotRepository;
@@ -129,8 +131,16 @@ namespace HandyFix.Services.Data.Bookings
                 UserId = userId,
                 TotalAmount = totalAmount,
                 DepositAmount = depositAmount,
+                Source = BookingSource.Website,
+
+                // The job's own copy of its day and hour. It keeps them when it gives the slot
+                // back, so a cancelled or abandoned booking still says when it was for.
+                ScheduledStart = slot.StartTime,
+                ScheduledEnd = slot.EndTime,
                 BookingServices = new List<BookingService>(),
             };
+
+            booking.History.Add(JobHistory.Line("Booked on the website."));
 
             // 2. Link services directly to the navigation property list before saving
             foreach (Service svc in selectedServices)
@@ -186,6 +196,70 @@ namespace HandyFix.Services.Data.Bookings
             return booking;
         }
 
+        public async Task<Guid> CreateWrittenInJobAsync(JobInputModel model)
+        {
+            if (model.Source == null || model.Source == BookingSource.Website)
+            {
+                throw new InvalidOperationException("A job written in by the admin comes from somewhere other than the website.");
+            }
+
+            if (model.Date == null || model.Time == null)
+            {
+                throw new InvalidOperationException("A job needs a day and a time.");
+            }
+
+            // Booked from the start, with no deposit to wait for. "Pending" is a website booking
+            // waiting for its deposit, and the sweep that abandons those after fifteen minutes
+            // must never pick up a job the admin wrote in.
+            BookingStatus bookedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
+            if (bookedStatus == null)
+            {
+                throw new InvalidOperationException("Booking status 'Approved' is not seeded.");
+            }
+
+            Service service = model.ServiceId.HasValue
+                ? await this.serviceRepository.All().FirstOrDefaultAsync(x => x.Id == model.ServiceId.Value)
+                : null;
+
+            DateTime start = model.Date.Value.Date + model.Time.Value;
+
+            var booking = new Booking
+            {
+                CustomerFirstName = model.CustomerFirstName.Trim(),
+                CustomerLastName = NullIfBlank(model.CustomerLastName),
+                Email = NullIfBlank(model.Email),
+                PhoneNumber = model.PhoneNumber.Trim(),
+                Address = NullIfBlank(model.Address),
+                ProblemDescription = NullIfBlank(model.ProblemDescription),
+                StatusId = bookedStatus.Id,
+                Source = model.Source.Value,
+
+                // An hour in the calendar is a start time, and one hour is the least a customer
+                // pays for. No slot is claimed: the admin blocks the hour in the calendar by hand,
+                // as agreed for every job that is written in.
+                ScheduledStart = start,
+                ScheduledEnd = start.AddHours(1),
+                TotalAmount = service?.BasePrice,
+            };
+
+            if (service != null)
+            {
+                booking.BookingServices.Add(new BookingService
+                {
+                    ServiceId = service.Id,
+                    PriceAtBooking = service.BasePrice,
+                    Quantity = 1,
+                });
+            }
+
+            booking.History.Add(JobHistory.Line($"Written in by the admin. Came from: {model.Source.Value}."));
+
+            await this.bookingRepository.AddAsync(booking);
+            await this.bookingRepository.SaveChangesAsync();
+
+            return booking.Id;
+        }
+
         public async Task<T> GetByIdAsync<T>(Guid id)
         {
             return await this.bookingRepository.All()
@@ -201,16 +275,19 @@ namespace HandyFix.Services.Data.Bookings
         {
             IQueryable<Booking> query = this.bookingRepository.All();
 
+            // The filter is one of the job's labels ("Booked", "Done"), which may stand for more
+            // than one of the database's own status names (JobLabels).
             if (!string.IsNullOrWhiteSpace(statusFilter))
             {
-                query = query.Where(x => x.Status.Name == statusFilter);
+                IReadOnlyList<string> statusNames = JobLabels.StatusNames(statusFilter);
+                query = query.Where(x => statusNames.Contains(x.Status.Name));
             }
 
             query = sortField switch
             {
                 BookingSortField.AppointmentTime => descending
-                    ? query.OrderByDescending(x => x.AvailabilitySlot.StartTime)
-                    : query.OrderBy(x => x.AvailabilitySlot.StartTime),
+                    ? query.OrderByDescending(x => x.ScheduledStart)
+                    : query.OrderBy(x => x.ScheduledStart),
                 BookingSortField.CustomerName => descending
                     ? query.OrderByDescending(x => x.CustomerFirstName).ThenByDescending(x => x.CustomerLastName)
                     : query.OrderBy(x => x.CustomerFirstName).ThenBy(x => x.CustomerLastName),
@@ -234,7 +311,7 @@ namespace HandyFix.Services.Data.Bookings
                 .ToListAsync();
         }
 
-        public async Task<bool> CompleteBookingAsync(Guid bookingId)
+        public async Task<bool> CompleteBookingAsync(Guid bookingId, decimal finalPrice)
         {
             Booking booking = await this.bookingRepository.All()
                 .Include(x => x.Status)
@@ -244,13 +321,44 @@ namespace HandyFix.Services.Data.Bookings
 
             if (booking == null
                 || completedStatus == null
-                || !BookingRules.CanComplete(booking.Status?.Name, IsDepositPaid(booking)))
+                || !IsAPrice(finalPrice)
+                || !BookingRules.CanComplete(booking.Status?.Name, booking.Source == BookingSource.Website, IsDepositPaid(booking)))
             {
                 return false;
             }
 
+            // The final price is what the money list is added up against: until it is typed in
+            // the page can only show an estimate, and no job can be "Paid in full".
             booking.StatusId = completedStatus.Id;
+            booking.FinalPrice = finalPrice;
+            booking.History.Add(JobHistory.Line($"Marked done. Final price {JobHistory.Pounds(finalPrice)}."));
+
             await this.bookingRepository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ChangeFinalPriceAsync(Guid bookingId, decimal finalPrice)
+        {
+            Booking booking = await this.bookingRepository.All()
+                .Include(x => x.Status)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
+
+            if (booking == null
+                || !IsAPrice(finalPrice)
+                || !BookingRules.CanChangeFinalPrice(booking.Status?.Name))
+            {
+                return false;
+            }
+
+            if (booking.FinalPrice != finalPrice)
+            {
+                booking.History.Add(JobHistory.Line(booking.FinalPrice.HasValue
+                    ? $"Final price changed from {JobHistory.Pounds(booking.FinalPrice.Value)} to {JobHistory.Pounds(finalPrice)}."
+                    : $"Final price set to {JobHistory.Pounds(finalPrice)}."));
+                booking.FinalPrice = finalPrice;
+                await this.bookingRepository.SaveChangesAsync();
+            }
+
             return true;
         }
 
@@ -274,7 +382,7 @@ namespace HandyFix.Services.Data.Bookings
             // Asked again here, not only by the page that shows the picker: the customer is
             // emailed a name and a number, and that must not happen for a booking that was
             // cancelled, or never paid for, while the admin's page sat open.
-            if (!BookingRules.CanPickTechnician(booking.Status?.Name, IsDepositPaid(booking)))
+            if (!BookingRules.CanPickTechnician(booking.Status?.Name, booking.Source == BookingSource.Website, IsDepositPaid(booking)))
             {
                 return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.NotAllowed, TechnicianName = currentName };
             }
@@ -302,25 +410,46 @@ namespace HandyFix.Services.Data.Bookings
             }
 
             booking.TechnicianId = technicianId;
-            await this.bookingRepository.SaveChangesAsync();
 
             if (technician == null)
             {
+                booking.History.Add(JobHistory.Line($"Technician taken off (was {currentName})."));
+                await this.bookingRepository.SaveChangesAsync();
                 return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.Cleared };
             }
 
+            var newName = NameFormat.Full(technician.FirstName, technician.LastName);
+
+            // The site emails website customers only. For a job that was written in the admin is
+            // already speaking to the customer, and tells them who is coming.
+            if (booking.Source != BookingSource.Website)
+            {
+                booking.History.Add(JobHistory.Line($"Technician picked: {newName}."));
+                await this.bookingRepository.SaveChangesAsync();
+                return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.AssignedNoEmailForWrittenInJob, TechnicianName = newName };
+            }
+
+            // Saved before the email goes, so a send that fails cannot undo the assignment. The
+            // history line follows the send, because it says whether the customer was told.
+            await this.bookingRepository.SaveChangesAsync();
+
             var emailed = await this.SendTechnicianEmailAsync(booking, technician);
+
+            booking.History.Add(JobHistory.Line(emailed
+                ? $"Technician picked: {newName}. The customer was emailed."
+                : $"Technician picked: {newName}. The email to the customer could not be sent."));
+            await this.bookingRepository.SaveChangesAsync();
 
             return new TechnicianAssignmentResult
             {
                 Outcome = emailed
                     ? TechnicianAssignmentOutcome.AssignedAndCustomerEmailed
                     : TechnicianAssignmentOutcome.AssignedButEmailNotSent,
-                TechnicianName = NameFormat.Full(technician.FirstName, technician.LastName),
+                TechnicianName = newName,
             };
         }
 
-        public async Task<bool> CancelBookingAsync(Guid bookingId)
+        public async Task<bool> CancelBookingAsync(Guid bookingId, string reason)
         {
             Booking booking = await this.bookingRepository.All()
                 .Include(x => x.Status)
@@ -329,14 +458,22 @@ namespace HandyFix.Services.Data.Bookings
 
             BookingStatus cancelledStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
 
+            reason = (reason ?? string.Empty).Trim();
+
             if (booking == null
                 || cancelledStatus == null
+                || reason.Length == 0
                 || !BookingRules.CanCancel(booking.Status?.Name))
             {
                 return false;
             }
 
+            // The reason is kept on the job, with the day and hour it was for: its slot goes back
+            // on sale below, and a slot given back no longer says whose it was.
             booking.StatusId = cancelledStatus.Id;
+            booking.CancelReason = reason.Length > MaxCancelReasonLength ? reason.Substring(0, MaxCancelReasonLength) : reason;
+            booking.ScheduledStart ??= booking.AvailabilitySlot?.StartTime;
+            booking.ScheduledEnd ??= booking.AvailabilitySlot?.EndTime;
 
             // Release slot
             List<AvailabilitySlot> slots = await this.slotRepository.All().Where(x => x.BookingId == bookingId).ToListAsync();
@@ -377,6 +514,12 @@ namespace HandyFix.Services.Data.Bookings
 
                 await this.bookingRepository.SaveChangesAsync();
             }
+
+            // The history line goes in a save of its own, after the one above has landed. That
+            // save can be sent twice (the retry just above), and a new row riding along with it
+            // would be sent twice with it.
+            booking.History.Add(JobHistory.Line($"Cancelled. Reason: {booking.CancelReason}"));
+            await this.bookingRepository.SaveChangesAsync();
 
             return true;
         }
@@ -422,8 +565,122 @@ namespace HandyFix.Services.Data.Bookings
                 // The booking's own technician is deliberately left untouched. Slots carry no
                 // technician (see AvailabilitySlot) - moving a job to a different hour doesn't
                 // change who was assigned to it, so an admin's assignment survives a reschedule.
+                booking.ScheduledStart = newSlot.StartTime;
+                booking.ScheduledEnd = newSlot.EndTime;
+                await this.bookingRepository.SaveChangesAsync();
+
                 await transaction.CommitAsync();
             }
+        }
+
+        public async Task<JobMoveResult> MoveBookingAsync(Guid bookingId, DateTime newStart)
+        {
+            Booking booking = await this.bookingRepository.All()
+                .Include(x => x.Status)
+                .Include(x => x.Payments).ThenInclude(p => p.Status)
+                .Include(x => x.AvailabilitySlot)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
+            if (booking == null)
+            {
+                return new JobMoveResult { Outcome = JobMoveOutcome.BookingNotFound };
+            }
+
+            var cameFromWebsite = booking.Source == BookingSource.Website;
+            if (!BookingRules.CanMove(booking.Status?.Name, cameFromWebsite, IsDepositPaid(booking)))
+            {
+                return new JobMoveResult { Outcome = JobMoveOutcome.NotAllowed };
+            }
+
+            DateTime? oldStart = booking.ScheduledStart ?? booking.AvailabilitySlot?.StartTime;
+            DateTime? oldEnd = booking.ScheduledEnd ?? booking.AvailabilitySlot?.EndTime;
+            if (oldStart == newStart)
+            {
+                return new JobMoveResult { Outcome = JobMoveOutcome.Unchanged, NewStart = newStart };
+            }
+
+            AvailabilitySlot oldSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.BookingId == bookingId);
+            AvailabilitySlot newSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.StartTime == newStart);
+
+            // A website booking carries its hour in the calendar with it: its deposit promised
+            // the time, so the new hour comes off sale where the calendar has it free. A job that
+            // was written in holds no hour, here as when it was made; the admin blocks by hand.
+            var takeNewHour = cameFromWebsite && newSlot != null && !newSlot.IsBooked && !newSlot.IsBlocked;
+
+            // The hour it leaves goes back on sale and the new one comes off together, or
+            // neither does: a move that failed half way would sell the same hour twice.
+            await using (IDbContextTransaction transaction = await this.dbQueryRunner.BeginTransactionAsync())
+            {
+                if (oldSlot != null && !await this.availabilityService.ReleaseSlotAsync(oldSlot.Id))
+                {
+                    await transaction.RollbackAsync();
+                    return new JobMoveResult { Outcome = JobMoveOutcome.CalendarChanged };
+                }
+
+                if (takeNewHour && !await this.availabilityService.BookSlotAsync(newSlot.Id, bookingId))
+                {
+                    await transaction.RollbackAsync();
+                    return new JobMoveResult { Outcome = JobMoveOutcome.CalendarChanged };
+                }
+
+                // It keeps the length it had, an hour unless its slot was longer.
+                TimeSpan length = oldStart.HasValue && oldEnd.HasValue && oldEnd > oldStart ? oldEnd.Value - oldStart.Value : TimeSpan.FromHours(1);
+                booking.ScheduledStart = newStart;
+                booking.ScheduledEnd = newStart + length;
+                booking.History.Add(JobHistory.Line(oldStart.HasValue
+                    ? $"Moved from {JobHistory.DayAndHour(oldStart.Value)} to {JobHistory.DayAndHour(newStart)}."
+                    : $"Moved to {JobHistory.DayAndHour(newStart)}."));
+                await this.bookingRepository.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+
+            return new JobMoveResult
+            {
+                Outcome = JobMoveOutcome.Moved,
+                NewStart = newStart,
+                OldHourFreed = oldSlot != null,
+                NewHourTaken = takeNewHour,
+                NewHourNotAvailable = cameFromWebsite && !takeNewHour,
+            };
+        }
+
+        public async Task<bool> SaveNotesAsync(Guid bookingId, string notes)
+        {
+            Booking booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
+            if (booking == null)
+            {
+                return false;
+            }
+
+            // No history line: the notes are the admin's own, and the box holds the latest.
+            booking.AdminNotes = NullIfBlank(notes);
+            await this.bookingRepository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<T>> GetHistoryAsync<T>(Guid bookingId)
+        {
+            return await this.bookingRepository.All()
+                .Where(x => x.Id == bookingId)
+                .SelectMany(x => x.History)
+                .OrderBy(x => x.CreatedOn)
+                .To<T>()
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> GetJobsForDayAsync<T>(DateTime day)
+        {
+            DateTime from = day.Date;
+            DateTime to = from.AddDays(1);
+
+            // Every job that is on or done that day, written-in ones too. A cancelled or
+            // abandoned job is left out: the admin opens the day to see who is going where.
+            return await this.bookingRepository.All()
+                .Where(x => x.ScheduledStart >= from && x.ScheduledStart < to)
+                .Where(x => x.Status.Name != "Cancelled" && x.Status.Name != "Abandoned")
+                .OrderBy(x => x.ScheduledStart)
+                .To<T>()
+                .ToListAsync();
         }
 
         public async Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan)
@@ -453,10 +710,17 @@ namespace HandyFix.Services.Data.Bookings
             foreach (Booking booking in staleBookings)
             {
                 booking.StatusId = abandonedStatus.Id;
+                booking.History.Add(JobHistory.Line("Abandoned: the deposit was not paid in time. Its hour went back on sale."));
             }
 
             foreach (AvailabilitySlot slot in slotsToRelease)
             {
+                // A booking saved before jobs kept their own date takes it from the slot now,
+                // in the last moment the slot still says whose it was.
+                Booking owner = staleBookings.First(x => x.Id == slot.BookingId);
+                owner.ScheduledStart ??= slot.StartTime;
+                owner.ScheduledEnd ??= slot.EndTime;
+
                 slot.IsBooked = false;
                 slot.BookingId = null;
             }
@@ -501,30 +765,46 @@ namespace HandyFix.Services.Data.Bookings
             // Deliberately takes the list rather than fetching it: the caller decides whether it
             // already has the right (unfiltered) list in hand or needs to fetch one, so a request
             // that isn't filtered doesn't pay for a redundant round trip.
+            // A cancelled or abandoned job keeps its date now, so it has to be left out by name:
+            // while it lost its date with its slot it fell out of both figures by accident.
+            List<BookingDetailsViewModel> standing = bookings
+                .Where(b => b.JobLabel == JobLabels.Booked || b.JobLabel == JobLabels.Done)
+                .ToList();
+
             return new BookingSummaryStats
             {
-                TodaysAppointmentsCount = bookings.Count(b => b.ScheduledTime.Date == DateTime.Today),
+                TodaysAppointmentsCount = standing.Count(b => b.ScheduledTime.Date == DateTime.Today),
 
-                // The admin's to-do after a deposit comes in: paid bookings nobody is on yet.
+                // The admin's to-do: jobs that are on and have nobody on them yet.
                 AwaitingTechnicianCount = bookings.Count(b => b.CanPickTechnician && b.TechnicianId == null),
-                MonthlyRevenue = bookings.Any()
-                    ? bookings.Where(b => b.ScheduledTime.Month == DateTime.Today.Month && b.ScheduledTime.Year == DateTime.Today.Year).Sum(b => b.TotalAmount)
-                    : 0,
+
+                // The final price where a job has one, its estimate until then.
+                MonthlyRevenue = standing
+                    .Where(b => b.ScheduledTime.Month == DateTime.Today.Month && b.ScheduledTime.Year == DateTime.Today.Year)
+                    .Sum(b => b.Price),
             };
         }
 
-        public async Task<IEnumerable<string>> GetStatusOptionsAsync()
+        // The list's filter offers the job's labels, in the order a job goes through them.
+        public Task<IEnumerable<string>> GetStatusOptionsAsync()
         {
-            return await this.statusRepository.All()
-                .Select(x => x.Name)
-                .OrderBy(x => x)
-                .ToListAsync();
+            return Task.FromResult<IEnumerable<string>>(JobLabels.JobOptions);
         }
 
         // The booking's payments have to be loaded with their statuses for this to say anything.
         private static bool IsDepositPaid(Booking booking)
         {
             return booking.Payments != null && booking.Payments.Any(p => p.Status != null && p.Status.Name == "DepositPaid");
+        }
+
+        private static string NullIfBlank(string text)
+        {
+            return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+        }
+
+        private static bool IsAPrice(decimal amount)
+        {
+            return amount > 0m && amount <= 100000m;
         }
 
         // The one customer email that names the technician, sent when an admin picks one. It used
@@ -535,8 +815,9 @@ namespace HandyFix.Services.Data.Bookings
         private async Task<bool> SendTechnicianEmailAsync(Booking booking, Technician technician)
         {
             var technicianName = EmailText.Encode(NameFormat.Full(technician.FirstName, technician.LastName));
-            var visit = booking.AvailabilitySlot != null
-                ? $" on <strong>{booking.AvailabilitySlot.StartTime:dd MMM yyyy 'at' HH:mm}</strong>"
+            DateTime? start = booking.ScheduledStart ?? booking.AvailabilitySlot?.StartTime;
+            var visit = start.HasValue
+                ? $" on <strong>{start.Value:dd MMM yyyy 'at' HH:mm}</strong>"
                 : string.Empty;
             var phoneLine = !string.IsNullOrWhiteSpace(technician.PhoneNumber)
                 ? $@"<p>You can reach {technicianName} on <a href=""tel:{EmailText.PhoneLink(technician.PhoneNumber)}"">{EmailText.Encode(technician.PhoneNumber)}</a>.</p>"
