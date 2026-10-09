@@ -821,9 +821,12 @@ namespace HandyFix.Services.Data.Tests
 
             BookingSummaryStats stats = service.GetSummaryStats(bookings);
 
-            Assert.Equal(2, stats.TodaysAppointmentsCount);
+            // The first one is still waiting for its deposit. It is not a job until the deposit is
+            // in, so it is in none of the three figures. While it read "Booked" it was counted
+            // as a job today and £100 of the month's work (PROJECT_STATE.md Section 3ch).
+            Assert.Equal(1, stats.TodaysAppointmentsCount);
             Assert.Equal(1, stats.AwaitingTechnicianCount);
-            Assert.Equal(425m, stats.MonthlyRevenue);
+            Assert.Equal(325m, stats.MonthlyRevenue);
         }
 
         // The card that used to read "Pending Approval" counted bookings waiting for a step that

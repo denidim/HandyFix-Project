@@ -12,6 +12,7 @@
     var jobBadgeClass = Model.JobLabel == JobLabels.Done ? "tint-success" :
                         Model.JobLabel == JobLabels.Cancelled ? "tint-error" :
                         Model.JobLabel == JobLabels.Abandoned ? "tint-neutral" :
+                        Model.JobLabel == JobLabels.WaitingForDeposit ? "tint-waiting" :
                         "tint-secondary";
     var moneyBadgeClass = Model.MoneyLabel == JobLabels.PaidInFull ? "tint-success" :
                           Model.MoneyLabel == JobLabels.DepositPaid || Model.MoneyLabel == JobLabels.PartPaid ? "tint-secondary" :
@@ -31,8 +32,9 @@
     Func<decimal, string> plain = amount => amount.ToString("0.00", CultureInfo.InvariantCulture);
     Func<decimal, string> pounds = amount => "£" + plain(amount);
 
-    // A job that was cancelled or abandoned owes nothing, whatever its estimate was.
-    var owesMoney = Model.JobLabel == JobLabels.Booked || Model.JobLabel == JobLabels.Done;
+    // A job that was cancelled or abandoned owes nothing, whatever its estimate was. One still
+    // waiting for its deposit owes all of it.
+    var owesMoney = Model.JobLabel == JobLabels.WaitingForDeposit || Model.JobLabel == JobLabels.Booked || Model.JobLabel == JobLabels.Done;
     var stillOwed = !owesMoney ? "Nothing: the job is " + Model.JobLabel.ToLowerInvariant()
         : Model.Price > 0 ? pounds(Model.StillOwed)
         : "Not known until the final price is typed in";

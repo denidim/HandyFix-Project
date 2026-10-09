@@ -13,6 +13,8 @@
     // those words, and back again for the list's filter.
     public static class JobLabels
     {
+        public const string WaitingForDeposit = "Waiting for deposit";
+
         public const string Booked = "Booked";
 
         public const string Done = "Done";
@@ -32,14 +34,17 @@
         public const string DepositRefunded = "Deposit refunded";
 
         // In the order a job goes through them, for the list's filter.
-        public static readonly IReadOnlyList<string> JobOptions = new[] { Booked, Done, Cancelled, Abandoned };
+        public static readonly IReadOnlyList<string> JobOptions = new[] { WaitingForDeposit, Booked, Done, Cancelled, Abandoned };
 
-        // "Booked" covers a website booking still waiting for its deposit too: it has a day and an
-        // hour, and the money label beside it says "Not paid".
+        // "Pending" is only ever a website booking still waiting for its deposit: paying moves it
+        // on in the same save, and a job the admin writes in starts further along. It is not a job
+        // yet and is dropped after about fifteen minutes, so it has a label of its own. It read
+        // "Booked" until one was taken for a written-in job (PROJECT_STATE.md Section 3ch).
         public static string Job(string statusName)
         {
             return statusName switch
             {
+                "Pending" => WaitingForDeposit,
                 "Completed" => Done,
                 "Cancelled" => Cancelled,
                 "Abandoned" => Abandoned,
@@ -52,7 +57,8 @@
         {
             return jobLabel switch
             {
-                Booked => new[] { "Pending", "Approved", "InProgress" },
+                WaitingForDeposit => new[] { "Pending" },
+                Booked => new[] { "Approved", "InProgress" },
                 Done => new[] { "Completed" },
                 Cancelled => new[] { "Cancelled" },
                 Abandoned => new[] { "Abandoned" },

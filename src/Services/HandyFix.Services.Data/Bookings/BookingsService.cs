@@ -1001,6 +1001,8 @@ namespace HandyFix.Services.Data.Bookings
             // that isn't filtered doesn't pay for a redundant round trip.
             // A cancelled or abandoned job keeps its date now, so it has to be left out by name:
             // while it lost its date with its slot it fell out of both figures by accident.
+            // A website booking still waiting for its deposit is left out too: it is not a job
+            // until the deposit is in, and most of those are gone a quarter of an hour later.
             List<BookingDetailsViewModel> standing = bookings
                 .Where(b => b.JobLabel == JobLabels.Booked || b.JobLabel == JobLabels.Done)
                 .ToList();

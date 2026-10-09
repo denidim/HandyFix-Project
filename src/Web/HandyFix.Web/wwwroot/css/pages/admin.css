@@ -244,6 +244,16 @@
   text-transform: uppercase;
 }
 
+/* The job list's label when it is too long for one line: "Waiting for" above "deposit", no
+   wider than the other labels, so the table is no wider with it than without. */
+.job-badge-two-lines {
+  display: inline-block;
+  max-width: 7.5em;
+  line-height: 1.25;
+  text-align: center;
+  border-radius: var(--radius-lg);
+}
+
 .payment-dot {
   display: inline-block;
   width: 6px;

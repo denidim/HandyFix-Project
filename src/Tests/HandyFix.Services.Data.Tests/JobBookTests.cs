@@ -457,8 +457,11 @@
             Assert.False(await world.Payments.RemovePaymentAsync(Guid.NewGuid(), deposit));
         }
 
+        // "Pending" is a website booking that has not paid its deposit. It read "Booked", the same
+        // as a job the admin had written in, and the two could not be told apart in the list
+        // (PROJECT_STATE.md Section 3ch).
         [Theory]
-        [InlineData("Pending", "Booked")]
+        [InlineData("Pending", "Waiting for deposit")]
         [InlineData("Approved", "Booked")]
         [InlineData("InProgress", "Booked")]
         [InlineData("Completed", "Done")]
@@ -495,7 +498,8 @@
         {
             using var world = new BookingWorld();
 
-            Assert.Equal(new[] { "Booked", "Done", "Cancelled", "Abandoned" }, await world.Bookings.GetStatusOptionsAsync());
+            Assert.Equal(new[] { "Waiting for deposit", "Booked", "Done", "Cancelled", "Abandoned" }, await world.Bookings.GetStatusOptionsAsync());
+            Assert.DoesNotContain("Pending", JobLabels.StatusNames("Booked"));
         }
 
         // A website booking's deposit promised the time, so it carries its hour in the calendar

@@ -61,7 +61,7 @@
                                 <p class="text-on-surface-variant mb-0 fs-13">@(job.Services.Any() ? string.Join(", ", job.Services) : "No service picked") &middot; @(job.TechnicianId != null ? job.TechnicianName : "No technician yet") &middot; @job.Source</p>
                             </div>
                         </div>
-                        <span class="status-badge @(job.JobLabel == JobLabels.Done ? "tint-success" : "tint-secondary")">@job.JobLabel</span>
+                        <span class="status-badge @(job.JobLabel == JobLabels.Done ? "tint-success" : job.JobLabel == JobLabels.WaitingForDeposit ? "tint-waiting" : "tint-secondary")">@job.JobLabel</span>
                     </a>
                 }
             }
@@ -106,7 +106,11 @@
                             <div>
                                 @if (slot.IsBooked)
                                 {
-                                    <span class="rounded slot-tag slot-tag-booked mb-1">Booked</span>
+                                    // A website booking holds its hour from the moment the form is sent, a
+                                    // quarter of an hour before it is dropped if the deposit does not come.
+                                    var waitingForDeposit = Model.Jobs.Any(j => j.Id == slot.BookingId && j.JobLabel == JobLabels.WaitingForDeposit);
+
+                                    <span class="rounded slot-tag @(waitingForDeposit ? "tint-waiting" : "slot-tag-booked") mb-1">@(waitingForDeposit ? JobLabels.WaitingForDeposit : "Booked")</span>
                                     <p class="font-body-md text-primary mb-0 fs-13">
                                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@slot.BookingId">Job #@BookingReference.Short(slot.BookingId.Value)</a>
                                     </p>

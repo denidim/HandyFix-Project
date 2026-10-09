@@ -157,7 +157,8 @@
             var id = new Dictionary<string, string> { ["id"] = booking.Id.ToString() };
 
             var opened = WebUtility.HtmlDecode(await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
-            Assert.Equal(("Booked", "Not paid"), LabelsOn(opened));
+            Assert.Equal(("Waiting for deposit", "Not paid"), LabelsOn(opened));
+            Assert.Matches("<dt>Still owed</dt>\\s*<dd>£", opened);
             Assert.DoesNotContain("name=\"technicianId\"", opened);
             Assert.Contains("A technician can be picked once the deposit is paid.", opened);
             Assert.DoesNotContain("id=\"job-complete\"", opened);
@@ -167,6 +168,24 @@
             Assert.Contains("A payment can be written here once the deposit is paid on the website.", opened);
             Assert.Contains("id=\"job-cancel\"", opened);
             Assert.Contains("Not yet, deposit not paid", opened);
+
+            // It read "Booked" and "Not paid", exactly as a job the admin had written in does,
+            // and the two could not be told apart in the list. It has its own label now, its own
+            // choice in the filter, and the hour it holds says so in the calendar
+            // (PROJECT_STATE.md Section 3ch).
+            var reference = "#" + BookingReference.Short(booking.Id);
+            var list = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage)).Content.ReadAsStringAsync());
+            Assert.Matches("job-badge-two-lines tint-waiting\">Waiting for deposit</span>", list);
+
+            var waiting = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage + "?status=Waiting%20for%20deposit")).Content.ReadAsStringAsync());
+            Assert.Contains(reference, waiting);
+
+            var booked = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage + "?status=Booked")).Content.ReadAsStringAsync());
+            Assert.DoesNotContain(reference, booked);
+
+            var day = WebUtility.HtmlDecode(await (await admin.GetAsync("/Administration/Calendar?date=" + booking.ScheduledStart.Value.ToString("yyyy-MM-dd"))).Content.ReadAsStringAsync());
+            Assert.Matches("slot-tag tint-waiting mb-1\">Waiting for deposit</span>", day);
+            Assert.Matches("status-badge tint-waiting\">Waiting for deposit</span>", day);
 
             HttpResponseMessage picked = await PostFromAsync(admin, jobPage, JobsPage + "/AssignTechnician", With(id, "technicianId", site.LaunchTechnicianId().ToString()));
             Assert.Contains("Nothing was changed. A technician can be picked while the job is booked, and on a website booking only once its deposit is paid.", WebUtility.HtmlDecode(await picked.Content.ReadAsStringAsync()));
@@ -810,7 +829,7 @@
             Assert.Equal(2, Regex.Matches(list, ">Needs one</span>").Count);
             Assert.Contains("<span>Deposit paid</span>", list);
             Assert.Contains("<span>Not paid</span>", list);
-            Assert.Matches("<option value=\"Booked\"[^>]*>Booked</option>\\s*<option value=\"Done\"[^>]*>Done</option>\\s*<option value=\"Cancelled\"[^>]*>Cancelled</option>\\s*<option value=\"Abandoned\"[^>]*>Abandoned</option>", list);
+            Assert.Matches("<option value=\"Waiting for deposit\"[^>]*>Waiting for deposit</option>\\s*<option value=\"Booked\"[^>]*>Booked</option>\\s*<option value=\"Done\"[^>]*>Done</option>\\s*<option value=\"Cancelled\"[^>]*>Cancelled</option>\\s*<option value=\"Abandoned\"[^>]*>Abandoned</option>", list);
 
             await PostFromAsync(admin, JobPage(booking.Id), JobsPage + "/AssignTechnician", new Dictionary<string, string>
             {
