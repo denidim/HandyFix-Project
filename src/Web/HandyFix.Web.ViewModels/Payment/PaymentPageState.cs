@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Payment
+﻿namespace HandyFix.Web.ViewModels.Payment
 {
     // What the page a customer lands on without a paid booking has to tell them.
     public enum PaymentPageState
