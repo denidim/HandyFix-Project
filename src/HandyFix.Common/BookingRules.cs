@@ -59,6 +59,15 @@
             return statusName == Cancelled && depositPaidOrRefunded;
         }
 
+        // Who the customer is, where the job is and what it is can be put right while the job is
+        // booked and once it is done: a wrong phone number matters until the job is paid for, and
+        // a wrong address after that. A cancelled or abandoned job is a record of what happened,
+        // and keeps the details it ended with (PROJECT_STATE.md Section 3cf).
+        public static bool CanEditDetails(string statusName)
+        {
+            return statusName == Pending || IsUnderWay(statusName) || statusName == Completed;
+        }
+
         private static bool IsOn(string statusName, bool cameFromWebsite, bool depositPaid)
         {
             return IsUnderWay(statusName) && (!cameFromWebsite || depositPaid);

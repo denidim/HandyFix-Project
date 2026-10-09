@@ -85,6 +85,7 @@
                 bookingStatusRepo,
                 new EfDeletableEntityRepository<BookingImage>(this.DbContext),
                 new EfDeletableEntityRepository<Technician>(this.DbContext),
+                new EfDeletableEntityRepository<BookingService>(this.DbContext),
                 this.Availability,
                 this.Payments,
                 new DbQueryRunner(this.DbContext),
@@ -188,6 +189,42 @@
         {
             Guid id = await this.Bookings.CreateWrittenInJobAsync(this.WrittenInJob(start));
             return this.DbContext.Bookings.Single(x => x.Id == id);
+        }
+
+        // The form that puts a job's details right, filled in with what the job holds now: what
+        // the admin's page sends back when nothing on it is touched.
+        public JobEditInputModel EditFormOf(Booking booking)
+        {
+            Booking job = this.DbContext.Bookings.Include(x => x.BookingServices).Single(x => x.Id == booking.Id);
+
+            return new JobEditInputModel
+            {
+                Id = job.Id,
+                CustomerFirstName = job.CustomerFirstName,
+                CustomerLastName = job.CustomerLastName,
+                PhoneNumber = job.PhoneNumber,
+                Email = job.Email,
+                Address = job.Address,
+                ServiceId = job.BookingServices.Where(x => !x.IsDeleted).Select(x => (Guid?)x.ServiceId).FirstOrDefault(),
+                ProblemDescription = job.ProblemDescription,
+                Source = job.Source == BookingSource.Website ? null : job.Source,
+            };
+        }
+
+        // Another service on the list, for a job whose service is changed.
+        public Service AddService(string name, decimal price)
+        {
+            var added = new Service
+            {
+                Name = name,
+                Description = name,
+                Slug = name.ToLowerInvariant().Replace(' ', '-'),
+                BasePrice = price,
+                CategoryId = this.service.CategoryId,
+            };
+            this.DbContext.Services.Add(added);
+            this.DbContext.SaveChanges();
+            return added;
         }
 
         public Technician AddTechnician(string firstName, string lastName = null, string phoneNumber = "020 3951 5915")

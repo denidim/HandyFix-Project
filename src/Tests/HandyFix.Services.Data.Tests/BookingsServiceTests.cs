@@ -100,6 +100,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 technicianRepo,
+                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
@@ -229,6 +230,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 technicianRepo,
+                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
@@ -335,6 +337,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 technicianRepo,
+                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
@@ -439,6 +442,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 technicianRepo,
+                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
@@ -519,6 +523,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 technicianRepo,
+                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
@@ -636,6 +641,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 technicianRepo,
+                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
@@ -791,6 +797,7 @@ namespace HandyFix.Services.Data.Tests
                 bookingStatusRepo,
                 bookingImageRepo,
                 technicianRepo,
+                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
@@ -803,7 +810,7 @@ namespace HandyFix.Services.Data.Tests
         {
             // A pure computation over whatever list it's handed - no repository access - so it
             // needs none of BookingsService's other dependencies wired up.
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -825,7 +832,7 @@ namespace HandyFix.Services.Data.Tests
         [Fact]
         public void GetSummaryStatsShouldCountOnlyPaidOpenBookingsWithNoTechnicianAsWaitingForOne()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -846,7 +853,7 @@ namespace HandyFix.Services.Data.Tests
         [Fact]
         public void GetSummaryStatsShouldReturnZeroRevenueForAnEmptyList()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
 
             BookingSummaryStats stats = service.GetSummaryStats(new List<BookingDetailsViewModel>());
 
@@ -861,7 +868,7 @@ namespace HandyFix.Services.Data.Tests
         [Fact]
         public void GetSummaryStatsShouldLeaveOutJobsThatWereCancelledOrAbandoned()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
 
             var bookings = new List<BookingDetailsViewModel>
             {

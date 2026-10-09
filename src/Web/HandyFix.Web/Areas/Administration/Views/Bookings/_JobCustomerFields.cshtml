@@ -1,0 +1,37 @@
+@model HandyFix.Web.ViewModels.Booking.JobDetailsInputModel
+@* Who the customer is. "Write a job in" and "Edit the details" both use these boxes, so the two
+   forms ask for the same things in the same words (PROJECT_STATE.md Section 3cf). *@
+
+<div class="row gy-4">
+    <div class="col-md-6 form-group">
+        <label asp-for="CustomerFirstName" class="form-label font-label-sm text-on-surface-variant mb-2">First Name</label>
+        <input asp-for="CustomerFirstName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
+        <span asp-validation-for="CustomerFirstName" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 form-group">
+        <label asp-for="CustomerLastName" class="form-label font-label-sm text-on-surface-variant mb-2">Last Name (optional)</label>
+        <input asp-for="CustomerLastName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" />
+        <span asp-validation-for="CustomerLastName" class="text-danger small"></span>
+    </div>
+</div>
+
+<div class="row gy-4">
+    <div class="col-md-6 form-group">
+        <label asp-for="PhoneNumber" class="form-label font-label-sm text-on-surface-variant mb-2">Phone Number</label>
+        <input asp-for="PhoneNumber" class="form-control py-3 admin-form-control form-pad-standard" type="tel" maxlength="20" required />
+        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 form-group">
+        <label asp-for="Email" class="form-label font-label-sm text-on-surface-variant mb-2">@(Model.CameFromWebsite ? "Email" : "Email (optional)")</label>
+        <input asp-for="Email" class="form-control py-3 admin-form-control form-pad-standard" type="email" maxlength="255" required="@Model.CameFromWebsite" />
+        @if (Model.CameFromWebsite)
+        {
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">The site emails this customer at this address. Saving a new one sends nothing.</span>
+        }
+        else
+        {
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Kept on the job. The site sends no email for a job that is written in.</span>
+        }
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+</div>

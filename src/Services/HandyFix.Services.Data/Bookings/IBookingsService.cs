@@ -62,6 +62,15 @@ namespace HandyFix.Services.Data.Bookings
         Task<JobMoveResult> MoveBookingAsync(Guid bookingId, DateTime newStart);
 
         /// <summary>
+        /// Puts a job's details right: the name, the phone number, the email, the address, the
+        /// service and what the job is, and for a written-in job where it came from. Not its
+        /// day and time, which <see cref="MoveBookingAsync"/> changes. Nothing is emailed. The
+        /// result says what changed, or why nothing did; <see cref="BookingRules.CanEditDetails"/>
+        /// decides whether the job may be edited at all.
+        /// </summary>
+        Task<JobEditResult> EditDetailsAsync(JobEditInputModel model);
+
+        /// <summary>
         /// Saves the notes only the admin sees. False when there is no such job.
         /// </summary>
         Task<bool> SaveNotesAsync(Guid bookingId, string notes);

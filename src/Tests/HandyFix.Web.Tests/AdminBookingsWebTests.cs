@@ -561,6 +561,220 @@
             Assert.Equal(free.StartTime, site.Booking().ScheduledStart);
         }
 
+        // The one thing the Job Book left out: a phone number typed wrongly meant cancelling the
+        // job and writing it in again. The job's page has a button, and the form behind it opens
+        // with what the job holds (PROJECT_STATE.md Section 3cf).
+        [Fact]
+        public async Task AWrittenInJobsDetailsArePutRightOnAFormThatOpensFilledIn()
+        {
+            using var site = new Site();
+            HttpClient admin = await site.SignedInAdminAsync();
+            DateTime start = DateTime.Today.AddDays(4).AddHours(15);
+            Guid jobId = await site.WriteAJobInAsync(admin, start);
+            var jobPage = JobPage(jobId);
+            var editPage = EditPage(jobId);
+            Service service = site.Read(dbContext => dbContext.Services.OrderBy(x => x.Name).First());
+
+            var opened = WebUtility.HtmlDecode(await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
+            Assert.Contains("href=\"" + editPage + "\"", Regex.Match(opened, "<a[^>]*id=\"job-edit-details\"[^>]*>").Value);
+
+            var form = WebUtility.HtmlDecode(await (await admin.GetAsync(editPage)).Content.ReadAsStringAsync());
+            Assert.Contains("Edit the Details of Job #" + BookingReference.Short(jobId), form);
+            Assert.Matches("name=\"CustomerFirstName\"[^>]*value=\"Grace\"", form);
+            Assert.Matches("name=\"PhoneNumber\"[^>]*value=\"07700 900456\"", form);
+            Assert.Matches("<option value=\"Agency\" selected=\"selected\">Agency</option>", form);
+            Assert.DoesNotContain("<option value=\"Website\"", form);
+
+            // The day and the time are "Move"'s to change, not this form's.
+            Assert.DoesNotContain("name=\"Date\"", form);
+            Assert.DoesNotContain("name=\"Time\"", form);
+
+            var fields = new Dictionary<string, string>
+            {
+                ["Id"] = jobId.ToString(),
+                ["CustomerFirstName"] = "Grace",
+                ["CustomerLastName"] = "Hopper",
+                ["PhoneNumber"] = "07700 900999",
+                ["Address"] = "3 Navy Row, Epsom, KT17 1AA",
+                ["ServiceId"] = service.Id.ToString(),
+                ["Source"] = "Phone",
+                ["ProblemDescription"] = "Fit a new kitchen tap.",
+            };
+
+            HttpResponseMessage saved = await PostFromAsync(admin, editPage, editPage, fields);
+
+            var page = WebUtility.HtmlDecode(await saved.Content.ReadAsStringAsync());
+            Assert.Equal(jobPage, saved.RequestMessage.RequestUri.AbsolutePath);
+            Assert.Contains("The details are saved. Changed: last name, phone number, address, service, where it came from, what the job is.", page);
+            Assert.Contains("Grace Hopper · came from: Phone", page);
+            Assert.Contains("<span>07700 900999</span>", page);
+            Assert.Contains("3 Navy Row, Epsom, KT17 1AA", page);
+            Assert.Contains(service.Name, page);
+            Assert.Contains("Fit a new kitchen tap.", page);
+            Assert.Matches("<dt>Estimate</dt>\\s*<dd>£" + service.BasePrice.ToString("0.00", CultureInfo.InvariantCulture) + "</dd>", page);
+            Assert.Contains(
+                "<span class=\"job-ledger-what text-primary\">Details changed. Last name was empty. Phone number was 07700 900456. Address was not written down. Service was not picked. Where it came from was Agency. The job had no description.</span>",
+                page);
+
+            // Still the same job at the same time, and nobody was emailed about any of it.
+            Assert.Equal(start, site.Booking().ScheduledStart);
+            Assert.Equal(("Booked", "Not paid"), LabelsOn(page));
+            Assert.Empty(site.Emails.Sent);
+
+            // Saved again as it stands.
+            HttpResponseMessage again = await PostFromAsync(admin, editPage, editPage, fields);
+            Assert.Contains("Nothing was changed: the details are as they were.", WebUtility.HtmlDecode(await again.Content.ReadAsStringAsync()));
+
+            // A job needs a phone number when it is put right, as when it is written in. The
+            // form comes back with what was typed, and the job keeps the number it had.
+            HttpResponseMessage refused = await PostFromAsync(admin, editPage, editPage, With(With(fields, "PhoneNumber", string.Empty), "CustomerLastName", "Murray"));
+            var refusedPage = WebUtility.HtmlDecode(await refused.Content.ReadAsStringAsync());
+            Assert.Contains("Phone number is required.", refusedPage);
+            Assert.Matches("name=\"CustomerLastName\"[^>]*value=\"Murray\"", refusedPage);
+            Assert.Equal("07700 900999", site.Booking().PhoneNumber);
+            Assert.Equal("Hopper", site.Booking().CustomerLastName);
+        }
+
+        // A customer who booked on the website rings to say the email was typed wrongly. The
+        // booking's details are put right like any other job's, with two differences: it stays
+        // a website booking, and it keeps an email, because the site emails this customer.
+        [Fact]
+        public async Task AWebsiteBookingsDetailsArePutRightButItKeepsAnEmailAndStaysAWebsiteBooking()
+        {
+            using var site = new Site();
+            Booking booking = await site.BookAndPayAsync(site.AFreeSlot());
+            HttpClient admin = await site.SignedInAdminAsync();
+            var jobPage = JobPage(booking.Id);
+            var editPage = EditPage(booking.Id);
+            Guid serviceId = site.Read(dbContext => dbContext.BookingServices.Single().ServiceId);
+            await PostFromAsync(admin, jobPage, JobsPage + "/AssignTechnician", new Dictionary<string, string>
+            {
+                ["id"] = booking.Id.ToString(),
+                ["technicianId"] = site.LaunchTechnicianId().ToString(),
+            });
+            var emailsBefore = site.Emails.Sent.Count;
+
+            var form = WebUtility.HtmlDecode(await (await admin.GetAsync(editPage)).Content.ReadAsStringAsync());
+            Assert.DoesNotContain("name=\"Source\"", form);
+            Assert.Contains("The site emails this customer at this address.", form);
+            var emailBox = Regex.Match(form, "<input[^>]*name=\"Email\"[^>]*>").Value;
+            Assert.Contains("value=\"ada@example.com\"", emailBox);
+            Assert.Contains("required", emailBox);
+            Assert.Matches("<option value=\"" + serviceId + "\" selected=\"selected\">", form);
+            Assert.Matches("name=\"Address\"[^>]*value=\"1 Analytical Engine Way, Chessington, KT9 1AA\"", form);
+
+            var fields = new Dictionary<string, string>
+            {
+                ["Id"] = booking.Id.ToString(),
+                ["CustomerFirstName"] = "Ada",
+                ["CustomerLastName"] = "Lovelace",
+                ["PhoneNumber"] = "07700 900123",
+                ["Email"] = string.Empty,
+                ["Address"] = "1 Analytical Engine Way, Chessington, KT9 1AA",
+                ["ServiceId"] = serviceId.ToString(),
+                ["ProblemDescription"] = "The kitchen tap has been dripping for a week.",
+            };
+
+            HttpResponseMessage noEmail = await PostFromAsync(admin, editPage, editPage, fields);
+            Assert.Contains("A website booking keeps an email address: the site emails this customer.", WebUtility.HtmlDecode(await noEmail.Content.ReadAsStringAsync()));
+            Assert.Equal("ada@example.com", site.Booking().Email);
+
+            // A form sent without the page can name somewhere else it came from.
+            HttpResponseMessage saved = await PostFromAsync(admin, editPage, editPage, With(With(fields, "Email", "ada.lovelace@example.com"), "Source", "Phone"));
+
+            var page = WebUtility.HtmlDecode(await saved.Content.ReadAsStringAsync());
+            Assert.Equal(jobPage, saved.RequestMessage.RequestUri.AbsolutePath);
+            Assert.Contains(
+                "The details are saved. Changed: email. The emails the site sent before went to the old address, and nothing was sent to the new one. To send the technician's name and number to the new address, set the technician to \"Unassigned\", save, then pick Zapryan again.",
+                page);
+            Assert.Contains("<span>ada.lovelace@example.com</span>", page);
+            Assert.Contains("Ada Lovelace · came from: Website", page);
+            Assert.Equal(("Booked", "Deposit paid"), LabelsOn(page));
+            Assert.Equal(BookingSource.Website, site.Booking().Source);
+            Assert.Equal(emailsBefore, site.Emails.Sent.Count);
+
+            // What the line says to do does send the email, to the new address.
+            var id = new Dictionary<string, string> { ["id"] = booking.Id.ToString() };
+            await PostFromAsync(admin, jobPage, JobsPage + "/AssignTechnician", With(id, "technicianId", string.Empty));
+            await PostFromAsync(admin, jobPage, JobsPage + "/AssignTechnician", With(id, "technicianId", site.LaunchTechnicianId().ToString()));
+            Assert.Equal("ada.lovelace@example.com", site.Emails.Sent.Last(e => e.Subject == TechnicianEmailSubject).To);
+        }
+
+        // A service deleted in the admin panel is no longer on the form's list. The job that was
+        // booked with it gets an option of its own, already picked: without it the list would
+        // open on "Not picked", and correcting a phone number would take the service off the job.
+        [Fact]
+        public async Task AJobKeepsAServiceNoLongerOfferedWhenItsOtherDetailsAreSaved()
+        {
+            using var site = new Site();
+            Booking booking = await site.BookAndPayAsync(site.AFreeSlot());
+            HttpClient admin = await site.SignedInAdminAsync();
+            var editPage = EditPage(booking.Id);
+            Guid serviceId = site.Read(dbContext => dbContext.BookingServices.Single().ServiceId);
+            site.Write(dbContext =>
+            {
+                Service service = dbContext.Services.Single(x => x.Id == serviceId);
+                service.IsDeleted = true;
+                service.DeletedOn = DateTime.UtcNow;
+                return service.Id;
+            });
+
+            var form = WebUtility.HtmlDecode(await (await admin.GetAsync(editPage)).Content.ReadAsStringAsync());
+            Assert.Contains("<option value=\"" + serviceId + "\" selected=\"selected\">The service it has now (no longer offered)</option>", form);
+
+            HttpResponseMessage saved = await PostFromAsync(admin, editPage, editPage, new Dictionary<string, string>
+            {
+                ["Id"] = booking.Id.ToString(),
+                ["CustomerFirstName"] = "Ada",
+                ["CustomerLastName"] = "Lovelace",
+                ["PhoneNumber"] = "07700 900999",
+                ["Email"] = "ada@example.com",
+                ["Address"] = "1 Analytical Engine Way, Chessington, KT9 1AA",
+                ["ServiceId"] = serviceId.ToString(),
+                ["ProblemDescription"] = "The kitchen tap has been dripping for a week.",
+            });
+
+            Assert.Contains("The details are saved. Changed: phone number.", WebUtility.HtmlDecode(await saved.Content.ReadAsStringAsync()));
+            Assert.Equal(serviceId, site.Read(dbContext => dbContext.BookingServices.Single().ServiceId));
+            Assert.NotNull(site.Booking().TotalAmount);
+        }
+
+        // A cancelled job is a record of what happened. Its page has no button, the form does
+        // not open, and one that was opened before the job was cancelled changes nothing.
+        [Fact]
+        public async Task ACancelledJobsDetailsCannotBeEditedEvenFromAFormOpenedBefore()
+        {
+            using var site = new Site();
+            HttpClient admin = await site.SignedInAdminAsync();
+            Guid jobId = await site.WriteAJobInAsync(admin, DateTime.Today.AddDays(4).AddHours(15));
+            var jobPage = JobPage(jobId);
+            var editPage = EditPage(jobId);
+            var refusal = "Nothing was changed. A job's details can be put right while it is booked or done, not once it is cancelled or abandoned.";
+            var openedBefore = await (await admin.GetAsync(editPage)).Content.ReadAsStringAsync();
+
+            HttpResponseMessage cancelled = await PostFromAsync(admin, jobPage, JobsPage + "/Cancel", new Dictionary<string, string>
+            {
+                ["id"] = jobId.ToString(),
+                ["reason"] = "The agency withdrew the job.",
+            });
+            Assert.DoesNotContain("id=\"job-edit-details\"", await cancelled.Content.ReadAsStringAsync());
+
+            HttpResponseMessage reopened = await admin.GetAsync(editPage);
+            Assert.Equal(jobPage, reopened.RequestMessage.RequestUri.AbsolutePath);
+            Assert.Contains(refusal, WebUtility.HtmlDecode(await reopened.Content.ReadAsStringAsync()));
+
+            HttpResponseMessage sent = await PostToAsync(admin, openedBefore, editPage, new Dictionary<string, string>
+            {
+                ["Id"] = jobId.ToString(),
+                ["CustomerFirstName"] = "Grace",
+                ["PhoneNumber"] = "07700 900999",
+                ["Source"] = "Agency",
+            });
+
+            Assert.Contains(refusal, WebUtility.HtmlDecode(await sent.Content.ReadAsStringAsync()));
+            Assert.Equal("07700 900456", site.Booking().PhoneNumber);
+        }
+
         // The address the "Approve" button posted to. A booking is approved by its deposit.
         [Fact]
         public async Task TheApproveAddressIsGone()
@@ -669,6 +883,8 @@
         }
 
         private static string JobPage(Guid id) => JobsPage + "/Details/" + id;
+
+        private static string EditPage(Guid id) => JobsPage + "/Edit/" + id;
 
         // The two labels at the top of a job's page: where the work stands, and the money.
         private static (string Job, string Money) LabelsOn(string page)

@@ -594,6 +594,191 @@ namespace HandyFix.Web.Tests.Controllers
             Assert.Same(history, model.History);
         }
 
+        // "Edit the Details" opens the form with what the job holds now, so the admin changes the
+        // one box that is wrong and types nothing twice (PROJECT_STATE.md Section 3cf).
+        [Fact]
+        public async Task EditShouldOpenTheFormFilledInWithWhatTheJobHolds()
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            var jobId = Guid.NewGuid();
+            var serviceId = Guid.NewGuid();
+            bookingsService
+                .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(jobId))
+                .ReturnsAsync(new BookingDetailsViewModel
+                {
+                    Id = jobId,
+                    StatusName = "Approved",
+                    Source = BookingSource.Agency,
+                    CustomerFirstName = "Grace",
+                    CustomerLastName = "Hopper",
+                    PhoneNumber = "07700 900456",
+                    Email = "grace@example.com",
+                    Address = "3 Navy Row, Epsom",
+                    ProblemDescription = "Fit a new kitchen tap.",
+                    ServiceId = serviceId,
+                });
+
+            var result = await controller.Edit(jobId);
+
+            var view = Assert.IsType<ViewResult>(result);
+            Assert.Equal("Edit", view.ViewName);
+            var model = Assert.IsType<JobEditInputModel>(view.Model);
+            Assert.Equal(jobId, model.Id);
+            Assert.Equal("Grace", model.CustomerFirstName);
+            Assert.Equal("Hopper", model.CustomerLastName);
+            Assert.Equal("07700 900456", model.PhoneNumber);
+            Assert.Equal("grace@example.com", model.Email);
+            Assert.Equal("3 Navy Row, Epsom", model.Address);
+            Assert.Equal("Fit a new kitchen tap.", model.ProblemDescription);
+            Assert.Equal(serviceId, model.ServiceId);
+            Assert.Equal(BookingSource.Agency, model.Source);
+            Assert.False(model.CameFromWebsite);
+        }
+
+        // A website booking's form has no "Came from" box, and its email is not optional.
+        [Fact]
+        public async Task EditShouldOpenAWebsiteBookingWithNoPlaceItCameFromToPick()
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            var jobId = Guid.NewGuid();
+            bookingsService
+                .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(jobId))
+                .ReturnsAsync(new BookingDetailsViewModel { Id = jobId, StatusName = "Approved", Source = BookingSource.Website });
+
+            var result = await controller.Edit(jobId);
+
+            var model = Assert.IsType<JobEditInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Null(model.Source);
+            Assert.True(model.CameFromWebsite);
+        }
+
+        [Theory]
+        [InlineData("Cancelled")]
+        [InlineData("Abandoned")]
+        public async Task EditShouldNotOpenForAJobThatFellAway(string status)
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            var jobId = Guid.NewGuid();
+            bookingsService
+                .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(jobId))
+                .ReturnsAsync(new BookingDetailsViewModel { Id = jobId, StatusName = status });
+
+            var result = await controller.Edit(jobId);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirect.ActionName);
+            Assert.Equal(jobId, redirect.RouteValues["id"]);
+            Assert.Contains("not once it is cancelled or abandoned", Assert.IsType<string>(controller.TempData["ErrorMessage"]));
+        }
+
+        [Fact]
+        public async Task EditShouldReturnNotFoundForAnUnknownJob()
+        {
+            var controller = BuildController(out var bookingsService, out _);
+
+            Assert.IsType<NotFoundResult>(await controller.Edit(Guid.NewGuid()));
+            Assert.IsType<NotFoundResult>(await controller.Edit(new JobEditInputModel { Id = Guid.NewGuid() }));
+            bookingsService.Verify(x => x.EditDetailsAsync(It.IsAny<JobEditInputModel>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EditShouldSaveTheDetailsAndSayWhichChanged()
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Phone);
+            bookingsService
+                .Setup(x => x.EditDetailsAsync(form))
+                .ReturnsAsync(new JobEditResult { Outcome = JobEditOutcome.Saved, Changed = new[] { "phone number", "address" } });
+
+            var result = await controller.Edit(form);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirect.ActionName);
+            Assert.Equal(form.Id, redirect.RouteValues["id"]);
+            Assert.Equal("The details are saved. Changed: phone number, address.", controller.TempData["SuccessMessage"]);
+        }
+
+        // Saving a new email sends nothing. The line has to say where the earlier emails went,
+        // and how to send the technician's name again: picking the same technician a second
+        // time sends nothing either.
+        [Theory]
+        [InlineData(null, "The details are saved. Changed: email. The emails the site sent before went to the old address, and nothing was sent to the new one.")]
+        [InlineData("Zapryan", "The details are saved. Changed: email. The emails the site sent before went to the old address, and nothing was sent to the new one. To send the technician's name and number to the new address, set the technician to \"Unassigned\", save, then pick Zapryan again.")]
+        public async Task EditShouldSayWhereTheEarlierEmailsWentWhenAWebsiteBookingsEmailChanges(string technicianName, string expectedText)
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Website);
+            bookingsService
+                .Setup(x => x.EditDetailsAsync(form))
+                .ReturnsAsync(new JobEditResult
+                {
+                    Outcome = JobEditOutcome.Saved,
+                    Changed = new[] { "email" },
+                    EmailChangedOnWebsiteBooking = true,
+                    TechnicianName = technicianName,
+                });
+
+            await controller.Edit(form);
+
+            Assert.Equal(expectedText, controller.TempData["SuccessMessage"]);
+        }
+
+        [Theory]
+        [InlineData(JobEditOutcome.Unchanged, "SuccessMessage", "Nothing was changed: the details are as they were.")]
+        [InlineData(JobEditOutcome.NotAllowed, "ErrorMessage", "Nothing was changed. A job's details can be put right while it is booked or done, not once it is cancelled or abandoned.")]
+        public async Task EditShouldSayWhyNothingWasChanged(JobEditOutcome outcome, string messageKey, string expectedText)
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Phone);
+            bookingsService.Setup(x => x.EditDetailsAsync(form)).ReturnsAsync(new JobEditResult { Outcome = outcome });
+
+            var result = await controller.Edit(form);
+
+            Assert.Equal("Details", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Equal(expectedText, controller.TempData[messageKey]);
+            Assert.Null(controller.TempData[messageKey == "SuccessMessage" ? "ErrorMessage" : "SuccessMessage"]);
+        }
+
+        // Three things the form's own rules cannot know, because they depend on the job or on
+        // the list of services as it is now. The form comes back with the reason at the box.
+        [Theory]
+        [InlineData(JobEditOutcome.EmailNeeded, "Email", "A website booking keeps an email address: the site emails this customer.")]
+        [InlineData(JobEditOutcome.SourceNeeded, "Source", "Pick where the job came from.")]
+        [InlineData(JobEditOutcome.ServiceNotFound, "ServiceId", "That service is no longer on the list: pick another.")]
+        public async Task EditShouldBringTheFormBackWithTheReasonAtTheBox(JobEditOutcome outcome, string field, string expectedText)
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Website);
+            bookingsService.Setup(x => x.EditDetailsAsync(form)).ReturnsAsync(new JobEditResult { Outcome = outcome });
+
+            var result = await controller.Edit(form);
+
+            var view = Assert.IsType<ViewResult>(result);
+            Assert.Equal("Edit", view.ViewName);
+            Assert.Same(form, view.Model);
+            Assert.Equal(expectedText, Assert.Single(controller.ModelState[field].Errors).ErrorMessage);
+            Assert.Null(controller.TempData["SuccessMessage"]);
+        }
+
+        // A box the form's rules refuse: nothing is saved, and the form comes back as the job's
+        // own page would draw it. Whether the job came from the website is read off the job; a
+        // form that claims otherwise is not believed.
+        [Fact]
+        public async Task EditShouldNotSaveAFormItsOwnRulesRefuse()
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Website);
+            form.CameFromWebsite = false;
+            controller.ModelState.AddModelError("PhoneNumber", "Phone number is required.");
+
+            var result = await controller.Edit(form);
+
+            var view = Assert.IsType<ViewResult>(result);
+            Assert.Equal("Edit", view.ViewName);
+            Assert.True(Assert.IsType<JobEditInputModel>(view.Model).CameFromWebsite);
+            bookingsService.Verify(x => x.EditDetailsAsync(It.IsAny<JobEditInputModel>()), Times.Never);
+        }
+
         // A booking is approved by its deposit being paid. The button that did it by hand showed
         // only on an unpaid booking, and the email that hung off it could never be sent for a
         // paid one.
@@ -601,6 +786,24 @@ namespace HandyFix.Web.Tests.Controllers
         public void ThereIsNoApproveAction()
         {
             Assert.Null(typeof(BookingsController).GetMethod("Approve"));
+        }
+
+        // The form for a job that is on, as it is sent back, with the job itself there to be read.
+        private static JobEditInputModel EditFormFor(Mock<IBookingsService> bookingsService, BookingSource cameFrom)
+        {
+            var form = new JobEditInputModel
+            {
+                Id = Guid.NewGuid(),
+                CustomerFirstName = "Grace",
+                PhoneNumber = "07700 900456",
+                Source = cameFrom == BookingSource.Website ? null : cameFrom,
+            };
+
+            bookingsService
+                .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(form.Id))
+                .ReturnsAsync(new BookingDetailsViewModel { Id = form.Id, StatusName = "Approved", Source = cameFrom });
+
+            return form;
         }
 
         private static BookingDetailsViewModel Booking(string status, DateTime scheduledTime, decimal total) =>

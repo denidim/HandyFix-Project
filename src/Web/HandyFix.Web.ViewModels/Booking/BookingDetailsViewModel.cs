@@ -118,7 +118,17 @@ namespace HandyFix.Web.ViewModels.Booking
 
         public bool CanMarkDepositRefunded => BookingRules.CanMarkDepositRefunded(this.StatusName, this.IsDepositPaid || this.IsDepositRefunded);
 
+        public bool CanEditDetails => BookingRules.CanEditDetails(this.StatusName);
+
         public IEnumerable<string> Services { get; set; }
+
+        /// <summary>
+        /// The service the job has, by its id, for the form that edits the job's details. It is
+        /// read off the job's own line, not off the service: a job booked with a service that
+        /// was deleted since still has its id here, though <see cref="Services"/> no longer
+        /// lists its name.
+        /// </summary>
+        public Guid? ServiceId { get; set; }
 
         public IEnumerable<string> ImageUrls { get; set; }
 
@@ -159,6 +169,7 @@ namespace HandyFix.Web.ViewModels.Booking
                 .Map(dest => dest.HasOtherPayments, src => src.Payments != null && src.Payments.Any(p => p.Status.Name == "Completed"))
                 .Map(dest => dest.PaidRaw, src => src.Payments.Where(p => p.Status.Name == "DepositPaid" || p.Status.Name == "Completed").Sum(p => (double)p.Amount))
                 .Map(dest => dest.Services, src => src.BookingServices != null ? src.BookingServices.Select(x => x.Service.Name) : new List<string>())
+                .Map(dest => dest.ServiceId, src => src.BookingServices != null ? src.BookingServices.OrderBy(x => x.CreatedOn).Select(x => (Guid?)x.ServiceId).FirstOrDefault() : null)
                 .Map(dest => dest.ImageUrls, src => src.Images != null ? src.Images.Select(x => x.ImageUrl) : new List<string>());
         }
     }

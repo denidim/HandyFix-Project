@@ -27,6 +27,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         private const string SuccessMessageKey = "SuccessMessage";
         private const string ErrorMessageKey = "ErrorMessage";
 
+        private const string DetailsCannotBeEditedMessage = "Nothing was changed. A job's details can be put right while it is booked or done, not once it is cancelled or abandoned.";
+
         private readonly IBookingsService bookingsService;
         private readonly ITechniciansService techniciansService;
         private readonly IPaymentsService paymentsService;
@@ -147,6 +149,92 @@ namespace HandyFix.Web.Areas.Administration.Controllers
 
             this.TempData[SuccessMessageKey] = "The job is written in. Its hour is still on sale on the website: block it in the calendar if nobody else should be booked then. No email was sent to the customer.";
             return this.RedirectToAction(nameof(this.Details), new { id });
+        }
+
+        // The form that puts a job's details right: who the customer is, where the job is and
+        // what it is. It opens filled in with what the job holds now. The day and time are not
+        // on it: "Move" changes those and looks after the calendar (PROJECT_STATE.md Section 3cf).
+        [HttpGet]
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            BookingDetailsViewModel job = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(id);
+            if (job == null)
+            {
+                return this.NotFound();
+            }
+
+            if (!job.CanEditDetails)
+            {
+                this.TempData[ErrorMessageKey] = DetailsCannotBeEditedMessage;
+                return this.RedirectToAction(nameof(this.Details), new { id });
+            }
+
+            var model = new JobEditInputModel
+            {
+                Id = job.Id,
+                CustomerFirstName = job.CustomerFirstName,
+                CustomerLastName = job.CustomerLastName,
+                PhoneNumber = job.PhoneNumber,
+                Email = job.Email,
+                Address = job.Address,
+                ServiceId = job.ServiceId,
+                ProblemDescription = job.ProblemDescription,
+                Source = job.CameFromWebsite ? null : job.Source,
+            };
+
+            return await this.EditForm(model, job);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(JobEditInputModel model)
+        {
+            BookingDetailsViewModel job = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(model.Id);
+            if (job == null)
+            {
+                return this.NotFound();
+            }
+
+            if (!this.ModelState.IsValid)
+            {
+                return await this.EditForm(model, job);
+            }
+
+            JobEditResult result = await this.bookingsService.EditDetailsAsync(model);
+
+            switch (result.Outcome)
+            {
+                case JobEditOutcome.BookingNotFound:
+                    return this.NotFound();
+
+                // The three the form's own rules cannot know, because they depend on the job or
+                // on the list of services as it is now. The form comes back with the reason
+                // beside the box, and with everything else as it was typed.
+                case JobEditOutcome.EmailNeeded:
+                    this.ModelState.AddModelError(nameof(model.Email), "A website booking keeps an email address: the site emails this customer.");
+                    return await this.EditForm(model, job);
+
+                case JobEditOutcome.SourceNeeded:
+                    this.ModelState.AddModelError(nameof(model.Source), "Pick where the job came from.");
+                    return await this.EditForm(model, job);
+
+                case JobEditOutcome.ServiceNotFound:
+                    this.ModelState.AddModelError(nameof(model.ServiceId), "That service is no longer on the list: pick another.");
+                    return await this.EditForm(model, job);
+
+                case JobEditOutcome.Saved:
+                    this.TempData[SuccessMessageKey] = DetailsSavedMessage(result);
+                    break;
+
+                case JobEditOutcome.Unchanged:
+                    this.TempData[SuccessMessageKey] = "Nothing was changed: the details are as they were.";
+                    break;
+
+                default:
+                    this.TempData[ErrorMessageKey] = DetailsCannotBeEditedMessage;
+                    break;
+            }
+
+            return this.RedirectToAction(nameof(this.Details), new { id = model.Id });
         }
 
         // There is no Approve action. A website booking is approved by its deposit being paid
@@ -371,14 +459,55 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             return "£" + amount.ToString("0.00", CultureInfo.InvariantCulture);
         }
 
+        // What saving the details changed, in the line the admin is left with. Saving sends no
+        // email, which only matters when it is the email itself that changed: whatever the site
+        // sent that customer before went to the old address.
+        private static string DetailsSavedMessage(JobEditResult result)
+        {
+            var parts = new List<string>
+            {
+                $"The details are saved. Changed: {string.Join(", ", result.Changed)}.",
+            };
+
+            if (result.EmailChangedOnWebsiteBooking)
+            {
+                parts.Add("The emails the site sent before went to the old address, and nothing was sent to the new one.");
+
+                // Picking the same technician again sends nothing, so the way to send the email
+                // again is to take them off first.
+                if (result.TechnicianName != null)
+                {
+                    parts.Add($"To send the technician's name and number to the new address, set the technician to \"Unassigned\", save, then pick {result.TechnicianName} again.");
+                }
+            }
+
+            return string.Join(" ", parts);
+        }
+
         private async Task<IActionResult> JobForm(JobInputModel model)
         {
-            // Building work is quoted, not booked by the hour, on the website. Written in by
-            // hand any service can be picked, so the whole list is offered.
-            IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-            model.Services = services.OrderBy(x => x.CategoryName).ThenBy(x => x.Name).ToList();
+            model.Services = await this.ServicesForTheFormAsync();
 
             return this.View("Create", model);
+        }
+
+        // Whether the job came from the website is taken from the job, never from what the form
+        // sent: it decides which boxes the page shows and whether the email may be empty.
+        private async Task<IActionResult> EditForm(JobEditInputModel model, BookingDetailsViewModel job)
+        {
+            model.CameFromWebsite = job.CameFromWebsite;
+            model.Services = await this.ServicesForTheFormAsync();
+
+            return this.View("Edit", model);
+        }
+
+        // Building work is quoted, not booked by the hour, on the website. Written in or put
+        // right by hand any service can be picked, so the whole list is offered.
+        private async Task<List<ServiceViewModel>> ServicesForTheFormAsync()
+        {
+            IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
+
+            return services.OrderBy(x => x.CategoryName).ThenBy(x => x.Name).ToList();
         }
     }
 }
