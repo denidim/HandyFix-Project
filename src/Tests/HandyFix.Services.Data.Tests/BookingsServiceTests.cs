@@ -138,17 +138,18 @@ namespace HandyFix.Services.Data.Tests
             var slotInDb = dbContext.AvailabilitySlots.First(x => x.Id == slot.Id);
             Assert.True(slotInDb.IsBooked);
 
-            // Verify email receipt was sent
+            // No email goes out for a booking that is not paid for yet: the first one a customer
+            // gets follows the deposit (PROJECT_STATE.md Section 3ce).
             emailSenderMock.Verify(
                 x => x.SendEmailAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    "john@example.com",
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    null,
+                    It.IsAny<string>(),
+                    It.IsAny<IEnumerable<EmailAttachment>>(),
                     It.IsAny<string>()),
-                Times.Once);
+                Times.Never);
         }
 
         [Fact]
@@ -708,12 +709,13 @@ namespace HandyFix.Services.Data.Tests
 
         private static BookingsService CreateBookingsServiceWithThreeBookings(out Booking older, out Booking newer, out Booking cancelled)
         {
-            // BookingDetailsViewModel.PaymentStatus's mapping is a ternary guarded by
-            // Payments.Any(), but none of these three bookings have any Payments (same as a
-            // real booking that hasn't reached Stripe checkout yet). EF Core's InMemory
-            // provider doesn't short-circuit that ternary — it evaluates Payments.First() on
-            // the "then" branch unconditionally and throws on the empty collection — so this
-            // needs a real relational engine, same as the transaction-rollback tests above.
+            // None of these three bookings have any Payments (same as a real booking that hasn't
+            // reached Stripe checkout yet), and BookingDetailsViewModel's mapping reads through
+            // Payments. EF Core's InMemory provider does not evaluate such a projection the way
+            // a relational engine does: the mapping this one replaced, a ternary guarded by
+            // Payments.Any(), had its Payments.First() evaluated unconditionally and threw on
+            // the empty collection. So this runs on a real relational engine, same as the
+            // transaction-rollback tests above.
             var connection = new SqliteConnection("DataSource=:memory:");
             connection.Open();
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -806,15 +808,39 @@ namespace HandyFix.Services.Data.Tests
             var bookings = new List<BookingDetailsViewModel>
             {
                 new BookingDetailsViewModel { StatusName = "Pending", ScheduledTime = DateTime.Today, TotalAmount = 100m },
-                new BookingDetailsViewModel { StatusName = "Approved", ScheduledTime = DateTime.Today, TotalAmount = 250m },
-                new BookingDetailsViewModel { StatusName = "Completed", ScheduledTime = AnotherDayThisMonth(), TotalAmount = 75m },
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 250m },
+                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true, ScheduledTime = AnotherDayThisMonth(), TotalAmount = 75m },
             };
 
             BookingSummaryStats stats = service.GetSummaryStats(bookings);
 
             Assert.Equal(2, stats.TodaysAppointmentsCount);
-            Assert.Equal(1, stats.PendingApprovalCount);
+            Assert.Equal(1, stats.AwaitingTechnicianCount);
             Assert.Equal(425m, stats.MonthlyRevenue);
+        }
+
+        // The card that used to read "Pending Approval" counted bookings waiting for a step that
+        // no longer exists. It now counts the admin's to-do after a deposit comes in: a booking
+        // that is paid, still open, and has nobody on it (PROJECT_STATE.md Section 3ce).
+        [Fact]
+        public void GetSummaryStatsShouldCountOnlyPaidOpenBookingsWithNoTechnicianAsWaitingForOne()
+        {
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+
+            var bookings = new List<BookingDetailsViewModel>
+            {
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true },
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, TechnicianId = Guid.NewGuid() },
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = false },
+                new BookingDetailsViewModel { StatusName = "Pending", IsDepositPaid = false },
+                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true },
+                new BookingDetailsViewModel { StatusName = "Cancelled", IsDepositPaid = true },
+                new BookingDetailsViewModel { StatusName = "Abandoned", IsDepositPaid = false },
+            };
+
+            BookingSummaryStats stats = service.GetSummaryStats(bookings);
+
+            Assert.Equal(1, stats.AwaitingTechnicianCount);
         }
 
         [Fact]
@@ -825,7 +851,7 @@ namespace HandyFix.Services.Data.Tests
             BookingSummaryStats stats = service.GetSummaryStats(new List<BookingDetailsViewModel>());
 
             Assert.Equal(0, stats.TodaysAppointmentsCount);
-            Assert.Equal(0, stats.PendingApprovalCount);
+            Assert.Equal(0, stats.AwaitingTechnicianCount);
             Assert.Equal(0m, stats.MonthlyRevenue);
         }
 

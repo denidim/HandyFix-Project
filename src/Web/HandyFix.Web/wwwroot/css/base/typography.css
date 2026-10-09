@@ -20,6 +20,9 @@ h1, h2, h3, h4, h5, h6 {
    category as font-bold/text-right in utilities.css. */
 .text-on-surface { color: var(--on-surface) !important; }
 .text-on-secondary-container { color: var(--on-secondary-container) !important; }
+/* The same again: the admin booking page's "Deposit Paid" row has asked for this since it was
+   written, so the row took the dark card's own dark text colour and could not be read. */
+.text-secondary-container { color: var(--secondary-container) !important; }
 .text-on-tertiary-container { color: var(--on-tertiary-container) !important; }
 .text-outline { color: var(--outline) !important; }
 .text-error { color: var(--error) !important; }

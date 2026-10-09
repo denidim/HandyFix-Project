@@ -99,8 +99,8 @@ namespace HandyFix.Services.Data.Bookings
                 throw new InvalidOperationException("Booking status 'Pending' is not seeded.");
             }
 
-            // Slot must exist before we do any work; its StartTime is needed below, and the
-            // actual availability check happens atomically in BookSlotAsync.
+            // Slot must exist before we do any work; the actual availability check happens
+            // atomically in BookSlotAsync.
             AvailabilitySlot slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == model.SlotId);
             if (slot == null)
             {
@@ -178,35 +178,11 @@ namespace HandyFix.Services.Data.Bookings
                 await this.imageRepository.SaveChangesAsync();
             }
 
-            // 5. Tell the customer the booking was received. The booking and its slot are saved by
-            // now, so a send that fails is logged and the customer goes on to pay: an exception
-            // here used to show "an error occurred while saving your booking" for a booking that
-            // had been saved, and a second try then lost the slot to the first one.
-            // What the customer typed is encoded before it goes into the email's HTML.
-            var subject = "Your Plumbing Handyman Surrey Booking Inquiry has been Received!";
-            var body = $@"
-            <h3>Hello {EmailText.Encode(model.CustomerFirstName)} {EmailText.Encode(model.CustomerLastName)},</h3>
-            <p>Thank you for choosing <strong>Plumbing Handyman Surrey</strong>. We have received your booking request details:</p>
-            <ul>
-                <li><strong>Booking Reference:</strong> {booking.Id}</li>
-                <li><strong>Service(s):</strong> {EmailText.Encode(string.Join(", ", selectedServices.Select(s => s.Name)))}</li>
-                <li><strong>Scheduled Time:</strong> {slot.StartTime:dd MMM yyyy 'at' HH:mm}</li>
-                <li><strong>Address:</strong> {EmailText.Encode(address)}</li>
-            </ul>
-            <p>To secure this appointment slot, please pay the deposit of £{depositAmount.ToString("F2")} on the next screen.</p>
-            <p>Once paid, we will confirm your technician assignment.</p>
-            <br />
-            <p>Best Regards,<br/><strong>The Plumbing Handyman Surrey Team</strong></p>";
-
-            await this.emailSender.TrySendEmailAsync(
-                this.logger,
-                "booking received, to the customer",
-                EmailSettings.SystemFromAddress(this.configuration),
-                EmailSettings.CustomerFromName,
-                model.Email,
-                subject,
-                body);
-
+            // No email goes out here, on purpose. A booking that is never paid is abandoned after
+            // about fifteen minutes and its slot goes back on sale, so "we have received your
+            // booking" promised something that could be gone before it was read. The first email a
+            // customer gets is the one that follows the deposit (PaymentsService;
+            // PROJECT_STATE.md Section 3ce).
             return booking;
         }
 
@@ -258,87 +234,106 @@ namespace HandyFix.Services.Data.Bookings
                 .ToListAsync();
         }
 
-        public async Task UpdateStatusAsync(Guid bookingId, string statusName)
+        public async Task<bool> CompleteBookingAsync(Guid bookingId)
         {
             Booking booking = await this.bookingRepository.All()
-                .Include(x => x.Technician)
+                .Include(x => x.Status)
+                .Include(x => x.Payments).ThenInclude(p => p.Status)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
-            BookingStatus status = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name.ToLower() == statusName.ToLower());
+            BookingStatus completedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Completed");
 
-            if (booking != null && status != null)
+            if (booking == null
+                || completedStatus == null
+                || !BookingRules.CanComplete(booking.Status?.Name, IsDepositPaid(booking)))
             {
-                booking.StatusId = status.Id;
-                await this.bookingRepository.SaveChangesAsync();
-
-                if (statusName == "Approved")
-                {
-                    // This is the one customer email that names the technician - by the time an
-                    // admin approves, the assignment has been made. The deposit confirmation
-                    // deliberately says nothing about it (see PaymentsService).
-                    var technicianBlock = booking.Technician != null
-                        ? $@"<p>Your technician for this visit is <strong>{EmailText.Encode(NameFormat.Full(booking.Technician.FirstName, booking.Technician.LastName))}</strong>
-                             (<a href=""tel:{EmailText.PhoneLink(booking.Technician.PhoneNumber)}"">{EmailText.Encode(booking.Technician.PhoneNumber)}</a>).</p>"
-                        : "<p>A professional technician is scheduled for your address at the selected slot.</p>";
-
-                    // Send Booking Confirmed email
-                    var subject = "Your Plumbing Handyman Surrey Booking is CONFIRMED!";
-                    var body = $@"
-                        <h3>Hi {EmailText.Encode(booking.CustomerFirstName)},</h3>
-                        <p>We are pleased to inform you that your booking reference <strong>{booking.Id}</strong> is officially confirmed.</p>
-                        {technicianBlock}
-                        <p>Thank you for choosing Plumbing Handyman Surrey!</p>";
-
-                    // The status is saved by now. A send that fails is logged, not thrown: the
-                    // admin's page would otherwise fail on a booking that had in fact been approved.
-                    await this.emailSender.TrySendEmailAsync(
-                        this.logger,
-                        "booking confirmed, to the customer",
-                        EmailSettings.BookingsFromAddress(this.configuration),
-                        EmailSettings.CustomerFromName,
-                        booking.Email,
-                        subject,
-                        body);
-                }
+                return false;
             }
+
+            booking.StatusId = completedStatus.Id;
+            await this.bookingRepository.SaveChangesAsync();
+            return true;
         }
 
-        public async Task AssignTechnicianAsync(Guid bookingId, Guid? technicianId)
+        public async Task<TechnicianAssignmentResult> AssignTechnicianAsync(Guid bookingId, Guid? technicianId)
         {
-            Booking booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
+            Booking booking = await this.bookingRepository.All()
+                .Include(x => x.Status)
+                .Include(x => x.Payments).ThenInclude(p => p.Status)
+                .Include(x => x.Technician)
+                .Include(x => x.AvailabilitySlot)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
             if (booking == null)
             {
-                return;
+                return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.BookingNotFound };
+            }
+
+            var currentName = booking.Technician != null
+                ? NameFormat.Full(booking.Technician.FirstName, booking.Technician.LastName)
+                : null;
+
+            // Asked again here, not only by the page that shows the picker: the customer is
+            // emailed a name and a number, and that must not happen for a booking that was
+            // cancelled, or never paid for, while the admin's page sat open.
+            if (!BookingRules.CanPickTechnician(booking.Status?.Name, IsDepositPaid(booking)))
+            {
+                return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.NotAllowed, TechnicianName = currentName };
             }
 
             // A null id is the "-- Unassigned --" option and clears the assignment. Anything
             // else has to resolve to a real Technician row first: TechnicianId is a live FK,
             // so writing an unknown id (Guid.Empty being the easy way to get one from a form
             // post) fails at the database with a raw constraint violation, not a 400.
+            Technician technician = null;
             if (technicianId.HasValue)
             {
-                var exists = await this.technicianRepository.All()
-                    .AnyAsync(x => x.Id == technicianId.Value);
-                if (!exists)
+                technician = await this.technicianRepository.All()
+                    .FirstOrDefaultAsync(x => x.Id == technicianId.Value);
+                if (technician == null)
                 {
-                    return;
+                    return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.TechnicianNotFound, TechnicianName = currentName };
                 }
+            }
+
+            // Saving the form as it stands changes nothing, and must not email the customer a
+            // second time with what they were already told.
+            if (booking.TechnicianId == technicianId)
+            {
+                return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.Unchanged, TechnicianName = currentName };
             }
 
             booking.TechnicianId = technicianId;
             await this.bookingRepository.SaveChangesAsync();
+
+            if (technician == null)
+            {
+                return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.Cleared };
+            }
+
+            var emailed = await this.SendTechnicianEmailAsync(booking, technician);
+
+            return new TechnicianAssignmentResult
+            {
+                Outcome = emailed
+                    ? TechnicianAssignmentOutcome.AssignedAndCustomerEmailed
+                    : TechnicianAssignmentOutcome.AssignedButEmailNotSent,
+                TechnicianName = NameFormat.Full(technician.FirstName, technician.LastName),
+            };
         }
 
-        public async Task CancelBookingAsync(Guid bookingId)
+        public async Task<bool> CancelBookingAsync(Guid bookingId)
         {
             Booking booking = await this.bookingRepository.All()
+                .Include(x => x.Status)
                 .Include(x => x.AvailabilitySlot)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
 
             BookingStatus cancelledStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
 
-            if (booking == null || cancelledStatus == null)
+            if (booking == null
+                || cancelledStatus == null
+                || !BookingRules.CanCancel(booking.Status?.Name))
             {
-                return;
+                return false;
             }
 
             booking.StatusId = cancelledStatus.Id;
@@ -382,6 +377,8 @@ namespace HandyFix.Services.Data.Bookings
 
                 await this.bookingRepository.SaveChangesAsync();
             }
+
+            return true;
         }
 
         public async Task RescheduleBookingAsync(Guid bookingId, Guid newSlotId)
@@ -507,7 +504,9 @@ namespace HandyFix.Services.Data.Bookings
             return new BookingSummaryStats
             {
                 TodaysAppointmentsCount = bookings.Count(b => b.ScheduledTime.Date == DateTime.Today),
-                PendingApprovalCount = bookings.Count(b => b.StatusName == "Pending"),
+
+                // The admin's to-do after a deposit comes in: paid bookings nobody is on yet.
+                AwaitingTechnicianCount = bookings.Count(b => b.CanPickTechnician && b.TechnicianId == null),
                 MonthlyRevenue = bookings.Any()
                     ? bookings.Where(b => b.ScheduledTime.Month == DateTime.Today.Month && b.ScheduledTime.Year == DateTime.Today.Year).Sum(b => b.TotalAmount)
                     : 0,
@@ -520,6 +519,57 @@ namespace HandyFix.Services.Data.Bookings
                 .Select(x => x.Name)
                 .OrderBy(x => x)
                 .ToListAsync();
+        }
+
+        // The booking's payments have to be loaded with their statuses for this to say anything.
+        private static bool IsDepositPaid(Booking booking)
+        {
+            return booking.Payments != null && booking.Payments.Any(p => p.Status != null && p.Status.Name == "DepositPaid");
+        }
+
+        // The one customer email that names the technician, sent when an admin picks one. It used
+        // to hang off the "Approve" button, which a paid booking never showed, so no customer was
+        // ever sent it (PROJECT_STATE.md Section 3ce). The assignment is saved by now: a send that
+        // fails is logged and reported back, so the admin's page can say the customer still has
+        // to be told.
+        private async Task<bool> SendTechnicianEmailAsync(Booking booking, Technician technician)
+        {
+            var technicianName = EmailText.Encode(NameFormat.Full(technician.FirstName, technician.LastName));
+            var visit = booking.AvailabilitySlot != null
+                ? $" on <strong>{booking.AvailabilitySlot.StartTime:dd MMM yyyy 'at' HH:mm}</strong>"
+                : string.Empty;
+            var phoneLine = !string.IsNullOrWhiteSpace(technician.PhoneNumber)
+                ? $@"<p>You can reach {technicianName} on <a href=""tel:{EmailText.PhoneLink(technician.PhoneNumber)}"">{EmailText.Encode(technician.PhoneNumber)}</a>.</p>"
+                : string.Empty;
+
+            // Asked for here, by the one caller that prints them: loaded with the booking above,
+            // beside its payments, they would make that one query fetch two lists at once.
+            List<string> serviceNames = await this.bookingRepository.All()
+                .Where(x => x.Id == booking.Id)
+                .SelectMany(x => x.BookingServices)
+                .Select(x => x.Service.Name)
+                .ToListAsync();
+
+            var subject = "Your technician for your Plumbing Handyman Surrey booking";
+            var body = $@"
+                <h3>Hi {EmailText.Encode(booking.CustomerFirstName)},</h3>
+                <p>Your technician for your visit{visit} is <strong>{technicianName}</strong>.</p>
+                {phoneLine}
+                <ul>
+                    <li><strong>Booking Reference:</strong> {BookingReference.Short(booking.Id)}</li>
+                    <li><strong>Service(s):</strong> {EmailText.Encode(string.Join(", ", serviceNames))}</li>
+                    <li><strong>Address:</strong> {EmailText.Encode(booking.Address)}</li>
+                </ul>
+                <p>Thank you for choosing Plumbing Handyman Surrey!</p>";
+
+            return await this.emailSender.TrySendEmailAsync(
+                this.logger,
+                "technician picked, to the customer",
+                EmailSettings.BookingsFromAddress(this.configuration),
+                EmailSettings.CustomerFromName,
+                booking.Email,
+                subject,
+                body);
         }
     }
 }

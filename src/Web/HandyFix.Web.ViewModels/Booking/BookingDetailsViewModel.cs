@@ -43,9 +43,19 @@ namespace HandyFix.Web.ViewModels.Booking
 
         public string TechnicianName { get; set; }
 
+        public string TechnicianPhoneNumber { get; set; }
+
         public Guid? TechnicianId { get; set; }
 
-        public string PaymentStatus { get; set; }
+        public bool IsDepositPaid { get; set; }
+
+        // Which buttons the booking's admin page offers. The service asks the same rules again
+        // before it acts (BookingRules).
+        public bool CanPickTechnician => BookingRules.CanPickTechnician(this.StatusName, this.IsDepositPaid);
+
+        public bool CanComplete => BookingRules.CanComplete(this.StatusName, this.IsDepositPaid);
+
+        public bool CanCancel => BookingRules.CanCancel(this.StatusName);
 
         public IEnumerable<string> Services { get; set; }
 
@@ -64,7 +74,8 @@ namespace HandyFix.Web.ViewModels.Booking
                 .Map(dest => dest.ScheduledEndTime, src => src.AvailabilitySlot != null ? src.AvailabilitySlot.EndTime : default)
                 .Map(dest => dest.CreatedOn, src => src.CreatedOn)
                 .Map(dest => dest.TechnicianName, src => src.Technician != null ? NameFormat.Full(src.Technician.FirstName, src.Technician.LastName) : "Not Assigned")
-                .Map(dest => dest.PaymentStatus, src => src.Payments != null && src.Payments.Any() ? src.Payments.OrderByDescending(p => p.CreatedOn).First().Status.Name : "Unpaid")
+                .Map(dest => dest.TechnicianPhoneNumber, src => src.Technician != null ? src.Technician.PhoneNumber : null)
+                .Map(dest => dest.IsDepositPaid, src => src.Payments != null && src.Payments.Any(p => p.Status.Name == "DepositPaid"))
                 .Map(dest => dest.Services, src => src.BookingServices != null ? src.BookingServices.Select(x => x.Service.Name) : new List<string>())
                 .Map(dest => dest.ImageUrls, src => src.Images != null ? src.Images.Select(x => x.ImageUrl) : new List<string>());
         }

@@ -52,11 +52,11 @@
 
     <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between admin-stat-card">
         <div>
-            <p class="font-label-sm text-on-surface-variant mb-1">Pending Approval</p>
-            <h3 class="font-headline-md mb-0 text-secondary fs-headline-md font-bold">@Model.PendingApprovalCount</h3>
+            <p class="font-label-sm text-on-surface-variant mb-1">Waiting for a Technician</p>
+            <h3 class="font-headline-md mb-0 text-secondary fs-headline-md font-bold">@Model.AwaitingTechnicianCount</h3>
         </div>
         <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary dim-48 tint-secondary">
-            <span class="material-symbols-outlined">pending_actions</span>
+            <span class="material-symbols-outlined">engineering</span>
         </div>
     </div>
 
@@ -104,6 +104,7 @@
                             }
                         </a>
                     </th>
+                    <th class="px-4 py-3 font-label-sm uppercase">Technician</th>
                     <th class="px-4 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
                            asp-route-sortField="CreatedOn" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
@@ -143,12 +144,14 @@
                                            booking.StatusName == "Completed" ? "tint-success" :
                                            "tint-secondary";
 
-                        var paymentText = booking.PaymentStatus == "DepositPaid" ? "Paid" : "Unpaid";
-                        var paymentDotClass = booking.PaymentStatus == "DepositPaid" ? "payment-dot-paid" : "payment-dot-unpaid";
-                        var paymentTextClass = booking.PaymentStatus == "DepositPaid" ? "text-on-tertiary-container" : "text-outline";
+                        var submittedOn = UkTime.FromUtc(booking.CreatedOn);
+
+                        var paymentText = booking.IsDepositPaid ? "Paid" : "Unpaid";
+                        var paymentDotClass = booking.IsDepositPaid ? "payment-dot-paid" : "payment-dot-unpaid";
+                        var paymentTextClass = booking.IsDepositPaid ? "text-on-tertiary-container" : "text-outline";
 
                         <tr class="align-middle admin-table-row">
-                            <td class="px-4 py-3 font-body-md font-bold text-secondary select-all">#@booking.Id.ToString().Substring(0, 8).ToUpper()</td>
+                            <td class="px-4 py-3 font-body-md font-bold text-secondary select-all">#@BookingReference.Short(booking.Id)</td>
                             <td class="px-4 py-3">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="rounded-circle d-flex align-items-center justify-content-center text-on-secondary-container font-bold fs-11 avatar-badge dim-32 tint-secondary-fixed">
@@ -161,9 +164,24 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3 font-body-md text-primary">@booking.ScheduledTime.ToString("MMM dd, yyyy")</td>
+                            <td class="px-4 py-3 font-body-md">
+                                @if (booking.TechnicianId != null)
+                                {
+                                    <span class="text-primary">@booking.TechnicianName</span>
+                                }
+                                else if (booking.CanPickTechnician)
+                                {
+                                    @* The rows the "Waiting for a Technician" card counts. *@
+                                    <span class="font-bold text-secondary">Needs one</span>
+                                }
+                                else
+                                {
+                                    <span class="text-outline">None</span>
+                                }
+                            </td>
                             <td class="px-4 py-3">
-                                <p class="font-body-md text-primary mb-0">@UkTime.FromUtc(booking.CreatedOn).ToString("MMM dd, yyyy")</p>
-                                <p class="text-on-surface-variant mb-0 fs-11">@UkTime.FromUtc(booking.CreatedOn).ToString("hh:mm tt")</p>
+                                <p class="font-body-md text-primary mb-0">@submittedOn.ToString("MMM dd, yyyy")</p>
+                                <p class="text-on-surface-variant mb-0 fs-11">@submittedOn.ToString("hh:mm tt")</p>
                             </td>
                             <td class="px-4 py-3 font-body-md font-bold text-primary">£@booking.TotalAmount.ToString("F2")</td>
                             <td class="px-4 py-3">
@@ -184,7 +202,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center p-4 text-muted">No appointments booked yet.</td>
+                        <td colspan="9" class="text-center p-4 text-muted">No appointments booked yet.</td>
                     </tr>
                 }
             </tbody>

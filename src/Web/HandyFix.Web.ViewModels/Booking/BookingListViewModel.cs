@@ -19,7 +19,7 @@ namespace HandyFix.Web.ViewModels.Booking
         // to the table below.
         public int TodaysAppointmentsCount { get; set; }
 
-        public int PendingApprovalCount { get; set; }
+        public int AwaitingTechnicianCount { get; set; }
 
         public decimal MonthlyRevenue { get; set; }
     }

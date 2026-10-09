@@ -5,6 +5,7 @@ namespace HandyFix.Services.Data.Payments
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Common;
@@ -163,21 +164,25 @@ namespace HandyFix.Services.Data.Payments
             var address = EmailText.Encode(booking.Address);
             serviceNames = EmailText.Encode(serviceNames);
 
-            // No technician line here on purpose. A technician is assigned by an admin after the
+            // No technician line here on purpose. A technician is picked by an admin after the
             // deposit clears, so this email would always read "Not yet assigned" - which looks
-            // unfinished to the customer. The technician detail belongs in the admin-approval
-            // "CONFIRMED" email instead (BookingsService.UpdateStatusAsync).
+            // unfinished to the customer. The technician's name and number go out in an email of
+            // their own, when one is picked (BookingsService.AssignTechnicianAsync).
+            //
+            // This is the first email a customer gets: nothing is sent before the deposit is paid
+            // (BookingsService.CreateBookingAsync).
+            var reference = BookingReference.Short(booking.Id);
             var clientSubject = "Your Plumbing Handyman Surrey Booking is Confirmed!";
             var clientBody = $@"
                 <h3>Hi {EmailText.Encode(booking.CustomerFirstName)},</h3>
                 <p>Great news! Your deposit of £{payment.Amount:F2} has been received and your booking is now confirmed.</p>
                 <ul>
-                    <li><strong>Booking Reference:</strong> {booking.Id}</li>
+                    <li><strong>Booking Reference:</strong> {reference}</li>
                     <li><strong>Service(s):</strong> {serviceNames}</li>
                     <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
                     <li><strong>Address:</strong> {address}</li>
                 </ul>
-                <p>We'll confirm your assigned technician shortly.</p>
+                <p>We'll email you your technician's name and phone number as soon as one is assigned.</p>
                 <p>We look forward to helping you. Thank you for choosing Plumbing Handyman Surrey!</p>";
 
             await this.emailSender.TrySendEmailAsync(
@@ -193,14 +198,14 @@ namespace HandyFix.Services.Data.Payments
             var adminBody = $@"
                 <h3>A booking deposit has just been paid.</h3>
                 <ul>
-                    <li><strong>Booking Reference:</strong> {booking.Id}</li>
+                    <li><strong>Booking Reference:</strong> {reference}</li>
                     <li><strong>Customer:</strong> {customerName} ({EmailText.Encode(booking.Email)}, {EmailText.Encode(booking.PhoneNumber)})</li>
                     <li><strong>Service(s):</strong> {serviceNames}</li>
                     <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
                     <li><strong>Address:</strong> {address}</li>
                     <li><strong>Deposit Paid:</strong> £{payment.Amount:F2}</li>
                 </ul>
-                <p>Please review and assign a technician if one isn't already set.</p>";
+                <p>Next: pick a technician on the booking's page in the admin panel. The customer is emailed the name and number when you do.</p>";
 
             // Reply-To is the customer, so pressing Reply on this notice answers them.
             await this.emailSender.TrySendEmailAsync(
@@ -337,7 +342,7 @@ namespace HandyFix.Services.Data.Payments
                             Currency = "gbp",
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
-                                Name = $"Plumbing Handyman Surrey Booking Deposit (Ref: {bookingId})",
+                                Name = $"Plumbing Handyman Surrey Booking Deposit (Ref: {BookingReference.Short(bookingId)})",
                                 Description = "Deposit to secure your service booking.",
                             },
                         },

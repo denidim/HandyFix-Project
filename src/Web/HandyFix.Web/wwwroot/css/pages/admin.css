@@ -417,19 +417,13 @@
 }
 
 /* One-off action-button color treatments used on Details/status-change
-   pages (approve/complete/cancel, etc). */
+   pages (complete/cancel, etc). */
 .btn-block-py2 {
   padding: var(--spacing-2) 0;
 }
 
 .btn-block-py3 {
   padding: var(--spacing-3) 0;
-}
-
-.btn-approve-outline {
-  border: 1px solid var(--secondary);
-  background: transparent;
-  color: var(--secondary);
 }
 
 .btn-complete-fill {

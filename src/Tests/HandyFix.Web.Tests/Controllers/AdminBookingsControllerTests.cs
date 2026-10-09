@@ -10,7 +10,9 @@ namespace HandyFix.Web.Tests.Controllers
     using HandyFix.Web.ViewModels.Administration.Technicians;
     using HandyFix.Web.ViewModels.Booking;
 
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
     using Moq;
 
@@ -67,7 +69,7 @@ namespace HandyFix.Web.Tests.Controllers
         [Fact]
         public async Task IndexShouldComputeSummaryCardsFromAllBookingsWhenAStatusFilterIsApplied()
         {
-            // Regression for PROJECT_STATE.md section 3d: the Today/Pending/Revenue cards
+            // Regression for PROJECT_STATE.md section 3d: the Today/Waiting/Revenue cards
             // are meant to describe the whole business, not whatever the status filter is
             // currently narrowing the table to. The arithmetic itself now lives in
             // BookingsService.GetSummaryStats (see BookingsServiceTests) - this only checks
@@ -95,7 +97,7 @@ namespace HandyFix.Web.Tests.Controllers
                 .Setup(x => x.GetAllBookingsAsync<BookingDetailsViewModel>(BookingSortField.CreatedOn, true, null))
                 .ReturnsAsync(everything);
 
-            var expectedSummary = new BookingSummaryStats { TodaysAppointmentsCount = 2, PendingApprovalCount = 1, MonthlyRevenue = 425m };
+            var expectedSummary = new BookingSummaryStats { TodaysAppointmentsCount = 2, AwaitingTechnicianCount = 1, MonthlyRevenue = 425m };
             bookingsService.Setup(x => x.GetSummaryStats(everything)).Returns(expectedSummary);
 
             var result = await controller.Index(status: "Pending");
@@ -110,7 +112,7 @@ namespace HandyFix.Web.Tests.Controllers
             bookingsService.Verify(x => x.GetSummaryStats(everything), Times.Once);
             bookingsService.Verify(x => x.GetSummaryStats(filtered), Times.Never);
             Assert.Equal(2, model.TodaysAppointmentsCount);
-            Assert.Equal(1, model.PendingApprovalCount);
+            Assert.Equal(1, model.AwaitingTechnicianCount);
             Assert.Equal(425m, model.MonthlyRevenue);
         }
 
@@ -193,36 +195,97 @@ namespace HandyFix.Web.Tests.Controllers
             techniciansService.Verify(x => x.GetAssignableAsync<TechnicianOptionViewModel>(assignedId), Times.Once);
         }
 
+        // The admin's buttons used to reload the page and say nothing, so "Update Assignment"
+        // looked the same whether it had saved or not. Each now leaves a line saying what it did
+        // (PROJECT_STATE.md Section 3ce). The line is what tells the admin whether the customer
+        // was emailed, so its wording is checked for the part that matters.
         [Theory]
-        [InlineData("Approve", "Approved")]
-        [InlineData("Complete", "Completed")]
-        public async Task StatusActionsShouldUpdateToTheExpectedStatusAndReturnToDetails(string action, string expectedStatus)
+        [InlineData(TechnicianAssignmentOutcome.AssignedAndCustomerEmailed, "Zapryan", "SuccessMessage", "Zapryan is now the technician for this booking. The customer has been emailed")]
+        [InlineData(TechnicianAssignmentOutcome.AssignedButEmailNotSent, "Zapryan", "ErrorMessage", "the email to the customer could not be sent. Please give them the name and phone number yourself")]
+        [InlineData(TechnicianAssignmentOutcome.Cleared, null, "SuccessMessage", "This booking has no technician now. The customer has not been emailed")]
+        [InlineData(TechnicianAssignmentOutcome.Unchanged, "Zapryan", "SuccessMessage", "Nothing was changed: Zapryan was already the technician. No email was sent")]
+        [InlineData(TechnicianAssignmentOutcome.Unchanged, null, "SuccessMessage", "Nothing was changed: this booking had no technician")]
+        [InlineData(TechnicianAssignmentOutcome.TechnicianNotFound, null, "ErrorMessage", "Nothing was changed. That technician is no longer on the roster")]
+        [InlineData(TechnicianAssignmentOutcome.NotAllowed, null, "ErrorMessage", "Nothing was changed. A technician can be picked once the deposit is paid")]
+        public async Task AssignTechnicianShouldSayWhatHappened(TechnicianAssignmentOutcome outcome, string technicianName, string messageKey, string expectedText)
         {
             var controller = BuildController(out var bookingsService, out _);
             var bookingId = Guid.NewGuid();
+            bookingsService
+                .Setup(x => x.AssignTechnicianAsync(bookingId, It.IsAny<Guid?>()))
+                .ReturnsAsync(new TechnicianAssignmentResult { Outcome = outcome, TechnicianName = technicianName });
 
-            var result = action == "Approve"
-                ? await controller.Approve(bookingId)
-                : await controller.Complete(bookingId);
-
-            bookingsService.Verify(x => x.UpdateStatusAsync(bookingId, expectedStatus), Times.Once);
+            var result = await controller.AssignTechnician(bookingId, Guid.NewGuid());
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirect.ActionName);
             Assert.Equal(bookingId, redirect.RouteValues["id"]);
+            Assert.Contains(expectedText, Assert.IsType<string>(controller.TempData[messageKey]));
+            Assert.Null(controller.TempData[messageKey == "SuccessMessage" ? "ErrorMessage" : "SuccessMessage"]);
         }
 
         [Fact]
-        public async Task CancelShouldGoThroughCancelBookingRatherThanAStatusUpdate()
+        public async Task AssignTechnicianShouldReturnNotFoundForAnUnknownBooking()
         {
-            // Cancelling has to release the slot too, which UpdateStatusAsync does not do.
+            var controller = BuildController(out var bookingsService, out _);
+            bookingsService
+                .Setup(x => x.AssignTechnicianAsync(It.IsAny<Guid>(), It.IsAny<Guid?>()))
+                .ReturnsAsync(new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.BookingNotFound });
+
+            var result = await controller.AssignTechnician(Guid.NewGuid(), Guid.NewGuid());
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Theory]
+        [InlineData(true, "SuccessMessage", "The booking is marked as completed.")]
+        [InlineData(false, "ErrorMessage", "Nothing was changed. A booking can be marked as completed once its deposit is paid")]
+        public async Task CompleteShouldSayWhetherTheBookingWasCompletedAndReturnToDetails(bool completed, string messageKey, string expectedText)
+        {
             var controller = BuildController(out var bookingsService, out _);
             var bookingId = Guid.NewGuid();
+            bookingsService.Setup(x => x.CompleteBookingAsync(bookingId)).ReturnsAsync(completed);
 
-            await controller.Cancel(bookingId);
+            var result = await controller.Complete(bookingId);
 
+            bookingsService.Verify(x => x.CompleteBookingAsync(bookingId), Times.Once);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirect.ActionName);
+            Assert.Equal(bookingId, redirect.RouteValues["id"]);
+            Assert.Contains(expectedText, Assert.IsType<string>(controller.TempData[messageKey]));
+        }
+
+        // The site sends no email when a booking is cancelled, and refunds are made by hand. The
+        // line the admin is left with has to say both, or nobody tells the customer.
+        [Theory]
+        [InlineData(true, "SuccessMessage", "The booking is cancelled and its time slot can be booked again. The customer has not been emailed")]
+        [InlineData(false, "ErrorMessage", "Nothing was changed. This booking is already completed, cancelled or abandoned.")]
+        public async Task CancelShouldSayWhetherTheBookingWasCancelledAndReturnToDetails(bool cancelled, string messageKey, string expectedText)
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            var bookingId = Guid.NewGuid();
+            bookingsService.Setup(x => x.CancelBookingAsync(bookingId)).ReturnsAsync(cancelled);
+
+            var result = await controller.Cancel(bookingId);
+
+            // Cancelling has to release the slot too, which is CancelBookingAsync's job.
             bookingsService.Verify(x => x.CancelBookingAsync(bookingId), Times.Once);
-            bookingsService.Verify(x => x.UpdateStatusAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
+            bookingsService.Verify(x => x.CompleteBookingAsync(It.IsAny<Guid>()), Times.Never);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirect.ActionName);
+            Assert.Equal(bookingId, redirect.RouteValues["id"]);
+            Assert.Contains(expectedText, Assert.IsType<string>(controller.TempData[messageKey]));
+        }
+
+        // A booking is approved by its deposit being paid. The button that did it by hand showed
+        // only on an unpaid booking, and the email that hung off it could never be sent for a
+        // paid one.
+        [Fact]
+        public void ThereIsNoApproveAction()
+        {
+            Assert.Null(typeof(BookingsController).GetMethod("Approve"));
         }
 
         private static BookingDetailsViewModel Booking(string status, DateTime scheduledTime, decimal total) =>
@@ -249,10 +312,19 @@ namespace HandyFix.Web.Tests.Controllers
             bookingsService
                 .Setup(x => x.GetStatusOptionsAsync())
                 .ReturnsAsync(Array.Empty<string>());
+            bookingsService
+                .Setup(x => x.AssignTechnicianAsync(It.IsAny<Guid>(), It.IsAny<Guid?>()))
+                .ReturnsAsync(new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.Cleared });
 
+            // The actions leave their message in TempData, which a controller built by hand
+            // does not have until it is given one.
             return new BookingsController(
                 bookingsService.Object,
-                techniciansService.Object);
+                techniciansService.Object)
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>()),
+            };
         }
     }
 }

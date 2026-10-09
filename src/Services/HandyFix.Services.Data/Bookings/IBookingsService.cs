@@ -4,6 +4,7 @@ namespace HandyFix.Services.Data.Bookings
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Web.ViewModels.Booking;
 
@@ -23,11 +24,23 @@ namespace HandyFix.Services.Data.Bookings
 
         Task<IEnumerable<T>> GetUserBookingsAsync<T>(string userId);
 
-        Task UpdateStatusAsync(Guid bookingId, string statusName);
+        /// <summary>
+        /// Marks a booking completed. False, with nothing changed, when the booking is missing or
+        /// <see cref="BookingRules.CanComplete"/> says no.
+        /// </summary>
+        Task<bool> CompleteBookingAsync(Guid bookingId);
 
-        Task AssignTechnicianAsync(Guid bookingId, Guid? technicianId);
+        /// <summary>
+        /// Sets or clears a booking's technician and, when a new one is set, emails the customer
+        /// that technician's name and number. The result says which of those happened.
+        /// </summary>
+        Task<TechnicianAssignmentResult> AssignTechnicianAsync(Guid bookingId, Guid? technicianId);
 
-        Task CancelBookingAsync(Guid bookingId);
+        /// <summary>
+        /// Cancels a booking and frees its slot. False, with nothing changed, when the booking is
+        /// missing or <see cref="BookingRules.CanCancel"/> says no.
+        /// </summary>
+        Task<bool> CancelBookingAsync(Guid bookingId);
 
         Task RescheduleBookingAsync(Guid bookingId, Guid newSlotId);
 
