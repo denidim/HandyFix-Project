@@ -1,10 +1,7 @@
 @model HandyFix.Web.ViewModels.Booking.JobInputModel
-@using HandyFix.Data.Models
+@using HandyFix.Web.ViewModels.Booking
 @{
     this.ViewData["Title"] = "Write a Job In";
-
-    // Every way a job arrives except the website, which makes its own.
-    var sources = new[] { BookingSource.Phone, BookingSource.WhatsApp, BookingSource.Enquiry, BookingSource.Agency, BookingSource.Other };
 }
 
 <!-- Breadcrumbs & Header Actions -->
@@ -43,32 +40,7 @@
 
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-        <div class="row gy-4">
-            <div class="col-md-6 form-group">
-                <label asp-for="CustomerFirstName" class="form-label font-label-sm text-on-surface-variant mb-2">First Name</label>
-                <input asp-for="CustomerFirstName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
-                <span asp-validation-for="CustomerFirstName" class="text-danger small"></span>
-            </div>
-            <div class="col-md-6 form-group">
-                <label asp-for="CustomerLastName" class="form-label font-label-sm text-on-surface-variant mb-2">Last Name (optional)</label>
-                <input asp-for="CustomerLastName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" />
-                <span asp-validation-for="CustomerLastName" class="text-danger small"></span>
-            </div>
-        </div>
-
-        <div class="row gy-4">
-            <div class="col-md-6 form-group">
-                <label asp-for="PhoneNumber" class="form-label font-label-sm text-on-surface-variant mb-2">Phone Number</label>
-                <input asp-for="PhoneNumber" class="form-control py-3 admin-form-control form-pad-standard" type="tel" maxlength="20" required />
-                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
-            </div>
-            <div class="col-md-6 form-group">
-                <label asp-for="Email" class="form-label font-label-sm text-on-surface-variant mb-2">Email (optional)</label>
-                <input asp-for="Email" class="form-control py-3 admin-form-control form-pad-standard" type="email" maxlength="255" />
-                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Kept on the job. The site sends no email for a job that is written in.</span>
-                <span asp-validation-for="Email" class="text-danger small"></span>
-            </div>
-        </div>
+        <partial name="_JobCustomerFields" model="Model" />
 
         <div class="row gy-4">
             <div class="col-md-4 form-group">
@@ -84,7 +56,7 @@
             <div class="col-md-4 form-group">
                 <label asp-for="Source" class="form-label font-label-sm text-on-surface-variant mb-2">Came From</label>
                 <select asp-for="Source" class="form-control py-3 admin-form-control form-pad-standard" required>
-                    @foreach (var source in sources)
+                    @foreach (var source in JobDetailsInputModel.WrittenInSources)
                     {
                         <option value="@source" selected="@(Model.Source == source)">@source</option>
                     }
@@ -98,35 +70,7 @@
             <a asp-area="Administration" asp-controller="Calendar" asp-action="Index">calendar</a>. An hour is a start time: block the next ones too if the job will run long.
         </p>
 
-        <div class="row gy-4">
-            <div class="col-md-6 form-group">
-                <label asp-for="ServiceId" class="form-label font-label-sm text-on-surface-variant mb-2">Service (optional)</label>
-                <select asp-for="ServiceId" class="form-control py-3 admin-form-control form-pad-standard">
-                    <option value="">-- Not picked --</option>
-                    @foreach (var category in Model.Services.GroupBy(x => x.CategoryName))
-                    {
-                        <optgroup label="@category.Key">
-                            @foreach (var service in category)
-                            {
-                                <option value="@service.Id" selected="@(Model.ServiceId == service.Id)">@service.Name</option>
-                            }
-                        </optgroup>
-                    }
-                </select>
-                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Its price becomes the job's estimate. The final price is typed in when the job is done.</span>
-            </div>
-            <div class="col-md-6 form-group">
-                <label asp-for="Address" class="form-label font-label-sm text-on-surface-variant mb-2">Address (optional)</label>
-                <input asp-for="Address" class="form-control py-3 admin-form-control form-pad-standard" maxlength="300" />
-                <span asp-validation-for="Address" class="text-danger small"></span>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="ProblemDescription" class="form-label font-label-sm text-on-surface-variant mb-2">What Is the Job (optional)</label>
-            <textarea asp-for="ProblemDescription" class="form-control admin-form-control form-pad-standard" rows="4" maxlength="3000"></textarea>
-            <span asp-validation-for="ProblemDescription" class="text-danger small"></span>
-        </div>
+        <partial name="_JobWorkFields" model="Model" />
 
         <div class="pt-4 d-flex flex-column flex-md-row align-items-center justify-content-end gap-3 form-actions-row">
             <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="btn btn-outline font-button-text admin-btn-outline btn-py3-px8">Cancel</a>
