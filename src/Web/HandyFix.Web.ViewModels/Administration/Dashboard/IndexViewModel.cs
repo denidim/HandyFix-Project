@@ -6,9 +6,9 @@ namespace HandyFix.Web.ViewModels.Administration.Dashboard
 
         public int PendingBookingsCount { get; set; }
 
-        public int TotalEnquiriesCount { get; set; }
+        public int AwaitingTechnicianCount { get; set; }
 
-        public int PendingReviewsCount { get; set; }
+        public int TotalEnquiriesCount { get; set; }
 
         public decimal TotalRevenue { get; set; }
     }

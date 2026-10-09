@@ -457,8 +457,11 @@
             Assert.False(await world.Payments.RemovePaymentAsync(Guid.NewGuid(), deposit));
         }
 
+        // "Pending" is a website booking that has not paid its deposit. It read "Booked", the same
+        // as a job the admin had written in, and the two could not be told apart in the list
+        // (PROJECT_STATE.md Section 3ch).
         [Theory]
-        [InlineData("Pending", "Booked")]
+        [InlineData("Pending", "Waiting for deposit")]
         [InlineData("Approved", "Booked")]
         [InlineData("InProgress", "Booked")]
         [InlineData("Completed", "Done")]
@@ -495,7 +498,47 @@
         {
             using var world = new BookingWorld();
 
-            Assert.Equal(new[] { "Booked", "Done", "Cancelled", "Abandoned" }, await world.Bookings.GetStatusOptionsAsync());
+            Assert.Equal(new[] { "Waiting for deposit", "Booked", "Done", "Cancelled", "Abandoned" }, await world.Bookings.GetStatusOptionsAsync());
+            Assert.DoesNotContain("Pending", JobLabels.StatusNames("Booked"));
+        }
+
+        // The calendar's arrows light up for a neighbouring day that has something to show
+        // (PROJECT_STATE.md Section 3ch). The jobs arrow asks what the day's own list answers,
+        // so a lit arrow never opens an empty list: a job that was called off lights nothing.
+        [Fact]
+        public async Task ADayHasJobsOnlyWhileOneOnItIsStillOnOrDone()
+        {
+            using var world = new BookingWorld();
+            DateTime day = world.SlotStart.Date;
+            Assert.False(await world.Bookings.HasJobsOnDayAsync(day));
+
+            Booking job = await world.SeedWrittenInJobAsync(world.SlotStart);
+
+            Assert.True(await world.Bookings.HasJobsOnDayAsync(day));
+            Assert.True(await world.Bookings.HasJobsOnDayAsync(day.AddHours(23)));
+            Assert.False(await world.Bookings.HasJobsOnDayAsync(day.AddDays(-1)));
+            Assert.False(await world.Bookings.HasJobsOnDayAsync(day.AddDays(1)));
+
+            await world.Bookings.CancelBookingAsync(job.Id, "Called off.");
+
+            Assert.False(await world.Bookings.HasJobsOnDayAsync(day));
+            Assert.Empty(await world.Bookings.GetJobsForDayAsync<BookingDetailsViewModel>(day));
+        }
+
+        // The slots arrow: any slot counts, on sale or not, because the list under it shows
+        // them all.
+        [Fact]
+        public async Task ADayHasSlotsWhateverStateTheyAreIn()
+        {
+            using var world = new BookingWorld();
+            DateTime day = world.SlotStart.Date.AddDays(30);
+            Assert.False(await world.Availability.HasSlotsOnDayAsync(day));
+
+            world.AddSlot(day.AddHours(9), blocked: true);
+
+            Assert.True(await world.Availability.HasSlotsOnDayAsync(day));
+            Assert.True(await world.Availability.HasSlotsOnDayAsync(day.AddHours(17)));
+            Assert.False(await world.Availability.HasSlotsOnDayAsync(day.AddDays(1)));
         }
 
         // A website booking's deposit promised the time, so it carries its hour in the calendar

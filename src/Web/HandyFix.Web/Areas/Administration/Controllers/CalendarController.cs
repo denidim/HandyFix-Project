@@ -48,6 +48,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 TargetDate = targetDate,
                 Slots = slots,
                 Jobs = jobs,
+                PreviousDay = await this.NeighbourAsync(targetDate.Date.AddDays(-1)),
+                NextDay = await this.NeighbourAsync(targetDate.Date.AddDays(1)),
             };
 
             return this.View(model);
@@ -122,6 +124,18 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         private static string Day(DateTime date)
         {
             return date.ToString("dddd d MMMM yyyy", CultureInfo.InvariantCulture);
+        }
+
+        // What an arrow needs to know about the day it leads to: two yes-or-no questions, not
+        // that day's whole lists (PROJECT_STATE.md Section 3ch).
+        private async Task<CalendarNeighbourDayViewModel> NeighbourAsync(DateTime day)
+        {
+            return new CalendarNeighbourDayViewModel
+            {
+                Date = day,
+                HasJobs = await this.bookingsService.HasJobsOnDayAsync(day),
+                HasSlots = await this.availabilityService.HasSlotsOnDayAsync(day),
+            };
         }
     }
 }

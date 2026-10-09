@@ -157,7 +157,8 @@
             var id = new Dictionary<string, string> { ["id"] = booking.Id.ToString() };
 
             var opened = WebUtility.HtmlDecode(await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
-            Assert.Equal(("Booked", "Not paid"), LabelsOn(opened));
+            Assert.Equal(("Waiting for deposit", "Not paid"), LabelsOn(opened));
+            Assert.Matches("<dt>Still owed</dt>\\s*<dd>£", opened);
             Assert.DoesNotContain("name=\"technicianId\"", opened);
             Assert.Contains("A technician can be picked once the deposit is paid.", opened);
             Assert.DoesNotContain("id=\"job-complete\"", opened);
@@ -167,6 +168,24 @@
             Assert.Contains("A payment can be written here once the deposit is paid on the website.", opened);
             Assert.Contains("id=\"job-cancel\"", opened);
             Assert.Contains("Not yet, deposit not paid", opened);
+
+            // It read "Booked" and "Not paid", exactly as a job the admin had written in does,
+            // and the two could not be told apart in the list. It has its own label now, its own
+            // choice in the filter, and the hour it holds says so in the calendar
+            // (PROJECT_STATE.md Section 3ch).
+            var reference = "#" + BookingReference.Short(booking.Id);
+            var list = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage)).Content.ReadAsStringAsync());
+            Assert.Matches("job-badge-two-lines tint-waiting\">Waiting for deposit</span>", list);
+
+            var waiting = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage + "?status=Waiting%20for%20deposit")).Content.ReadAsStringAsync());
+            Assert.Contains(reference, waiting);
+
+            var booked = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage + "?status=Booked")).Content.ReadAsStringAsync());
+            Assert.DoesNotContain(reference, booked);
+
+            var day = WebUtility.HtmlDecode(await (await admin.GetAsync("/Administration/Calendar?date=" + booking.ScheduledStart.Value.ToString("yyyy-MM-dd"))).Content.ReadAsStringAsync());
+            Assert.Matches("slot-tag tint-waiting mb-1\">Waiting for deposit</span>", day);
+            Assert.Matches("status-badge tint-waiting\">Waiting for deposit</span>", day);
 
             HttpResponseMessage picked = await PostFromAsync(admin, jobPage, JobsPage + "/AssignTechnician", With(id, "technicianId", site.LaunchTechnicianId().ToString()));
             Assert.Contains("Nothing was changed. A technician can be picked while the job is booked, and on a website booking only once its deposit is paid.", WebUtility.HtmlDecode(await picked.Content.ReadAsStringAsync()));
@@ -810,7 +829,7 @@
             Assert.Equal(2, Regex.Matches(list, ">Needs one</span>").Count);
             Assert.Contains("<span>Deposit paid</span>", list);
             Assert.Contains("<span>Not paid</span>", list);
-            Assert.Matches("<option value=\"Booked\"[^>]*>Booked</option>\\s*<option value=\"Done\"[^>]*>Done</option>\\s*<option value=\"Cancelled\"[^>]*>Cancelled</option>\\s*<option value=\"Abandoned\"[^>]*>Abandoned</option>", list);
+            Assert.Matches("<option value=\"Waiting for deposit\"[^>]*>Waiting for deposit</option>\\s*<option value=\"Booked\"[^>]*>Booked</option>\\s*<option value=\"Done\"[^>]*>Done</option>\\s*<option value=\"Cancelled\"[^>]*>Cancelled</option>\\s*<option value=\"Abandoned\"[^>]*>Abandoned</option>", list);
 
             await PostFromAsync(admin, JobPage(booking.Id), JobsPage + "/AssignTechnician", new Dictionary<string, string>
             {
@@ -841,6 +860,82 @@
 
             // The cards describe the whole business whatever the filter: the card still says 0.
             Assert.Matches("Waiting for a Technician</p>\\s*<h3[^>]*>0</h3>", cancelled);
+        }
+
+        // Most of the dashboard was the design mock-up's own text: "+12.5%" beside the revenue,
+        // "System Status: Optimal", a server-capacity bar, an "Add Widget" tile, a graph that
+        // "is generating", and a card counting reviews that have had no way in since the public
+        // form was removed. Every figure on it is counted now, each card opens the list it
+        // counts, and the menu no longer leads to the reviews page, which is still there for the
+        // day reviews are brought in from Google (PROJECT_STATE.md Section 3ch).
+        [Fact]
+        public async Task TheDashboardShowsCountedFiguresThatOpenTheirListsAndNoMockUpText()
+        {
+            using var site = new Site();
+            await site.BookAndPayAsync(site.AFreeSlot());
+            HttpClient customer = site.Browser(followRedirects: false);
+            await FormsWebTests.PostFormAsync(customer, "/Booking", site.BookingFormFor(site.AFreeSlot()));
+            HttpClient admin = await site.SignedInAdminAsync();
+
+            var dashboard = WebUtility.HtmlDecode(await (await admin.GetAsync("/Administration/Dashboard")).Content.ReadAsStringAsync());
+
+            var mockUpText = new[]
+            {
+                "+12.5%", "System Status", "notifications_active", "New Leads", "Add Widget", "Activity Visualization",
+                "Platform Health", "Server Capacity", "Inquiry Response Rate", "Administrator Mode", "Unapproved Reviews", "Moderate Reviews",
+            };
+            Assert.All(mockUpText, text => Assert.DoesNotContain(text, dashboard));
+
+            // One booking paid and one still waiting for its deposit.
+            Assert.Matches("Total Revenue</p>\\s*<h2[^>]*>£50.00</h2>", dashboard);
+            Assert.Matches("Total Jobs</p>\\s*<h2[^>]*>2</h2>", dashboard);
+            Assert.Contains(">1 waiting for deposit</span>", dashboard);
+            Assert.Matches("Waiting for a Technician</p>\\s*<h2[^>]*>1</h2>", dashboard);
+            Assert.Matches("Total Enquiries</p>\\s*<h2[^>]*>0</h2>", dashboard);
+
+            // The same to-do figure as the card on the Jobs page.
+            var list = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage)).Content.ReadAsStringAsync());
+            Assert.Matches("Waiting for a Technician</p>\\s*<h3[^>]*>1</h3>", list);
+
+            Assert.Equal(3, Regex.Matches(dashboard, "<a\\b(?=[^>]*class=\"dashboard-stat-card)(?=[^>]*href=\"" + JobsPage + "\")[^>]*>").Count);
+            Assert.Single(Regex.Matches(dashboard, "<a\\b(?=[^>]*class=\"dashboard-stat-card)(?=[^>]*href=\"/Administration/Enquiries\")[^>]*>"));
+            Assert.Contains("href=\"" + JobsPage + "/Create\"", dashboard);
+
+            Assert.DoesNotContain("href=\"/Administration/Reviews\"", dashboard);
+            Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync("/Administration/Reviews")).StatusCode);
+        }
+
+        // The calendar had only a date box to get from one day to another. Each of its two lists
+        // now has an arrow a day back and a day on, lit when the day it leads to has something
+        // for that list, and the menu has the calendar straight after the jobs
+        // (PROJECT_STATE.md Section 3ch).
+        [Fact]
+        public async Task TheCalendarsArrowsStepADayAndLightUpForADayThatHasJobsOrSlots()
+        {
+            using var site = new Site();
+            HttpClient admin = await site.SignedInAdminAsync();
+
+            // A day years away, where nothing is seeded: a job is written in on the day after it.
+            DateTime day = DateTime.Today.AddYears(3);
+            await site.WriteAJobInAsync(admin, day.AddDays(1).AddHours(15));
+
+            var page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(day))).Content.ReadAsStringAsync());
+            Assert.Matches(Arrow("jobs-day-after", lit: true, day.AddDays(1), "has jobs"), page);
+            Assert.Matches(Arrow("jobs-day-before", lit: false, day.AddDays(-1), "no jobs"), page);
+            Assert.Matches(Arrow("slots-day-after", lit: false, day.AddDays(1), "no slots"), page);
+            Assert.Matches(Arrow("slots-day-before", lit: false, day.AddDays(-1), "no slots"), page);
+
+            // The day before one that has slots, and the day after it.
+            DateTime slotDay = site.AFreeSlot().StartTime.Date;
+            page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(slotDay.AddDays(-1)))).Content.ReadAsStringAsync());
+            Assert.Matches(Arrow("slots-day-after", lit: true, slotDay, "has slots"), page);
+            page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(slotDay.AddDays(1)))).Content.ReadAsStringAsync());
+            Assert.Matches(Arrow("slots-day-before", lit: true, slotDay, "has slots"), page);
+
+            // On a phone the button beside the arrow has no plus, which reached the arrow.
+            Assert.Matches("d-none d-md-inline-block\">add</span>\\s*<span>Write a job in</span>", page);
+
+            Assert.Matches("Jobs\\s*</a>\\s*<a\\b[^>]*href=\"/Administration/Calendar\"", page);
         }
 
         // "Unblock" in the admin calendar did nothing: it called the method that frees a slot
@@ -885,6 +980,18 @@
         private static string JobPage(Guid id) => JobsPage + "/Details/" + id;
 
         private static string EditPage(Guid id) => JobsPage + "/Edit/" + id;
+
+        private static string CalendarDay(DateTime day) => "/Administration/Calendar?date=" + day.ToString("yyyy-MM-dd");
+
+        // One of the calendar's four day arrows, as it should stand in the page: where it leads,
+        // whether it is lit, and what it says when pointed at.
+        private static string Arrow(string id, bool lit, DateTime leadsTo, string says)
+        {
+            return "<a\\b(?=[^>]*id=\"" + id + "\")"
+                + "(?=[^>]*class=\"day-arrow" + (lit ? " day-arrow-lit" : "\\s*") + "\")"
+                + "(?=[^>]*href=\"" + Regex.Escape(CalendarDay(leadsTo)) + "\")"
+                + "(?=[^>]*title=\"[^\"]*: " + says + "\")[^>]*>";
+        }
 
         // The two labels at the top of a job's page: where the work stands, and the money.
         private static (string Job, string Money) LabelsOn(string page)

@@ -17,6 +17,12 @@ namespace HandyFix.Services.Data.Availability
         Task<IEnumerable<AvailabilitySlot>> GetAllSlotsForDayAsync(DateTime date);
 
         /// <summary>
+        /// Whether that day has any slot at all: free, booked or blocked. The calendar's arrows
+        /// ask it about the day before and the day after.
+        /// </summary>
+        Task<bool> HasSlotsOnDayAsync(DateTime date);
+
+        /// <summary>
         /// The day a slot is on, or null if there is no such slot. The booking page opens again
         /// on that day when a customer's form comes back to them.
         /// </summary>

@@ -32,15 +32,27 @@ then goes the same way as any other:
 
 | The job (where the work stands) | The money (where the payment stands) |
 | --- | --- |
-| **Booked**: it has a day and an hour | **Not paid**: nothing has come in |
-| **Done**: finished, with its final price | **Deposit paid**: the £50 from the website, and nothing else |
-| **Cancelled**: called off, with the reason | **Part paid**: money has come in and more is owed |
-| **Abandoned**: a website booking whose deposit never came | **Paid in full**: the final price is covered |
-| | **Deposit refunded**: a cancelled job's deposit went back |
+| **Waiting for deposit**: a website booking whose £50 has not come yet; not a job yet | **Not paid**: nothing has come in |
+| **Booked**: it has a day and an hour, and it is on | **Deposit paid**: the £50 from the website, and nothing else |
+| **Done**: finished, with its final price | **Part paid**: money has come in and more is owed |
+| **Cancelled**: called off, with the reason | **Paid in full**: the final price is covered |
+| **Abandoned**: a website booking whose deposit never came | **Deposit refunded**: a cancelled job's deposit went back |
 
 The database keeps its own, older names for where the work stands (`Pending`, `Approved`,
-`Completed`); `JobLabels` is the one place that turns them into the words above. "Booked" covers
-a website booking still waiting for its deposit: its money label says "Not paid".
+`Completed`); `JobLabels` is the one place that turns them into the words above.
+
+**"Waiting for deposit" is not "Booked".** A website booking is saved, and holds its hour, from the
+moment the form is sent, a quarter of an hour before it is dropped if the deposit does not come
+(step 2). Until `PROJECT_STATE.md` Section 3ch it read "Booked" and "Not paid" for those minutes,
+exactly as a job the admin had written in does, and the two could not be told apart in the list.
+It is `Pending` in the database, which nothing else ever is: paying moves it to `Approved` in the
+same save, and a written-in job starts there. What follows from the label of its own:
+
+- It is amber where "Booked" is blue: in the job list, on the job's page, and in the calendar,
+  where the hour it holds reads "Waiting for deposit" in place of "Booked".
+- The job list's filter has it as its own choice, and "Booked" does not include it.
+- It is in neither **Today's Jobs** nor **This Month's Jobs, in Pounds** until the deposit is in.
+- The dashboard's *Total Jobs* card says how many there are, when there are any.
 
 **There is no "approve" step.** A website booking is approved by its deposit being paid, and by
 nothing else. Until `PROJECT_STATE.md` Section 3ce an admin's "Approve" button sent the email
@@ -82,6 +94,21 @@ Also on this page, each answering with a line that says what it did:
 slot, so the slots alone would show its hour as free; the slot at that hour says *"Still on sale,
 though #A7C30F12 is at this hour. Block it if nobody else should be booked then."* **Write a job
 in** on this page opens the form with the day filled in.
+
+**From one day to the next: the arrows.** Each of the two lists, *Jobs on …* and *Slots for …*, has
+an arrow on either side of its heading: a day back and a day on. Any of the four moves the whole
+page. An arrow is **lit** (filled, with a halo and a ring that beats) when the day it leads to has
+something for that list, and a grey ring when it has not; it works either way. Pointing at one
+says which day it is and what it has.
+
+| Arrows beside | Lit when that day has |
+| --- | --- |
+| *Jobs on …* | a job that is on or done: what that day's own list would show. A cancelled or abandoned job lights nothing, so a lit arrow never opens an empty list. |
+| *Slots for …* | any slot at all, on sale, taken or blocked. |
+
+The page asks two yes-or-no questions about each neighbouring day
+(`BookingsService.HasJobsOnDayAsync`, `AvailabilityService.HasSlotsOnDayAsync`), not for that day's
+lists. The date box at the top still jumps to any day.
 
 > "Unblock" did nothing until `PROJECT_STATE.md` Section 3ce: it called the method that frees a
 > slot from its booking, which leaves the block where it is. A blocked hour could not be opened
@@ -323,7 +350,8 @@ none.
 
 The list at `/Administration/Bookings` counts the jobs this step is waiting on: the middle card,
 **Waiting for a Technician**, is every job that is on with nobody on it, and those rows read
-"Needs one" in the Technician column.
+"Needs one" in the Technician column. The dashboard has a card with the same figure, worked out
+from the same list, so the two cannot disagree.
 
 The roster behind that dropdown is managed at **`/Administration/Technicians`** — add, edit,
 activate/deactivate, delete. You can add a technician on the fly and assign them immediately.

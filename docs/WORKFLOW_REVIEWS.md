@@ -12,6 +12,12 @@ controls whether reviews show up on the public site at all.
 
 ## Admin: approve, filter, delete — `/Administration/Reviews`
 
+**Nothing in the admin panel leads to this page**, since `PROJECT_STATE.md` Section 3ch: not the
+menu, not the dashboard. No review can reach the site until the Google import is built, so the
+page is always empty, and a menu entry and a dashboard card for it only sent the admin to look at
+nothing. The page, its controller and its service are all still there, at the address above, for
+the day the import fills it. Put the menu link back in `_AdminSidebar.cshtml` then.
+
 `Review.IsApproved` is a plain bool, not a status enum. The admin Index list is sortable
 (`CreatedOn`/`CustomerName`/`Rating`) and filterable by a `statusFilter` string matched against
 `"Approved"`/`"Pending"` — same "Order by" pattern as Bookings/Enquiries, just without a real status
@@ -22,8 +28,8 @@ entity behind it.
 | **Approve** | Sets `IsApproved = true`. This is the only thing that makes a review eligible for public display (subject to the config gate below). |
 | **Delete** | Soft delete via the standard `IDeletableEntityRepository` pattern. |
 
-**Summary stat cards (Average Rating, Total Published, Approval Rate, Pending count) are always
-computed from the full, unfiltered review list** — applying the status filter to the table below
+**Summary stat cards (Average Rating, Total Published, Approval Rate, and the Pending count beside
+the title) are always computed from the full, unfiltered review list** — applying the status filter to the table below
 them never skews these numbers. Same reasoning as the Bookings and Enquiries summary cards: a filter
 on what you're looking at shouldn't change what the dashboard reports.
 

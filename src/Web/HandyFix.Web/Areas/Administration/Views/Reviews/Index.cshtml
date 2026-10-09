@@ -7,7 +7,6 @@
     var averageRating = Model.AverageRating;
     var totalPublished = Model.TotalPublished;
     var approvalRate = Model.ApprovalRate;
-    var flaggedReviews = 0; // Simulated field or 0 as database fallback
 }
 
 @functions {
@@ -25,25 +24,19 @@
             @pendingReviews Pending
         </span>
     </div>
-    <div class="d-flex align-items-center gap-3">
-        <form method="get" asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="m-0">
-            <input type="hidden" name="sortField" value="@Model.SortField" />
-            <input type="hidden" name="descending" value="@(Model.Descending.ToString())" />
-            <select name="status" class="admin-status-filter font-body-md" onchange="this.form.submit()">
-                <option value="">All Statuses</option>
-                <option value="Approved" selected="@(Model.StatusFilter == "Approved")">Approved</option>
-                <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
-            </select>
-        </form>
-        <a asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 w-100 w-md-auto rounded-lg btn-py3-px6">
-            <span class="material-symbols-outlined">refresh</span>
-            <span>Refresh List</span>
-        </a>
-    </div>
+    <form method="get" asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="m-0">
+        <input type="hidden" name="sortField" value="@Model.SortField" />
+        <input type="hidden" name="descending" value="@(Model.Descending.ToString())" />
+        <select name="status" class="admin-status-filter font-body-md" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option value="Approved" selected="@(Model.StatusFilter == "Approved")">Approved</option>
+            <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
+        </select>
+    </form>
 </div>
 
 <!-- Summary Stats (Bento Style) -->
-<div class="bento-grid bento-grid-4 mb-5">
+<div class="bento-grid bento-grid-3 mb-5">
     <div class="glass-card p-4 rounded-xl admin-stat-card">
         <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Average Rating</p>
         <div class="d-flex align-items-end gap-2">
@@ -67,11 +60,6 @@
     <div class="glass-card p-4 rounded-xl tint-secondary-faint border-secondary-soft">
         <p class="text-secondary font-label-sm mb-1 uppercase tracking-wider">Approval Rate</p>
         <p class="font-headline-lg mb-0 fs-headline-lg font-bold text-secondary">@approvalRate%</p>
-    </div>
-
-    <div class="glass-card p-4 rounded-xl admin-stat-card">
-        <p class="font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Flagged Reviews</p>
-        <p class="font-headline-lg mb-0 text-danger fs-headline-lg font-bold">@flaggedReviews</p>
     </div>
 </div>
 
@@ -132,10 +120,7 @@
                                     <div class="rounded-circle d-flex align-items-center justify-content-center font-bold dim-32 tint-primary-fixed-dim fs-11">
                                         @initials.ToUpper()
                                     </div>
-                                    <div>
-                                        <p class="font-body-md font-bold mb-0 text-primary">@review.CustomerName</p>
-                                        <p class="text-on-surface-variant mb-0 fs-11">Verified Client</p>
-                                    </div>
+                                    <p class="font-body-md font-bold mb-0 text-primary">@review.CustomerName</p>
                                 </div>
                             </td>
                             <td class="px-4 py-3">
