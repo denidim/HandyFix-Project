@@ -1,199 +1,115 @@
 @model HandyFix.Web.ViewModels.Administration.Dashboard.IndexViewModel
+@using HandyFix.Common
 @{
     this.ViewData["Title"] = "Dashboard Overview";
+
+    // The business's day, not the server's: the server keeps UTC.
+    var today = UkTime.FromUtc(DateTime.UtcNow);
 }
 
 <!-- Header -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <div>
         <h1 class="admin-page-title">Administration Dashboard</h1>
-        <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Real-time overview of Plumbing Handyman Surrey platform performance.</p>
+        <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Where the jobs, the money and the enquiries stand.</p>
     </div>
-    <div class="d-flex align-items-center gap-4">
-        <div class="d-none d-md-flex flex-column text-right">
-            <span class="font-label-sm font-bold text-on-surface">@DateTime.Now.ToString("dddd, MMM dd")</span>
-            <span class="font-label-sm text-on-surface-variant">System Status: Optimal</span>
-        </div>
-        <div class="p-2 rounded-circle shadow-sm d-flex align-items-center justify-content-center dim-40 admin-card">
-            <span class="material-symbols-outlined text-secondary">notifications_active</span>
-        </div>
-    </div>
+    <span class="d-none d-md-inline font-label-sm font-bold text-on-surface">@today.ToString("dddd, dd MMM")</span>
 </div>
 
-<!-- Stats Grid -->
-<div class="bento-grid bento-grid-4">
-    <!-- Revenue -->
-    <div class="dashboard-stat-card">
+<!-- Every figure here is counted from the database, and every card opens the list it counts.
+     Nothing on this page is fixed text standing in for a figure (PROJECT_STATE.md Section 3ch). -->
+<div class="bento-grid bento-grid-4" id="dashboard-figures">
+    <!-- Money that has come in and stayed: website deposits and payments written on jobs -->
+    <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="dashboard-stat-card text-no-decoration">
         <div class="dashboard-stat-card-header">
             <div class="dashboard-stat-card-icon-wrapper tint-secondary">
                 <span class="material-symbols-outlined text-secondary">payments</span>
             </div>
-            <span class="font-label-sm font-bold px-2 py-1 rounded tint-success">+12.5%</span>
         </div>
         <div>
             <p class="dashboard-stat-card-label">Total Revenue</p>
             <h2 class="dashboard-stat-card-value">£@Model.TotalRevenue.ToString("N2")</h2>
         </div>
-    </div>
+    </a>
 
-    <!-- Bookings -->
-    <div class="dashboard-stat-card">
-        <div class="dashboard-stat-card-header">
+    <!-- Jobs -->
+    <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="dashboard-stat-card text-no-decoration">
+        <div class="dashboard-stat-card-header gap-2">
             <div class="dashboard-stat-card-icon-wrapper tint-black-soft">
                 <span class="material-symbols-outlined text-primary">calendar_today</span>
             </div>
-            <span class="font-label-sm font-bold px-2 py-1 rounded tint-info">@Model.PendingBookingsCount waiting for a deposit</span>
+            @if (Model.PendingBookingsCount > 0)
+            {
+                <span class="font-label-sm font-bold px-2 py-1 rounded tint-waiting">@Model.PendingBookingsCount waiting for deposit</span>
+            }
         </div>
         <div>
             <p class="dashboard-stat-card-label">Total Jobs</p>
             <h2 class="dashboard-stat-card-value">@Model.TotalBookingsCount</h2>
         </div>
-    </div>
+    </a>
+
+    <!-- The admin's to-do: the same figure as the card on the Jobs page -->
+    <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="dashboard-stat-card text-no-decoration">
+        <div class="dashboard-stat-card-header">
+            <div class="dashboard-stat-card-icon-wrapper tint-secondary">
+                <span class="material-symbols-outlined text-secondary">engineering</span>
+            </div>
+        </div>
+        <div>
+            <p class="dashboard-stat-card-label">Waiting for a Technician</p>
+            <h2 class="dashboard-stat-card-value">@Model.AwaitingTechnicianCount</h2>
+        </div>
+    </a>
 
     <!-- Enquiries -->
-    <div class="dashboard-stat-card">
+    <a asp-area="Administration" asp-controller="Enquiries" asp-action="Index" class="dashboard-stat-card text-no-decoration">
         <div class="dashboard-stat-card-header">
             <div class="dashboard-stat-card-icon-wrapper tint-secondary">
                 <span class="material-symbols-outlined text-secondary">chat_bubble</span>
             </div>
-            <span class="font-label-sm font-bold px-2 py-1 rounded tint-neutral-soft">New Leads</span>
         </div>
         <div>
             <p class="dashboard-stat-card-label">Total Enquiries</p>
             <h2 class="dashboard-stat-card-value">@Model.TotalEnquiriesCount</h2>
         </div>
-    </div>
-
-    <!-- Unapproved Reviews -->
-    <div class="dashboard-stat-card">
-        <div class="dashboard-stat-card-header">
-            <div class="dashboard-stat-card-icon-wrapper tint-error-soft">
-                <span class="material-symbols-outlined text-error">star_half</span>
-            </div>
-            <div class="d-flex align-items-center gap-1 text-error font-bold font-label-sm">
-                <span class="rounded-circle legend-dot legend-dot-error"></span>
-                <span>Action Req.</span>
-            </div>
-        </div>
-        <div>
-            <p class="dashboard-stat-card-label">Unapproved Reviews</p>
-            <h2 class="dashboard-stat-card-value">@Model.PendingReviewsCount</h2>
-        </div>
-    </div>
+    </a>
 </div>
 
-<div class="row">
-    <!-- Quick Navigation Links (2/3 Column) -->
-    <div class="col-lg-8 mb-4">
-        <h3 class="font-headline-sm text-primary mb-4 d-flex align-items-center gap-2">
-            <span class="material-symbols-outlined">bolt</span>
-            <span>Quick Actions</span>
-        </h3>
+<h3 class="font-headline-sm text-primary mb-4 d-flex align-items-center gap-2">
+    <span class="material-symbols-outlined">bolt</span>
+    <span>Quick Actions</span>
+</h3>
 
-        <div class="quick-actions-grid">
-            <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="action-btn-card">
-                <div class="action-btn-circle">
-                    <span class="material-symbols-outlined">event_note</span>
-                </div>
-                <span class="font-button-text text-primary">Jobs</span>
-            </a>
-            <a asp-area="Administration" asp-controller="Services" asp-action="Index" class="action-btn-card">
-                <div class="action-btn-circle">
-                    <span class="material-symbols-outlined">construction</span>
-                </div>
-                <span class="font-button-text text-primary">Manage Services</span>
-            </a>
-            <a asp-area="Administration" asp-controller="Calendar" asp-action="Index" class="action-btn-card">
-                <div class="action-btn-circle">
-                    <span class="material-symbols-outlined">schedule</span>
-                </div>
-                <span class="font-button-text text-primary">Manage Availability</span>
-            </a>
-            <a asp-area="Administration" asp-controller="Enquiries" asp-action="Index" class="action-btn-card">
-                <div class="action-btn-circle">
-                    <span class="material-symbols-outlined">forum</span>
-                </div>
-                <span class="font-button-text text-primary">Client Enquiries</span>
-            </a>
-            <a asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="action-btn-card">
-                <div class="action-btn-circle">
-                    <span class="material-symbols-outlined">reviews</span>
-                </div>
-                <span class="font-button-text text-primary">Moderate Reviews</span>
-            </a>
-            <div class="action-btn-card add-widget-placeholder">
-                <span class="material-symbols-outlined text-outline-variant mb-2 fs-32">add</span>
-                <span class="font-button-text text-on-surface-variant">Add Widget</span>
-            </div>
+<div class="quick-actions-grid" id="dashboard-actions">
+    <a asp-area="Administration" asp-controller="Bookings" asp-action="Create" class="action-btn-card">
+        <div class="action-btn-circle">
+            <span class="material-symbols-outlined">add</span>
         </div>
-
-        <!-- Activity Graph Mockup -->
-        <div class="mt-4 p-5 rounded-xl shadow-sm admin-card activity-graph-placeholder">
-            <div class="text-center stack-above">
-                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 dim-56 tint-secondary">
-                    <span class="material-symbols-outlined text-secondary fs-28">insights</span>
-                </div>
-                <h4 class="font-headline-sm text-primary mb-1">Activity Visualization</h4>
-                <p class="font-body-md text-on-surface-variant max-w-sm mx-auto admin-page-subtitle">Detailed performance graphs are generating based on real-time booking trends.</p>
-            </div>
+        <span class="font-button-text text-primary">Write a Job In</span>
+    </a>
+    <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="action-btn-card">
+        <div class="action-btn-circle">
+            <span class="material-symbols-outlined">event_note</span>
         </div>
-    </div>
-
-    <!-- Sidebar Stats (1/3 Column) -->
-    <div class="col-lg-4">
-        <!-- Newest Leads -->
-        <div class="rounded-xl p-4 shadow-sm mb-4 admin-card">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="font-headline-sm text-primary mb-0">Platform Health</h3>
-            </div>
-
-            <div class="health-stat-item">
-                <div class="health-stat-header">
-                    <span class="health-stat-label">Server Capacity</span>
-                    <span class="font-label-sm">42%</span>
-                </div>
-                <div class="health-progress-bar">
-                    <div class="health-progress-fill" style="width: 42%;"></div>
-                </div>
-            </div>
-
-            <div class="health-stat-item m-0">
-                <div class="health-stat-header">
-                    <span class="health-stat-label">Inquiry Response Rate</span>
-                    <span class="font-label-sm">98%</span>
-                </div>
-                <div class="health-progress-bar">
-                    <div class="health-progress-fill tint-tertiary-fill" style="width: 98%;"></div>
-                </div>
-            </div>
+        <span class="font-button-text text-primary">Jobs</span>
+    </a>
+    <a asp-area="Administration" asp-controller="Calendar" asp-action="Index" class="action-btn-card">
+        <div class="action-btn-circle">
+            <span class="material-symbols-outlined">schedule</span>
         </div>
-
-        <!-- System Logs / Info Card -->
-        <div class="rounded-xl p-4 shadow-sm admin-card tint-secondary-faint">
-            <div class="d-flex align-items-center gap-3">
-                <span class="material-symbols-outlined text-secondary fs-32">verified_user</span>
-                <div>
-                    <h4 class="font-label-sm font-bold text-primary mb-1">Administrator Mode</h4>
-                    <p class="font-body-md text-on-surface-variant mb-0 fs-13 lh-snug">All dashboard actions are logged. Ensure credentials are kept confidential.</p>
-                </div>
-            </div>
+        <span class="font-button-text text-primary">Manage Availability</span>
+    </a>
+    <a asp-area="Administration" asp-controller="Enquiries" asp-action="Index" class="action-btn-card">
+        <div class="action-btn-circle">
+            <span class="material-symbols-outlined">forum</span>
         </div>
-    </div>
+        <span class="font-button-text text-primary">Client Enquiries</span>
+    </a>
+    <a asp-area="Administration" asp-controller="Services" asp-action="Index" class="action-btn-card">
+        <div class="action-btn-circle">
+            <span class="material-symbols-outlined">construction</span>
+        </div>
+        <span class="font-button-text text-primary">Manage Services</span>
+    </a>
 </div>
-
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Animate progress bars on load
-            const progressFills = document.querySelectorAll('.health-progress-fill');
-            progressFills.forEach(fill => {
-                const finalWidth = fill.style.width;
-                fill.style.width = '0%';
-                setTimeout(() => {
-                    fill.style.transition = 'width 1s cubic-bezier(0.65, 0, 0.35, 1)';
-                    fill.style.width = finalWidth;
-                }, 200);
-            });
-        });
-    </script>
-}

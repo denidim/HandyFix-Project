@@ -172,7 +172,6 @@
 .tint-waiting { background-color: rgba(245, 158, 11, 0.2); color: #7a4a00; }
 .tint-neutral-soft { background-color: var(--surface-container); color: var(--on-surface-variant); }
 .tint-black-soft { background-color: rgba(0, 0, 0, 0.05); }
-.tint-tertiary-fill { background-color: var(--on-tertiary-container); }
 .tint-secondary-fixed { background-color: var(--secondary-fixed); }
 .tint-primary-fixed-dim { background-color: var(--primary-fixed-dim); }
 .tint-surface-high { background-color: var(--surface-container-high); }

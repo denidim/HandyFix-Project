@@ -862,6 +862,49 @@
             Assert.Matches("Waiting for a Technician</p>\\s*<h3[^>]*>0</h3>", cancelled);
         }
 
+        // Most of the dashboard was the design mock-up's own text: "+12.5%" beside the revenue,
+        // "System Status: Optimal", a server-capacity bar, an "Add Widget" tile, a graph that
+        // "is generating", and a card counting reviews that have had no way in since the public
+        // form was removed. Every figure on it is counted now, each card opens the list it
+        // counts, and the menu no longer leads to the reviews page, which is still there for the
+        // day reviews are brought in from Google (PROJECT_STATE.md Section 3ch).
+        [Fact]
+        public async Task TheDashboardShowsCountedFiguresThatOpenTheirListsAndNoMockUpText()
+        {
+            using var site = new Site();
+            await site.BookAndPayAsync(site.AFreeSlot());
+            HttpClient customer = site.Browser(followRedirects: false);
+            await FormsWebTests.PostFormAsync(customer, "/Booking", site.BookingFormFor(site.AFreeSlot()));
+            HttpClient admin = await site.SignedInAdminAsync();
+
+            var dashboard = WebUtility.HtmlDecode(await (await admin.GetAsync("/Administration/Dashboard")).Content.ReadAsStringAsync());
+
+            var mockUpText = new[]
+            {
+                "+12.5%", "System Status", "notifications_active", "New Leads", "Add Widget", "Activity Visualization",
+                "Platform Health", "Server Capacity", "Inquiry Response Rate", "Administrator Mode", "Unapproved Reviews", "Moderate Reviews",
+            };
+            Assert.All(mockUpText, text => Assert.DoesNotContain(text, dashboard));
+
+            // One booking paid and one still waiting for its deposit.
+            Assert.Matches("Total Revenue</p>\\s*<h2[^>]*>£50.00</h2>", dashboard);
+            Assert.Matches("Total Jobs</p>\\s*<h2[^>]*>2</h2>", dashboard);
+            Assert.Contains(">1 waiting for deposit</span>", dashboard);
+            Assert.Matches("Waiting for a Technician</p>\\s*<h2[^>]*>1</h2>", dashboard);
+            Assert.Matches("Total Enquiries</p>\\s*<h2[^>]*>0</h2>", dashboard);
+
+            // The same to-do figure as the card on the Jobs page.
+            var list = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage)).Content.ReadAsStringAsync());
+            Assert.Matches("Waiting for a Technician</p>\\s*<h3[^>]*>1</h3>", list);
+
+            Assert.Equal(3, Regex.Matches(dashboard, "<a\\b(?=[^>]*class=\"dashboard-stat-card)(?=[^>]*href=\"" + JobsPage + "\")[^>]*>").Count);
+            Assert.Single(Regex.Matches(dashboard, "<a\\b(?=[^>]*class=\"dashboard-stat-card)(?=[^>]*href=\"/Administration/Enquiries\")[^>]*>"));
+            Assert.Contains("href=\"" + JobsPage + "/Create\"", dashboard);
+
+            Assert.DoesNotContain("href=\"/Administration/Reviews\"", dashboard);
+            Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync("/Administration/Reviews")).StatusCode);
+        }
+
         // "Unblock" in the admin calendar did nothing: it called the method that frees a slot
         // from its booking, which leaves the block where it is. Each calendar button also
         // answers now with what it did.

@@ -778,30 +778,6 @@
   color: var(--text-main);
 }
 
-.legend-dot-error {
-  background-color: var(--error);
-}
-
-.stack-above {
-  position: relative;
-  z-index: 10;
-}
-
-.add-widget-placeholder {
-  border: 2px dashed var(--outline-variant);
-  background: transparent;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.activity-graph-placeholder {
-  height: 280px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
 /* Service Create/Edit form pages. */
 .admin-form-container {
   max-width: 800px;
@@ -988,6 +964,13 @@
   }
 }
 
+/* The dashboard's five shortcuts in one row, now that they have the page's full width. */
+@media (min-width: 992px) {
+  .quick-actions-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 .action-btn-card {
   background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(10px);
@@ -1028,36 +1011,6 @@
 }
 
 .action-btn-card:hover .action-btn-circle {
-  background-color: var(--secondary);
-}
-
-/* Progress and health stats */
-.health-stat-item {
-  margin-bottom: var(--spacing-4);
-}
-
-.health-stat-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-1);
-}
-
-.health-stat-label {
-  font-size: var(--fs-label-sm);
-  font-weight: 700;
-}
-
-.health-progress-bar {
-  width: 100%;
-  background-color: var(--surface-container-highest);
-  height: 8px;
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.health-progress-fill {
-  height: 100%;
-  border-radius: var(--radius-full);
   background-color: var(--secondary);
 }
 
