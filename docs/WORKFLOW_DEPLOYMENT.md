@@ -100,12 +100,32 @@ Names only — real values live in `.env` on the server, itself gitignored, gene
 | `EMAIL_SUBJECT_PREFIX` | `Email:SubjectPrefix` — a mark in front of every subject. `[STAGING]` on staging; empty on the live site. |
 | `ADMIN_NOTIFICATION_EMAIL` | `Admin:NotificationEmail` — where notices to the company go (paid deposits, enquiries, job applications). Empty means `info@` on the real domain; staging sets a role address of its own. `WORKFLOW_EMAIL.md` has every email setting in one table. |
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | `Turnstile:SiteKey` / `Turnstile:SecretKey` — the person check on the public forms. **The form pages fail without both** outside Development; see `WORKFLOW_FORMS.md`. |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | `Stripe:SecretKey` / `Stripe:WebhookSecret` — the deposit. On staging both belong to a Stripe **sandbox**, so nobody is charged. **Paying for a booking fails without the key** outside Development. See "Stripe on staging" below. |
 | `STAGING_HOSTNAME`, `BASIC_AUTH_USER`, `BASIC_AUTH_HASH` | consumed by the `caddy` service, not `web` |
 
-`ASPNETCORE_ENVIRONMENT=Staging` and `Stripe__AllowSandboxOutsideDevelopment=true` are hardcoded
-literals in the compose file itself, not pulled from `.env` — the Stripe flag exists because there's
-no real Stripe account yet, letting staging demo the full booking flow through the sandbox bypass;
-remove it and set `Stripe__SecretKey` once a real test-mode account exists.
+`ASPNETCORE_ENVIRONMENT=Staging` is a hardcoded literal in the compose file itself, not pulled
+from `.env`.
+
+### Stripe on staging
+
+Staging takes the deposit through Stripe in test mode since `PROJECT_STATE.md` Section 3cg; before
+that a setting (`Stripe:AllowSandboxOutsideDevelopment`) made it pretend. That setting is gone from
+the compose file and must never be given to the live site.
+
+- **The key** is a restricted key made in a Stripe sandbox (it starts `rk_test_`), with one
+  permission: Checkout Sessions, Write. The site opens, asks about and closes payment pages and
+  asks Stripe for nothing else, so a leaked key can move no money.
+- **The webhook** is made in the same sandbox: payload "Snapshot", the events
+  `checkout.session.completed` and `checkout.session.expired`, pointed at
+  `https://<staging host>/api/payment/webhook`. Its signing secret (`whsec_...`) is the second
+  setting. Which version of Stripe's format the webhook is set to does not matter: the site reads
+  the message's type and the page's id, and asks Stripe for the rest.
+- **The Caddyfile lets that one path past Basic Auth**, because Stripe cannot answer a password
+  prompt. The path is not open for that: the app refuses a call without Stripe's signature.
+- **To pay on staging** use Stripe's test card, `4242 4242 4242 4242`, any date in the future
+  and any three digits.
+- **The live site** gets a live key and a webhook of its own, made outside any sandbox and pointed
+  at the real domain. Same two settings, different values.
 
 `CloudflareR2:*` (`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_SERVICE_URL`, `R2_PUBLIC_URL`,
 `R2_BUCKET_NAME`) is wired up as of 2026-08-05 — staging reuses the same bucket as local dev. See
@@ -194,6 +214,9 @@ database, the live site's above all, both are chosen **before** its first start.
 | Photo uploads fail on staging | `CloudflareR2:*` is configured as of 2026-08-05 (see above) — if this still happens, check the server's actual `.env` and `docker-compose.staging.yml` directly rather than assuming the repo version is what's running. |
 | `/Contact`, `/JoinOurTeam` and `/Booking` fail, the rest of the site works | The Turnstile keys are missing from the container: `Turnstile is not configured for this environment` in the log. Check both lines are in `.env` **and** that the server's compose file maps them. |
 | Every page `HomeController` serves fails | `Brevo:ApiKey` is missing. The enquiries service needs the email sender, and outside Development the sender refuses to exist without a key. |
+| A booking is saved, then the customer gets an error page where Stripe should open | `Stripe is not configured for this environment` in the log: `STRIPE_SECRET_KEY` is missing from `.env`, or the server's compose file still has the old pretend-payment line in place of the two Stripe ones. |
+| Stripe shows a webhook delivery as failed with `401` | The server's `Caddyfile` is the old one, without the path let past Basic Auth. Copy the repo's over it and restart Caddy. |
+| Stripe shows a webhook delivery as failed with `400`, and the log says `A call to the Stripe webhook was refused` | `STRIPE_WEBHOOK_SECRET` is not the signing secret of the webhook that is calling. Each webhook has its own, and a sandbox's differs from the live one. Deposits are still confirmed when the customer comes back from Stripe, but not when they close the tab first. |
 | A `Secure`-flagged cookie won't persist, or a generated absolute URL (e.g. Stripe redirect URLs) comes back `http://` instead of `https://` | `Request.Scheme`/`IsHttps` reading wrong behind Caddy — see "Why the app has to trust Caddy's forwarded headers" above. Confirm `UseForwardedHeaders()` is still the first middleware in `Program.cs`. |
 
 For real hostnames/credentials and a step-by-step walkthrough of each failure above with actual
@@ -203,8 +226,9 @@ values, see `docs/private/STAGING_RUNBOOK.md`.
 
 ## Related
 
-- Full architectural history and what's still open (production pipeline, Stripe for staging,
-  DB host `sa` password rotation): `PROJECT_STATE.md` Section 3v–3w and Section 4 Tier 4.
+- Full architectural history and what's still open (production pipeline, DB host `sa` password
+  rotation): `PROJECT_STATE.md` Section 3v–3w and Section 4 Tier 4. Stripe on staging:
+  `PROJECT_STATE.md` Section 3cg.
 - The forwarded-headers/cookie-consent bug, full root-cause writeup: `PROJECT_STATE.md`
   Section 3ac.
 - Mobile-scroll fix, silent-booking-error fix, CloudflareR2 wiring, and the compose-file-drift bug

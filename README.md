@@ -101,8 +101,7 @@ None of the values below live in any committed `appsettings.json` — set them l
 
 ```bash
 cd src/Web/HandyFix.Web
-dotnet user-secrets set "Stripe:SecretKey" "sk_test_..."
-dotnet user-secrets set "Stripe:PublishableKey" "pk_test_..."
+dotnet user-secrets set "Stripe:SecretKey" "rk_test_..."
 dotnet user-secrets set "Stripe:WebhookSecret" "whsec_..."
 dotnet user-secrets set "Brevo:ApiKey" "xkeysib-..."
 dotnet user-secrets set "Admin:SeedEmail" "<the email you will sign in with>"
@@ -116,7 +115,9 @@ dotnet user-secrets set "CloudflareR2:BucketName" "..."
 
 In staging/production these are supplied as environment variables instead (`Admin__SeedPassword`, `CloudflareR2__AccessKeyId`, etc. — double underscore is ASP.NET Core's section separator), read from a `.env` file that lives on the server only and is never committed ([docs/WORKFLOW_DEPLOYMENT.md](docs/WORKFLOW_DEPLOYMENT.md)).
 
-If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to Mock/Sandbox mode (Stripe) or a no-op sender (Brevo) **only in Development** — both throw on startup outside Development, so a missing key can't silently ship a broken (or, for Stripe, fake-successful) production flow. `Admin:SeedEmail` and `Admin:SeedPassword` follow the same rule: unset outside Development throws; unset in Development seeds fixed dev-only fallbacks, never used elsewhere.
+The Stripe key is a restricted key from a Stripe sandbox with one permission, Checkout Sessions: Write; the site uses Stripe's hosted payment page, so it needs no publishable key. The webhook secret matters only where Stripe can reach the site, which a local run is not: locally a deposit is confirmed when the browser comes back from Stripe.
+
+If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to a pretend payment (Stripe) or a no-op sender (Brevo) **only in Development** — outside Development the email sender refuses to start and paying for a booking throws, so a missing key can't silently ship a broken (or, for Stripe, fake-successful) production flow. `Admin:SeedEmail` and `Admin:SeedPassword` follow the same rule: unset outside Development throws; unset in Development seeds fixed dev-only fallbacks, never used elsewhere.
 
 **The two `Admin:Seed*` settings are read once in a database's life**: at the first start, which makes the admin account. Setting or changing them later changes nothing. After that the admin changes the password and the login email in the admin panel, on the Account page ([docs/WORKFLOW_ADMIN_ACCOUNT.md](docs/WORKFLOW_ADMIN_ACCOUNT.md)).
 

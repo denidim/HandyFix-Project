@@ -1,5 +1,10 @@
 {$STAGING_HOSTNAME} {
-	basic_auth {
+	# Stripe calls this one address by itself to say a deposit was paid, and has
+	# no way to answer a password prompt, so it is the only path left outside
+	# Basic Auth. It is not open for that: the app refuses any call that does not
+	# carry Stripe's signature.
+	@behindThePassword not path /api/payment/webhook
+	basic_auth @behindThePassword {
 		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
 	}
 

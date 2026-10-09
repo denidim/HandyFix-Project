@@ -120,6 +120,12 @@ namespace HandyFix.Web.ViewModels.Booking
 
         public bool CanEditDetails => BookingRules.CanEditDetails(this.StatusName);
 
+        // The two the customer's own pages ask: may the deposit still be paid, and is there a
+        // confirmed booking to show.
+        public bool CanPayDeposit => BookingRules.CanPayDeposit(this.StatusName, this.CameFromWebsite, this.IsDepositPaid);
+
+        public bool IsConfirmed => BookingRules.IsConfirmed(this.StatusName, this.CameFromWebsite, this.IsDepositPaid);
+
         public IEnumerable<string> Services { get; set; }
 
         /// <summary>

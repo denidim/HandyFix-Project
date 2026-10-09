@@ -264,9 +264,18 @@ namespace HandyFix.Web.Controllers
             try
             {
                 BookingDetailsViewModel booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(id);
-                if (booking == null)
+                if (booking == null || !booking.CameFromWebsite)
                 {
                     return this.NotFound();
+                }
+
+                if (!booking.IsConfirmed)
+                {
+                    // This page used to say "Booking Confirmed" and "Deposit Paid" for any
+                    // booking's id, paid or not. One that is not paid goes to the page that
+                    // says where it stands and, while its time is held, lets it be paid
+                    // (PROJECT_STATE.md Section 3cg).
+                    return this.RedirectToAction("Cancel", "Payment", new { bookingId = id });
                 }
 
                 return this.View(booking);
