@@ -33,6 +33,8 @@ namespace HandyFix.Data
 
         public DbSet<Booking> Bookings { get; set; }
 
+        public DbSet<BookingHistoryEntry> BookingHistoryEntries { get; set; }
+
         public DbSet<BookingImage> BookingImages { get; set; }
 
         public DbSet<BookingService> BookingServices { get; set; }
