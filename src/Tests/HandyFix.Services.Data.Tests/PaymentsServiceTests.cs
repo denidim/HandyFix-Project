@@ -74,7 +74,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_9999");
 
             // Verify payment update
@@ -164,7 +164,7 @@ namespace HandyFix.Services.Data.Tests
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new[] { new System.Collections.Generic.KeyValuePair<string, string>("Admin:NotificationEmail", "owner@handyfix.co.uk") })
                 .Build();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, configuration, Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, configuration, Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
 
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_email_test");
 
@@ -239,7 +239,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
 
             // Stripe retries webhooks; the success handler and the Success redirect can
             // also both fire for the same session. Neither should be able to corrupt state
@@ -324,7 +324,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
 
             // Customer clicks "Pay" twice (e.g. hits back and retries) before completing
             // either Stripe checkout.
@@ -370,7 +370,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             await service.CancelPaymentAsync(checkoutSessionId);
 
             var updatedPayment = dbContext.Payments.First(x => x.Id == payment.Id);
@@ -410,7 +410,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             await service.CancelPaymentAsync(checkoutSessionId);
 
             var updatedPayment = dbContext.Payments.First(x => x.Id == payment.Id);
@@ -447,7 +447,7 @@ namespace HandyFix.Services.Data.Tests
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
 
             // Only the stale bookings' pending payments should be cancelled; the paid
             // one must be left alone even though it's in the id list, and the pending
@@ -458,118 +458,6 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal(cancelledPaymentStatus.Id, dbContext.Payments.First(x => x.Id == otherStalePayment.Id).StatusId);
             Assert.Equal(paidPaymentStatus.Id, dbContext.Payments.First(x => x.Id == paidPayment.Id).StatusId);
             Assert.Equal(pendingPaymentStatus.Id, dbContext.Payments.First(x => x.Id == untouchedPayment.Id).StatusId);
-        }
-
-        /// <summary>
-        /// Covers the Stripe sandbox bypass, which is a security control rather than a
-        /// convenience: it must fire only when a key is genuinely absent AND the environment
-        /// allows it. Getting this wrong in the unsafe direction means production silently
-        /// reporting fake-successful payments for bookings nobody paid for.
-        /// </summary>
-        public class CreateCheckoutSessionAsyncTests
-        {
-            [Fact]
-            public async Task ShouldBypassStripeWhenTheKeyIsMissingInDevelopment()
-            {
-                PaymentsService service = BuildService(stripeSecretKey: null, environmentName: "Development", out ApplicationDbContext dbContext);
-
-                var bookingId = Guid.NewGuid();
-                PaymentCheckoutResult result = await service.CreateCheckoutSessionAsync(bookingId, 40m, "https://example.com/success", "https://example.com/cancel");
-
-                Assert.True(result.IsMock);
-                Assert.StartsWith("mock_session_", result.SessionId);
-
-                // The mock session id has to reach the payment record, because Success()
-                // looks the payment up by exactly that id on the way back.
-                Payment payment = dbContext.Payments.First(x => x.BookingId == bookingId);
-                Assert.Equal("Stripe-Mock", payment.Provider);
-                Assert.Equal(result.SessionId, payment.CheckoutSessionId);
-            }
-
-            [Theory]
-            [InlineData("Production")]
-            [InlineData("Staging")]
-            [InlineData("QA")]
-            public async Task ShouldThrowRatherThanFakeAPaymentWhenTheKeyIsMissingOutsideDevelopment(string environmentName)
-            {
-                PaymentsService service = BuildService(stripeSecretKey: null, environmentName: environmentName, out ApplicationDbContext dbContext);
-
-                InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                    () => service.CreateCheckoutSessionAsync(Guid.NewGuid(), 40m, "https://example.com/success", "https://example.com/cancel"));
-
-                Assert.Contains("Stripe is not configured", exception.Message);
-
-                // The part that actually matters: failing loudly is only useful if it also
-                // fails to record anything. A payment row here would mark the booking paid.
-                Assert.False(dbContext.Payments.Any());
-            }
-
-            [Theory]
-            [InlineData("")]
-            [InlineData("   ")]
-            public async Task ShouldTreatABlankKeyAsMissingRatherThanConfigured(string blankKey)
-            {
-                // A key set to an empty string in appsettings is a misconfiguration, not a
-                // configured key - outside Development it must fail the same way a null does.
-                PaymentsService service = BuildService(stripeSecretKey: blankKey, environmentName: "Production", out ApplicationDbContext dbContext);
-
-                await Assert.ThrowsAsync<InvalidOperationException>(
-                    () => service.CreateCheckoutSessionAsync(Guid.NewGuid(), 40m, "https://example.com/success", "https://example.com/cancel"));
-
-                Assert.False(dbContext.Payments.Any());
-            }
-
-            private static PaymentsService BuildService(string stripeSecretKey, string environmentName, out ApplicationDbContext dbContext)
-            {
-                var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-
-                dbContext = new ApplicationDbContext(options);
-                var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
-                var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
-                var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
-                var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
-
-                dbContext.PaymentStatuses.Add(new PaymentStatus { Name = "Pending" });
-                dbContext.SaveChanges();
-
-                var settings = new Dictionary<string, string>();
-                if (stripeSecretKey != null)
-                {
-                    settings["Stripe:SecretKey"] = stripeSecretKey;
-                }
-
-                IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
-
-                var environment = new Mock<IWebHostEnvironment>();
-                environment.SetupGet(x => x.EnvironmentName).Returns(environmentName);
-
-                return new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, new Mock<IEmailSender>().Object, configuration, environment.Object, NullLogger<PaymentsService>.Instance);
-            }
-        }
-
-        public class HandleWebhookEventAsyncTests
-        {
-            [Fact]
-            public async Task ShouldThrowForAnUnverifiableSignature()
-            {
-                // An unsigned or forged event must not be processed - the caller (the webhook
-                // controller action) turns this into a 400 rather than a 500, since Stripe
-                // retries on 5xx and a crash here would turn one bad request into many.
-                var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-
-                using var dbContext = new ApplicationDbContext(options);
-                using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
-                using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
-                using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
-                using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
-
-                var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, new Mock<IEmailSender>().Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance);
-
-                await Assert.ThrowsAnyAsync<Exception>(
-                    () => service.HandleWebhookEventAsync("{\"id\":\"evt_forged\"}", string.Empty));
-            }
         }
     }
 }

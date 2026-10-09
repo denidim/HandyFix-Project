@@ -24,6 +24,14 @@ namespace HandyFix.Services.Data.Payments
 
     public class PaymentsService : IPaymentsService
     {
+        private const string StripeProvider = "Stripe";
+        private const string MockProvider = "Stripe-Mock";
+
+        // Stripe keeps a payment page open for a day unless told otherwise, and will not take
+        // less than thirty minutes. The site closes the page itself when it drops the booking
+        // (CloseCheckoutsAsync); this is what is left if that call never gets through.
+        private static readonly TimeSpan CheckoutLifetime = TimeSpan.FromMinutes(31);
+
         private readonly IDeletableEntityRepository<Payment> paymentRepository;
         private readonly IDeletableEntityRepository<PaymentStatus> paymentStatusRepository;
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
@@ -32,6 +40,7 @@ namespace HandyFix.Services.Data.Payments
         private readonly IConfiguration configuration;
         private readonly IWebHostEnvironment environment;
         private readonly ILogger<PaymentsService> logger;
+        private readonly IStripeGateway stripeGateway;
 
         public PaymentsService(
             IDeletableEntityRepository<Payment> paymentRepository,
@@ -41,7 +50,8 @@ namespace HandyFix.Services.Data.Payments
             IEmailSender emailSender,
             IConfiguration configuration,
             IWebHostEnvironment environment,
-            ILogger<PaymentsService> logger)
+            ILogger<PaymentsService> logger,
+            IStripeGateway stripeGateway)
         {
             this.paymentRepository = paymentRepository;
             this.paymentStatusRepository = paymentStatusRepository;
@@ -51,12 +61,7 @@ namespace HandyFix.Services.Data.Payments
             this.configuration = configuration;
             this.environment = environment;
             this.logger = logger;
-
-            var secretKey = this.configuration["Stripe:SecretKey"];
-            if (!string.IsNullOrWhiteSpace(secretKey))
-            {
-                StripeConfiguration.ApiKey = secretKey;
-            }
+            this.stripeGateway = stripeGateway;
         }
 
         public async Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId)
@@ -98,11 +103,59 @@ namespace HandyFix.Services.Data.Payments
             return payment.Id;
         }
 
+        public async Task<Guid?> ConfirmCheckoutAsync(string checkoutSessionId)
+        {
+            if (string.IsNullOrWhiteSpace(checkoutSessionId))
+            {
+                return null;
+            }
+
+            Payment payment = await this.paymentRepository.All()
+                .Include(x => x.Status)
+                .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
+
+            if (payment == null)
+            {
+                return null;
+            }
+
+            var statusName = payment.Status?.Name;
+
+            if (payment.Provider == MockProvider)
+            {
+                // The pretend payment counts only where the pretend payment is allowed. With a
+                // real key in place, an address typed with a pretend id confirms nothing.
+                if (statusName == "Pending" && this.MockPaymentsAllowed())
+                {
+                    await this.ProcessPaymentSuccessAsync(checkoutSessionId, $"txn_mock_{Guid.NewGuid()}");
+                }
+            }
+            else if (statusName == "Pending" || statusName == "Cancelled")
+            {
+                // The site never takes the browser's word that a page was paid: an address with
+                // the page's id in it can be typed by anyone who has seen that page. Stripe is
+                // asked. A payment the site had given up on is asked about too, so that money
+                // which did reach Stripe is written down whatever the site thought.
+                Session session = await this.stripeGateway.GetCheckoutAsync(checkoutSessionId);
+                if (IsPaid(session))
+                {
+                    await this.ProcessPaymentSuccessAsync(checkoutSessionId, session.PaymentIntentId);
+                }
+            }
+
+            return payment.BookingId;
+        }
+
+        // Writes down a deposit that has been paid. It asks nobody whether that is true: the
+        // customer's return from Stripe and Stripe's own message both come here through
+        // ConfirmCheckoutAsync, which asks Stripe first, and it is not on the interface for
+        // that reason.
         public async Task ProcessPaymentSuccessAsync(string checkoutSessionId, string transactionId)
         {
             Payment payment = await this.paymentRepository.All()
                 .Include(x => x.Booking).ThenInclude(b => b.BookingServices).ThenInclude(bs => bs.Service)
                 .Include(x => x.Booking).ThenInclude(b => b.AvailabilitySlot)
+                .Include(x => x.Booking).ThenInclude(b => b.Status)
                 .FirstOrDefaultAsync(x => x.CheckoutSessionId == checkoutSessionId);
 
             if (payment == null)
@@ -111,44 +164,107 @@ namespace HandyFix.Services.Data.Payments
             }
 
             PaymentStatus paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
+            if (paidStatus == null)
+            {
+                throw new InvalidOperationException("Payment status 'DepositPaid' is not seeded.");
+            }
 
-            // The Stripe webhook and the browser's Success redirect can both call this
-            // for the same session. Only the first call — the one that actually moves
-            // the payment from Pending to DepositPaid — should trigger confirmation
-            // emails; a repeat call is a harmless status re-confirmation.
-            var alreadyProcessed = paidStatus != null && payment.StatusId == paidStatus.Id;
+            // Stripe's message and the customer's return can both arrive for the same payment.
+            // The first one writes it down and sends the emails; the second finds it done and
+            // changes nothing, the transaction id included.
+            if (payment.StatusId == paidStatus.Id)
+            {
+                return;
+            }
 
-            // Set transaction ID
             payment.TransactionId = transactionId;
+            payment.StatusId = paidStatus.Id;
 
-            // Change payment status to "DepositPaid"
-            if (paidStatus != null)
-            {
-                payment.StatusId = paidStatus.Id;
-            }
-
-            // Update associated booking status to "Approved" (Confirmed deposit)
             Booking booking = payment.Booking;
-            if (booking != null)
+            if (booking == null)
             {
-                BookingStatus approvedStatus = await this.bookingStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
-                if (approvedStatus != null)
-                {
-                    booking.StatusId = approvedStatus.Id;
-                }
+                await this.paymentRepository.SaveChangesAsync();
+                return;
             }
 
-            if (!alreadyProcessed && booking != null)
+            if (booking.Status?.Name != "Pending")
             {
-                booking.History.Add(JobHistory.Line($"Deposit of {JobHistory.Pounds(payment.Amount)} paid on the website."));
+                // Money for a booking that is not waiting for it: one that was dropped or
+                // cancelled while a payment page was still open, or one paid twice. The site
+                // closes those pages itself (CloseCheckoutsAsync), so this should not happen,
+                // but money is never left unwritten, and it never switches a booking back on:
+                // its hour may be someone else's by now. The company is told and decides.
+                booking.History.Add(JobHistory.Line($"Deposit of {JobHistory.Pounds(payment.Amount)} paid on the website when the booking was not waiting for one. Nothing else was changed: book the job again or send the deposit back in Stripe."));
+                await this.paymentRepository.SaveChangesAsync();
+
+                this.logger.LogWarning(
+                    "A deposit was paid for booking {BookingId}, which was {Status} and not waiting for one",
+                    booking.Id,
+                    booking.Status?.Name);
+                await this.SendUnexpectedDepositNoticeAsync(booking, payment);
+                return;
             }
+
+            BookingStatus approvedStatus = await this.bookingStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
+            if (approvedStatus != null)
+            {
+                booking.StatusId = approvedStatus.Id;
+            }
+
+            booking.History.Add(JobHistory.Line($"Deposit of {JobHistory.Pounds(payment.Amount)} paid on the website."));
 
             await this.paymentRepository.SaveChangesAsync();
 
-            if (!alreadyProcessed && booking != null)
+            await this.SendBookingConfirmationEmailsAsync(booking, payment);
+        }
+
+        public async Task<CheckoutClosure> CloseCheckoutsAsync(Guid bookingId)
+        {
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            List<Payment> open = await this.paymentRepository.All()
+                .Where(x => x.BookingId == bookingId && x.Status.Name == "Pending")
+                .ToListAsync();
+
+            if (cancelledStatus == null || open.Count == 0)
             {
-                await this.SendBookingConfirmationEmailsAsync(booking, payment);
+                return CheckoutClosure.Closed;
             }
+
+            CheckoutClosure result = CheckoutClosure.Closed;
+
+            foreach (Payment payment in open)
+            {
+                if (payment.Provider != StripeProvider)
+                {
+                    // The pretend payment has no page anywhere to close.
+                    payment.StatusId = cancelledStatus.Id;
+                    continue;
+                }
+
+                try
+                {
+                    Session session = await this.stripeGateway.ExpireCheckoutAsync(payment.CheckoutSessionId);
+                    if (IsPaid(session))
+                    {
+                        // Paid in the moment before it was closed. That is a booking, not a
+                        // booking to drop.
+                        await this.ProcessPaymentSuccessAsync(payment.CheckoutSessionId, session.PaymentIntentId);
+                        return CheckoutClosure.Paid;
+                    }
+
+                    payment.StatusId = cancelledStatus.Id;
+                }
+                catch (Exception ex)
+                {
+                    // Stripe could not be reached. The page may still be open, so the payment
+                    // stays as it is and whoever asked is told, to try again later.
+                    this.logger.LogWarning(ex, "The payment page of booking {BookingId} could not be closed at Stripe", bookingId);
+                    result = CheckoutClosure.Unknown;
+                }
+            }
+
+            await this.paymentRepository.SaveChangesAsync();
+            return result;
         }
 
         // A payment the admin writes on a job: how the rest was paid, in person or by transfer.
@@ -329,6 +445,38 @@ namespace HandyFix.Services.Data.Payments
                 replyTo: booking.Email);
         }
 
+        // To the company only. The customer is not told the booking is confirmed, because it is
+        // not: someone has to ring them, and either find a new time or send the money back.
+        private async Task SendUnexpectedDepositNoticeAsync(Booking booking, Payment payment)
+        {
+            var customerName = EmailText.Encode($"{booking.CustomerFirstName} {booking.CustomerLastName}");
+            var scheduledTime = booking.ScheduledStart.HasValue
+                ? booking.ScheduledStart.Value.ToString("dd MMM yyyy 'at' HH:mm")
+                : "not recorded";
+
+            var subject = $"Action needed: deposit paid for a booking that is not held - {booking.CustomerFirstName} {booking.CustomerLastName}";
+            var body = $@"
+                <h3>A deposit was paid for a booking that was not waiting for one.</h3>
+                <p>The booking had been dropped or cancelled, or was already paid, when this money arrived. The site has written the payment on the job and changed nothing else. The customer has not been sent a confirmation.</p>
+                <ul>
+                    <li><strong>Booking Reference:</strong> {BookingReference.Short(booking.Id)}</li>
+                    <li><strong>Customer:</strong> {customerName} ({EmailText.Encode(booking.Email)}, {EmailText.Encode(booking.PhoneNumber)})</li>
+                    <li><strong>It was booked for:</strong> {scheduledTime}</li>
+                    <li><strong>Deposit Paid:</strong> £{payment.Amount:F2}</li>
+                </ul>
+                <p>Next: call the customer. The site has told them you will be in touch to confirm their visit. Either write the job in again for a time that is free, or send the deposit back in Stripe.</p>";
+
+            await this.emailSender.TrySendEmailAsync(
+                this.logger,
+                "deposit paid for a booking not held, notice to the company",
+                EmailSettings.SystemFromAddress(this.configuration),
+                EmailSettings.WebsiteFromName,
+                EmailSettings.AdminNotificationAddress(this.configuration),
+                subject,
+                body,
+                replyTo: booking.Email);
+        }
+
         public async Task CancelPaymentAsync(string checkoutSessionId)
         {
             Payment payment = await this.paymentRepository.All()
@@ -412,31 +560,50 @@ namespace HandyFix.Services.Data.Payments
                 .SumAsync(x => (decimal?)x.Amount) ?? 0.00m;
         }
 
-        public async Task<PaymentCheckoutResult> CreateCheckoutSessionAsync(Guid bookingId, decimal depositAmount, string successUrl, string cancelUrl)
+        public async Task<PaymentCheckoutResult> CreateCheckoutSessionAsync(Guid bookingId, string successUrl, string cancelUrl)
         {
-            var secretKey = this.configuration["Stripe:SecretKey"];
-            var keyMissing = string.IsNullOrWhiteSpace(secretKey);
+            Booking booking = await this.bookingRepository.All()
+                .Include(x => x.Status)
+                .Include(x => x.Payments).ThenInclude(p => p.Status)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
 
-            // Sandbox Mode bypasses Stripe entirely so the booking flow can still be exercised
-            // without a real account. Always allowed in Development. Outside Development it
-            // requires an explicit opt-in (Stripe:AllowSandboxOutsideDevelopment) so a staging
-            // environment can demo the flow before a real Stripe account exists, while production
-            // stays protected by default -- that flag must never be set there.
-            var sandboxAllowed = this.environment.IsDevelopment()
-                || this.configuration.GetValue<bool>("Stripe:AllowSandboxOutsideDevelopment");
-
-            if (keyMissing && sandboxAllowed)
+            // The address that opens a payment page has the booking's id in it and nothing else,
+            // so it is the booking that says whether there is anything to pay: one already paid
+            // would be paid twice, and one that was dropped has no hour held for it.
+            if (booking == null
+                || !BookingRules.CanPayDeposit(booking.Status?.Name, booking.Source == BookingSource.Website, HasPayment(booking, "DepositPaid"))
+                || booking.DepositAmount.GetValueOrDefault() <= 0m)
             {
-                var mockSessionId = $"mock_session_{Guid.NewGuid()}";
-                await this.CreatePaymentRecordAsync(bookingId, depositAmount, "Stripe-Mock", mockSessionId);
-                return new PaymentCheckoutResult { IsMock = true, SessionId = mockSessionId };
+                return null;
             }
 
-            if (keyMissing)
+            var depositAmount = booking.DepositAmount.Value;
+            var keyMissing = string.IsNullOrWhiteSpace(this.configuration["Stripe:SecretKey"]);
+
+            if (keyMissing && !this.MockPaymentsAllowed())
             {
                 // Never silently fake a payment or attempt a doomed Stripe call outside
                 // development: fail loudly so a missing production secret gets noticed.
                 throw new InvalidOperationException("Stripe is not configured for this environment. Set Stripe:SecretKey before accepting real payments.");
+            }
+
+            // A second try closes the page of the first, or the customer could pay on both.
+            CheckoutClosure earlierPages = await this.CloseCheckoutsAsync(bookingId);
+            if (earlierPages == CheckoutClosure.Paid)
+            {
+                return null;
+            }
+
+            if (earlierPages == CheckoutClosure.Unknown)
+            {
+                throw new InvalidOperationException("An earlier payment page for this booking could not be closed at Stripe, so a new one was not opened.");
+            }
+
+            if (keyMissing)
+            {
+                var mockSessionId = $"mock_session_{Guid.NewGuid()}";
+                await this.CreatePaymentRecordAsync(bookingId, depositAmount, MockProvider, mockSessionId);
+                return new PaymentCheckoutResult { IsMock = true, SessionId = mockSessionId };
             }
 
             var options = new SessionCreateOptions
@@ -448,7 +615,7 @@ namespace HandyFix.Services.Data.Payments
                     {
                         PriceData = new SessionLineItemPriceDataOptions
                         {
-                            UnitAmount = (long)(depositAmount * 100), // convert to cents
+                            UnitAmount = (long)(depositAmount * 100), // convert to pence
                             Currency = "gbp",
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
@@ -462,43 +629,69 @@ namespace HandyFix.Services.Data.Payments
                 Mode = "payment",
                 SuccessUrl = successUrl,
                 CancelUrl = cancelUrl,
+                ExpiresAt = DateTime.UtcNow.Add(CheckoutLifetime),
+
+                // Filled in on Stripe's page, so the customer does not type it a second time
+                // and Stripe's receipt goes where the site's own emails go.
+                CustomerEmail = string.IsNullOrWhiteSpace(booking.Email) ? null : booking.Email,
+
+                // The booking's id on the payment, for finding one from the other in Stripe.
+                ClientReferenceId = bookingId.ToString(),
             };
 
-            var sessionService = new SessionService();
-            Session session = await sessionService.CreateAsync(options);
+            Session session = await this.stripeGateway.CreateCheckoutAsync(options);
 
-            await this.CreatePaymentRecordAsync(bookingId, depositAmount, "Stripe", session.Id);
+            await this.CreatePaymentRecordAsync(bookingId, depositAmount, StripeProvider, session.Id);
 
             return new PaymentCheckoutResult { IsMock = false, SessionId = session.Id, RedirectUrl = session.Url };
         }
 
         public async Task HandleWebhookEventAsync(string json, string signature)
         {
-            var webhookSecret = this.configuration["Stripe:WebhookSecret"];
-            Event stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
+            Event stripeEvent = this.stripeGateway.ReadEvent(json, signature, this.configuration["Stripe:WebhookSecret"]);
 
-            if (stripeEvent.Type == Events.CheckoutSessionCompleted)
+            var sessionId = (stripeEvent.Data?.Object as Session)?.Id;
+
+            // One line per message, so the log can answer "is Stripe reaching us?" without
+            // anyone opening the Stripe dashboard.
+            this.logger.LogInformation("Stripe webhook: {EventType} for payment page {SessionId}", stripeEvent.Type, sessionId);
+
+            if (sessionId == null)
             {
-                var session = stripeEvent.Data.Object as Session;
-                if (session != null)
-                {
-                    await this.ProcessPaymentSuccessAsync(session.Id, session.PaymentIntentId);
-                }
+                return;
             }
-            else if (stripeEvent.Type == Events.CheckoutSessionExpired)
+
+            if (stripeEvent.Type == EventTypes.CheckoutSessionCompleted)
             {
-                var session = stripeEvent.Data.Object as Session;
-                if (session != null)
-                {
-                    await this.CancelPaymentAsync(session.Id);
-                }
+                // The message says which page; whether it was paid is asked of Stripe, the
+                // same way as when the customer comes back from it.
+                await this.ConfirmCheckoutAsync(sessionId);
             }
+            else if (stripeEvent.Type == EventTypes.CheckoutSessionExpired)
+            {
+                await this.CancelPaymentAsync(sessionId);
+            }
+        }
+
+        private static bool IsPaid(Session session)
+        {
+            return session != null && session.PaymentStatus == "paid";
         }
 
         // The booking's payments have to be loaded with their statuses for this to say anything.
         private static bool HasPayment(Booking booking, string statusName)
         {
             return booking.Payments != null && booking.Payments.Any(p => p.Status != null && p.Status.Name == statusName);
+        }
+
+        // The pretend payment stands in for Stripe so the booking flow can be gone through
+        // without an account: always in Development, and outside it only where a setting asks
+        // for it by name (Stripe:AllowSandboxOutsideDevelopment), which the live site must never
+        // have. A real key switches it off everywhere.
+        private bool MockPaymentsAllowed()
+        {
+            return string.IsNullOrWhiteSpace(this.configuration["Stripe:SecretKey"])
+                && (this.environment.IsDevelopment() || this.configuration.GetValue<bool>("Stripe:AllowSandboxOutsideDevelopment"));
         }
     }
 }

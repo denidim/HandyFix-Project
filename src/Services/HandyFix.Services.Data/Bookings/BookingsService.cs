@@ -476,6 +476,16 @@ namespace HandyFix.Services.Data.Bookings
                 return false;
             }
 
+            if (booking.Status?.Name == "Pending")
+            {
+                // A website booking still waiting for its deposit has a payment page open at
+                // Stripe. It is closed first, or the customer could go on to pay for a booking
+                // that has just been cancelled. If the page cannot be reached the job is
+                // cancelled all the same; money that still comes for it is written on the job
+                // and the company is told (PaymentsService.ProcessPaymentSuccessAsync).
+                await this.paymentsService.CloseCheckoutsAsync(bookingId);
+            }
+
             // The reason is kept on the job, with the day and hour it was for: its slot goes back
             // on sale below, and a slot given back no longer says whose it was.
             booking.StatusId = cancelledStatus.Id;
@@ -905,6 +915,21 @@ namespace HandyFix.Services.Data.Bookings
             List<Booking> staleBookings = await this.bookingRepository.All()
                 .Where(x => x.StatusId == pendingStatus.Id && x.CreatedOn < cutoff)
                 .ToListAsync();
+
+            // Before a booking is dropped, its payment page is closed at Stripe: one left open
+            // could be paid after the hour had gone back on sale. A booking whose page turns out
+            // to be paid is a booking, and is left alone. One whose page could not be reached
+            // keeps its hour until the next run (PROJECT_STATE.md Section 3cg).
+            var droppable = new List<Booking>();
+            foreach (Booking booking in staleBookings)
+            {
+                if (await this.paymentsService.CloseCheckoutsAsync(booking.Id) == CheckoutClosure.Closed)
+                {
+                    droppable.Add(booking);
+                }
+            }
+
+            staleBookings = droppable;
 
             if (staleBookings.Count == 0)
             {

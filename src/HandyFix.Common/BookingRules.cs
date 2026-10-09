@@ -31,6 +31,21 @@
             return IsOn(statusName, cameFromWebsite, depositPaid);
         }
 
+        // The deposit is paid once, on the website, by a booking that is still waiting for it.
+        // Not by one that was dropped or cancelled, whose hour may be someone else's by now, and
+        // not by a job the admin wrote in, which has no deposit (PROJECT_STATE.md Section 3cg).
+        public static bool CanPayDeposit(string statusName, bool cameFromWebsite, bool depositPaid)
+        {
+            return cameFromWebsite && statusName == Pending && !depositPaid;
+        }
+
+        // What the customer's "Booking Confirmed" page stands on: a website booking with its
+        // deposit in, that is on or done.
+        public static bool IsConfirmed(string statusName, bool cameFromWebsite, bool depositPaid)
+        {
+            return cameFromWebsite && depositPaid && (IsUnderWay(statusName) || statusName == Completed);
+        }
+
         // A booking still waiting for its deposit can be called off too. Cancelling one that is
         // already done, cancelled or abandoned would only rewrite what happened to it.
         public static bool CanCancel(string statusName)

@@ -1,43 +1,122 @@
+@using HandyFix.Web.ViewModels.Payment
 @model HandyFix.Web.ViewModels.Payment.PaymentCancelViewModel
 @{
     this.Layout = "_Layout";
-    this.ViewData["Title"] = "Payment Cancelled";
-    var bookingId = Model.BookingId;
+
+    // One page, four things it may have to say (PaymentController.Cancel decides which).
+    var noLongerHeld = Model.BookingId != null && Model.State == PaymentPageState.NoLongerHeld;
+    var depositReceived = Model.BookingId != null && Model.State == PaymentPageState.DepositReceived;
+    var cancelled = Model.BookingId != null && Model.State == PaymentPageState.Cancelled;
+    var canRetry = Model.BookingId != null && Model.State == PaymentPageState.NotPaid;
+
+    var title = depositReceived ? "We Received Your Deposit"
+        : cancelled ? "This Booking Was Cancelled"
+        : noLongerHeld ? "Booking No Longer Held"
+        : "Payment Cancelled";
+    var icon = depositReceived ? "check_circle" : cancelled ? "event_busy" : noLongerHeld ? "schedule" : "warning";
+    this.ViewData["Title"] = title;
 }
 
 <div class="page-container payment-page-container">
     <div class="payment-status-card">
         <!-- Icon and Heading -->
         <div class="payment-status-icon-bubble">
-            <span class="material-symbols-outlined payment-status-icon icon-medium-weight">warning</span>
+            <span class="material-symbols-outlined payment-status-icon icon-medium-weight">@icon</span>
         </div>
-        <h1 class="payment-status-title">Payment Cancelled</h1>
-        <p class="payment-status-desc">
-            The secure Stripe checkout process was interrupted. No charges have been made to your account and your deposit was not processed.
-        </p>
+        <h1 class="payment-status-title">@title</h1>
 
-        <!-- Alert Box -->
-        <div class="payment-status-alert">
-            <span class="material-symbols-outlined payment-status-alert-icon">info</span>
-            <div>
-                <p class="payment-status-alert-title">Important Reminder</p>
-                <p class="payment-status-alert-text">
-                    To secure your chosen time slot and technician, a <span class="fw-bold text-primary">£50.00 deposit</span> is required. This amount will be deducted from your final bill once the job is complete.
-                </p>
+        @if (depositReceived)
+        {
+            @* The rare late payment: the deposit came in after the booking had been dropped. *@
+            <p class="payment-status-desc">
+                Thank you! We've received your £50.00 deposit.
+            </p>
+            <p class="payment-status-desc">
+                Because the reservation timed out during checkout, we are double-checking our technician's schedule for your chosen time.
+            </p>
+
+            <div class="payment-status-alert">
+                <span class="material-symbols-outlined payment-status-alert-icon">info</span>
+                <div>
+                    <p class="payment-status-alert-text">
+                        We will contact you shortly to confirm your visit, or you can call us directly on <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="fw-bold text-primary">@GlobalConstants.BusinessPhone</a>.
+                    </p>
+                </div>
             </div>
-        </div>
+        }
+        else if (cancelled)
+        {
+            @* A customer opening an old link to a booking that was cancelled. *@
+            <p class="payment-status-desc">
+                This appointment was cancelled.
+            </p>
+
+            <div class="payment-status-alert">
+                <span class="material-symbols-outlined payment-status-alert-icon">info</span>
+                <div>
+                    <p class="payment-status-alert-title">Deposit</p>
+                    <p class="payment-status-alert-text">
+                        If you cancelled more than 24 hours in advance, your <span class="fw-bold text-primary">£50.00 deposit</span> has been refunded to your card (usually arrives within 5–10 working days).
+                    </p>
+                    <p class="payment-status-alert-title mt-3">Need to rebook?</p>
+                    <p class="payment-status-alert-text">
+                        You can book a new time on our website or call us on <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="fw-bold text-primary">@GlobalConstants.BusinessPhone</a>.
+                    </p>
+                </div>
+            </div>
+        }
+        else if (noLongerHeld)
+        {
+            <p class="payment-status-desc">
+                This booking is no longer held, and we are not holding a deposit for it. A time is kept for 15 minutes while the deposit is paid, then goes back on sale.
+            </p>
+
+            <div class="payment-status-alert">
+                <span class="material-symbols-outlined payment-status-alert-icon">info</span>
+                <div>
+                    <p class="payment-status-alert-title">Still need a visit?</p>
+                    <p class="payment-status-alert-text">
+                        Choose a time again and pay the <span class="fw-bold text-primary">£50.00 deposit</span> to secure it. The deposit is deducted from your final bill once the job is complete.
+                    </p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <p class="payment-status-desc">
+                The secure Stripe checkout process was interrupted. No charges have been made to your account and your deposit was not processed.
+            </p>
+
+            <!-- Alert Box -->
+            <div class="payment-status-alert">
+                <span class="material-symbols-outlined payment-status-alert-icon">info</span>
+                <div>
+                    <p class="payment-status-alert-title">Important Reminder</p>
+                    <p class="payment-status-alert-text">
+                        To secure your chosen time slot and technician, a <span class="fw-bold text-primary">£50.00 deposit</span> is required. This amount will be deducted from your final bill once the job is complete.
+                    </p>
+                </div>
+            </div>
+        }
 
         <!-- Action Buttons -->
         <div class="payment-status-actions">
-            @if (bookingId != null)
+            @if (canRetry)
             {
-                <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@bookingId" class="btn btn-primary payment-status-btn" id="retry-btn">
+                <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@Model.BookingId" class="btn btn-primary payment-status-btn" id="retry-btn">
                     <span class="material-symbols-outlined fs-20">refresh</span>
                     <span>Retry Payment (£50.00)</span>
                 </a>
             }
+            else if (noLongerHeld || cancelled)
+            {
+                <a asp-controller="Booking" asp-action="Index" class="btn btn-primary payment-status-btn">
+                    <span class="material-symbols-outlined fs-20">calendar_month</span>
+                    <span>Book Again</span>
+                </a>
+            }
             <a asp-controller="Home" asp-action="Index" class="btn btn-outline payment-status-btn payment-status-btn-outline">
-                Cancel and Return Home
+                @(canRetry ? "Cancel and Return Home" : "Return Home")
             </a>
         </div>
 

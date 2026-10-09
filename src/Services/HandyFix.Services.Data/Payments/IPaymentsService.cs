@@ -10,7 +10,21 @@ namespace HandyFix.Services.Data.Payments
     {
         Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId);
 
-        Task ProcessPaymentSuccessAsync(string checkoutSessionId, string transactionId);
+        /// <summary>
+        /// Asks Stripe whether a payment page was paid and, when it was, writes the deposit on
+        /// its booking and sends the emails; once, however often it is called. Answers with the
+        /// booking the page belongs to, paid or not, and with null for a page the site never
+        /// opened. Both ways a payment is heard of come through here: the customer's return
+        /// from Stripe and Stripe's own message.
+        /// </summary>
+        Task<Guid?> ConfirmCheckoutAsync(string checkoutSessionId);
+
+        /// <summary>
+        /// Closes every payment page still open for a booking, at Stripe, so that nobody can
+        /// pay for it any more. Called before the booking is dropped or cancelled, and before a
+        /// new page is opened for it.
+        /// </summary>
+        Task<CheckoutClosure> CloseCheckoutsAsync(Guid bookingId);
 
         Task CancelPaymentAsync(string checkoutSessionId);
 
@@ -45,18 +59,20 @@ namespace HandyFix.Services.Data.Payments
         Task<IEnumerable<T>> GetMoneyListAsync<T>(Guid bookingId);
 
         /// <summary>
+        /// Opens a payment page for a booking's deposit, closing any earlier one first. Null
+        /// when there is nothing to pay: the booking is missing, already paid, dropped,
+        /// cancelled, or was written in by the admin.
         /// Owns the sandbox-bypass-vs-real-Stripe-Checkout decision entirely: sandbox is always
         /// allowed in Development, and outside it only via the explicit
-        /// Stripe:AllowSandboxOutsideDevelopment opt-in (so staging can demo the booking flow
-        /// before a real Stripe account exists, while production stays protected by default).
+        /// Stripe:AllowSandboxOutsideDevelopment opt-in, which the live site must never have.
         /// Throws InvalidOperationException if the key is missing and sandbox isn't allowed -
         /// never silently fakes a payment or attempts a doomed Stripe call.
         /// </summary>
-        Task<PaymentCheckoutResult> CreateCheckoutSessionAsync(Guid bookingId, decimal depositAmount, string successUrl, string cancelUrl);
+        Task<PaymentCheckoutResult> CreateCheckoutSessionAsync(Guid bookingId, string successUrl, string cancelUrl);
 
         /// <summary>
-        /// Verifies the webhook signature, constructs the Stripe event, and dispatches
-        /// checkout.session.completed/expired to ProcessPaymentSuccessAsync/CancelPaymentAsync.
+        /// Checks that Stripe signed the message, then passes checkout.session.completed to
+        /// ConfirmCheckoutAsync and checkout.session.expired to CancelPaymentAsync.
         /// Throws on an invalid signature or malformed payload - the caller is expected to turn
         /// that into a 400 rather than a 500, since a bad signature is an untrusted-caller
         /// problem, not a server fault.

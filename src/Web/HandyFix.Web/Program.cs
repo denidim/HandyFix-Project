@@ -181,6 +181,7 @@ namespace HandyFix.Web
             services.AddTransient<IBookingsService, BookingsService>();
             services.AddTransient<ITechniciansService, TechniciansService>();
             services.AddTransient<IPaymentsService, PaymentsService>();
+            services.AddSingleton<IStripeGateway, StripeGateway>();
             services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();
             services.AddTransient<IImageService, ImageService>();
             services.AddTransient<IImageStorageService>(sp =>

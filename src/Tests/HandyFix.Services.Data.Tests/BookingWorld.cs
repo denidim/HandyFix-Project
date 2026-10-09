@@ -30,7 +30,9 @@
         private readonly Service service;
         private readonly AvailabilitySlot slot;
 
-        public BookingWorld()
+        // With a Stripe key the payments service goes to Stripe (the stand-in, here) as the live
+        // site does; without one, and in Development, it uses the pretend payment.
+        public BookingWorld(string stripeSecretKey = null, string environmentName = null)
         {
             this.DbContext = new ApplicationDbContext(
                 new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -61,7 +63,17 @@
             this.DbContext.AvailabilitySlots.Add(this.slot);
             this.DbContext.SaveChanges();
 
-            IConfiguration configuration = new ConfigurationBuilder().Build();
+            var settings = new Dictionary<string, string>();
+            if (stripeSecretKey != null)
+            {
+                settings["Stripe:SecretKey"] = stripeSecretKey;
+                settings["Stripe:WebhookSecret"] = "whsec_test";
+            }
+
+            IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+            var environment = new Mock<IWebHostEnvironment>();
+            environment.SetupGet(x => x.EnvironmentName).Returns(environmentName);
+
             var bookingRepo = new EfDeletableEntityRepository<Booking>(this.DbContext);
             var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(this.DbContext);
             var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(this.DbContext);
@@ -75,8 +87,9 @@
                 bookingStatusRepo,
                 this.EmailSender.Object,
                 configuration,
-                Mock.Of<IWebHostEnvironment>(),
-                NullLogger<PaymentsService>.Instance);
+                environment.Object,
+                NullLogger<PaymentsService>.Instance,
+                this.Stripe.Object);
 
             this.Bookings = new BookingsService(
                 bookingRepo,
@@ -97,6 +110,10 @@
         public ApplicationDbContext DbContext { get; }
 
         public Mock<IEmailSender> EmailSender { get; } = new Mock<IEmailSender>();
+
+        // Stands in for Stripe. Left alone it answers nothing, which the payments service reads
+        // as a payment page that is not paid and no longer open.
+        public Mock<IStripeGateway> Stripe { get; } = new Mock<IStripeGateway>();
 
         public BookingsService Bookings { get; }
 
