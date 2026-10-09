@@ -36,6 +36,22 @@ www.plumbing-handyman-surrey.co.uk {
 plumbing-handyman-surrey.co.uk {
 	import origin_certificate
 
+	# BEFORE LAUNCH ONLY. The domain points here, but the site is not open
+	# yet: every page asks for a password, so the checks on the real address
+	# can be made without a visitor or a search engine walking in. Launching
+	# the site is deleting this block, the two BASIC_AUTH lines in the compose
+	# file and the same two in the server's .env.
+	#
+	# Stripe calls one address by itself to say a deposit was paid, and has no
+	# way to answer a password prompt, so that path is left outside. It is not
+	# open for that: the app refuses any call that does not carry Stripe's
+	# signature.
+	@behindThePassword not path /api/payment/webhook
+	basic_auth @behindThePassword {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+	header X-Robots-Tag "noindex, nofollow"
+
 	reverse_proxy web:8080 {
 		# One address goes to the app: the visitor's, as worked out above.
 		# Left alone, Caddy adds Cloudflare's address behind the visitor's,
