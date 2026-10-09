@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Administration.Enquiries.EnquiryViewModel
+@using HandyFix.Common
 @{
     this.ViewData["Title"] = $"Enquiry Details - {Model.Name}";
 }
@@ -27,7 +28,7 @@
     <div class="d-flex align-items-center gap-3">
         <h2 class="admin-page-title">Enquiry #@Model.Id</h2>
     </div>
-    <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Received on @Model.CreatedOn.ToString("MMMM dd, yyyy 'at' hh:mm tt")</p>
+    <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Received on @UkTime.FromUtc(Model.CreatedOn).ToString("MMMM dd, yyyy 'at' hh:mm tt")</p>
 </div>
 
 <!-- Bento Layout -->
@@ -110,6 +111,11 @@
                 <span class="material-symbols-outlined fs-20">call</span>
                 <span>Call Customer</span>
             </a>
+            <a asp-area="Administration" asp-controller="Bookings" asp-action="Create" asp-route-enquiryId="@Model.Id" class="btn btn-secondary font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 text-no-decoration" id="make-this-a-job">
+                <span class="material-symbols-outlined fs-20">assignment_add</span>
+                <span>Make this a job</span>
+            </a>
+            <p class="text-on-surface-variant mb-0 fs-13 lh-snug">Opens the job form with the name, phone number and message already filled in. The enquiry stays here.</p>
         </section>
 
         <!-- Management Status & Controls -->

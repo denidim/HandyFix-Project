@@ -4,7 +4,7 @@ namespace HandyFix.Web.ViewModels.Booking
     {
         public int TodaysAppointmentsCount { get; set; }
 
-        public int PendingApprovalCount { get; set; }
+        public int AwaitingTechnicianCount { get; set; }
 
         public decimal MonthlyRevenue { get; set; }
     }

@@ -18,16 +18,17 @@ Fields: First Name, Last Name, Phone Number, Active flag.
 | Phone Number | **required at the form level**, `[Phone]` format, ≤20 chars |
 
 **One name is enough.** A technician kept under a first name alone is shown, and named to the
-customer, by that name: "Your technician for this visit is Zapryan (020 3951 5915)". The business
+customer, by that name: "Your technician for your visit on 13 Oct 2026 at 10:00 is Zapryan. You
+can reach Zapryan on 020 3951 5915." The business
 launches this way on purpose, so no surname goes into a customer's email. Every place that prints
 a technician's name goes through `NameFormat.Full` (`HandyFix.Common`), which leaves no space
 hanging after a name that stands alone. A last name box left empty is saved as no value, not as
 an empty one.
 
 The phone number is required on the form even though the underlying database column is nullable.
-Reason, straight from the code comment: it's what the customer receives in the booking-confirmation
-email, so a roster entry without one isn't useful — this was tightened deliberately and needed no
-migration.
+Reason, straight from the code comment: it's what the customer is emailed when the technician is
+picked for their booking, so a roster entry without one isn't useful — this was tightened
+deliberately and needed no migration.
 
 ### Deactivate vs. delete — these are not the same action
 
@@ -89,7 +90,8 @@ person from its first start. This means:
 | Can't delete a technician | They have bookings (even old/soft-deleted ones). Deactivate instead. |
 | Assignment dropdown is empty | No active technicians exist. Add or reactivate one. |
 | A booking's assigned technician shows "(inactive)" in the dropdown | Expected — they were deactivated after being assigned. Reassigning to someone else is fine; leaving them is fine too. |
-| Confirmation email says nothing about a technician | The booking was approved *before* a technician was assigned — see `WORKFLOW_BOOKINGS.md`'s troubleshooting table. |
+| Confirmation email says nothing about a technician | Expected. The email that follows the deposit names nobody; the technician's name and number go out in an email of their own when one is picked on the booking's page — see `WORKFLOW_BOOKINGS.md` Step 3. |
+| A booking's page has no assignment dropdown | Its deposit is not paid yet, or the booking is completed, cancelled or abandoned — see `WORKFLOW_BOOKINGS.md` Step 3. |
 | A change to `TechniciansSeeder` did nothing | The seeder only fires on a completely empty table — edit the existing row in the admin panel instead. |
 | The customer's email names the technician by first name only | Expected when the roster entry has no last name. Add one on the technician's Edit page if it should be there. |
 

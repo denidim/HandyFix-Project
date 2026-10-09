@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Administration.Enquiries.EnquiryListViewModel
+@using HandyFix.Common
 @{
     this.ViewData["Title"] = "Client Enquiries";
     var inquiries = Model.Inquiries;
@@ -88,8 +89,8 @@
                                 <p class="font-body-md text-on-surface mb-0 italic message-snippet-truncate">"@inquiry.Message"</p>
                             </td>
                             <td class="px-4 py-3">
-                                <p class="font-body-md text-primary mb-0">@inquiry.CreatedOn.ToString("MMM dd, yyyy")</p>
-                                <p class="text-on-surface-variant mb-0 fs-11">@inquiry.CreatedOn.ToString("hh:mm tt")</p>
+                                <p class="font-body-md text-primary mb-0">@UkTime.FromUtc(inquiry.CreatedOn).ToString("MMM dd, yyyy")</p>
+                                <p class="text-on-surface-variant mb-0 fs-11">@UkTime.FromUtc(inquiry.CreatedOn).ToString("hh:mm tt")</p>
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <a asp-area="Administration" asp-controller="Enquiries" asp-action="Details" asp-route-id="@inquiry.Id" class="btn btn-sm d-inline-flex align-items-center gap-1 font-label-sm admin-btn-compact tint-secondary-soft btn-no-border">

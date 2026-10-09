@@ -29,24 +29,31 @@ Email Routing, which forwards each address to the company's one shared mailbox
 
 ---
 
-## The seven emails
+## The six emails
 
 | Email | Sent when | To | A reply goes to | Subject |
 | --- | --- | --- | --- | --- |
-| Booking received | a booking is saved, before payment | the customer | `bookings@` | Your Plumbing Handyman Surrey Booking Inquiry has been Received! |
 | Deposit paid | the payment succeeds | the customer | `bookings@` | Your Plumbing Handyman Surrey Booking is Confirmed! |
 | Deposit paid, notice | the payment succeeds | the company | **the customer** | New Confirmed Booking - {name} |
-| Booking confirmed | an admin approves the booking | the customer | `bookings@` | Your Plumbing Handyman Surrey Booking is CONFIRMED! |
+| Technician picked | an admin picks a technician on a paid booking, or changes it to another | the customer | `bookings@` | Your technician for your Plumbing Handyman Surrey booking |
 | Enquiry or application, notice | an enquiry or a job application is saved | the company | **the sender** | New enquiry - {name}, or New job application - {name} |
 | Acknowledgement | an enquiry or a job application is saved | the sender | `bookings@` | We have received your enquiry, or application |
 | Password reset link | "Forgot password?" is sent with the admin's login email | the admin's login email | `bookings@` | Reset your Plumbing Handyman Surrey admin password |
 
-All seven are sent from `bookings@`. The two notices carry the customer's address as Reply-To, so
+All six are sent from `bookings@`. The two notices carry the customer's address as Reply-To, so
 pressing Reply in the company inbox answers the customer and not the site.
 
-The first six each follow a save and go through `TrySendEmailAsync`: a send that fails is logged
-as `Email not sent: {which email}` and does not undo or hide what was saved. Nothing in the admin
-panel shows a failed send yet (`PROJECT_STATE.md` Launch Sprint L4 item 15). The reset link goes
+**A customer who books on the website gets two emails and no more**: one when the deposit is
+paid, one when a technician is picked. Nothing goes out before the deposit, because a booking
+that is never paid is dropped fifteen minutes later. Nothing goes out when a job is cancelled or
+moved, and nothing at all for a job the admin wrote in by hand, whatever email address is on it:
+in each of those the admin is already speaking to the customer (`PROJECT_STATE.md` Section 3ce).
+
+The first five each follow a save and go through `TrySendEmailAsync`: a send that fails is logged
+as `Email not sent: {which email}` and does not undo or hide what was saved. The technician email
+is the one whose failure the admin is told about at once, in the line the booking's page answers
+with. For the others nothing in the admin panel shows a failed send yet (`PROJECT_STATE.md`
+Launch Sprint L4 item 15). The reset link goes
 the same way and fails the same way; `WORKFLOW_ADMIN_ACCOUNT.md` has the rest of that flow. It is
 the one email that goes to an address chosen in the admin panel, not in a setting, so **the admin's
 login email has to be a mailbox that can be opened**.

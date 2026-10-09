@@ -96,6 +96,12 @@ uploaded photos.
 No approve/respond/mark-read action exists. Responding to an enquiry happens outside the app
 entirely (phone/email, using the contact details on the row).
 
+**An enquiry that turns into work becomes a job.** The enquiry's page has **Make this a job**,
+which opens the admin's "Write a job in" form with the name, phone number, email and message
+already filled in and "Enquiry" picked as where it came from. The admin adds the day and the
+time. The enquiry itself is not changed or removed. `WORKFLOW_BOOKINGS.md` has the rest ("Step 2,
+the other way").
+
 ### "Delete Permanent" is a real delete
 
 Unlike almost everything else in the app, deleting an enquiry is **not** a soft delete. An enquiry

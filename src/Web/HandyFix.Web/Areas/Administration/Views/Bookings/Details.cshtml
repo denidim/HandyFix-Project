@@ -1,13 +1,42 @@
 @model HandyFix.Web.ViewModels.Booking.BookingDetailsViewModel
+@using System.Globalization
+@using HandyFix.Common
 @using HandyFix.Data.Models
 @{
-    this.ViewData["Title"] = $"Booking Details - {Model.Id.ToString().Substring(0, 8).ToUpper()}";
+    var reference = BookingReference.Short(Model.Id);
+    this.ViewData["Title"] = $"Job {reference}";
     var technicians = Model.Technicians;
-    var balanceDue = Model.TotalAmount - Model.DepositAmount;
-    var statusBadgeClass = Model.StatusName == "Pending" ? "tint-neutral" :
-                       Model.StatusName == "Cancelled" ? "tint-error" :
-                       Model.StatusName == "Completed" ? "tint-success" :
-                       "tint-secondary";
+    var receivedOn = UkTime.FromUtc(Model.CreatedOn);
+
+    // The two labels every job carries: where the work stands, and where the money stands.
+    var jobBadgeClass = Model.JobLabel == JobLabels.Done ? "tint-success" :
+                        Model.JobLabel == JobLabels.Cancelled ? "tint-error" :
+                        Model.JobLabel == JobLabels.Abandoned ? "tint-neutral" :
+                        "tint-secondary";
+    var moneyBadgeClass = Model.MoneyLabel == JobLabels.PaidInFull ? "tint-success" :
+                          Model.MoneyLabel == JobLabels.DepositPaid || Model.MoneyLabel == JobLabels.PartPaid ? "tint-secondary" :
+                          "tint-neutral";
+
+    // A job still open has no picker only because its deposit is not in yet.
+    var technicianLockedReason = Model.CanCancel
+        ? "A technician can be picked once the deposit is paid."
+        : "The technician can no longer be changed on this job.";
+
+    // Only a deposit promises the time, and a deposit is only paid on the website.
+    var timePromised = Model.CameFromWebsite
+        ? (Model.IsDepositPaid ? "Yes, deposit paid" : Model.IsDepositRefunded ? "No, deposit refunded" : "Not yet, deposit not paid")
+        : "No, no deposit";
+
+    // Prices go into number boxes with a dot, whatever language the server is set to.
+    Func<decimal, string> plain = amount => amount.ToString("0.00", CultureInfo.InvariantCulture);
+    Func<decimal, string> pounds = amount => "£" + plain(amount);
+
+    // A job that was cancelled or abandoned owes nothing, whatever its estimate was.
+    var owesMoney = Model.JobLabel == JobLabels.Booked || Model.JobLabel == JobLabels.Done;
+    var stillOwed = !owesMoney ? "Nothing: the job is " + Model.JobLabel.ToLowerInvariant()
+        : Model.Price > 0 ? pounds(Model.StillOwed)
+        : "Not known until the final price is typed in";
+    var stillOwedShort = !owesMoney ? "Nothing" : Model.Price > 0 ? pounds(Model.StillOwed) : "Not known";
 }
 
 <!-- Breadcrumbs & Header Actions -->
@@ -15,9 +44,9 @@
     <nav class="breadcrumb-nav mb-0" aria-label="breadcrumb">
         <a asp-area="Administration" asp-controller="Dashboard" asp-action="Index">Admin</a>
         <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
-        <a asp-area="Administration" asp-controller="Bookings" asp-action="Index">Bookings</a>
+        <a asp-area="Administration" asp-controller="Bookings" asp-action="Index">Jobs</a>
         <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
-        <span class="breadcrumb-current">Booking Details</span>
+        <span class="breadcrumb-current">Job #@reference</span>
     </nav>
     <a asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
         <span class="material-symbols-outlined">arrow_back</span>
@@ -25,36 +54,76 @@
     </a>
 </div>
 
+@if (this.TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4" role="alert">@this.TempData["SuccessMessage"]</div>
+}
+
+@if (this.TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mb-4" role="alert">@this.TempData["ErrorMessage"]</div>
+}
+
 <div class="mb-5">
-    <div class="d-flex align-items-center gap-3">
-        <h2 class="admin-page-title">Booking #@Model.Id.ToString().Substring(0, 8).ToUpper()</h2>
-        <div class="d-flex gap-2">
-            <span class="status-badge @statusBadgeClass">@Model.StatusName</span>
-            <span class="status-badge tint-success">@Model.PaymentStatus</span>
+    <div class="d-flex align-items-center flex-wrap gap-3">
+        <h2 class="admin-page-title">Job #@reference</h2>
+        <div class="d-flex gap-2" id="job-labels">
+            <span class="status-badge @jobBadgeClass" title="Where the work stands">@Model.JobLabel</span>
+            <span class="status-badge @moneyBadgeClass" title="Where the money stands">@Model.MoneyLabel</span>
         </div>
     </div>
-    <p class="font-body-md text-on-surface-variant admin-page-subtitle">Scheduled appointment for client @Model.CustomerFirstName @Model.CustomerLastName</p>
+    <p class="font-body-md text-on-surface-variant admin-page-subtitle">@Model.CustomerName &middot; came from: @Model.Source</p>
 </div>
 
-<!-- Two Column Layout -->
-<div class="row">
-    <!-- Left Column: Details & Images -->
-    <div class="col-lg-8 mb-4">
-        <!-- Customer & Service Details -->
+@if (Model.JobLabel == JobLabels.Cancelled)
+{
+    <!-- Why it was called off, and whether the deposit went back -->
+    <section class="admin-card p-4 shadow-sm mb-4 job-cancelled-box" id="job-cancelled">
+        <label class="detail-label">Cancelled</label>
+        <p class="font-body-md text-primary mb-0 pre-wrap">@(string.IsNullOrWhiteSpace(Model.CancelReason) ? "No reason was written down." : Model.CancelReason)</p>
+
+        @if (Model.CanMarkDepositRefunded)
+        {
+            <form asp-area="Administration" asp-controller="Bookings" asp-action="DepositRefunded" method="post" class="m-0 mt-3">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <label class="d-flex align-items-center gap-2 font-body-md text-primary font-bold m-0 label-clickable">
+                    <input type="checkbox" name="refunded" value="true" class="form-check-input checkbox-lg m-0" checked="@Model.IsDepositRefunded" onchange="this.form.submit()" />
+                    <span>Deposit refunded</span>
+                </label>
+                <p class="text-on-surface-variant mb-0 mt-1 fs-13 lh-snug">Tick this once the @pounds(Model.DepositAmount) has been sent back in Stripe. The refund itself is made by hand.</p>
+                <noscript><button type="submit" class="btn btn-secondary font-button-text admin-btn-compact mt-2">Save</button></noscript>
+            </form>
+        }
+    </section>
+}
+
+<!-- In reading order: the job's details, what the admin does to it, then its money, notes and
+     history. On a phone that is the order down the page, so the buttons come straight after the
+     details. On a wide screen the buttons take a column of their own on the right. -->
+<div class="job-page-grid">
+    <div class="job-page-details">
+        <!-- Who, where, what and when -->
         <section class="admin-card p-4 p-md-5 shadow-sm mb-4">
             <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
                 <span class="material-symbols-outlined text-secondary">person_pin_circle</span>
-                <span>Customer &amp; Service Details</span>
+                <span>Customer &amp; Job Details</span>
             </h2>
 
             <div class="row">
                 <div class="col-md-6 mb-4">
                     <label class="detail-label">Customer Name</label>
-                    <p class="font-body-lg text-primary font-bold mb-0">@Model.CustomerFirstName @Model.CustomerLastName</p>
+                    <p class="font-body-lg text-primary font-bold mb-0">@Model.CustomerName</p>
                 </div>
                 <div class="col-md-6 mb-4">
-                    <label class="detail-label">Service Address</label>
-                    <p class="font-body-md text-primary mb-0 lh-normal">@Model.Address</p>
+                    <label class="detail-label">Address</label>
+                    @if (!string.IsNullOrWhiteSpace(Model.Address))
+                    {
+                        <p class="font-body-md text-primary mb-0 lh-normal">@Model.Address</p>
+                    }
+                    else
+                    {
+                        <p class="font-body-md text-on-surface-variant mb-0">Not written down</p>
+                    }
                 </div>
             </div>
 
@@ -65,39 +134,92 @@
                         <span class="material-symbols-outlined text-secondary fs-16">call</span>
                         <span>@Model.PhoneNumber</span>
                     </p>
-                    <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2 select-all">
-                        <span class="material-symbols-outlined text-secondary fs-16">mail</span>
-                        <span>@Model.Email</span>
-                    </p>
+                    @if (!string.IsNullOrWhiteSpace(Model.Email))
+                    {
+                        <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2 select-all">
+                            <span class="material-symbols-outlined text-secondary fs-16">mail</span>
+                            <span>@Model.Email</span>
+                        </p>
+                    }
                 </div>
                 <div class="col-md-6 mb-4">
-                    <label class="detail-label">Service Requested</label>
-                    <p class="font-body-lg text-secondary font-bold mb-0">@string.Join(", ", Model.Services)</p>
+                    <label class="detail-label">Service</label>
+                    @if (Model.Services.Any())
+                    {
+                        <p class="font-body-lg text-secondary font-bold mb-0">@string.Join(", ", Model.Services)</p>
+                    }
+                    else
+                    {
+                        <p class="font-body-md text-on-surface-variant mb-0">None picked</p>
+                    }
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-md-6 mb-4">
-                    <label class="detail-label">Scheduled Time</label>
-                    <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-secondary fs-16">calendar_today</span>
-                        <span>@Model.ScheduledTime.ToString("MMMM dd, yyyy")</span>
-                    </p>
-                    <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-secondary fs-16">schedule</span>
-                        <span>@Model.ScheduledTime.ToString("hh:mm tt") - @Model.ScheduledEndTime.ToString("hh:mm tt")</span>
-                    </p>
+                <div class="col-md-6 mb-4" id="job-day-and-time">
+                    <label class="detail-label">Day and Time</label>
+                    @if (Model.HasDate)
+                    {
+                        <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary fs-16">calendar_today</span>
+                            <span>@Model.ScheduledTime.ToString("dddd, MMMM dd, yyyy")</span>
+                        </p>
+                        <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary fs-16">schedule</span>
+                            <span>@Model.ScheduledTime.ToString("hh:mm tt") - @Model.ScheduledEndTime.ToString("hh:mm tt")</span>
+                        </p>
+                        <a asp-area="Administration" asp-controller="Calendar" asp-action="Index" asp-route-date="@Model.ScheduledTime.ToString("yyyy-MM-dd")" class="fs-13">Open this day in the calendar</a>
+                    }
+                    else
+                    {
+                        <!-- Cancelled or abandoned before jobs kept their own date -->
+                        <p class="font-body-md text-on-surface-variant mb-0">No date kept</p>
+                    }
                 </div>
                 <div class="col-md-6 mb-4">
-                    <label class="detail-label">Booking Received</label>
+                    <label class="detail-label">@(Model.CameFromWebsite ? "Booked on the Website" : "Written In")</label>
                     <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-secondary fs-16">mail</span>
-                        <span>@Model.CreatedOn.ToString("MMMM dd, yyyy")</span>
+                        <span>@receivedOn.ToString("MMMM dd, yyyy")</span>
                     </p>
                     <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-secondary fs-16">schedule</span>
-                        <span>@Model.CreatedOn.ToString("hh:mm tt")</span>
+                        <span>@receivedOn.ToString("hh:mm tt")</span>
                     </p>
+                </div>
+            </div>
+
+            <!-- Who is going. The picker in the sidebar changes it; this is where it is read. -->
+            <div class="row">
+                <div class="col-md-6 mb-4" id="booking-technician">
+                    <label class="detail-label">Technician</label>
+                    @if (Model.TechnicianId != null)
+                    {
+                        <p class="font-body-lg text-primary font-bold mb-1 d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary fs-16">engineering</span>
+                            <span>@Model.TechnicianName</span>
+                        </p>
+                        @if (!string.IsNullOrWhiteSpace(Model.TechnicianPhoneNumber))
+                        {
+                            <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2 select-all">
+                                <span class="material-symbols-outlined text-secondary fs-16">call</span>
+                                <span>@Model.TechnicianPhoneNumber</span>
+                            </p>
+                        }
+                    }
+                    else
+                    {
+                        <p class="font-body-md text-on-surface-variant mb-0 d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined fs-16">engineering</span>
+                            <span>@(Model.CanPickTechnician ? "Not picked yet" : "None")</span>
+                        </p>
+                    }
+                </div>
+                <div class="col-md-6 mb-4" id="job-came-from">
+                    <label class="detail-label">Came From</label>
+                    <p class="font-body-md text-primary mb-1">@Model.Source</p>
+                    <label class="detail-label mt-2">Time Promised</label>
+                    <p class="font-body-md text-primary mb-0">@timePromised</p>
                 </div>
             </div>
 
@@ -106,8 +228,8 @@
                 <div class="row">
                     <div class="col-12 mt-2">
                         <div class="p-3 bg-light rounded-lg border-start border-secondary customer-note-box">
-                            <label class="text-secondary font-bold uppercase block mb-1 fs-10">Customer Note</label>
-                            <p class="italic text-on-surface-variant mb-0 fs-13 lh-snug">"@Model.ProblemDescription"</p>
+                            <label class="text-secondary font-bold uppercase block mb-1 fs-10">@(Model.CameFromWebsite ? "Customer Note" : "What Is the Job")</label>
+                            <p class="italic text-on-surface-variant mb-0 fs-13 lh-snug pre-wrap">"@Model.ProblemDescription"</p>
                         </div>
                     </div>
                 </div>
@@ -117,7 +239,7 @@
         <!-- Problem Images -->
         @if (Model.ImageUrls != null && Model.ImageUrls.Any())
         {
-            <section class="admin-card p-4 p-md-5 shadow-sm">
+            <section class="admin-card p-4 p-md-5 shadow-sm mb-4">
                 <h2 class="font-headline-sm text-primary mb-4 flex items-center gap-2">
                     <span class="material-symbols-outlined text-secondary">image</span>
                     <span>Problem Visuals Attached</span>
@@ -138,77 +260,165 @@
         }
     </div>
 
-    <!-- Right Column: Sidebar Controls -->
-    <div class="col-lg-4">
-        <!-- Status & Assignment Card -->
+    <!-- What the admin does to the job -->
+    <div class="job-page-actions">
         <section class="glass-card rounded-xl p-4 shadow-sm border mb-4 admin-card">
-            <h2 class="font-headline-sm text-primary mb-4">Status &amp; Assignment</h2>
+            <h2 class="font-headline-sm text-primary mb-4">Technician</h2>
 
-            <!-- Technician Assignment Form -->
-            <form asp-area="Administration" asp-controller="Bookings" asp-action="AssignTechnician" method="post" class="mb-4">
-                <input type="hidden" name="id" value="@Model.Id" />
-                <div class="form-group mb-3">
-                    <label for="technicianId" class="form-label font-label-sm text-on-surface-variant mb-2">Assign Technician</label>
-                    <select name="technicianId" id="technicianId" class="form-control py-3 admin-form-control">
-                        <option value="">-- Unassigned --</option>
-                        @foreach (var tech in technicians)
+            @if (Model.CanPickTechnician)
+            {
+                <!-- Technician Assignment Form -->
+                <form asp-area="Administration" asp-controller="Bookings" asp-action="AssignTechnician" method="post" class="m-0">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="form-group mb-3">
+                        <label for="technicianId" class="form-label font-label-sm text-on-surface-variant mb-2">Assign Technician</label>
+                        <select name="technicianId" id="technicianId" class="form-control py-3 admin-form-control">
+                            <option value="">-- Unassigned --</option>
+                            @foreach (var tech in technicians)
+                            {
+                                <option value="@tech.Id" selected="@(tech.Id == Model.TechnicianId)">
+                                    @tech.FullName@(tech.IsActive ? string.Empty : " (inactive)")
+                                </option>
+                            }
+                        </select>
+                        @if (!technicians.Any())
                         {
-                            <option value="@tech.Id" selected="@(tech.Id == Model.TechnicianId)">
-                                @tech.FullName@(tech.IsActive ? string.Empty : " (inactive)")
-                            </option>
+                            <span class="font-label-sm text-on-surface-variant mt-2 d-block fs-11">
+                                No active technicians yet &mdash; add one under
+                                <a asp-area="Administration" asp-controller="Technicians" asp-action="Index">Technicians</a>.
+                            </span>
                         }
-                    </select>
-                    @if (!technicians.Any())
-                    {
-                        <span class="font-label-sm text-on-surface-variant mt-2 d-block fs-11">
-                            No active technicians yet &mdash; add one under
-                            <a asp-area="Administration" asp-controller="Technicians" asp-action="Index">Technicians</a>.
-                        </span>
-                    }
+                        @if (Model.CameFromWebsite)
+                        {
+                            <span class="text-on-surface-variant mt-2 d-block fs-13 lh-snug">Saving a new technician emails the customer that technician's name and phone number.</span>
+                        }
+                        else
+                        {
+                            <span class="text-on-surface-variant mt-2 d-block fs-13 lh-snug">No email goes out for a job that was written in. Tell the customer yourself who is coming.</span>
+                        }
+                    </div>
+                    <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
+                        <span class="material-symbols-outlined fs-20">save</span>
+                        <span>Update Assignment</span>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <!-- No picker: the deposit is not in, or the job is closed -->
+                <div>
+                    <p class="font-body-md text-primary font-bold mb-1">@(Model.TechnicianId != null ? Model.TechnicianName : "None")</p>
+                    <p class="text-on-surface-variant mb-0 fs-13 lh-snug">@technicianLockedReason</p>
                 </div>
-                <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
-                    <span class="material-symbols-outlined fs-20">save</span>
-                    <span>Update Assignment</span>
-                </button>
-            </form>
+            }
+        </section>
 
-            <hr class="section-divider-spaced">
+        <!-- Move, finish, cancel -->
+        <section class="glass-card rounded-xl p-4 shadow-sm border mb-4 admin-card" id="job-actions">
+            <h2 class="font-headline-sm text-primary mb-4">The Job</h2>
 
-            <!-- Status Actions -->
-            <div class="d-flex flex-column gap-2">
-                <label class="text-on-surface-variant font-bold uppercase block mb-1 fs-11">Manage Booking Status</label>
-
-                @if (Model.StatusName == "Pending")
+            <div class="d-flex flex-column gap-3">
+                @if (Model.CanMove)
                 {
-                    <form asp-area="Administration" asp-controller="Bookings" asp-action="Approve" method="post" class="w-100">
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-outline font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 btn-approve-outline">
-                            <span class="material-symbols-outlined">check_circle</span>
-                            <span>Approve Booking</span>
-                        </button>
-                    </form>
+                    <details class="job-disclosure" id="job-move">
+                        <summary class="btn btn-outline font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 admin-btn-outline">
+                            <span class="material-symbols-outlined">event_repeat</span>
+                            <span>Move to Another Day or Time</span>
+                        </summary>
+                        <form asp-area="Administration" asp-controller="Bookings" asp-action="Move" method="post" class="mt-3">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="row">
+                                <div class="col-7 form-group mb-3">
+                                    <label for="move-date" class="form-label font-label-sm text-on-surface-variant mb-2">New day</label>
+                                    <input type="date" name="date" id="move-date" class="form-control py-2 admin-form-control" required value="@(Model.HasDate ? Model.ScheduledTime.ToString("yyyy-MM-dd") : string.Empty)" />
+                                </div>
+                                <div class="col-5 form-group mb-3">
+                                    <label for="move-time" class="form-label font-label-sm text-on-surface-variant mb-2">New time</label>
+                                    <input type="time" name="time" id="move-time" class="form-control py-2 admin-form-control" required value="@(Model.HasDate ? Model.ScheduledTime.ToString("HH:mm") : string.Empty)" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
+                                <span class="material-symbols-outlined fs-20">event_available</span>
+                                <span>Move the Job</span>
+                            </button>
+                            @if (Model.CameFromWebsite)
+                            {
+                                <p class="text-on-surface-variant mb-0 mt-2 fs-13 lh-snug">The hour it holds goes back on sale, and the new one comes off sale if the calendar has it free. The customer is not emailed.</p>
+                            }
+                            else
+                            {
+                                <p class="text-on-surface-variant mb-0 mt-2 fs-13 lh-snug">Nothing changes in the calendar: block and unblock the hours by hand. The customer is not emailed.</p>
+                            }
+                        </form>
+                    </details>
                 }
 
-                @if (Model.StatusName == "Approved" || Model.StatusName == "Pending")
+                @if (Model.CanComplete)
                 {
-                    <form asp-area="Administration" asp-controller="Bookings" asp-action="Complete" method="post" class="w-100">
+                    <form asp-area="Administration" asp-controller="Bookings" asp-action="Complete" method="post" class="m-0" id="job-complete">
                         <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="form-group mb-2">
+                            <label for="final-price" class="form-label font-label-sm text-on-surface-variant mb-2">Final price (£)</label>
+                            <input type="number" name="finalPrice" id="final-price" class="form-control py-2 admin-form-control" step="0.01" min="0.01" max="100000" required value="@(Model.TotalAmount > 0 ? plain(Model.TotalAmount) : string.Empty)" />
+                        </div>
                         <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 btn-complete-fill">
                             <span class="material-symbols-outlined">done_all</span>
-                            <span>Complete Service</span>
+                            <span>Mark as Done</span>
                         </button>
+                        <p class="text-on-surface-variant mb-0 mt-2 fs-13 lh-snug">Type what the job came to: one hour is the least, then 30-minute blocks at the same rate.</p>
                     </form>
                 }
 
-                @if (Model.StatusName != "Cancelled")
+                @if (Model.CanChangeFinalPrice)
                 {
-                    <form asp-area="Administration" asp-controller="Bookings" asp-action="Cancel" method="post" class="w-100">
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg tint-error-soft btn-block-py3 btn-danger-soft">
+                    <details class="job-disclosure" id="job-final-price">
+                        <summary class="btn btn-outline font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py3 admin-btn-outline">
+                            <span class="material-symbols-outlined">edit</span>
+                            <span>Change the Final Price</span>
+                        </summary>
+                        <form asp-area="Administration" asp-controller="Bookings" asp-action="FinalPrice" method="post" class="mt-3">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="form-group mb-2">
+                                <label for="changed-final-price" class="form-label font-label-sm text-on-surface-variant mb-2">Final price (£)</label>
+                                <input type="number" name="finalPrice" id="changed-final-price" class="form-control py-2 admin-form-control" step="0.01" min="0.01" max="100000" required value="@(Model.FinalPrice.HasValue ? plain(Model.FinalPrice.Value) : string.Empty)" />
+                            </div>
+                            <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
+                                <span class="material-symbols-outlined fs-20">save</span>
+                                <span>Save the Final Price</span>
+                            </button>
+                        </form>
+                    </details>
+                }
+
+                @if (Model.CanCancel)
+                {
+                    <details class="job-disclosure" id="job-cancel">
+                        <summary class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg tint-error-soft btn-block-py3 btn-danger-soft">
                             <span class="material-symbols-outlined">cancel</span>
-                            <span>Cancel Booking</span>
-                        </button>
-                    </form>
+                            <span>Cancel the Job</span>
+                        </summary>
+                        <form asp-area="Administration" asp-controller="Bookings" asp-action="Cancel" method="post" class="mt-3">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="form-group mb-2">
+                                <label for="cancel-reason" class="form-label font-label-sm text-on-surface-variant mb-2">Why is it cancelled?</label>
+                                <textarea name="reason" id="cancel-reason" class="form-control admin-form-control" rows="3" maxlength="500" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-outline-danger w-100 font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2 btn-danger-soft">
+                                <span class="material-symbols-outlined fs-20">cancel</span>
+                                <span>Cancel This Job</span>
+                            </button>
+                            <p class="text-on-surface-variant mb-0 mt-2 fs-13 lh-snug">The job keeps its date and this reason. An hour it holds goes back on sale. The customer is not emailed.</p>
+                        </form>
+                    </details>
+                }
+
+                @if (!Model.CanComplete && !Model.CanCancel && !Model.CanChangeFinalPrice)
+                {
+                    <p class="text-on-surface-variant mb-0 fs-13 lh-snug">Nothing more can be done on this job.</p>
+                }
+                else if (Model.CanCancel && !Model.CanComplete)
+                {
+                    <p class="text-on-surface-variant mb-0 fs-13 lh-snug">It can be moved, or marked as done, once its deposit is paid.</p>
                 }
             </div>
         </section>
@@ -217,26 +427,152 @@
         <section class="glass-card rounded-xl p-4 shadow-sm border mb-4 financial-summary-card">
             <h2 class="font-headline-sm text-white mb-4">Financial Summary</h2>
             <div class="d-flex flex-column gap-2">
-                <div class="d-flex justify-content-between financial-row-muted">
-                    <span class="font-body-md">Base Service Estimate</span>
-                    <span class="font-bold">£@Model.TotalAmount.ToString("F2")</span>
-                </div>
-                <hr class="financial-summary-divider">
                 <div class="d-flex justify-content-between align-items-end">
-                    <span class="font-body-md text-white">Total Estimated</span>
-                    <span class="font-bold text-white fs-20">£@Model.TotalAmount.ToString("F2")</span>
+                    <span class="font-body-md text-white">@(Model.FinalPrice.HasValue ? "Final Price" : "Estimate")</span>
+                    <span class="font-bold text-white fs-20">@(Model.Price > 0 ? pounds(Model.Price) : "Not set")</span>
                 </div>
                 <div class="mt-3 p-3 rounded-lg financial-summary-deposit-box">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="font-bold text-secondary-container uppercase fs-11">Deposit Paid</span>
-                        <span class="font-bold text-secondary-container">£@Model.DepositAmount.ToString("F2")</span>
+                        <span class="font-bold text-secondary-container uppercase fs-11">Paid So Far</span>
+                        <span class="font-bold text-secondary-container">@pounds(Model.Paid)</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="font-bold text-white fs-13">Balance Due</span>
-                        <span class="font-bold text-white fs-15">£@balanceDue.ToString("F2")</span>
+                        <span class="font-bold text-white fs-13">Still Owed</span>
+                        <span class="font-bold text-white fs-15">@stillOwedShort</span>
                     </div>
                 </div>
             </div>
+        </section>
+    </div>
+
+    <div class="job-page-rest">
+        <!-- The money list: every payment is one line, and what is still owed is always shown -->
+        <section class="admin-card p-4 p-md-5 shadow-sm mb-4" id="job-money">
+            <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
+                <span class="material-symbols-outlined text-secondary">payments</span>
+                <span>Money List</span>
+            </h2>
+
+            @if (Model.Payments.Any())
+            {
+                <ul class="job-ledger mb-4">
+                    @foreach (var payment in Model.Payments)
+                    {
+                        <li class="job-ledger-row">
+                            <span class="job-ledger-date">@UkTime.FromUtc(payment.CreatedOn).ToString("dd MMM yyyy")</span>
+                            <span class="job-ledger-what @(payment.IsRefunded ? "text-on-surface-variant" : "text-primary")">@payment.Description</span>
+                            <span class="job-ledger-amount @(payment.IsRefunded ? "job-ledger-struck" : "font-bold text-primary")">@pounds(payment.Amount)</span>
+                            <span class="job-ledger-action">
+                                @if (!payment.IsWebsiteDeposit)
+                                {
+                                    <form asp-area="Administration" asp-controller="Bookings" asp-action="RemovePayment" method="post" class="m-0" onsubmit="return confirm('Take this payment of @pounds(payment.Amount) off the job?');">
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="paymentId" value="@payment.Id" />
+                                        <button type="submit" class="btn btn-sm font-button-text slot-action-btn">Take off</button>
+                                    </form>
+                                }
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="font-body-md text-on-surface-variant mb-4">Nothing has been paid yet.</p>
+            }
+
+            <dl class="job-totals mb-0">
+                <div class="job-totals-row">
+                    <dt>@(Model.FinalPrice.HasValue ? "Final price" : "Estimate")</dt>
+                    <dd>@(Model.Price > 0 ? pounds(Model.Price) : "Not set")</dd>
+                </div>
+                <div class="job-totals-row">
+                    <dt>Paid so far</dt>
+                    <dd>@pounds(Model.Paid)</dd>
+                </div>
+                <div class="job-totals-row job-totals-owed">
+                    <dt>Still owed</dt>
+                    <dd>@stillOwed</dd>
+                </div>
+            </dl>
+
+            @if (Model.CanTakePayment)
+            {
+                <form asp-area="Administration" asp-controller="Bookings" asp-action="AddPayment" method="post" class="mt-4 pt-4 divider-subtle">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <label class="detail-label">Write a Payment on the Job</label>
+                    <div class="row align-items-end">
+                        <div class="col-sm-4 form-group mb-3">
+                            <label for="payment-amount" class="form-label font-label-sm text-on-surface-variant mb-2">Amount (£)</label>
+                            <input type="number" name="amount" id="payment-amount" class="form-control py-2 admin-form-control" step="0.01" min="0.01" max="100000" required value="@(Model.StillOwed > 0 ? plain(Model.StillOwed) : string.Empty)" />
+                        </div>
+                        <div class="col-sm-4 form-group mb-3">
+                            <label for="payment-method" class="form-label font-label-sm text-on-surface-variant mb-2">Paid by</label>
+                            <select name="method" id="payment-method" class="form-control py-2 admin-form-control" required>
+                                @foreach (var method in PaymentMethods.All)
+                                {
+                                    <option value="@method">@method</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-sm-4 form-group mb-3">
+                            <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
+                                <span class="material-symbols-outlined fs-20">add</span>
+                                <span>Add Payment</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-on-surface-variant mb-0 fs-13 lh-snug">For money taken in person or by transfer. The deposit paid on the website is written here by the site itself.</p>
+                </form>
+            }
+            else if (Model.CanCancel)
+            {
+                <p class="text-on-surface-variant mb-0 mt-4 fs-13 lh-snug">A payment can be written here once the deposit is paid on the website.</p>
+            }
+        </section>
+
+        <!-- Notes: only the admin sees them -->
+        <section class="admin-card p-4 p-md-5 shadow-sm mb-4" id="job-notes">
+            <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
+                <span class="material-symbols-outlined text-secondary">sticky_note_2</span>
+                <span>Notes</span>
+            </h2>
+            <form asp-area="Administration" asp-controller="Bookings" asp-action="Notes" method="post" class="m-0">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <textarea name="notes" class="form-control admin-form-control mb-2" rows="4" maxlength="4000" aria-label="Notes">@Model.AdminNotes</textarea>
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <p class="text-on-surface-variant mb-0 fs-13 lh-snug">Anything worth knowing next time: the customer, the property, where the stopcock is. Only the admin sees this. The customer never does.</p>
+                    <button type="submit" class="btn btn-secondary font-button-text admin-btn-compact d-flex align-items-center gap-2 text-nowrap flex-shrink-0">
+                        <span class="material-symbols-outlined fs-18">save</span>
+                        <span>Save Notes</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- History: one line per change, oldest first -->
+        <section class="admin-card p-4 p-md-5 shadow-sm" id="job-history">
+            <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
+                <span class="material-symbols-outlined text-secondary">history</span>
+                <span>History</span>
+            </h2>
+            @if (Model.History.Any())
+            {
+                <ul class="job-ledger mb-0">
+                    @foreach (var line in Model.History)
+                    {
+                        var happened = UkTime.FromUtc(line.CreatedOn);
+                        <li class="job-ledger-row job-history-row">
+                            <span class="job-ledger-date">@happened.ToString("dd MMM yyyy") <span class="text-on-surface-variant">@happened.ToString("HH:mm")</span></span>
+                            <span class="job-ledger-what text-primary">@line.Text</span>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="font-body-md text-on-surface-variant mb-0">No lines yet. This job was made before the site kept a history.</p>
+            }
         </section>
     </div>
 </div>
