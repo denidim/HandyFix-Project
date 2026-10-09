@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Booking.BookingListViewModel
+@using HandyFix.Common
 @{
     this.ViewData["Title"] = "Manage Bookings";
 
@@ -161,8 +162,8 @@
                             </td>
                             <td class="px-4 py-3 font-body-md text-primary">@booking.ScheduledTime.ToString("MMM dd, yyyy")</td>
                             <td class="px-4 py-3">
-                                <p class="font-body-md text-primary mb-0">@booking.CreatedOn.ToLocalTime().ToString("MMM dd, yyyy")</p>
-                                <p class="text-on-surface-variant mb-0 fs-11">@booking.CreatedOn.ToLocalTime().ToString("hh:mm tt")</p>
+                                <p class="font-body-md text-primary mb-0">@UkTime.FromUtc(booking.CreatedOn).ToString("MMM dd, yyyy")</p>
+                                <p class="text-on-surface-variant mb-0 fs-11">@UkTime.FromUtc(booking.CreatedOn).ToString("hh:mm tt")</p>
                             </td>
                             <td class="px-4 py-3 font-body-md font-bold text-primary">£@booking.TotalAmount.ToString("F2")</td>
                             <td class="px-4 py-3">

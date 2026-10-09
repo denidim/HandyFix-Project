@@ -1,4 +1,5 @@
 @model HandyFix.Web.ViewModels.Booking.BookingDetailsViewModel
+@using HandyFix.Common
 @using HandyFix.Data.Models
 @{
     this.ViewData["Title"] = $"Booking Details - {Model.Id.ToString().Substring(0, 8).ToUpper()}";
@@ -92,11 +93,11 @@
                     <label class="detail-label">Booking Received</label>
                     <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-secondary fs-16">mail</span>
-                        <span>@Model.CreatedOn.ToString("MMMM dd, yyyy")</span>
+                        <span>@UkTime.FromUtc(Model.CreatedOn).ToString("MMMM dd, yyyy")</span>
                     </p>
                     <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-secondary fs-16">schedule</span>
-                        <span>@Model.CreatedOn.ToString("hh:mm tt")</span>
+                        <span>@UkTime.FromUtc(Model.CreatedOn).ToString("hh:mm tt")</span>
                     </p>
                 </div>
             </div>
