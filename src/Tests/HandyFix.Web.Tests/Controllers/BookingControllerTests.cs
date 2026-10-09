@@ -515,11 +515,11 @@
         }
 
         [Fact]
-        public async Task ConfirmedShouldReturnTheBookingWhenItExists()
+        public async Task ConfirmedShouldReturnTheBookingWhenItsDepositIsPaid()
         {
             var controller = BuildController(out _, out _, out var bookingsService, out _);
 
-            var booking = new BookingDetailsViewModel();
+            var booking = new BookingDetailsViewModel { Source = BookingSource.Website, StatusName = "Approved", IsDepositPaid = true };
             bookingsService
                 .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(It.IsAny<Guid>()))
                 .ReturnsAsync(booking);
@@ -528,6 +528,46 @@
 
             var viewResult = Assert.IsType<ViewResult>(result);
             Assert.Same(booking, viewResult.Model);
+        }
+
+        // The page said "Booking Confirmed" and "Deposit Paid" for any booking's id, paid or
+        // not (PROJECT_STATE.md Section 3cg). An unpaid one goes to the page that says where it
+        // stands; whether it can still be paid for is that page's to work out.
+        [Theory]
+        [InlineData("Pending", false)]
+        [InlineData("Abandoned", false)]
+        [InlineData("Cancelled", true)]
+        public async Task ConfirmedShouldSendABookingThatIsNotConfirmedToThePaymentPage(string status, bool depositPaid)
+        {
+            var controller = BuildController(out _, out _, out var bookingsService, out _);
+
+            var id = Guid.NewGuid();
+            bookingsService
+                .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(id))
+                .ReturnsAsync(new BookingDetailsViewModel { Id = id, Source = BookingSource.Website, StatusName = status, IsDepositPaid = depositPaid });
+
+            var result = await controller.Confirmed(id);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Cancel", redirect.ActionName);
+            Assert.Equal("Payment", redirect.ControllerName);
+            Assert.Equal(id, redirect.RouteValues["bookingId"]);
+        }
+
+        // A job the admin wrote in is not the customer's to open: it has no deposit and no
+        // confirmation page.
+        [Fact]
+        public async Task ConfirmedShouldReturnNotFoundForAJobTheAdminWroteIn()
+        {
+            var controller = BuildController(out _, out _, out var bookingsService, out _);
+
+            bookingsService
+                .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(It.IsAny<Guid>()))
+                .ReturnsAsync(new BookingDetailsViewModel { Source = BookingSource.Phone, StatusName = "Approved" });
+
+            var result = await controller.Confirmed(Guid.NewGuid());
+
+            Assert.IsType<NotFoundResult>(result);
         }
 
         private static BookingInputModel ValidModel() => new BookingInputModel
