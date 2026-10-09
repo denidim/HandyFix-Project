@@ -1,12 +1,20 @@
-name: Deploy to Staging
+name: Deploy to Production
 
+# Runs when something lands on main, and the only way onto main is a pull request
+# from dev that has been checked on staging first (AGENTS.md Section 12). So a merge
+# into main means "this goes live".
 on:
   push:
-    branches: [dev]
+    branches: [main]
 
 permissions:
   contents: read
   packages: write
+
+# One deploy to the live site at a time. A second merge waits for the first to finish.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   build-test-push:
@@ -35,39 +43,55 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # "prod" is the tag the live site runs; staging's "latest" is left alone. The
+      # second tag names the commit, and is what going back a version asks for.
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/denidim/handyfix-web:latest
+            ghcr.io/denidim/handyfix-web:prod
             ghcr.io/denidim/handyfix-web:${{ github.sha }}
 
-      # The server's copies of these two used to be put there by hand, and a change
-      # pushed here did nothing until somebody remembered to copy it over. The .env
-      # beside them is not copied: it holds the secrets and lives on the server only.
+  deploy:
+    needs: build-test-push
+    runs-on: ubuntu-latest
+    # The live server's address and key are secrets of this environment, not of the
+    # repository, and the environment lets the main branch alone use them. A workflow
+    # on any other branch cannot read them, whatever it is changed to say.
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # The .env and the certificate beside these two are never copied: they are
+      # secrets and live on the server only.
       - name: Copy the compose file and the Caddyfile to the server
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
-          host: ${{ secrets.STAGING_HOST }}
+          host: ${{ secrets.PROD_HOST }}
           username: root
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          source: "deploy/docker-compose.staging.yml,deploy/caddy/staging/Caddyfile"
+          key: ${{ secrets.PROD_SSH_KEY }}
+          source: "deploy/docker-compose.prod.yml,deploy/caddy/prod/Caddyfile"
           target: /opt/handyfix/deploy
           strip_components: 1
 
-      - name: Deploy to staging
+      - name: Deploy to production
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
-          host: ${{ secrets.STAGING_HOST }}
+          host: ${{ secrets.PROD_HOST }}
           username: root
-          key: ${{ secrets.STAGING_SSH_KEY }}
+          key: ${{ secrets.PROD_SSH_KEY }}
           script: |
             set -euo pipefail
             cd /opt/handyfix/deploy
-            docker compose -f docker-compose.staging.yml pull
-            docker compose -f docker-compose.staging.yml up -d
+
+            # "pull" reads the whole compose file first, so a setting missing from
+            # .env stops the deploy here, before a running container is touched.
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
 
             # Caddy reads its Caddyfile when it starts, so one that has just been
             # copied over is taken up here, without dropping a connection. Tried a
@@ -75,7 +99,7 @@ jobs:
             # moment before it answers.
             reloaded=no
             for attempt in 1 2 3 4 5; do
-              if docker compose -f docker-compose.staging.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile; then
+              if docker compose -f docker-compose.prod.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile; then
                 reloaded=yes
                 break
               fi

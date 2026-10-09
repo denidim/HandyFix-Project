@@ -1,6 +1,7 @@
 namespace HandyFix.Web
 {
     using System;
+    using System.IO;
     using System.Reflection;
 
     using HandyFix.Data;
@@ -30,6 +31,8 @@ namespace HandyFix.Web
     using HandyFix.Web.ViewModels;
 
     using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.DataProtection.KeyManagement;
+    using Microsoft.AspNetCore.DataProtection.Repositories;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.HttpOverrides;
     using Microsoft.AspNetCore.Identity;
@@ -40,6 +43,7 @@ namespace HandyFix.Web
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
 
     using WebOptimizer;
 
@@ -68,6 +72,26 @@ namespace HandyFix.Web
             // How long an emailed password reset link works. Identity's own default is a day.
             services.Configure<DataProtectionTokenProviderOptions>(
                 options => options.TokenLifespan = TimeSpan.FromHours(AdminAccountService.ResetLinkHours));
+
+            // The keys that sign the login cookie, the antiforgery tokens, the time stamp on
+            // each public form and the password reset links. Told nothing, the framework keeps
+            // them in the user's profile, which on the servers is inside the container, and a
+            // deploy throws the container away: every deploy signed the admin out, made a form
+            // that was open at that moment come back "that didn't go through", and ended every
+            // reset link already sent. With DataProtection:KeysPath set (a folder on a Docker
+            // volume, in both compose files) the keys outlive the container. Not set, as on a
+            // developer's machine, nothing changes (PROJECT_STATE Section 3ci). The setting is
+            // read when the keys are first asked for, not on this line, so it counts whichever
+            // source it comes from and however late that source is added.
+            services.AddOptions<KeyManagementOptions>().Configure<IConfiguration, ILoggerFactory>(
+                (options, settings, loggerFactory) =>
+                {
+                    string keysPath = settings["DataProtection:KeysPath"];
+                    if (!string.IsNullOrWhiteSpace(keysPath))
+                    {
+                        options.XmlRepository = new FileSystemXmlRepository(new DirectoryInfo(keysPath), loggerFactory);
+                    }
+                });
 
             services.Configure<CookiePolicyOptions>(
                 options =>

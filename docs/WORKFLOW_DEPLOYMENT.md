@@ -1,13 +1,14 @@
-# 🚀 Deployment — Staging Pipeline
+# 🚀 Deployment — Staging and Production Pipelines
 
-How a push to `dev` ends up running on the staging server. This doc is deliberately public-repo-safe
-— no real hostnames, IPs, or credential values anywhere in it, matching the rest of this repo (see
-`PROJECT_STATE.md`'s Hosting section for the same `<PLACEHOLDER>` convention). If you need real
-values, they live in `docs/private/INFRASTRUCTURE.md` and `docs/private/STAGING_RUNBOOK.md` — both
-gitignored, neither reproduced here.
+How a push to `dev` ends up running on the staging server, and how a merge into `main` ends up on
+the live one. This doc is deliberately public-repo-safe — no real hostnames, IPs, or credential
+values anywhere in it, matching the rest of this repo (see `PROJECT_STATE.md`'s Hosting section for
+the same `<PLACEHOLDER>` convention). If you need real values, they live in
+`docs/private/INFRASTRUCTURE.md` and `docs/private/STAGING_RUNBOOK.md` — both gitignored, neither
+reproduced here.
 
-> **Production deployment (`deploy-prod.yml`) does not exist yet.** Deliberately deferred until
-> staging has been in use for a while rather than built alongside it — see `PROJECT_STATE.md` Tier 4.
+The two pipelines are the same shape on purpose. Staging is described first and in full;
+"Production" further down says only what differs.
 
 ---
 
@@ -20,12 +21,15 @@ gitignored, neither reproduced here.
    entirely, there's no `continue-on-error`.
 3. Log in to `ghcr.io` using the automatic `secrets.GITHUB_TOKEN` (no separate PAT needed).
 4. Build and push the Docker image, tagged both `latest` and `${{ github.sha }}`.
-5. SSH into the staging host (`secrets.STAGING_HOST` / `secrets.STAGING_SSH_KEY`) and run:
+5. Copy `deploy/docker-compose.staging.yml` and `deploy/caddy/staging/Caddyfile` to
+   `/opt/handyfix/deploy/` on the staging host (`secrets.STAGING_HOST` / `secrets.STAGING_SSH_KEY`).
+6. SSH into the same host and run:
    ```bash
    set -euo pipefail
    cd /opt/handyfix/deploy
    docker compose -f docker-compose.staging.yml pull
    docker compose -f docker-compose.staging.yml up -d
+   # then: caddy reload, tried up to five times (see below)
    docker image prune -f
    ```
    `set -euo pipefail` matters here: an earlier version of this script had no `set -e` and could
@@ -34,32 +38,39 @@ gitignored, neither reproduced here.
 **GitHub Secrets this depends on** (names only): `STAGING_HOST`, `STAGING_SSH_KEY`, plus the
 automatic `GITHUB_TOKEN`.
 
+**The two SSH actions are pinned to a commit**, not to a tag such as `@v1`. They are somebody
+else's code and they are handed the server's key; a tag can be moved to different code overnight,
+a commit cannot. The comment beside each says which release that commit is.
+
 ---
 
 ## What's actually automated, and what isn't — read this before editing `deploy/`
 
-Two different things live under `deploy/`, and only one of them is kept in sync by the pipeline:
+- **The application image** — automated. Every push to `dev` rebuilds it from source and the SSH
+  step always `pull`s the freshest one.
+- **The compose file and the Caddyfile** — automated since `PROJECT_STATE.md` Section 3ci. Every
+  deploy copies both from the repository to the server, then asks Caddy to re-read its file
+  (`caddy reload`, which drops no connection). A change to either, pushed, is live by the end of
+  that run.
+- **`.env`** — by hand, always. It holds the secrets and exists on the server only. On the live
+  server the same goes for the certificate in `certs/`.
 
-- **The application image** — fully automated. Every push to `dev` rebuilds it from source and the
-  SSH step always `pull`s the freshest one.
-- **`docker-compose.staging.yml`, `Caddyfile`, and `.env`** — placed on the server **once, by hand**,
-  when staging was first stood up. The SSH step never copies any of these three files from the repo
-  — it only runs `docker compose -f docker-compose.staging.yml pull && up -d` **using whatever is
-  already sitting in `/opt/handyfix/deploy/` on the server itself.**
+**Why the copying was added.** Until Section 3ci the compose file and the Caddyfile were put on the
+server once, by hand, and the pipeline only ever replaced the image. Editing either in the
+repository and pushing did nothing to staging, while the deploy reported success: it had restarted
+the containers, with the old file. That is what happened when `CloudflareR2:*` was first added to
+the compose file (2026-08-05, `PROJECT_STATE.md` Section 3ae), and every change since had to be
+remembered and copied over before the push that needed it. On a live site a forgotten copy is an
+outage, so the pipeline does it now.
 
-That means editing `docker-compose.staging.yml` or `Caddyfile` in this repo and pushing to `dev`
-**does nothing to staging by itself.** The deploy will report success — it did successfully restart
-the containers — just using the old, unchanged file. This is exactly what happened when
-`CloudflareR2:*` was first added to the compose file (2026-08-05): the env var mapping was correct
-in the repo and the push succeeded, but staging kept throwing "not fully configured" because the
-compose file that actually restarted was still the pre-change version. See `PROJECT_STATE.md`
-Section 3ae for the full incident.
+**Why Caddy is given a folder and not a file.** The compose files mount `./caddy/staging` (or
+`./caddy/prod`) as `/etc/caddy`, not the one Caddyfile. Docker mounts a single file by what it is on
+the disk at that moment; a deploy that replaces the file leaves a running Caddy looking at the old
+one, and its reload re-reads the old one too. A folder is looked into afresh each time.
 
-**If you change `docker-compose.staging.yml` or `Caddyfile`, you must also manually update the
-server's copy** — SSH in and either edit the file directly or copy the new version over it, then run
-`docker compose -f docker-compose.staging.yml up -d` yourself (or just push any commit to `dev`
-afterward, since the next automated deploy will pick up the now-updated file). `.env` has always
-worked this way and that part is documented — the two compose files were the gap.
+**A new `.env` line still has to reach the server before the build that needs it** — see the
+Turnstile example under "Environment variables" below. On production the compose file enforces
+this itself; on staging it is still a thing to remember.
 
 ---
 
@@ -75,7 +86,7 @@ source-only change doesn't re-download the whole dependency graph on every build
 
 ---
 
-## The stack — `deploy/docker-compose.staging.yml` + `deploy/Caddyfile`
+## The stack — `deploy/docker-compose.staging.yml` + `deploy/caddy/staging/Caddyfile`
 
 Two services on a private `internal` Docker network:
 
@@ -85,6 +96,20 @@ Two services on a private `internal` Docker network:
   `X-Robots-Tag: noindex, nofollow` as a second line of defense against a search engine indexing
   staging: a copy of the real site under another address — belt and braces alongside the Basic
   Auth itself.
+
+Two lines in the compose file are not secrets and are the same on staging and on the live site:
+
+- **`TZ: Europe/London`.** A container's own clock is UTC, an hour behind the UK from late March
+  to late October. Wherever the code asks what time or what day it is (which slots have passed,
+  "Today's Jobs", the calendar's default day), it now gets a UK clock's answer, as it always did on
+  a developer's machine. Without it a slot stayed on offer for an hour after it had started.
+- **`DataProtection__KeysPath: /keys`**, with the volume `dataprotection_keys` mounted there. These
+  are the keys that sign the login cookie, the antiforgery tokens, the time stamp on each public
+  form and the password reset links. Kept inside the container, every deploy made new ones: the
+  admin was signed out, a form open at that moment came back "that didn't go through", and a reset
+  link already sent stopped working. The keys are stored as they are, not encrypted, and the
+  framework says so in the log at start (`No XML encryptor configured`); the volume is on the same
+  server as the `.env` that holds every other secret, so that is accepted.
 
 ### Environment variables the compose file maps into the `web` container
 
@@ -132,14 +157,106 @@ the compose file and must never be given to the live site.
 `PROJECT_STATE.md` Section 3ae for how this was added and the compose-file sync issue it surfaced.
 
 **A new setting has to reach the server before the build that needs it.** The Turnstile keys are
-the case in point: a build with Turnstile fails its form pages when the keys are missing, and the
-pipeline only replaces the image. So the order is: put the new lines into `.env` on the server,
-copy the new `docker-compose.staging.yml` there, and only then push.
+the case in point: a build with Turnstile fails its form pages when the keys are missing. So the
+order is: put the new lines into `.env` on the server, and only then push. The compose file that
+maps them travels with the push.
 
 Three settings have defaults in code and need no line in `.env` unless they are to change:
 `RateLimiting:FormPostsPerWindow` (10), `RateLimiting:FormWindowMinutes` (10) and
 `RateLimiting:SlotLookupsPerMinute` (60). They are not mapped in the compose file; add
 `RateLimiting__FormPostsPerWindow: "20"`-style lines there to override one.
+
+---
+
+## Production — `deploy-prod.yml`, `docker-compose.prod.yml`, `caddy/prod/Caddyfile`
+
+The same pipeline, pointed at the live server. What differs, and why:
+
+| | Staging | Production |
+| --- | --- | --- |
+| Runs on | every push to `dev` | every push to `main`, which only a merged pull request from `dev` makes |
+| Image tag | `latest` | `prod`; the commit-id tag is pushed too, for going back a version |
+| Jobs | one | two: build and test, then deploy. Only the second is given the server's key |
+| Secrets | `STAGING_HOST`, `STAGING_SSH_KEY`, on the repository | `PROD_HOST`, `PROD_SSH_KEY`, on a GitHub **environment** named `production` that only `main` may use |
+| `ASPNETCORE_ENVIRONMENT` | `Staging` | `Production` |
+| Slots | 14 days made at each start | none made: an admin generates them (`WORKFLOW_BOOKINGS.md`) |
+| In front of Caddy | nothing | Cloudflare's proxy |
+| Certificate | Let's Encrypt, got by Caddy itself | Cloudflare's origin certificate, two files in `certs/` on the server |
+| Ports published | 80 and 443 | 443 only |
+| Password prompt, `noindex` header | both | neither |
+| A setting missing from `.env` | the page that needs it fails | the deploy stops and says which one |
+| Email settings | its own notice address and a `[STAGING]` mark | none: the code's own (`bookings@` sends, `info@` receives, no mark) |
+| Photo bucket | shared with development | its own |
+
+**Why the secrets sit on an environment.** A repository secret can be read by a workflow on any
+branch, so a workflow file changed on `dev` could use the live server's key. An environment's
+secrets are handed only to a job that names the environment, and the environment is set to allow
+the `main` branch alone.
+
+**Why the image is built again and not carried over from staging.** `main` and `dev` hold the same
+files after a merge, and the tests run again on them, so the two images are made from the same
+source. Carrying staging's image over would be one build fewer, at the cost of finding which commit
+on `dev` a merge commit on `main` came from. Not worth the moving parts here.
+
+### Cloudflare in front, and what that changes in the Caddyfile
+
+- **The certificate.** Caddy's usual free certificate needs the certificate authority to reach the
+  server directly, and Cloudflare stands in between. So the live Caddyfile names two files,
+  `/certs/origin.pem` and `/certs/origin.key`: Cloudflare's own origin certificate, made in its
+  dashboard (SSL/TLS, Origin Server) and valid for years. Cloudflare's SSL mode is **Full
+  (strict)**: it speaks HTTPS to the server and checks that certificate. Only Cloudflare trusts it,
+  so the proxy has to stay switched on for the site's records; with it off a browser is shown a
+  certificate warning.
+- **The visitor's address.** Every request now arrives from one of Cloudflare's servers, with the
+  visitor's address in the `CF-Connecting-IP` header. The Caddyfile lists Cloudflare's published
+  address ranges as `trusted_proxies` and names that header in `client_ip_headers`, then hands the
+  app one address in `X-Forwarded-For`: the visitor's. Left alone, Caddy would add Cloudflare's
+  address behind the visitor's, the app reads the last one, and every visitor would share the form
+  limit of a handful of Cloudflare servers. A request that reaches the server without going through
+  Cloudflare is taken to come from the address it came from, whatever its headers claim. The list
+  of ranges is Cloudflare's own (`https://www.cloudflare.com/ips/`); it changes rarely, and the date
+  it was read is in the file.
+- **`www`** answers with a permanent redirect to the name without it.
+- **A request that arrives during a deploy waits.** `lb_try_duration 30s` makes Caddy keep trying
+  the app's container for up to 30 seconds when it cannot be reached, which is what happens for a
+  few seconds while a deploy replaces it. Only a request that could not be handed over at all is
+  tried again, so a form is never sent twice.
+
+How the Caddyfile was checked before it went near a server: run on a developer's machine with a
+test certificate and a program behind it that answers with the request it was sent. A request
+claiming to be someone else reached the app as the address it really came from; with that machine
+listed as a trusted proxy, the same request reached the app as the address in `CF-Connecting-IP`
+and nothing else; `www` redirected; a request sent while the app's container was stopped was
+answered `200` ten seconds later, once it was back, and `502` at once with the wait taken out.
+
+### What has to be on the live server before its first deploy
+
+The workflow copies two files and restarts two containers. Everything else is put there once, by
+hand, and the first deploy fails without it:
+
+1. `/opt/handyfix/deploy/.env`, every line of `deploy/.env.prod.example` filled in.
+2. `/opt/handyfix/deploy/certs/origin.pem` and `origin.key`, the Cloudflare origin certificate.
+3. The public half of a deploy key of the live server's own in `root`'s `authorized_keys`, and its
+   private half in the `production` environment as `PROD_SSH_KEY`, beside `PROD_HOST`.
+4. A database login for the live site, with rights in `handyfix_prod` and nowhere else.
+5. In the accounts the settings come from: the live Stripe key and webhook, a Brevo key, the real
+   domain on the Turnstile widget's hostname list, and the photo bucket.
+
+The first start of an empty database also makes the admin account, from `ADMIN_SEED_EMAIL` and
+`ADMIN_SEED_PASSWORD`; see "Startup sequence" below.
+
+### Going back a version
+
+Every image the live site has run is still in the registry under its commit id. On the server:
+
+```bash
+cd /opt/handyfix/deploy
+IMAGE_TAG=<commit id> docker compose -f docker-compose.prod.yml up -d
+```
+
+The next deploy puts the site back on `prod`. This goes back the code only: a database migration
+that the newer version ran is not undone, so check what the versions in between changed in the
+database before relying on it.
 
 ---
 
@@ -206,16 +323,20 @@ database, the live site's above all, both are chosen **before** its first start.
 | --- | --- |
 | CI fails at the "Test" step | A real test regression — the deploy step never runs when this happens, by design. Fix the test before anything reaches staging. |
 | Deploy step succeeds but the site doesn't change | Check the SSH script actually found `docker-compose.staging.yml` at `/opt/handyfix/deploy` on the server — a missing/misnamed file used to fail silently before `set -euo pipefail` was added. |
-| You edited `docker-compose.staging.yml`/`Caddyfile`/env-var mappings in the repo, pushed, deploy shows green, but the behavior didn't change | **Not a pipeline failure** — see "What's actually automated, and what isn't" above. The SSH step never syncs these files from the repo; it restarted containers using the server's existing, unchanged copy. You have to update the server's copy yourself. |
+| You added a setting to a compose file, pushed, the deploy is green, and the app still does not have it | The compose file reached the server (it is copied at every deploy), so look at `.env` there: the line the mapping reads is missing or empty. `.env` is the one file the pipeline never touches. |
+| The live deploy stops at `required variable ... is missing a value` | A line the live compose file insists on is not in the server's `.env`. Nothing was restarted; the site is still on the version before. Add the line and run the workflow again. |
+| The deploy fails at the `caddy reload` step after five tries | The Caddyfile that was just copied over does not read: the step's output has Caddy's own message with the line. Caddy is still running on the one before. Fix the file and push. |
 | App container crashes on boot against a new, empty database | Almost always `Admin:SeedEmail` or `Admin:SeedPassword` (`ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` in `.env`) missing, or a password under 10 characters — the log names which. See the startup sequence above. A database that already has its admin needs neither. |
 | `ADMIN_SEED_PASSWORD` was changed in `.env` and the old password still signs in | By design: it is read at the first start only. Change the password on the admin panel's Account page. |
 | Caddy won't start / Basic Auth rejects a known-correct password | The hash in `BASIC_AUTH_HASH` doesn't match — regenerate with `docker run --rm caddy:2-alpine caddy hash-password --plaintext '<password>'` and update `.env`. |
 | SSH deploy step fails with a key error | `STAGING_SSH_KEY` secret is missing, malformed, or the corresponding public key isn't authorized on the staging host. |
-| Photo uploads fail on staging | `CloudflareR2:*` is configured as of 2026-08-05 (see above) — if this still happens, check the server's actual `.env` and `docker-compose.staging.yml` directly rather than assuming the repo version is what's running. |
-| `/Contact`, `/JoinOurTeam` and `/Booking` fail, the rest of the site works | The Turnstile keys are missing from the container: `Turnstile is not configured for this environment` in the log. Check both lines are in `.env` **and** that the server's compose file maps them. |
+| Photo uploads fail on staging | `CloudflareR2:*` is configured as of 2026-08-05 (see above) — if this still happens, check the five `R2_` lines in the server's `.env`. |
+| `/Contact`, `/JoinOurTeam` and `/Booking` fail, the rest of the site works | The Turnstile keys are missing from the container: `Turnstile is not configured for this environment` in the log. Check both lines are in the server's `.env`. |
 | Every page `HomeController` serves fails | `Brevo:ApiKey` is missing. The enquiries service needs the email sender, and outside Development the sender refuses to exist without a key. |
-| A booking is saved, then the customer gets an error page where Stripe should open | `Stripe is not configured for this environment` in the log: `STRIPE_SECRET_KEY` is missing from `.env`, or the server's compose file still has the old pretend-payment line in place of the two Stripe ones. |
-| Stripe shows a webhook delivery as failed with `401` | The server's `Caddyfile` is the old one, without the path let past Basic Auth. Copy the repo's over it and restart Caddy. |
+| A booking is saved, then the customer gets an error page where Stripe should open | `Stripe is not configured for this environment` in the log: `STRIPE_SECRET_KEY` is missing from the server's `.env`. |
+| Stripe shows a webhook delivery to staging as failed with `401` | Staging's Caddyfile lets that one path past the password prompt; a `401` means the Caddy that answered was not running that file. Run the deploy again and read its `caddy reload` step. |
+| The admin is signed out after every deploy, or a form open during one comes back "that didn't go through" | The keys are not being kept: check the compose file still maps `DataProtection__KeysPath` and mounts the `dataprotection_keys` volume at that path. |
+| A slot that started within the last hour can still be booked in summer | The container's clock is UTC again: check `TZ: Europe/London` is in the compose file (`docker compose exec web date` shows the clock the app sees). |
 | Stripe shows a webhook delivery as failed with `400`, and the log says `A call to the Stripe webhook was refused` | `STRIPE_WEBHOOK_SECRET` is not the signing secret of the webhook that is calling. Each webhook has its own, and a sandbox's differs from the live one. Deposits are still confirmed when the customer comes back from Stripe, but not when they close the tab first. |
 | A `Secure`-flagged cookie won't persist, or a generated absolute URL (e.g. Stripe redirect URLs) comes back `http://` instead of `https://` | `Request.Scheme`/`IsHttps` reading wrong behind Caddy — see "Why the app has to trust Caddy's forwarded headers" above. Confirm `UseForwardedHeaders()` is still the first middleware in `Program.cs`. |
 
@@ -226,9 +347,9 @@ values, see `docs/private/STAGING_RUNBOOK.md`.
 
 ## Related
 
-- Full architectural history and what's still open (production pipeline, DB host `sa` password
-  rotation): `PROJECT_STATE.md` Section 3v–3w and Section 4 Tier 4. Stripe on staging:
-  `PROJECT_STATE.md` Section 3cg.
+- Full architectural history: `PROJECT_STATE.md` Section 3v–3w and Section 4 Tier 4. Stripe on
+  staging: `PROJECT_STATE.md` Section 3cg. The production pipeline, the copying of the compose file
+  and Caddyfile, the keys folder and the UK clock: `PROJECT_STATE.md` Section 3ci.
 - The forwarded-headers/cookie-consent bug, full root-cause writeup: `PROJECT_STATE.md`
   Section 3ac.
 - Mobile-scroll fix, silent-booking-error fix, CloudflareR2 wiring, and the compose-file-drift bug

@@ -1,0 +1,87 @@
+# Runs on the production web host. Pulls the image built by
+# .github/workflows/deploy-prod.yml -- never built locally here.
+#
+# That workflow copies this file and caddy/prod/Caddyfile to the server at
+# every deploy. Two things it never copies, because they are secrets and live
+# on the server only (docs/private/INFRASTRUCTURE.md has the real values):
+#   .env     the settings named below; .env.prod.example is its template
+#   certs/   Cloudflare's origin certificate and its key
+#
+# A setting written ${NAME:?...} has to be in .env. Without it docker compose
+# stops with that message before it touches a running container, so a missing
+# setting stops the deploy and not the site.
+
+services:
+  web:
+    image: ghcr.io/denidim/handyfix-web:${IMAGE_TAG:-prod}
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # The container's own clock is UTC, an hour behind the UK all summer.
+      # With this, "now" and "today" in the code are a UK clock's: a slot that
+      # has started stops being offered at once, and not an hour later.
+      TZ: Europe/London
+      # Where the keys that sign the login cookie, the form tokens and the
+      # password reset links are kept: the volume below, so they outlive the
+      # container. Kept inside it, every deploy would sign the admin out and
+      # end every reset link already sent.
+      DataProtection__KeysPath: /keys
+      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING:?set DB_CONNECTION_STRING in .env}
+      # The admin account's login email and password. Both are read at one
+      # start only, the first start of a database, which makes the account.
+      # After that they are changed in the admin panel, on the Account page,
+      # and these two lines can be taken out of .env.
+      Admin__SeedEmail: ${ADMIN_SEED_EMAIL:-}
+      Admin__SeedPassword: ${ADMIN_SEED_PASSWORD:-}
+      Brevo__ApiKey: ${BREVO_API_KEY:?set BREVO_API_KEY in .env}
+      # No email settings here, on purpose. The live site sends from bookings@
+      # and sends its notices to info@, which is what the code does when it is
+      # told nothing, and its subjects carry no mark.
+      # Cloudflare Turnstile, the "are you a person" check on the public forms.
+      Turnstile__SiteKey: ${TURNSTILE_SITE_KEY:?set TURNSTILE_SITE_KEY in .env}
+      Turnstile__SecretKey: ${TURNSTILE_SECRET_KEY:?set TURNSTILE_SECRET_KEY in .env}
+      # Stripe, live: a restricted key made outside any sandbox (Checkout
+      # Sessions: Write, nothing else) and the signing secret of the webhook
+      # that points at this site. Stripe:AllowSandboxOutsideDevelopment must
+      # never be added here: it makes the site pretend a deposit was paid.
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY:?set STRIPE_SECRET_KEY in .env}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:?set STRIPE_WEBHOOK_SECRET in .env}
+      # The bucket for customers' photos. The live site's own, not the one
+      # development and staging share.
+      CloudflareR2__AccessKeyId: ${R2_ACCESS_KEY_ID:?set R2_ACCESS_KEY_ID in .env}
+      CloudflareR2__SecretAccessKey: ${R2_SECRET_ACCESS_KEY:?set R2_SECRET_ACCESS_KEY in .env}
+      CloudflareR2__ServiceUrl: ${R2_SERVICE_URL:?set R2_SERVICE_URL in .env}
+      CloudflareR2__PublicUrl: ${R2_PUBLIC_URL:?set R2_PUBLIC_URL in .env}
+      CloudflareR2__BucketName: ${R2_BUCKET_NAME:?set R2_BUCKET_NAME in .env}
+    volumes:
+      - dataprotection_keys:/keys
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      # 443 only. Cloudflare speaks HTTPS to this server and turns a visitor's
+      # plain-HTTP request into HTTPS itself, so nothing needs port 80 here.
+      - "443:443"
+    volumes:
+      # The folder, not the file. A single file is mounted by what it is on
+      # the disk at that moment, so a Caddyfile replaced by a deploy would
+      # stay invisible to a running Caddy; a folder is looked into afresh.
+      - ./caddy/prod:/etc/caddy:ro
+      - ./certs:/certs:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - internal
+    depends_on:
+      - web
+
+networks:
+  internal:
+
+volumes:
+  caddy_data:
+  caddy_config:
+  dataprotection_keys:
