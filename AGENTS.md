@@ -231,10 +231,12 @@ model (feature branches, required reviewers) would add ceremony without adding s
   triggers `.github/workflows/deploy-dev.yml`, which builds, tests, and deploys straight to
   staging — that's the feedback loop, use it liberally.
 - **`main` is the verified-stable branch.** Nothing lands there except through a pull request from
-  `dev`, opened once a batch of work has actually been checked on staging. `deploy-prod.yml`
-  does not exist yet, so merging to `main` currently deploys nothing — but the habit needs to
-  already be in place before it does, since at that point a `main` merge means "this goes live in
-  production."
+  `dev`, opened once a batch of work has actually been checked on staging. Every push to `main`
+  triggers `.github/workflows/deploy-prod.yml`, which builds, tests and deploys to the live
+  server, so **a merge into `main` means "this goes live in production."** Say so in those words
+  when asking whether to open the pull request. (Until `PROJECT_STATE.md` Section 3ci there was no
+  such workflow and a merge deployed nothing; the pull-request habit was put in place before it
+  mattered.)
 - **Merge `dev` into `main` often, not in one large batch.** Small, frequent merges are easy to
   review and hard to get wrong; a large merge accumulated over weeks is the opposite. A good
   trigger: after any change that's been verified working on staging and isn't obviously the start
