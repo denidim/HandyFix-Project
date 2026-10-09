@@ -126,7 +126,7 @@ If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to Mock/San
 
 - **[PROJECT_STATE.md](PROJECT_STATE.md)** — architectural memory: what the system is, what's been built and verified, what's left, and the decisions worth remembering. Start here.
 - **[DESIGN.md](DESIGN.md)** — design tokens, utility classes, page-shell templates, and the admin/card/area component families.
-- **[docs/WORKFLOW_BOOKINGS.md](docs/WORKFLOW_BOOKINGS.md)** — the booking pipeline end to end: generate capacity → customer books and pays → admin assigns a technician → admin approves.
+- **[docs/WORKFLOW_BOOKINGS.md](docs/WORKFLOW_BOOKINGS.md)** — every job end to end, booked on the website or written in by the admin: capacity → the booking and its deposit, or the job written in → the technician → done, with the final price → each payment on the job; plus cancelling, moving, notes and the job's history.
 - **[docs/WORKFLOW_SERVICE_AREAS.md](docs/WORKFLOW_SERVICE_AREAS.md)** — how a service area is created, seeded and published.
 - **[docs/WORKFLOW_SERVICES.md](docs/WORKFLOW_SERVICES.md)** — services & categories admin CRUD and the local WebP image pipeline.
 - **[docs/WORKFLOW_TECHNICIANS.md](docs/WORKFLOW_TECHNICIANS.md)** — the technician roster: create, deactivate vs. delete, the technician a new database starts with.
