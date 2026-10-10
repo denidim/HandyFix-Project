@@ -1082,9 +1082,9 @@ namespace HandyFix.Services.Data.Bookings
             var visit = start.HasValue
                 ? $" on <strong>{start.Value:dd MMM yyyy 'at' HH:mm}</strong>"
                 : string.Empty;
-            var phoneLine = !string.IsNullOrWhiteSpace(technician.PhoneNumber)
-                ? $@"<p>You can reach {technicianName} on <a href=""tel:{EmailText.PhoneLink(technician.PhoneNumber)}"">{EmailText.Encode(technician.PhoneNumber)}</a>.</p>"
-                : string.Empty;
+            var contact = !string.IsNullOrWhiteSpace(technician.PhoneNumber)
+                ? "Direct Contact: " + EmailLayout.Link("tel:" + EmailText.PhoneLink(technician.PhoneNumber), EmailText.Encode(technician.PhoneNumber))
+                : null;
 
             // Asked for here, by the one caller that prints them: loaded with the booking above,
             // beside its payments, they would make that one query fetch two lists at once.
@@ -1095,16 +1095,17 @@ namespace HandyFix.Services.Data.Bookings
                 .ToListAsync();
 
             var subject = "Your technician for your Plumbing Handyman Surrey booking";
-            var body = $@"
-                <h3>Hi {EmailText.Encode(booking.CustomerFirstName)},</h3>
-                <p>Your technician for your visit{visit} is <strong>{technicianName}</strong>.</p>
-                {phoneLine}
-                <ul>
-                    <li><strong>Booking Reference:</strong> {BookingReference.Short(booking.Id)}</li>
-                    <li><strong>Service(s):</strong> {EmailText.Encode(string.Join(", ", serviceNames))}</li>
-                    <li><strong>Address:</strong> {EmailText.Encode(booking.Address)}</li>
-                </ul>
-                <p>Thank you for choosing Plumbing Handyman Surrey!</p>";
+            var body = EmailLayout.ForCustomer(
+                EmailLayout.Badge(EmailColour.Blue, "&#128295; Technician Allocated")
+                + EmailLayout.Heading($"Hi {EmailText.Encode(booking.CustomerFirstName)},")
+                + EmailLayout.Lead($"Your technician for your visit{visit} is <strong>{technicianName}</strong>.")
+                + EmailLayout.Spotlight("Assigned Specialist", technicianName, contact)
+                + EmailLayout.Details(
+                    EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
+                    EmailLayout.Row("Service(s)", EmailText.Encode(string.Join(", ", serviceNames))),
+                    EmailLayout.PlainRow("Address", EmailText.Encode(booking.Address)))
+                + EmailLayout.Text($"{technicianName} will arrive equipped with all required professional tools. If you have parking restrictions, gate codes, or need to send photos of the work area, please reply to this email or send them on WhatsApp.")
+                + EmailLayout.WhatsAppButton("Message Us on WhatsApp"));
 
             return await this.emailSender.TrySendEmailAsync(
                 this.logger,

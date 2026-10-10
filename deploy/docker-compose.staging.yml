@@ -40,6 +40,11 @@ services:
       # applications). Empty means the real info@ inbox; staging sets its own
       # so test enquiries do not land there.
       Admin__NotificationEmail: ${ADMIN_NOTIFICATION_EMAIL:-}
+      # This site's own address, for the buttons in a notice that open its admin
+      # panel. Told nothing, the code takes the live site's, and a notice sent
+      # from staging would open the live admin panel. STAGING_HOSTNAME is
+      # already in .env, for Caddy below.
+      Site__PublicUrl: https://${STAGING_HOSTNAME}
       # Cloudflare Turnstile, the "are you a person" check on the public
       # forms. Outside Development the forms fail without both keys, on
       # purpose, so set them in .env before deploying a build that has it.

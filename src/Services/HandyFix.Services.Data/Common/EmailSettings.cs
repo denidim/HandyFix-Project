@@ -1,5 +1,7 @@
 ﻿namespace HandyFix.Services.Data.Common
 {
+    using HandyFix.Common;
+
     using Microsoft.Extensions.Configuration;
 
     // The addresses the site's emails go from and to, each with the real domain's address as its
@@ -41,6 +43,15 @@
         public static string SubjectPrefix(IConfiguration configuration)
         {
             return Read(configuration, "Email:SubjectPrefix", null);
+        }
+
+        // The address of the site this copy of the code runs as, with no slash at the end. For a
+        // link in an email that has to open this site and not another: the admin panel behind a
+        // notice to the company. Staging names itself in its compose file; told nothing, it is
+        // the live site's address.
+        public static string SiteUrl(IConfiguration configuration)
+        {
+            return Read(configuration, "Site:PublicUrl", GlobalConstants.SiteUrl).TrimEnd('/');
         }
 
         private static string Read(IConfiguration configuration, string key, string fallback)

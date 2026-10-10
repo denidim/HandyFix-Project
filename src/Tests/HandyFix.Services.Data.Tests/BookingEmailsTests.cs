@@ -111,8 +111,52 @@
             await world.Payments.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_1");
 
             Assert.Equal(2, sent.Count);
-            Assert.All(sent, email => Assert.Contains("<strong>Booking Reference:</strong> " + BookingReference.Short(bookingId) + "</li>", email.Body));
-            Assert.All(sent, email => Assert.DoesNotContain(bookingId.ToString(), email.Body));
+            Assert.All(sent, email => Assert.Contains(">#" + BookingReference.Short(bookingId) + "</td>", email.Body));
+            Assert.All(sent, email => Assert.DoesNotContain(bookingId.ToString(), email.WhatIsRead()));
+
+            // The customer's email holds the whole id nowhere at all. The company's holds it
+            // once, unseen, in the address its button opens (the next test).
+            Assert.DoesNotContain(bookingId.ToString(), sent.Single(e => e.To == "ada@example.com").Body);
+        }
+
+        // The button under the company's notice opens the job itself, where the technician is
+        // picked, and not the list of jobs or the home page.
+        [Fact]
+        public async Task TheCompanysNoticeShouldOpenTheJobsOwnPageInTheAdminPanel()
+        {
+            using var world = new BookingWorld();
+            var checkoutSessionId = await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
+            Guid bookingId = world.DbContext.Bookings.Single().Id;
+            List<SentEmail> sent = world.CaptureEmails();
+
+            await world.Payments.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_1");
+
+            SentEmail toCompany = sent.Single(e => e.To == "info@plumbing-handyman-surrey.co.uk");
+            Assert.Contains("href=\"https://plumbing-handyman-surrey.co.uk/Administration/Bookings/Details/" + bookingId + "\"", toCompany.Body);
+        }
+
+        // One look for every email (PROJECT_STATE.md Section 3cl). A customer's ends with how to
+        // reach the business and the company behind it; the company's own notice does not need
+        // telling who the company is.
+        [Fact]
+        public async Task TheDepositEmailsShouldWearTheSharedLookEachWithItsOwnFooter()
+        {
+            using var world = new BookingWorld();
+            var checkoutSessionId = await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
+            List<SentEmail> sent = world.CaptureEmails();
+
+            await world.Payments.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_1");
+
+            Assert.All(sent, email => Assert.Contains("<img src=\"https://plumbing-handyman-surrey.co.uk/images/email/logo-header.png\"", email.Body));
+
+            SentEmail toCustomer = sent.Single(e => e.To == "ada@example.com");
+            Assert.Contains("is a trading name of <strong>ZAP80 LTD</strong>, registered in England and Wales, company number 12658426.", toCustomer.Body);
+            Assert.Contains("Registered office: 16 Stormont Way, Chessington, Surrey, KT9 2QN.", toCustomer.Body);
+            Assert.Contains("href=\"https://wa.me/442039515915\"", toCustomer.Body);
+
+            SentEmail toCompany = sent.Single(e => e.To == "info@plumbing-handyman-surrey.co.uk");
+            Assert.Contains("Automated Internal System Notification", toCompany.Body);
+            Assert.DoesNotContain("Registered office", toCompany.Body);
         }
 
         // A technician may be on the roster under a first name alone, and a number is written
@@ -138,7 +182,7 @@
             Assert.Equal("ada@example.com", email.To);
             Assert.Equal("Your technician for your Plumbing Handyman Surrey booking", email.Subject);
             Assert.Contains(expectedName, email.Body);
-            Assert.Contains("<a href=\"tel:02039515915\">020 3951 5915</a>", email.Body);
+            Assert.Matches("<a href=\"tel:02039515915\"[^>]*>020 3951 5915</a>", email.Body);
             Assert.Contains(BookingReference.Short(booking.Id), email.Body);
             Assert.DoesNotContain(booking.Id.ToString(), email.Body);
             Assert.Contains("Leak Fix", email.Body);
@@ -252,7 +296,7 @@
             Assert.Equal("Sam Reed", result.TechnicianName);
             Assert.Equal(2, sent.Count);
             Assert.Contains("<strong>Sam Reed</strong>", sent[1].Body);
-            Assert.Contains("<a href=\"tel:07700900456\">07700 900456</a>", sent[1].Body);
+            Assert.Matches("<a href=\"tel:07700900456\"[^>]*>07700 900456</a>", sent[1].Body);
             Assert.DoesNotContain("Zapryan", sent[1].Body);
         }
 

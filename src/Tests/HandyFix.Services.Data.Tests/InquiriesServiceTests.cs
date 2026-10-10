@@ -3,6 +3,7 @@ namespace HandyFix.Services.Data.Tests
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using HandyFix.Data;
@@ -211,6 +212,39 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal("We have received your enquiry", acknowledgement.Subject);
             Assert.Null(acknowledgement.ReplyTo);
             Assert.Contains("020 3951 5915", acknowledgement.Body);
+            Assert.Contains("Is your request urgent?", acknowledgement.Body);
+        }
+
+        // The button under the notice opens the admin panel of the site that sent it. Staging
+        // names itself in a setting; told nothing, the site is the live one. Before the setting,
+        // a notice sent from staging would have opened the live site's admin panel.
+        [Theory]
+        [InlineData(null, "https://plumbing-handyman-surrey.co.uk/Administration/Enquiries")]
+        [InlineData("https://staging.example", "https://staging.example/Administration/Enquiries")]
+        [InlineData("https://staging.example/", "https://staging.example/Administration/Enquiries")]
+        public async Task TheNoticeToTheCompanyShouldOpenTheAdminPanelOfTheSiteThatSentIt(string siteUrl, string expectedAddress)
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            List<SentEmail> sent = CaptureEmails(emailSender);
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string> { ["Site:PublicUrl"] = siteUrl })
+                .Build();
+
+            await BuildService(dbContext, emailSender: emailSender, configuration: configuration).CreateInquiryAsync(
+                new ContactInputModel
+                {
+                    Name = "Jane Doe",
+                    Email = "jane@example.com",
+                    PhoneNumber = "07700 900123",
+                    Message = "Kitchen tap is dripping.",
+                },
+                new List<string>());
+
+            Assert.Contains("href=\"" + expectedAddress + "\"", sent[0].Body);
+
+            // The logo is another matter: it is fetched from the live site whoever sends.
+            Assert.Contains("<img src=\"https://plumbing-handyman-surrey.co.uk/images/email/logo-header.png\"", sent[0].Body);
         }
 
         // Anyone can type any address into a public form. An acknowledgement that repeated the
@@ -239,7 +273,7 @@ namespace HandyFix.Services.Data.Tests
             Assert.DoesNotContain("Prizewinner", acknowledgement.Subject);
             Assert.DoesNotContain("spam dot example", acknowledgement.Body);
             Assert.DoesNotContain("07700", acknowledgement.Body);
-            Assert.Contains("If you did not send us anything", acknowledgement.Body);
+            Assert.Contains("If you did not submit an enquiry on our website", acknowledgement.Body);
         }
 
         // The emails are HTML built as text. A message written into one as typed could carry a
@@ -262,7 +296,10 @@ namespace HandyFix.Services.Data.Tests
                 new List<string> { "https://photos.example/inquiries/abc_\"><script>alert(1)</script>.jpg" });
 
             SentEmail notice = sent[0];
-            Assert.DoesNotContain("<img", notice.Body);
+
+            // One picture, and it is the site's own logo at the top.
+            Assert.Single(Regex.Matches(notice.Body, "<img"));
+            Assert.Contains("<img src=\"https://plumbing-handyman-surrey.co.uk/images/email/logo-header.png\"", notice.Body);
             Assert.DoesNotContain("<script", notice.Body);
             Assert.DoesNotContain("href=\"https://evil.example\"", notice.Body);
             Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", notice.Body);
@@ -289,10 +326,13 @@ namespace HandyFix.Services.Data.Tests
             await BuildService(dbContext, emailSender: emailSender).CreateInquiryAsync(application.ToContactInputModel(), new List<string>());
 
             Assert.Equal("New job application - Sam Fitter", sent[0].Subject);
+            Assert.Contains("New Job Application", sent[0].Body);
+            Assert.Contains("A new job application has arrived from the website.", sent[0].Body);
             Assert.Contains("Trade: Plumbing", sent[0].Body);
             Assert.Equal("We have received your application", sent[1].Subject);
+            Assert.Contains("We have received your application", sent[1].Body);
 
-            // "If it is urgent, call us" is for a customer with a leak, not for an applicant.
+            // "Is your request urgent?" is for a customer with a leak, not for an applicant.
             Assert.DoesNotContain("urgent", sent[1].Body);
         }
 

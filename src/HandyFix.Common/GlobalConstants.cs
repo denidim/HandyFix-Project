@@ -4,6 +4,11 @@
     {
         public const string SystemName = "Plumbing Handyman Surrey";
 
+        // The live site's address, with no slash at the end. For what has to name the live site
+        // whichever copy of the code is running: the logo an email shows, the link behind it.
+        // A link that has to open the copy that is running asks EmailSettings.SiteUrl.
+        public const string SiteUrl = "https://plumbing-handyman-surrey.co.uk";
+
         // The business's public contact details, kept once here so every page shows the same ones
         // (PROJECT_STATE.md Section 3bu). The line is a VoIP landline: written messages go to
         // WhatsApp on the same number, so nothing on the site offers SMS.
