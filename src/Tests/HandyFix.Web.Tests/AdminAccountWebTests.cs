@@ -342,9 +342,11 @@
             RecordingEmailSender.Email email = Assert.Single(site.Emails.Sent);
             Assert.Equal(AdminEmail, email.To);
             Assert.Equal("Reset your Plumbing Handyman Surrey admin password", email.Subject);
-            Assert.Contains("works for 2 hours", email.Body);
+            Assert.Contains("works for <strong>2 hours</strong>", email.Body);
 
-            var link = new Uri(WebUtility.HtmlDecode(Regex.Match(email.Body, "href=\"([^\"]+)\"").Groups[1].Value));
+            // The first link in the email is the logo's, to the home page. The reset link is the
+            // one that names the reset page, on the button and written out in full under it.
+            var link = new Uri(WebUtility.HtmlDecode(Regex.Match(email.Body, "href=\"([^\"]*" + Regex.Escape(ResetPasswordPage) + "[^\"]*)\"").Groups[1].Value));
             Assert.Equal(ResetPasswordPage, link.AbsolutePath);
 
             HttpResponseMessage reset = await PostFromAsync(browser, link.PathAndQuery, ResetPasswordPage, new Dictionary<string, string>

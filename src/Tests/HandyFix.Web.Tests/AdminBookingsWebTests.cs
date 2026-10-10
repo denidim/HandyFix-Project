@@ -60,7 +60,7 @@
 
             RecordingEmailSender.Email toCustomer = site.Emails.Sent.Single(e => e.To == "ada@example.com");
             Assert.Equal("Your Plumbing Handyman Surrey Booking is Confirmed!", toCustomer.Subject);
-            Assert.Contains("<strong>Booking Reference:</strong> " + BookingReference.Short(booking.Id) + "</li>", toCustomer.Body);
+            Assert.Contains(">#" + BookingReference.Short(booking.Id) + "</td>", toCustomer.Body);
             Assert.DoesNotContain(booking.Id.ToString(), toCustomer.Body);
 
             RecordingEmailSender.Email toCompany = site.Emails.Sent.Single(e => e.To == GlobalConstants.BusinessEmail);
@@ -126,7 +126,7 @@
             RecordingEmailSender.Email email = Assert.Single(site.Emails.Sent, e => e.Subject == TechnicianEmailSubject);
             Assert.Equal("ada@example.com", email.To);
             Assert.Contains("<strong>Zapryan</strong>", email.Body);
-            Assert.Contains("<a href=\"tel:" + GlobalConstants.BusinessPhone.Replace(" ", string.Empty) + "\">" + GlobalConstants.BusinessPhone + "</a>", email.Body);
+            Assert.Matches("<a href=\"tel:" + GlobalConstants.BusinessPhone.Replace(" ", string.Empty) + "\"[^>]*>" + Regex.Escape(GlobalConstants.BusinessPhone) + "</a>", email.Body);
             Assert.Contains(BookingReference.Short(booking.Id), email.Body);
             Assert.Contains(site.ServiceName, email.Body);
             Assert.Contains("1 Analytical Engine Way, Chessington, KT9 1AA", email.Body);

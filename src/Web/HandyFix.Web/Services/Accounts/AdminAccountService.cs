@@ -118,11 +118,14 @@
             var token = await this.userManager.GeneratePasswordResetTokenAsync(user);
             var link = linkFor(user.Id, WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token)));
 
-            var body = $@"
-                <h3>Hello,</h3>
-                <p>Someone asked to reset the password of the <strong>{GlobalConstants.SystemName}</strong> admin panel.</p>
-                <p><a href=""{EmailText.Encode(link)}"">Choose a new password</a></p>
-                <p>The link works for {ResetLinkHours} hours, and only once. If you did not ask for it, you can ignore this email: the password stays as it is.</p>";
+            var address = EmailText.Encode(link);
+            var body = EmailLayout.ForAccountSecurity(
+                EmailLayout.Badge(EmailColour.Red, "&#128274; Security Notification")
+                + EmailLayout.Heading("Reset your admin password")
+                + EmailLayout.Lead($"A request was received to reset the password for the <strong>{GlobalConstants.SystemName}</strong> admin panel account.")
+                + EmailLayout.Button("Choose a New Password &rarr;", address)
+                + EmailLayout.Note("Important security note:", $"&bull; This password reset link works for <strong>{ResetLinkHours} hours</strong> and can only be used once.<br />&bull; If you did not request this reset, you can safely ignore this email. Your current password remains unchanged and secure.")
+                + EmailLayout.SmallPrint($"If the button above does not work, copy and paste this link into your browser:<br />{EmailLayout.LinkInFull(address)}"));
 
             await this.emailSender.TrySendEmailAsync(
                 this.logger,

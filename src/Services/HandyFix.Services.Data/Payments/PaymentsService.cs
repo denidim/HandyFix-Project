@@ -27,6 +27,9 @@ namespace HandyFix.Services.Data.Payments
         private const string StripeProvider = "Stripe";
         private const string MockProvider = "Stripe-Mock";
 
+        // On both notices to the company: their Reply-To is the customer's address.
+        private const string ReplyTip = "<em>Tip: Pressing &quot;Reply&quot; in your email inbox replies directly to the customer.</em>";
+
         // Stripe keeps a payment page open for a day unless told otherwise, and will not take
         // less than thirty minutes. The site closes the page itself when it drops the booking
         // (CloseCheckoutsAsync); this is what is left if that call never gets through.
@@ -398,18 +401,21 @@ namespace HandyFix.Services.Data.Payments
             // This is the first email a customer gets: nothing is sent before the deposit is paid
             // (BookingsService.CreateBookingAsync).
             var reference = BookingReference.Short(booking.Id);
+            var deposit = $"&pound;{payment.Amount:F2}";
             var clientSubject = "Your Plumbing Handyman Surrey Booking is Confirmed!";
-            var clientBody = $@"
-                <h3>Hi {EmailText.Encode(booking.CustomerFirstName)},</h3>
-                <p>Great news! Your deposit of £{payment.Amount:F2} has been received and your booking is now confirmed.</p>
-                <ul>
-                    <li><strong>Booking Reference:</strong> {reference}</li>
-                    <li><strong>Service(s):</strong> {serviceNames}</li>
-                    <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
-                    <li><strong>Address:</strong> {address}</li>
-                </ul>
-                <p>We'll email you your technician's name and phone number as soon as one is assigned.</p>
-                <p>We look forward to helping you. Thank you for choosing Plumbing Handyman Surrey!</p>";
+            var clientBody = EmailLayout.ForCustomer(
+                EmailLayout.Badge(EmailColour.Green, "&#10003; Deposit Received &amp; Booking Confirmed")
+                + EmailLayout.Heading($"Hi {EmailText.Encode(booking.CustomerFirstName)},")
+                + EmailLayout.Lead($"Great news! Your deposit of <strong>{deposit}</strong> has been received via Stripe and your booking is now locked in our schedule.")
+                + EmailLayout.Details(
+                    EmailLayout.ReferenceRow(reference),
+                    EmailLayout.Row("Service(s)", serviceNames),
+                    EmailLayout.TimeRow("Scheduled Time", scheduledTime),
+                    EmailLayout.PlainRow("Address", address),
+                    EmailLayout.Divider(),
+                    EmailLayout.MoneyRow("Deposit Paid", $"{deposit} (Paid)"))
+                + EmailLayout.Text("<strong>What happens next?</strong><br />We will send you a follow-up email with your assigned technician's name and direct contact number as soon as one is allocated. If you need to send photos of the job or additional directions, feel free to message us on WhatsApp below.")
+                + EmailLayout.WhatsAppButton("Message Us on WhatsApp"));
 
             await this.emailSender.TrySendEmailAsync(
                 this.logger,
@@ -421,17 +427,21 @@ namespace HandyFix.Services.Data.Payments
                 clientBody);
 
             var adminSubject = $"New Confirmed Booking - {booking.CustomerFirstName} {booking.CustomerLastName}";
-            var adminBody = $@"
-                <h3>A booking deposit has just been paid.</h3>
-                <ul>
-                    <li><strong>Booking Reference:</strong> {reference}</li>
-                    <li><strong>Customer:</strong> {customerName} ({EmailText.Encode(booking.Email)}, {EmailText.Encode(booking.PhoneNumber)})</li>
-                    <li><strong>Service(s):</strong> {serviceNames}</li>
-                    <li><strong>Scheduled Time:</strong> {scheduledTime}</li>
-                    <li><strong>Address:</strong> {address}</li>
-                    <li><strong>Deposit Paid:</strong> £{payment.Amount:F2}</li>
-                </ul>
-                <p>Next: pick a technician on the booking's page in the admin panel. The customer is emailed the name and number when you do.</p>";
+            var adminBody = EmailLayout.ForCompany(
+                EmailLayout.Badge(EmailColour.Green, "&#128276; New Customer Booking")
+                + EmailLayout.Heading("A booking deposit has just been paid.")
+                + EmailLayout.Lead("A customer has completed payment for their booking deposit via Stripe. The slot is confirmed in the schedule.")
+                + EmailLayout.Details(
+                    EmailLayout.ReferenceRow(reference),
+                    EmailLayout.Row("Customer", customerName),
+                    EmailLayout.PlainRow("Customer Contact", ContactLinks(booking)),
+                    EmailLayout.Row("Service(s)", serviceNames),
+                    EmailLayout.TimeRow("Scheduled Time", scheduledTime),
+                    EmailLayout.PlainRow("Service Address", address),
+                    EmailLayout.Divider(),
+                    EmailLayout.MoneyRow("Deposit Paid", $"{deposit} (Stripe)"))
+                + EmailLayout.Advice($"<strong>Next Step:</strong> Open the booking in the admin panel and assign a technician. The customer will be sent an automated notification with the technician's name as soon as you save.<br /><br />{ReplyTip}")
+                + EmailLayout.Button("&#9881;&#65039; Open Booking in Admin Panel", this.JobPage(booking)));
 
             // Reply-To is the customer, so pressing Reply on this notice answers them.
             await this.emailSender.TrySendEmailAsync(
@@ -455,16 +465,19 @@ namespace HandyFix.Services.Data.Payments
                 : "not recorded";
 
             var subject = $"Action needed: deposit paid for a booking that is not held - {booking.CustomerFirstName} {booking.CustomerLastName}";
-            var body = $@"
-                <h3>A deposit was paid for a booking that was not waiting for one.</h3>
-                <p>The booking had been dropped or cancelled, or was already paid, when this money arrived. The site has written the payment on the job and changed nothing else. The customer has not been sent a confirmation.</p>
-                <ul>
-                    <li><strong>Booking Reference:</strong> {BookingReference.Short(booking.Id)}</li>
-                    <li><strong>Customer:</strong> {customerName} ({EmailText.Encode(booking.Email)}, {EmailText.Encode(booking.PhoneNumber)})</li>
-                    <li><strong>It was booked for:</strong> {scheduledTime}</li>
-                    <li><strong>Deposit Paid:</strong> £{payment.Amount:F2}</li>
-                </ul>
-                <p>Next: call the customer. The site has told them you will be in touch to confirm their visit. Either write the job in again for a time that is free, or send the deposit back in Stripe.</p>";
+            var body = EmailLayout.ForCompany(
+                EmailLayout.Badge(EmailColour.Amber, "&#9888;&#65039; Action Needed")
+                + EmailLayout.Heading("A deposit was paid for a booking that was not waiting for one.")
+                + EmailLayout.Lead("The booking had been dropped or cancelled, or was already paid, when this money arrived. The site has written the payment on the job and changed nothing else. The customer has not been sent a confirmation.")
+                + EmailLayout.Details(
+                    EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
+                    EmailLayout.Row("Customer", customerName),
+                    EmailLayout.PlainRow("Customer Contact", ContactLinks(booking)),
+                    EmailLayout.TimeRow("It was booked for", scheduledTime),
+                    EmailLayout.Divider(),
+                    EmailLayout.MoneyRow("Deposit Paid", $"&pound;{payment.Amount:F2}"))
+                + EmailLayout.Advice($"<strong>Next Step:</strong> Call the customer. The site has told them you will be in touch to confirm their visit. Either write the job in again for a time that is free, or send the deposit back in Stripe.<br /><br />{ReplyTip}")
+                + EmailLayout.Button("&#9881;&#65039; Open Booking in Admin Panel", this.JobPage(booking)));
 
             await this.emailSender.TrySendEmailAsync(
                 this.logger,
@@ -673,6 +686,14 @@ namespace HandyFix.Services.Data.Payments
             }
         }
 
+        // The customer's phone number and email address, each as a link the company can press.
+        private static string ContactLinks(Booking booking)
+        {
+            return EmailLayout.Link("tel:" + EmailText.PhoneLink(booking.PhoneNumber), EmailText.Encode(booking.PhoneNumber))
+                + " &bull; "
+                + EmailLayout.Link("mailto:" + EmailText.Encode(booking.Email), EmailText.Encode(booking.Email));
+        }
+
         private static bool IsPaid(Session session)
         {
             return session != null && session.PaymentStatus == "paid";
@@ -692,6 +713,13 @@ namespace HandyFix.Services.Data.Payments
         {
             return string.IsNullOrWhiteSpace(this.configuration["Stripe:SecretKey"])
                 && (this.environment.IsDevelopment() || this.configuration.GetValue<bool>("Stripe:AllowSandboxOutsideDevelopment"));
+        }
+
+        // The job's own page in the admin panel of the site that sent the notice: staging's
+        // notices open staging, the live site's open the live site.
+        private string JobPage(Booking booking)
+        {
+            return $"{EmailSettings.SiteUrl(this.configuration)}/Administration/Bookings/Details/{booking.Id}";
         }
     }
 }

@@ -180,31 +180,40 @@ namespace HandyFix.Services.Data.Inquiries
         // Everything the sender typed is encoded before it goes into the HTML.
         private async Task NotifyTheCompanyAsync(Inquiry inquiry, IReadOnlyList<string> imageUrls, int photosNotSaved)
         {
-            var what = IsJobApplication(inquiry) ? "job application" : "enquiry";
+            var isApplication = IsJobApplication(inquiry);
+            var what = isApplication ? "job application" : "enquiry";
+            var name = EmailText.Encode(inquiry.Name);
 
             var photos = string.Empty;
             if (imageUrls != null && imageUrls.Count > 0)
             {
                 // A photo's address ends in the name its file had, which can hold spaces.
                 IEnumerable<string> links = imageUrls.Select((url, i) => $@"<a href=""{EmailText.Encode(url).Replace(" ", "%20")}"">Photo {i + 1}</a>");
-                photos = $"<p><strong>Photos:</strong> {string.Join(", ", links)}</p>";
+                photos = EmailLayout.Text($"<strong>Photos:</strong> {string.Join(", ", links)}");
             }
 
             if (photosNotSaved > 0)
             {
-                photos += $"<p><strong>Photos attached but not saved: {photosNotSaved}.</strong> Storage could not be reached when this was sent. Please ask for them again if you need them.</p>";
+                photos += EmailLayout.Note($"Photos attached but not saved: {photosNotSaved}.", "Storage could not be reached when this was sent. Please ask for them again if you need them.");
             }
 
-            var body = $@"
-                <h3>A new {what} has come in from the website.</h3>
-                <ul>
-                    <li><strong>Name:</strong> {EmailText.Encode(inquiry.Name)}</li>
-                    <li><strong>Email:</strong> {EmailText.Encode(inquiry.Email)}</li>
-                    <li><strong>Phone:</strong> {EmailText.Encode(inquiry.PhoneNumber)}</li>
-                </ul>
-                <p>{EmailText.EncodeLines(inquiry.Message)}</p>
-                {photos}
-                <p>Reply to this email to answer them directly. It is also in the admin panel, under Enquiries.</p>";
+            // A phone number is asked for on both forms, but an enquiry saved before that rule
+            // may hold none, and a link to nowhere is worse than a plain word.
+            var phone = string.IsNullOrWhiteSpace(inquiry.PhoneNumber)
+                ? "Not given"
+                : EmailLayout.Link("tel:" + EmailText.PhoneLink(inquiry.PhoneNumber), EmailText.Encode(inquiry.PhoneNumber));
+
+            var body = EmailLayout.ForCompany(
+                EmailLayout.Badge(EmailColour.Green, isApplication ? "&#128233; New Job Application" : "&#128233; New Website Enquiry")
+                + EmailLayout.Heading($"A new {what} has arrived from the website.")
+                + EmailLayout.Details(
+                    EmailLayout.Row("Name", name),
+                    EmailLayout.PlainRow("Email", EmailLayout.Link("mailto:" + EmailText.Encode(inquiry.Email), EmailText.Encode(inquiry.Email))),
+                    EmailLayout.PlainRow("Phone", phone))
+                + EmailLayout.Quote("Message Content:", EmailText.EncodeLines(inquiry.Message))
+                + photos
+                + EmailLayout.Advice($"&#128161; <strong>Quick Reply:</strong> Simply press <strong>Reply</strong> in your email app to reply directly to {name}.")
+                + EmailLayout.Button("&#9881;&#65039; View Enquiries in Admin Panel", $"{EmailSettings.SiteUrl(this.configuration)}/Administration/Enquiries"));
 
             await this.emailSender.TrySendEmailAsync(
                 this.logger,
@@ -225,16 +234,20 @@ namespace HandyFix.Services.Data.Inquiries
         {
             var isApplication = IsJobApplication(inquiry);
             var what = isApplication ? "application" : "enquiry";
+
+            // Somebody asking for work has no leak to report, so the box about emergencies is
+            // for an enquiry alone.
             var ifUrgent = isApplication
                 ? string.Empty
-                : $"<p>If it is urgent, call us or message us on WhatsApp on {GlobalConstants.BusinessPhone}.</p>";
+                : EmailLayout.Note("Is your request urgent?", "If you require urgent assistance, an emergency repair, or active leak support, please call us directly or message us on WhatsApp for faster response.");
 
-            var body = $@"
-                <h3>Hello,</h3>
-                <p>Thank you for getting in touch with <strong>{GlobalConstants.SystemName}</strong>. We have received your {what} and will be in touch soon.</p>
-                {ifUrgent}
-                <p>If you did not send us anything, you can ignore this email.</p>
-                <p>Best regards,<br /><strong>The {GlobalConstants.SystemName} Team</strong></p>";
+            var body = EmailLayout.ForCustomer(
+                EmailLayout.Badge(EmailColour.Green, "&#10003; Message Received")
+                + EmailLayout.Heading("Hello,")
+                + EmailLayout.Lead($"Thank you for getting in touch with <strong>{GlobalConstants.SystemName}</strong>. We have received your {what} and our team will review the details and get back to you shortly.")
+                + ifUrgent
+                + EmailLayout.WhatsAppButton("Message Us on WhatsApp")
+                + EmailLayout.SmallPrint($"If you did not submit an {what} on our website, you can safely disregard this email."));
 
             await this.emailSender.TrySendEmailAsync(
                 this.logger,
