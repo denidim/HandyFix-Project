@@ -127,6 +127,7 @@ Names only — real values live in `.env` on the server, itself gitignored, gene
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | `Turnstile:SiteKey` / `Turnstile:SecretKey` — the person check on the public forms. **The form pages fail without both** outside Development; see `WORKFLOW_FORMS.md`. |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | `Stripe:SecretKey` / `Stripe:WebhookSecret` — the deposit. On staging both belong to a Stripe **sandbox**, so nobody is charged. **Paying for a booking fails without the key** outside Development. See "Stripe on staging" below. |
 | `STAGING_HOSTNAME`, `BASIC_AUTH_USER`, `BASIC_AUTH_HASH` | consumed by the `caddy` service, not `web` |
+| `STAGING_HOSTNAME`, a second time | `Site:PublicUrl`, as `https://` and the hostname: the address behind the buttons in a notice to the company, so that a notice sent from staging opens staging's admin panel. The live compose file has no such line: the code's default is the live site's address. |
 
 `ASPNETCORE_ENVIRONMENT=Staging` is a hardcoded literal in the compose file itself, not pulled
 from `.env`.
@@ -242,6 +243,8 @@ address (the forms, a real payment, the emails) without a visitor or a search en
 - `/api/payment/webhook` is left outside it, because Stripe cannot answer a password prompt. The
   app refuses a call there that does not carry Stripe's signature.
 - `www` only redirects, so it asks for nothing.
+- `/images/email/*` is left outside it too. That folder holds the logo the site's emails show,
+  and a mail program fetching it cannot answer a password prompt either (`WORKFLOW_EMAIL.md`).
 
 **Launching the site** is one small change: delete that block, the two `BASIC_AUTH` lines in
 `deploy/docker-compose.prod.yml` and the same two in the server's `.env`, and merge. A search
