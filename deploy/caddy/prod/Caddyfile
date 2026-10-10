@@ -46,7 +46,11 @@ plumbing-handyman-surrey.co.uk {
 	# way to answer a password prompt, so that path is left outside. It is not
 	# open for that: the app refuses any call that does not carry Stripe's
 	# signature.
-	@behindThePassword not path /api/payment/webhook
+	#
+	# The logo the site's emails show is left outside too. An email program
+	# fetches it from here whoever sent the email, staging included, and it
+	# cannot answer a password prompt either. It is a picture of the logo.
+	@behindThePassword not path /api/payment/webhook /images/email/*
 	basic_auth @behindThePassword {
 		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
 	}
