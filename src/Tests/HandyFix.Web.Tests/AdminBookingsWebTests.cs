@@ -862,6 +862,20 @@
             Assert.Matches("Waiting for a Technician</p>\\s*<h3[^>]*>0</h3>", cancelled);
         }
 
+        // The admin layout had no font link of its own and took both web fonts from the combined
+        // stylesheet's imports, which are gone (PROJECT_STATE.md Section 3cn).
+        [Fact]
+        public async Task AdminPagesLinkTheSameTwoWebFontsAsThePublicSite()
+        {
+            using var site = new Site();
+            HttpClient admin = await site.SignedInAdminAsync();
+
+            var dashboard = await admin.GetStringAsync("/Administration/Dashboard");
+
+            Assert.Contains("family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block", dashboard);
+            Assert.Contains("family=Outfit", dashboard);
+        }
+
         // Most of the dashboard was the design mock-up's own text: "+12.5%" beside the revenue,
         // "System Status: Optimal", a server-capacity bar, an "Add Widget" tile, a graph that
         // "is generating", and a card counting reviews that have had no way in since the public

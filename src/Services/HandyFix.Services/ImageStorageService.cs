@@ -11,6 +11,17 @@ namespace HandyFix.Services
 
     public class ImageStorageService : IImageStorageService
     {
+        /// <summary>
+        /// The width of a picture's small copy, written beside it as <c>{slug}-hero-320.webp</c>.
+        /// A category page's card shows the picture 88 pixels wide on a phone, where the picture
+        /// itself is 1024 (PROJECT_STATE Section 3cn). The pictures that come with the site get
+        /// theirs from tools/image-gen/make-phone-copies.mjs.
+        /// </summary>
+        public const int SmallCopyWidth = 320;
+
+        private const string PublicFolder = "/images/services/";
+        private const string PictureSuffix = "-hero.webp";
+
         private readonly string targetDirectory;
         private readonly ILogger<ImageStorageService> logger;
         private readonly string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
@@ -79,6 +90,9 @@ namespace HandyFix.Services
                                 }
                             }
 
+                            // Written every time, so the copy is never an older picture than the
+                            // one it stands for: the new picture takes the same file name.
+                            this.SaveSmallCopy(targetBitmap, slug);
                             this.DeleteLegacyImages(slug);
                         }
                         finally
@@ -104,10 +118,12 @@ namespace HandyFix.Services
         {
             try
             {
-                var filePath = this.GetServiceImagePath(slug);
-                if (File.Exists(filePath))
+                foreach (var filePath in new[] { this.GetServiceImagePath(slug), this.GetSmallCopyPath(slug) })
                 {
-                    File.Delete(filePath);
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
                 }
 
                 this.DeleteLegacyImages(slug);
@@ -139,6 +155,20 @@ namespace HandyFix.Services
                     }
 
                     File.Move(oldPath, newPath);
+
+                    // The small copy goes with it. One already under the new name belongs to an
+                    // earlier picture and would stand for this one, so it goes either way.
+                    var oldCopy = this.GetSmallCopyPath(oldSlug);
+                    var newCopy = this.GetSmallCopyPath(newSlug);
+                    if (File.Exists(newCopy))
+                    {
+                        File.Delete(newCopy);
+                    }
+
+                    if (File.Exists(oldCopy))
+                    {
+                        File.Move(oldCopy, newCopy);
+                    }
                 }
 
                 this.DeleteLegacyImages(oldSlug);
@@ -171,7 +201,28 @@ namespace HandyFix.Services
 
         public string GetServiceImagePublicUrl(string slug)
         {
-            return $"/images/services/{slug}-hero.webp";
+            return $"{PublicFolder}{slug}{PictureSuffix}";
+        }
+
+        public string GetSmallCopyPublicUrl(string imageUrl)
+        {
+            if (imageUrl == null
+                || !imageUrl.StartsWith(PublicFolder, StringComparison.Ordinal)
+                || !imageUrl.EndsWith(PictureSuffix, StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            var slug = imageUrl.Substring(PublicFolder.Length, imageUrl.Length - PublicFolder.Length - PictureSuffix.Length);
+            try
+            {
+                return File.Exists(this.GetSmallCopyPath(slug)) ? $"{PublicFolder}{slug}-hero-{SmallCopyWidth}.webp" : null;
+            }
+            catch (ArgumentException)
+            {
+                // Not a name this service would have written; the page sends the picture itself.
+                return null;
+            }
         }
 
         private string GetServiceImagePath(string slug)
@@ -181,7 +232,25 @@ namespace HandyFix.Services
                 throw new ArgumentException("Invalid or unsafe service slug.");
             }
 
-            return Path.Combine(this.targetDirectory, $"{slug}-hero.webp");
+            return Path.Combine(this.targetDirectory, $"{slug}{PictureSuffix}");
+        }
+
+        private string GetSmallCopyPath(string slug)
+        {
+            // The same checks on the slug as the picture's own path.
+            return Path.ChangeExtension(this.GetServiceImagePath(slug), null) + $"-{SmallCopyWidth}.webp";
+        }
+
+        private void SaveSmallCopy(SKBitmap picture, string slug)
+        {
+            var height = (int)Math.Round((double)picture.Height * SmallCopyWidth / picture.Width);
+            using (var small = picture.Resize(new SKImageInfo(SmallCopyWidth, height), SKFilterQuality.High))
+            using (var image = SKImage.FromBitmap(small))
+            using (SKData data = image.Encode(SKEncodedImageFormat.Webp, 80))
+            using (var fileStream = new FileStream(this.GetSmallCopyPath(slug), FileMode.Create, FileAccess.Write))
+            {
+                data.SaveTo(fileStream);
+            }
         }
 
         private void DeleteLegacyImages(string slug)

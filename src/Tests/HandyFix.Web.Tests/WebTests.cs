@@ -134,6 +134,20 @@
             Assert.Contains("/Areas/guildford</loc>", responseContent);
         }
 
+        // The icon font was asked for twice, once with every weight, 1.1 MB on every page; it is
+        // asked for once now, at the one weight the site draws icons at (PROJECT_STATE Section 3cn).
+        [Fact]
+        public async Task PagesAskForTheIconFontOnceAtTheOneWeightTheSiteUses()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/");
+
+            var iconFont = Assert.Single(Regex.Matches(page, "href=\"(https://fonts\\.googleapis\\.com/css2\\?family=Material\\+Symbols[^\"]+)\"")).Groups[1].Value;
+            Assert.Contains("opsz,wght,FILL,GRAD@24,400,0..1,0", iconFont);
+            Assert.EndsWith("display=block", iconFont);
+            Assert.Single(Regex.Matches(page, "family=Outfit"));
+        }
+
         // Every page the sitemap hands a search engine names itself as the page. Only the area
         // pages did (PROJECT_STATE Section 3cm); a page added to the sitemap without a canonical
         // link fails here.
@@ -189,6 +203,61 @@
             response.EnsureSuccessStatusCode();
             var responseContent = await response.Content.ReadAsStringAsync();
             Assert.Contains("/Areas/wimbledon", responseContent);
+        }
+
+        // A file linked with its version in the address may be kept for a year, since a changed file
+        // gets a new address; Bootstrap and jQuery had no stated lifetime (PROJECT_STATE Section 3cn).
+        [Fact]
+        public async Task AVersionedFileIsKeptForAYear()
+        {
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/lib/bootstrap/dist/css/bootstrap.min.css?v=abc");
+            response.EnsureSuccessStatusCode();
+            Assert.Equal(TimeSpan.FromDays(365), response.Headers.CacheControl?.MaxAge);
+            Assert.True(response.Headers.CacheControl?.Public);
+        }
+
+        // A category card shows its picture 88px wide on a phone; with the small copy offered the
+        // browser takes it there and the whole picture on a computer (PROJECT_STATE Section 3cn).
+        [Fact]
+        public async Task CategoryCardsOfferThePicturesSmallCopy()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/Services/plumbing");
+
+            var card = Regex.Match(page, "<img class=\"service-card-thumbnail\" alt=\"Tap Repairs\"[^>]*>").Value;
+            var picture = Regex.Match(card, "src=\"([^\"?]+)").Groups[1].Value;
+            Assert.EndsWith("-hero.webp", picture);
+            Assert.Contains($"srcset=\"{picture[..^".webp".Length]}-320.webp 320w, {picture} 1024w\"", card);
+            Assert.Contains("sizes=\"(max-width: 767.98px) 88px, 256px\"", card);
+        }
+
+        // Every service picture that comes with the site has its small copy; a picture added or
+        // replaced without running tools/image-gen/make-phone-copies.mjs fails here.
+        [Fact]
+        public void EveryServicePictureHasItsSmallCopy()
+        {
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            var folder = Path.Combine(webRoot, "images", "services");
+            var pictures = Directory.GetFiles(folder, "*-hero.webp");
+            Assert.NotEmpty(pictures);
+            Assert.All(pictures, picture => Assert.True(File.Exists(picture[..^".webp".Length] + "-320.webp"), $"{Path.GetFileName(picture)} has no small copy"));
+        }
+
+        // A phone shows a narrow strip from the middle of the home page's main picture and is sent
+        // that strip; the picture itself stays for wider screens and keeps its priority.
+        [Fact]
+        public async Task HomePageSendsAPhoneTheStripOfTheMainPictureItShows()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/");
+
+            var picture = Regex.Match(page, "<picture>.*?</picture>", RegexOptions.Singleline).Value;
+            Assert.Contains("<source media=\"(max-width: 575.98px)\" srcset=\"/images/hero-phone.webp\"", picture);
+            Assert.Matches("<img src=\"/images/hero\\.webp\\?v=[^\"]+\"[^>]*fetchpriority=\"high\"", picture);
+
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            Assert.True(File.Exists(Path.Combine(webRoot, "images", "hero-phone.webp")));
         }
 
         [Fact]
@@ -722,8 +791,7 @@
             Assert.True(response.Headers.CacheControl?.MaxAge >= TimeSpan.FromDays(365));
 
             var css = await response.Content.ReadAsStringAsync();
-            Assert.StartsWith("@import url(", css); // web fonts, which must open the file
-            Assert.Equal(2, Regex.Matches(css, "@import").Count); // and no stylesheet of ours is left as an import
+            Assert.DoesNotContain("@import", css); // the web fonts are linked from the page head, and no stylesheet of ours is an import
             Assert.Contains(".site-logo", css); // a file from the middle of the list
             Assert.Contains(".material-symbols-filled", css); // the last file
         }

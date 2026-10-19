@@ -8,7 +8,12 @@
 <!-- HERO SECTION -->
 <section class="hero-section">
   <div class="hero-bg">
-    <img src="~/images/hero.webp" alt="Plumbing Handyman Surrey" asp-append-version="true" width="1920" height="1072" fetchpriority="high">
+    @* A phone shows a narrow strip from the middle of this picture; it is sent that strip, cut
+       out by tools/image-gen/make-phone-copies.mjs (PROJECT_STATE Section 3cn). *@
+    <picture>
+      <source media="(max-width: 575.98px)" srcset="~/images/hero-phone.webp" width="720" height="1072">
+      <img src="~/images/hero.webp" alt="Plumbing Handyman Surrey" asp-append-version="true" width="1920" height="1072" fetchpriority="high">
+    </picture>
     <div class="hero-bg-overlay"></div>
   </div>
 

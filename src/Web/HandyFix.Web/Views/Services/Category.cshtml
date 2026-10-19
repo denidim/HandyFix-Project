@@ -1,5 +1,7 @@
 @model HandyFix.Web.ViewModels.Services.CategoryViewModel
 @using System.Globalization
+@using HandyFix.Services
+@inject IImageStorageService ImageStorage
 @* Anything written inside a script block below goes through Json.Serialize. Razor's own HTML
    encoding is wrong there: a script block is never HTML-decoded (PROJECT_STATE Section 3bv). *@
 @{
@@ -88,9 +90,16 @@
                         ? $"{(svc.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
                         : $"{svc.EstimatedDurationMinutes} Mins");
 
+                // The card shows its picture 88px wide on a phone and 256px on a computer, from a
+                // picture 1024 wide. With a small copy beside it the browser picks by the screen;
+                // a picture without one is sent whole, as before (PROJECT_STATE Section 3cn).
+                var smallCopy = ImageStorage.GetSmallCopyPublicUrl(svc.ImageUrl);
+
                 <article class="service-horizontal-card group @cardDivisionClass">
                     <a class="service-card-thumbnail-wrapper card-image-link" asp-controller="Services" asp-action="Details" asp-route-categorySlug="@Model.Slug" asp-route-serviceSlug="@svc.Slug" tabindex="-1" aria-hidden="true">
-                        <img class="service-card-thumbnail" alt="@svc.Name" src="@svc.ImageUrl" asp-append-version="true" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
+                        <img class="service-card-thumbnail" alt="@svc.Name" src="@svc.ImageUrl" asp-append-version="true" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src='/images/hero.webp';"
+                             srcset="@(smallCopy == null ? null : $"{smallCopy} {ImageStorageService.SmallCopyWidth}w, {svc.ImageUrl} 1024w")"
+                             sizes="@(smallCopy == null ? null : "(max-width: 767.98px) 88px, 256px")">
                     </a>
                     <div class="service-card-content">
                         <div class="service-card-main-header">

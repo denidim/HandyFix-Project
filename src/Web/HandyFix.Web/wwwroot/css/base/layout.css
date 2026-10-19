@@ -88,3 +88,11 @@ body.page-bg-services-category {
   background-repeat: repeat-y;
   background-color: #f8fafc;
 }
+
+/* Drawn as wide as the screen, so a phone is sent a copy 1080 wide where the picture is 1440:
+   103 KB in place of 495 (tools/image-gen/make-phone-copies.mjs, PROJECT_STATE Section 3cn). */
+@media (max-width: 767.98px) {
+  body.page-bg-services-category {
+    background-image: url('/images/bg-services-category-phone.webp');
+  }
+}

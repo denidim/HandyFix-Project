@@ -42,6 +42,9 @@
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
     <PackageVersion Include="SkiaSharp" Version="2.88.9" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="2.88.9" />
+    <!-- The servers and the pipeline run Linux; without this an uploaded picture cannot be read
+         there (PROJECT_STATE.md Section 3cn). NoDependencies: it needs no fontconfig in the image. -->
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
     <!-- Code analyzers -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <!-- Overrides to patch the NuGet.Packaging vulnerability -->
