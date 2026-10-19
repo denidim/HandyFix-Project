@@ -399,6 +399,34 @@
             }
         }
 
+        // On a laptop the admin menu shows its icons alone, and each name comes up on hover from
+        // the link's title (PROJECT_STATE.md Section 3cq). A link added without one would be an
+        // icon nobody can name.
+        [Fact]
+        public async Task EveryLinkInTheAdminMenuCarriesItsNameForTheFoldedMenu()
+        {
+            var browser = this.server.CreateClient();
+            await FormsWebTests.PostFormAsync(browser, "/Identity/Account/Login", new Dictionary<string, string>
+            {
+                ["Input.Email"] = SqliteWebApplicationFactory.AdminEmail,
+                ["Input.Password"] = SqliteWebApplicationFactory.AdminPassword,
+            });
+
+            var content = await (await browser.GetAsync("/Administration/Dashboard")).Content.ReadAsStringAsync();
+            MatchCollection links = Regex.Matches(content, "<a class=\"admin-nav-link\"[^>]*>.*?</a>", RegexOptions.Singleline);
+
+            Assert.Equal(8, links.Count);
+            foreach (Match link in links)
+            {
+                var title = Regex.Match(link.Value, "title=\"([^\"]+)\"").Groups[1].Value;
+                var label = Regex.Match(link.Value, "<span class=\"admin-nav-label\">([^<]+)</span>").Groups[1].Value;
+                Assert.NotEmpty(title);
+                Assert.Equal(title, label);
+            }
+
+            Assert.Contains("aria-controls=\"admin-sidebar\"", content);
+        }
+
         [Theory]
         [MemberData(nameof(PublicPages))]
         public async Task PublicPagesLinkTheRealContactDetailsAndNeverThePlaceholderNumber(string url)

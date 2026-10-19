@@ -24,8 +24,30 @@ document.addEventListener("DOMContentLoaded", function () {
     const adminToggleBtn = document.getElementById('admin-sidebar-btn');
     const adminSidebar = document.querySelector('.admin-sidebar');
     if (adminToggleBtn && adminSidebar) {
+        const setAdminMenu = function (open) {
+            adminSidebar.classList.toggle('open', open);
+            adminToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            adminToggleBtn.setAttribute('aria-label', open ? 'Close the menu' : 'Open the menu');
+        };
+
         adminToggleBtn.addEventListener('click', function () {
-            adminSidebar.classList.toggle('open');
+            setAdminMenu(!adminSidebar.classList.contains('open'));
+        });
+
+        // The open menu lies over the page and over its own button, so a click anywhere else
+        // closes it, and so does Escape.
+        document.addEventListener('click', function (event) {
+            if (adminSidebar.classList.contains('open')
+                && !adminSidebar.contains(event.target)
+                && !adminToggleBtn.contains(event.target)) {
+                setAdminMenu(false);
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && adminSidebar.classList.contains('open')) {
+                setAdminMenu(false);
+                adminToggleBtn.focus();
+            }
         });
     }
 

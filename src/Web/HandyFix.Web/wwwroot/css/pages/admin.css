@@ -1081,6 +1081,57 @@
   background-color: var(--secondary);
 }
 
+/* Laptops: the menu folds to its icons. At 1280px and 1366px the job list ran 150px and 64px
+   past its box beside the full menu; folded, it gives the page 188px back (PROJECT_STATE.md
+   Section 3cq). Each name shows on hover (the link's title) and stays in the page for a screen
+   reader. The menu button opens the whole menu over the page: it keeps its folded width in the
+   row (the negative margin), so nothing beside it moves. */
+@media (min-width: 769px) and (max-width: 1535.98px) {
+  .admin-sidebar {
+    position: relative;
+    width: 72px;
+  }
+
+  .admin-sidebar:not(.open) .admin-sidebar-header {
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* The shield alone: the emblem is the left 490 of the logo's 1560 units. */
+  .admin-sidebar:not(.open) .admin-sidebar-header .site-logo {
+    height: 46px;
+    width: 42px;
+    overflow: hidden;
+  }
+
+  .admin-sidebar:not(.open) .admin-nav-link {
+    justify-content: center;
+    padding: var(--spacing-3);
+  }
+
+  .admin-sidebar:not(.open) .admin-nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .admin-sidebar.open {
+    width: 260px;
+    margin-right: -188px;
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* Wide screens show the whole menu, so the button that opens it has nothing to do. */
+@media (min-width: 1536px) {
+  .admin-sidebar-toggle {
+    display: none;
+  }
+}
+
 /* Mobile Sidebar Drawer Overlay */
 @media (max-width: 768px) {
   .admin-sidebar {

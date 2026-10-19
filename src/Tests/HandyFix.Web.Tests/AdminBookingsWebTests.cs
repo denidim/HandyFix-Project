@@ -949,7 +949,7 @@
             // On a phone the button beside the arrow has no plus, which reached the arrow.
             Assert.Matches("d-none d-md-inline-block\">add</span>\\s*<span>Write a job in</span>", page);
 
-            Assert.Matches("Jobs\\s*</a>\\s*<a\\b[^>]*href=\"/Administration/Calendar\"", page);
+            Assert.Matches(">Jobs</span>\\s*</a>\\s*<a\\b[^>]*href=\"/Administration/Calendar\"", page);
         }
 
         // "Unblock" in the admin calendar did nothing: it called the method that frees a slot
