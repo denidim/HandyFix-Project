@@ -66,7 +66,11 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/handyfix/deploy
-            docker compose -f docker-compose.staging.yml pull
+
+            # Only the site's own image, which this run has just pushed. Caddy's
+            # comes from Docker Hub, and asking it at every deploy let a Docker Hub
+            # outage fail one; the copy already on the server is used.
+            docker compose -f docker-compose.staging.yml pull web
             docker compose -f docker-compose.staging.yml up -d
 
             # Caddy reads its Caddyfile when it starts, so one that has just been

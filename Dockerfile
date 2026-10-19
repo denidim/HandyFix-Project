@@ -1,6 +1,8 @@
-# syntax=docker/dockerfile:1
-
 # ---- Build stage ----
+# Read by the builder's own Dockerfile reader. A "syntax" line at the top made
+# every build fetch a newer reader from Docker Hub first, which nothing here
+# needs, and a Docker Hub outage failed a deploy that way (PROJECT_STATE.md
+# Section 3cp). The base images are Microsoft's and come from mcr.microsoft.com.
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
