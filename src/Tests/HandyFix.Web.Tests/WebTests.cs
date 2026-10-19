@@ -205,6 +205,18 @@
             Assert.Contains("/Areas/wimbledon", responseContent);
         }
 
+        // A file linked with its version in the address may be kept for a year, since a changed file
+        // gets a new address; Bootstrap and jQuery had no stated lifetime (PROJECT_STATE Section 3cn).
+        [Fact]
+        public async Task AVersionedFileIsKeptForAYear()
+        {
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync("/lib/bootstrap/dist/css/bootstrap.min.css?v=abc");
+            response.EnsureSuccessStatusCode();
+            Assert.Equal(TimeSpan.FromDays(365), response.Headers.CacheControl?.MaxAge);
+            Assert.True(response.Headers.CacheControl?.Public);
+        }
+
         // A category card shows its picture 88px wide on a phone; with the small copy offered the
         // browser takes it there and the whole picture on a computer (PROJECT_STATE Section 3cn).
         [Fact]

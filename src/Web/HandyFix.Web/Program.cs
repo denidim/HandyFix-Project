@@ -297,9 +297,17 @@ namespace HandyFix.Web
                 // Site images get replaced in place under the same file name (PROJECT_STATE Section 3bd).
                 // With no Cache-Control, browsers cached them heuristically and kept showing the old
                 // pictures; "no-cache" makes them re-check every time (a cheap 304 when unchanged).
+                // A file asked for with "?v=" (asp-append-version) is the other way round: that value
+                // is a hash of the file, so a changed file has a new address, and a browser may keep
+                // this one for a year (PROJECT_STATE Section 3cn). Bootstrap and jQuery had no stated
+                // lifetime at all, so each browser guessed one.
                 OnPrepareResponse = context =>
                 {
-                    if (context.Context.Request.Path.StartsWithSegments("/images"))
+                    if (context.Context.Request.Query.ContainsKey("v"))
+                    {
+                        context.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+                    }
+                    else if (context.Context.Request.Path.StartsWithSegments("/images"))
                     {
                         context.Context.Response.Headers.CacheControl = "no-cache";
                     }
