@@ -205,6 +205,42 @@
             Assert.Contains("/Areas/wimbledon", responseContent);
         }
 
+        // A screen reader user moves through a page by its headings; a heading two levels below the
+        // one before it reads as a section gone missing. Each of these skipped a level somewhere,
+        // the footer's titles on every page (PROJECT_STATE Section 3co).
+        [Theory]
+        [InlineData("/")]
+        [InlineData("/Booking")]
+        [InlineData("/Services/plumbing")]
+        public async Task HeadingsNeverSkipALevel(string url)
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync(url);
+            var markup = Regex.Replace(page, "<script\\b.*?</script>", string.Empty, RegexOptions.Singleline);
+
+            var previous = 0;
+            foreach (Match heading in Regex.Matches(markup, "<h([1-6])\\b[^>]*>(.*?)</h\\1>", RegexOptions.Singleline))
+            {
+                var level = int.Parse(heading.Groups[1].Value);
+                Assert.True(level <= previous + 1, $"h{level} \"{Regex.Replace(heading.Groups[2].Value, "<[^>]+>|\\s+", " ").Trim()}\" follows an h{previous}");
+                previous = level;
+            }
+        }
+
+        // The cookie banner's button was named "Close" for a screen reader while it reads "Accept",
+        // and its link said "Learn More" without saying of what (PROJECT_STATE Section 3co).
+        [Fact]
+        public async Task CookieBannerSaysWhatItsButtonAndLinkDo()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/");
+
+            var banner = Regex.Match(page, "<div id=\"cookieConsent\".*?</div>", RegexOptions.Singleline).Value;
+            Assert.Contains(">Read our Cookie Policy</a>", banner);
+            Assert.DoesNotContain("aria-label", banner);
+            Assert.Matches("<button[^>]*accept-policy[^>]*>\\s*Accept\\s*</button>", banner);
+        }
+
         // A file linked with its version in the address may be kept for a year, since a changed file
         // gets a new address; Bootstrap and jQuery had no stated lifetime (PROJECT_STATE Section 3cn).
         [Fact]

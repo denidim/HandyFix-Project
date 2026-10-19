@@ -41,7 +41,7 @@
 }
 
 .btn-success {
-  background-color: var(--success);
+  background-color: var(--success-strong);
   color: var(--on-primary);
 }
 

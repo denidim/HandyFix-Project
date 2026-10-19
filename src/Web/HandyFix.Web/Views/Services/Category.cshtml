@@ -82,6 +82,9 @@
     <div class="category-main-layout">
         <!-- Services List -->
         <div class="services-list-container">
+            @* The cards' titles are h3s straight after the page's h1; a screen reader moving by
+               headings meets this one first (PROJECT_STATE Section 3co). *@
+            <h2 class="visually-hidden">@Model.Name services</h2>
             @foreach (var svc in Model.Services)
             {
                 var duration = isBuilding 

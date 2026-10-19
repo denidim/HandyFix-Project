@@ -102,11 +102,11 @@
                                 <div class="custom-calendar-card">
                                     <div class="calendar-header">
                                         <button type="button" class="calendar-nav-btn" id="cal-prev-month" aria-label="Previous Month">
-                                            <span class="material-symbols-outlined">chevron_left</span>
+                                            <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
                                         </button>
-                                        <h4 class="calendar-month-title" id="cal-month-year">Month Year</h4>
+                                        <h3 class="calendar-month-title" id="cal-month-year">Month Year</h3>
                                         <button type="button" class="calendar-nav-btn" id="cal-next-month" aria-label="Next Month">
-                                            <span class="material-symbols-outlined">chevron_right</span>
+                                            <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
                                         </button>
                                     </div>
                                     <div class="calendar-days-header">
@@ -532,6 +532,7 @@
 
                     if (cellDateObj < today) {
                         cell.classList.add("disabled");
+                        cell.disabled = true;
                     } else {
                         if (cellDateObj.getTime() === today.getTime()) {
                             cell.classList.add("today");
