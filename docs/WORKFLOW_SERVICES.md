@@ -121,6 +121,7 @@ booking/enquiry customer photo uploads (`ImageService`/`ICloudflareR2Service`, c
 | Resize | only if source width > **1920px** — resized to 1920 wide, proportional height |
 | Encode | always WebP, quality **80** |
 | Output path | `wwwroot/images/services/{slug}-hero.webp` (always, regardless of input format) |
+| Small copy | `{slug}-hero-320.webp`, 320 wide, written with every upload and deleted or renamed with the picture; a category page's card sends it to a phone (`GetSmallCopyPublicUrl`). The pictures that come with the site get theirs from `tools/image-gen/make-phone-copies.mjs`, and a test fails if one has none (`PROJECT_STATE.md` Section 3cn) |
 | Legacy cleanup | `DeleteLegacyImages` removes any leftover `{slug}-hero.jpg/.jpeg/.png` after a successful WebP write |
 | Slug validation | rejects empty slugs, `..`, or invalid filename characters before touching disk |
 

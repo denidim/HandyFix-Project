@@ -205,6 +205,49 @@
             Assert.Contains("/Areas/wimbledon", responseContent);
         }
 
+        // A category card shows its picture 88px wide on a phone; with the small copy offered the
+        // browser takes it there and the whole picture on a computer (PROJECT_STATE Section 3cn).
+        [Fact]
+        public async Task CategoryCardsOfferThePicturesSmallCopy()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/Services/plumbing");
+
+            var card = Regex.Match(page, "<img class=\"service-card-thumbnail\" alt=\"Tap Repairs\"[^>]*>").Value;
+            var picture = Regex.Match(card, "src=\"([^\"?]+)").Groups[1].Value;
+            Assert.EndsWith("-hero.webp", picture);
+            Assert.Contains($"srcset=\"{picture[..^".webp".Length]}-320.webp 320w, {picture} 1024w\"", card);
+            Assert.Contains("sizes=\"(max-width: 767.98px) 88px, 256px\"", card);
+        }
+
+        // Every service picture that comes with the site has its small copy; a picture added or
+        // replaced without running tools/image-gen/make-phone-copies.mjs fails here.
+        [Fact]
+        public void EveryServicePictureHasItsSmallCopy()
+        {
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            var folder = Path.Combine(webRoot, "images", "services");
+            var pictures = Directory.GetFiles(folder, "*-hero.webp");
+            Assert.NotEmpty(pictures);
+            Assert.All(pictures, picture => Assert.True(File.Exists(picture[..^".webp".Length] + "-320.webp"), $"{Path.GetFileName(picture)} has no small copy"));
+        }
+
+        // A phone shows a narrow strip from the middle of the home page's main picture and is sent
+        // that strip; the picture itself stays for wider screens and keeps its priority.
+        [Fact]
+        public async Task HomePageSendsAPhoneTheStripOfTheMainPictureItShows()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/");
+
+            var picture = Regex.Match(page, "<picture>.*?</picture>", RegexOptions.Singleline).Value;
+            Assert.Contains("<source media=\"(max-width: 575.98px)\" srcset=\"/images/hero-phone.webp\"", picture);
+            Assert.Matches("<img src=\"/images/hero\\.webp\\?v=[^\"]+\"[^>]*fetchpriority=\"high\"", picture);
+
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            Assert.True(File.Exists(Path.Combine(webRoot, "images", "hero-phone.webp")));
+        }
+
         [Fact]
         public async Task SiteImagesShouldTellBrowsersToRevalidate()
         {

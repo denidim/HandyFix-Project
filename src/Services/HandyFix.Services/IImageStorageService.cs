@@ -14,5 +14,11 @@ namespace HandyFix.Services
         bool ServiceImageExists(string slug);
 
         string GetServiceImagePublicUrl(string slug);
+
+        /// <summary>
+        /// The address of a service picture's small copy, for a page that shows the picture small;
+        /// null when the picture has none, and the page sends the picture itself.
+        /// </summary>
+        string GetSmallCopyPublicUrl(string imageUrl);
     }
 }
