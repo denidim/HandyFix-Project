@@ -77,6 +77,9 @@ Both are built as HTML, so everything the sender typed is encoded on its way in
 (`EmailText.Encode`). Both go through `TrySendEmailAsync`: a send that fails is logged
 (`Email not sent: enquiry notice to the company`) and does not throw, because the enquiry is
 already in this list and the visitor should not see an error for something that was received.
+Since `PROJECT_STATE.md` Section 3cq a failed send is also kept with the enquiry: its page shows a
+yellow note naming which email did not go, and the admin dashboard lists it for a week with a
+link here. That is how the company hears of an enquiry whose notice never came.
 What still fails loudly is a missing `Brevo:ApiKey` outside Development: the email sender cannot
 be created at all, and since `HomeController` needs the enquiries service, every page it serves
 fails until the key is set. That is deliberate, and a start-up check on a new environment.
@@ -129,9 +132,9 @@ table, hidden. They exist in development and staging databases only; production 
 
 Uploaded enquiry photos go through the same `ImageService`/`ICloudflareR2Service` pipeline as
 booking problem-photos — raw upload to Cloudflare R2, **no** WebP conversion, capped at 5 files ×
-15MB each. This is a different system from the local-disk `ImageStorageService` pipeline that
-handles service hero images — see `WORKFLOW_SERVICES.md` Step 3 if you need the contrast in more
-detail. Each accepted image becomes its own `InquiryImage` row (`ImageUrl` + the parent `InquiryId`).
+15MB each. Service pictures go to the same bucket since `PROJECT_STATE.md` Section 3cq, but
+through `ImageStorageService`, which converts them to WebP and makes a small copy — see
+`WORKFLOW_SERVICES.md` Step 3 if you need the contrast in more detail. Each accepted image becomes its own `InquiryImage` row (`ImageUrl` + the parent `InquiryId`).
 
 ---
 
@@ -143,7 +146,7 @@ detail. Each accepted image becomes its own `InquiryImage` row (`ImageUrl` + the
 | Looking for a way to mark an enquiry as handled | Doesn't exist. `Inquiry` has no status field; track responses outside the app. |
 | An enquiry has no photos even though the customer said they attached some | Storage could not be reached when it was sent. The enquiry is saved without them, the notice email says "Photos attached but not saved: N", and the customer was told on the thank-you. Ask for them again. |
 | A customer's photos were refused on the form | More than 5, one over 15 MB, or a file that is not JPEG, PNG or WEBP. The form comes back with the reason and everything they typed. |
-| The company inbox got no notice for an enquiry that is in the list | The send failed. Look in the application log for `Email not sent`; the usual causes are a sender address Brevo has not verified, or a wrong API key. |
+| The company inbox got no notice for an enquiry that is in the list | The send failed; the enquiry's page and the dashboard say so. For why, look in the application log for `Email not sent`; the usual causes are a sender address Brevo has not verified, or a wrong API key. |
 
 ---
 

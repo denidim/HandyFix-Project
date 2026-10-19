@@ -258,7 +258,9 @@ street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
   paid, to the customer`) and carries on. Before `PROJECT_STATE.md` Section 3cb a failed send
   showed the customer an error page on the way back from paying. The paid-deposit notice to the
   company has the customer as its Reply-To. When the technician email fails, the admin's page
-  says so (step 3).
+  says so (step 3). Since `PROJECT_STATE.md` Section 3cq every one of them that fails, the notice
+  of money for a booking not held too, leaves a line in the job's history and is listed on the
+  admin dashboard for a week, with a link to the job (`WORKFLOW_EMAIL.md`).
 - **One reference, eight characters.** A booking's id is 36 characters; wherever a person reads
   it (both emails' "Booking Reference", the customer's confirmation page, the admin list and
   page, the Stripe payment line) it is the first eight in capitals, `#A7C30F12`, from
@@ -504,7 +506,7 @@ job made before this has no lines for what happened before.
 | The customer of a written-in job got no email | None is ever sent for a written-in job, whatever is on it. |
 | A moved website booking's new hour is still on sale | The calendar had no free slot at that time (none exists there, or it was blocked or taken). The page said so when it was moved. Block it by hand if it should be. |
 | The customer says no email named their technician | None is sent until a technician is picked on the booking's page. If one was picked and the page answered "the email to the customer could not be sent", tell the customer yourself and see the next row. |
-| A customer says no email arrived | Look in the application log for `Email not sent`. The booking itself is unaffected; the usual causes are a sender address Brevo has not verified, or a wrong API key. |
+| A customer says no email arrived | The job's history says if it could not be sent, and so does the dashboard for a week. The booking itself is unaffected. For why, look in the application log for `Email not sent`; the usual causes are a sender address Brevo has not verified, or a wrong API key. |
 | A slot is stuck as booked with no real customer | Wait up to 5 minutes for the cleanup sweep, or Release it manually on the Calendar. |
 | A customer in our area is told "we don't take online bookings for KT21 yet" | No service area lists that district. Add it to the nearest area's Postcode Districts at `/Administration/ServiceAreas`. |
 | The Proceed to Payment button stays grey | A field is empty, the description is under 20 characters, or the postcode is outside the districts we cover (its notice says so). |
