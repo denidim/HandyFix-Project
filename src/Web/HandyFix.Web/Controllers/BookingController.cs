@@ -100,6 +100,10 @@ namespace HandyFix.Web.Controllers
 
                 this.ViewData["MetaDescription"] = "Book a plumbing or handyman appointment online across Surrey and South London. Pick a service, choose an available slot, and secure it with a deposit.";
 
+                // Without the link's category, date and service: every one of those links shows
+                // the same page, and this is the address the sitemap gives for it.
+                this.ViewData["Canonical"] = this.Url.Action("Index", "Booking", null, this.Request.Scheme);
+
                 return this.View(model);
             }
             catch (Exception ex)

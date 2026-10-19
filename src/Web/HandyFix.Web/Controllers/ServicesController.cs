@@ -43,6 +43,7 @@ namespace HandyFix.Web.Controllers
         public async Task<IActionResult> Index()
         {
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            this.ViewData["Canonical"] = this.Url.Action("Index", "Services", null, this.Request.Scheme);
             return this.View(categories);
         }
 
@@ -69,6 +70,7 @@ namespace HandyFix.Web.Controllers
 
             this.ViewData["Title"] = "Pricing";
             this.ViewData["MetaDescription"] = "Transparent, up-front hourly pricing for plumbing and handyman services across Surrey and South London, including Chessington, Cobham, and Epsom. No hidden fees.";
+            this.ViewData["Canonical"] = this.Url.Action("Pricing", "Services", null, this.Request.Scheme);
 
             return this.View(model);
         }
@@ -91,6 +93,10 @@ namespace HandyFix.Web.Controllers
 
             this.ViewData["Title"] = $"{category.Name} Services";
             this.ViewData["MetaDescription"] = $"Professional {category.Name.ToLower()} services operating across Surrey and South London, including Chessington, Cobham, Esher, and Kingston. Book your service online.";
+
+            // From the slug in the database, not the one in the address: routes match whatever the
+            // letter case, and /services/PLUMBING has to name /Services/plumbing as the page.
+            this.ViewData["Canonical"] = this.Url.RouteUrl("ServiceCategory", new { categorySlug = category.Slug }, this.Request.Scheme);
 
             return this.View(category);
         }
@@ -118,6 +124,7 @@ namespace HandyFix.Web.Controllers
             this.ViewData["MetaDescription"] = isBuildingService
                 ? $"Need {service.Name.ToLower()} in Surrey or South London? Free on-site survey and a fixed quote before any work begins. Request your quote today."
                 : $"Need {service.Name.ToLower()} in Surrey or South London? Certified plumbers and handymen, transparent pricing starting from £{service.BasePrice}. Book a slot now.";
+            this.ViewData["Canonical"] = this.Url.RouteUrl("ServiceDetails", new { categorySlug = service.CategorySlug, serviceSlug = service.Slug }, this.Request.Scheme);
 
             return this.View(service);
         }

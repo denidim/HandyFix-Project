@@ -15,6 +15,7 @@
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.Services;
 
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -157,7 +158,14 @@
                 new Mock<IImageService>().Object,
                 new Mock<IFormGuard>().Object,
                 configuration,
-                NullLogger<HomeController>.Instance);
+                NullLogger<HomeController>.Instance)
+            {
+                // Both pages name their own address for search engines, which needs a request and
+                // the site's routes. With no routes here the address comes back empty; WebTests
+                // checks the real ones.
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+                Url = Mock.Of<IUrlHelper>(),
+            };
         }
     }
 }
