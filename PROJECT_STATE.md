@@ -2868,6 +2868,11 @@ Launch Sprint L4 item 21, which the developer called important. Read on the live
 - **A local run in a browser** (Chromium, 23 addresses): every page answers `200` with its heading and names the address expected, including the five other ways in above; every JSON-LD block reads as JSON; no console errors.
 - **Staging, after the push**: the pipeline green; the same 23 addresses in a browser with the same answers, each canonical link on staging's own `https://` address; no error in the web log since the deploy.
 - **schema.org's own validator** (`validator.schema.org`), given staging's plumbing page and Tap Repairs page with staging's address swapped for the real domain: no errors and no warnings on either. It read the category page as a breadcrumb trail and a `Service` holding the company, 15 areas and an `OfferCatalog` of 13 services. Google's Rich Results Test fetches a page itself, which the password stops; schema.org's validator takes the page's code.
+- **The live site, after the merge**: the same 23 addresses, each naming its address on `https://plumbing-handyman-surrey.co.uk`; the sitemap lists 68.
+
+### Found on the live site after the merge, and changed
+
+- **Fifteen console errors on every category page and on `/Areas`, on the live site only.** Cloudflare's "Email Address Obfuscation", on by its default for the zone, hid `info@` in the HTML and put it back with a script of its own. That script reads every link on the page as text, and the 15 area links inside the coverage map are SVG links, whose address is not text. Visitors saw the right address; the errors would have counted against the Lighthouse score. Staging is not behind Cloudflare and never showed them. The setting was switched off for the zone on 2026-10-19 with the developer's yes: the address is public already, on the site and in this repository. Afterwards no console errors on the plumbing page and on Contact, and the `info@` links there read and open as before.
 
 ---
 
