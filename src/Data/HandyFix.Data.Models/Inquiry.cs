@@ -14,6 +14,7 @@
         {
             this.Id = Guid.NewGuid();
             this.Images = new HashSet<InquiryImage>();
+            this.EmailsNotSent = new HashSet<EmailNotSent>();
         }
 
         [Required(ErrorMessage = "The {0} field is required.")]
@@ -37,5 +38,7 @@
         public string Message { get; set; } = null!;
 
         public virtual ICollection<InquiryImage> Images { get; set; }
+
+        public virtual ICollection<EmailNotSent> EmailsNotSent { get; set; }
     }
 }

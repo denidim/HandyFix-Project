@@ -371,6 +371,38 @@ namespace HandyFix.Services.Data.Tests
                 Times.Once);
         }
 
+        // Each email that does not go is kept with the enquiry, for its page and the dashboard
+        // (PROJECT_STATE.md Section 3cq); one that goes leaves nothing.
+        [Fact]
+        public async Task CreateInquiryAsyncShouldKeepEachEmailThatCouldNotBeSent()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            var emailSender = new Mock<IEmailSender>();
+            emailSender
+                .Setup(x => x.SendEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<IEnumerable<EmailAttachment>>(),
+                    It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("Brevo email send failed (500)"));
+            var model = new ContactInputModel { Name = "Jane Doe", Email = "jane@example.com", PhoneNumber = "07700 900123", Message = "Kitchen tap is dripping." };
+
+            await BuildService(dbContext, emailSender: emailSender).CreateInquiryAsync(model, new List<string>());
+            await BuildService(dbContext).CreateInquiryAsync(new ContactInputModel { Name = "John Roe", Email = "john@example.com", PhoneNumber = "07700 900456", Message = "The bath taps both drip." }, new List<string>());
+
+            Inquiry failed = dbContext.Inquiries.Single(x => x.Name == "Jane Doe");
+            Assert.Equal(
+                new[] { "The acknowledgement, to the sender", "The notice to the company" },
+                dbContext.EmailsNotSent.Where(x => x.InquiryId == failed.Id).Select(x => x.What).OrderBy(x => x));
+            Assert.Equal(2, dbContext.EmailsNotSent.Count());
+
+            EnquiryViewModel page = await BuildService(dbContext).GetByIdAsync<EnquiryViewModel>(failed.Id);
+            Assert.Equal(2, page.EmailsNotSent.Count());
+        }
+
         // Storage out of reach no longer loses the enquiry (HomeController saves it without its
         // photos). The notice says photos were attached and lost, so someone can ask again.
         [Fact]
@@ -444,6 +476,28 @@ namespace HandyFix.Services.Data.Tests
             // Another enquiry and its photo are not touched.
             Assert.Single(dbContext.Inquiries.Where(x => x.Id == other.Id));
             Assert.Single(dbContext.InquiryImages.Where(x => x.InquiryId == other.Id));
+        }
+
+        // The record of an email about the enquiry that did not go is deleted with it, by the
+        // database's own cascade, the one the context sets (PROJECT_STATE.md Section 3cq). On
+        // Sqlite, because a row left pointing at the enquiry would stop the delete there.
+        [Fact]
+        public async Task DeleteAsyncShouldTakeTheRecordOfEmailsNotSentWithIt()
+        {
+            using var connection = new SqliteConnection("DataSource=:memory:");
+            using ApplicationDbContext dbContext = SqliteContext(connection);
+            Inquiry inquiry = await AddInquiryWithPhotosAsync(dbContext);
+            Inquiry other = await AddInquiryWithPhotosAsync(dbContext, "https://photos.example/inquiries/other.jpg");
+            dbContext.EmailsNotSent.AddRange(
+                new EmailNotSent { What = "The notice to the company", InquiryId = inquiry.Id },
+                new EmailNotSent { What = "The notice to the company", InquiryId = other.Id });
+            await dbContext.SaveChangesAsync();
+            dbContext.ChangeTracker.Clear();
+
+            await BuildService(dbContext).DeleteAsync(inquiry.Id);
+
+            Assert.Empty(dbContext.Inquiries.IgnoreQueryFilters().Where(x => x.Id == inquiry.Id));
+            Assert.Equal(new Guid?[] { other.Id }, dbContext.EmailsNotSent.Select(x => x.InquiryId).ToArray());
         }
 
         [Fact]

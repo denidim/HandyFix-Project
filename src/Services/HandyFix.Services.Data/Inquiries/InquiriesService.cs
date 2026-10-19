@@ -90,8 +90,26 @@ namespace HandyFix.Services.Data.Inquiries
 
             // After the save, never before it: the enquiry is what matters, and it is in the
             // admin list whether or not an email gets out.
-            await this.NotifyTheCompanyAsync(inquiry, imageUrls, model.PhotosNotSaved);
-            await this.AcknowledgeToTheSenderAsync(inquiry);
+            var companyTold = await this.NotifyTheCompanyAsync(inquiry, imageUrls, model.PhotosNotSaved);
+            var senderTold = await this.AcknowledgeToTheSenderAsync(inquiry);
+
+            // An email that did not go is kept with the enquiry: its page says so, and the
+            // dashboard lists it, which is how the company hears of an enquiry whose notice never
+            // came (PROJECT_STATE.md Section 3cq).
+            if (!companyTold)
+            {
+                inquiry.EmailsNotSent.Add(new EmailNotSent { What = "The notice to the company" });
+            }
+
+            if (!senderTold)
+            {
+                inquiry.EmailsNotSent.Add(new EmailNotSent { What = "The acknowledgement, to the sender" });
+            }
+
+            if (!companyTold || !senderTold)
+            {
+                await this.inquiryRepository.SaveChangesAsync();
+            }
         }
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(
@@ -178,7 +196,7 @@ namespace HandyFix.Services.Data.Inquiries
         // To the company's one inbox, so an enquiry is seen without anyone opening the admin
         // panel. Its Reply-To is the sender's address: pressing Reply answers them, not the site.
         // Everything the sender typed is encoded before it goes into the HTML.
-        private async Task NotifyTheCompanyAsync(Inquiry inquiry, IReadOnlyList<string> imageUrls, int photosNotSaved)
+        private async Task<bool> NotifyTheCompanyAsync(Inquiry inquiry, IReadOnlyList<string> imageUrls, int photosNotSaved)
         {
             var isApplication = IsJobApplication(inquiry);
             var what = isApplication ? "job application" : "enquiry";
@@ -215,7 +233,7 @@ namespace HandyFix.Services.Data.Inquiries
                 + EmailLayout.Advice($"&#128161; <strong>Quick Reply:</strong> Simply press <strong>Reply</strong> in your email app to reply directly to {name}.")
                 + EmailLayout.Button("&#9881;&#65039; View Enquiries in Admin Panel", $"{EmailSettings.SiteUrl(this.configuration)}/Administration/Enquiries"));
 
-            await this.emailSender.TrySendEmailAsync(
+            return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 $"{what} notice to the company",
                 EmailSettings.SystemFromAddress(this.configuration),
@@ -230,7 +248,7 @@ namespace HandyFix.Services.Data.Inquiries
         // nothing they typed, not even their name: anyone can put any address into a public form,
         // and an email that echoed the form back would let the site be used to send a stranger
         // whatever text a bot chose, from the business's own domain.
-        private async Task AcknowledgeToTheSenderAsync(Inquiry inquiry)
+        private async Task<bool> AcknowledgeToTheSenderAsync(Inquiry inquiry)
         {
             var isApplication = IsJobApplication(inquiry);
             var what = isApplication ? "application" : "enquiry";
@@ -249,7 +267,7 @@ namespace HandyFix.Services.Data.Inquiries
                 + EmailLayout.WhatsAppButton("Message Us on WhatsApp")
                 + EmailLayout.SmallPrint($"If you did not submit an {what} on our website, you can safely disregard this email."));
 
-            await this.emailSender.TrySendEmailAsync(
+            return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 $"{what} acknowledgement to the sender",
                 EmailSettings.BookingsFromAddress(this.configuration),

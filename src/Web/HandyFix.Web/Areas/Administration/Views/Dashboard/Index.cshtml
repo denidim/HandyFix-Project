@@ -1,5 +1,6 @@
 @model HandyFix.Web.ViewModels.Administration.Dashboard.IndexViewModel
 @using HandyFix.Common
+@using HandyFix.Web.ViewModels.Administration.Dashboard
 @{
     this.ViewData["Title"] = "Dashboard Overview";
 
@@ -15,6 +16,39 @@
     </div>
     <span class="d-none d-md-inline font-label-sm font-bold text-on-surface">@today.ToString("dddd, dd MMM")</span>
 </div>
+
+@* An email the site could not send in the last week, each with the job or enquiry it was about.
+   Shown only when there is one. Until PROJECT_STATE.md Section 3cq a failed email was a line in
+   the server's log: nobody knew to tell a customer another way, or that a notice never came. *@
+@{
+    var emailsNotSent = Model.EmailsNotSent.ToList();
+}
+@if (emailsNotSent.Count > 0)
+{
+    <section class="alert alert-warning mb-5" id="emails-not-sent" aria-labelledby="emails-not-sent-title">
+        <h2 class="font-headline-sm mb-2" id="emails-not-sent-title">
+            @(emailsNotSent.Count == 1 ? "1 email" : $"{emailsNotSent.Count} emails") did not go out in the last @IndexViewModel.EmailsNotSentDays days
+        </h2>
+        <p class="mb-3">Open each one. If the email was for a customer, contact them another way.</p>
+        <ul class="mb-0 ps-3">
+            @foreach (var email in emailsNotSent)
+            {
+                <li class="mb-1">
+                    <span class="font-bold">@UkTime.FromUtc(email.CreatedOn).ToString("ddd d MMM, HH:mm")</span>
+                    &middot; @email.What &middot;
+                    @if (email.BookingId.HasValue)
+                    {
+                        <a class="alert-link" asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@email.BookingId">Job #@BookingReference.Short(email.BookingId.Value), @NameFormat.Full(email.CustomerFirstName, email.CustomerLastName)</a>
+                    }
+                    else if (email.InquiryId.HasValue)
+                    {
+                        <a class="alert-link" asp-area="Administration" asp-controller="Enquiries" asp-action="Details" asp-route-id="@email.InquiryId">Enquiry from @email.InquiryName</a>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+}
 
 <!-- Every figure here is counted from the database, and every card opens the list it counts.
      Nothing on this page is fixed text standing in for a figure (PROJECT_STATE.md Section 3ch). -->
