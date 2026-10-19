@@ -119,11 +119,19 @@ key`.
 
 ### In the page
 
+- **Cloudflare's script is fetched on the form's first touch, not with the page** (Section 3cq).
+  The `_FormGuard` partial writes only the widget's box, with its settings as `data-*`
+  attributes. `site.js` waits for the first press, focus or typing inside a form that holds one,
+  then loads `api.js?render=explicit` and draws each widget from its box. Fetched with the page, the
+  check made 8 to 13 requests, about 800 KB, on every load of the booking page, and held its phone
+  score down. Nobody can send a form without touching it, so the check is always under way by
+  then.
 - The widget takes its full shape up to 400px wide. Where the inside of a form is narrower than
   the 300px that shape needs (the Contact and Join forms on a phone), the partial asks for the
   compact one before Cloudflare's script draws it.
 - `site.js` holds a form that is sent before the token is there and shows the hint under the
-  widget, so the visitor is not sent round a failed submission for being quick.
+  widget, so the visitor is not sent round a failed submission for being quick. A form sent as
+  the very first thing anyone does on the page also starts the check from there.
 - A token lasts five minutes and can be used once. The widget renews it by itself, and a form that
   comes back from the server gets a new widget and a new token.
 

@@ -25,10 +25,14 @@ namespace HandyFix.Web.ViewModels.Administration.Enquiries
 
         public IEnumerable<string> ImageUrls { get; set; }
 
+        // The emails about this enquiry that the site could not send (PROJECT_STATE.md Section 3cq).
+        public IEnumerable<string> EmailsNotSent { get; set; }
+
         public void CreateMappings(TypeAdapterConfig config)
         {
             config.NewConfig<Inquiry, EnquiryViewModel>()
-                .Map(dest => dest.ImageUrls, src => src.Images != null ? src.Images.Select(x => x.ImageUrl) : new List<string>());
+                .Map(dest => dest.ImageUrls, src => src.Images != null ? src.Images.Select(x => x.ImageUrl) : new List<string>())
+                .Map(dest => dest.EmailsNotSent, src => src.EmailsNotSent != null ? src.EmailsNotSent.OrderBy(x => x.CreatedOn).Select(x => x.What) : new List<string>());
         }
     }
 }

@@ -417,7 +417,7 @@ namespace HandyFix.Services.Data.Payments
                 + EmailLayout.Text("<strong>What happens next?</strong><br />We will send you a follow-up email with your assigned technician's name and direct contact number as soon as one is allocated. If you need to send photos of the job or additional directions, feel free to message us on WhatsApp below.")
                 + EmailLayout.WhatsAppButton("Message Us on WhatsApp"));
 
-            await this.emailSender.TrySendEmailAsync(
+            var customerTold = await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 "deposit paid, to the customer",
                 EmailSettings.BookingsFromAddress(this.configuration),
@@ -444,7 +444,7 @@ namespace HandyFix.Services.Data.Payments
                 + EmailLayout.Button("&#9881;&#65039; Open Booking in Admin Panel", this.JobPage(booking)));
 
             // Reply-To is the customer, so pressing Reply on this notice answers them.
-            await this.emailSender.TrySendEmailAsync(
+            var companyTold = await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 "deposit paid, notice to the company",
                 EmailSettings.SystemFromAddress(this.configuration),
@@ -453,6 +453,26 @@ namespace HandyFix.Services.Data.Payments
                 adminSubject,
                 adminBody,
                 replyTo: booking.Email);
+
+            // A failed send used to be a line in the server's log and nothing else: nobody knew
+            // to tell the customer another way, or that a deposit had come in. It is now on the
+            // job's history and in the dashboard's list (PROJECT_STATE.md Section 3cq).
+            if (!customerTold)
+            {
+                booking.History.Add(JobHistory.Line("The email confirming the deposit could not be sent to the customer. Tell them another way that the booking is confirmed."));
+                booking.EmailsNotSent.Add(new EmailNotSent { What = "The deposit confirmation, to the customer" });
+            }
+
+            if (!companyTold)
+            {
+                booking.History.Add(JobHistory.Line("The email telling the company of this deposit could not be sent."));
+                booking.EmailsNotSent.Add(new EmailNotSent { What = "The notice of a paid deposit, to the company" });
+            }
+
+            if (!customerTold || !companyTold)
+            {
+                await this.paymentRepository.SaveChangesAsync();
+            }
         }
 
         // To the company only. The customer is not told the booking is confirmed, because it is
@@ -479,7 +499,7 @@ namespace HandyFix.Services.Data.Payments
                 + EmailLayout.Advice($"<strong>Next Step:</strong> Call the customer. The site has told them you will be in touch to confirm their visit. Either write the job in again for a time that is free, or send the deposit back in Stripe.<br /><br />{ReplyTip}")
                 + EmailLayout.Button("&#9881;&#65039; Open Booking in Admin Panel", this.JobPage(booking)));
 
-            await this.emailSender.TrySendEmailAsync(
+            var companyTold = await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 "deposit paid for a booking not held, notice to the company",
                 EmailSettings.SystemFromAddress(this.configuration),
@@ -488,6 +508,13 @@ namespace HandyFix.Services.Data.Payments
                 subject,
                 body,
                 replyTo: booking.Email);
+
+            if (!companyTold)
+            {
+                booking.History.Add(JobHistory.Line("The email telling the company of this deposit could not be sent."));
+                booking.EmailsNotSent.Add(new EmailNotSent { What = "The notice of a deposit for a booking not held, to the company" });
+                await this.paymentRepository.SaveChangesAsync();
+            }
         }
 
         public async Task CancelPaymentAsync(string checkoutSessionId)

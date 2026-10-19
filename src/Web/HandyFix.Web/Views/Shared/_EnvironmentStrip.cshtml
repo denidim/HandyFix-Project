@@ -1,0 +1,12 @@
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+@* The strip on every page of a copy of the site that is not the live one (EnvironmentMark says
+   why). On the public pages it comes first: on a computer it sits above the header, on a phone,
+   where the header is fixed to the top of the screen, just under it. In the admin panel it tops
+   the column beside the menu. *@
+@{
+    var strip = EnvironmentMark.Strip(HostEnvironment);
+}
+@if (strip != null)
+{
+    <div class="environment-strip" role="note">@strip</div>
+}

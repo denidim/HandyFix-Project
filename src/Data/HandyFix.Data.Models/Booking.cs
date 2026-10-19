@@ -19,6 +19,7 @@ namespace HandyFix.Data.Models
             this.Images = new HashSet<BookingImage>();
             this.Payments = new HashSet<Payment>();
             this.History = new HashSet<BookingHistoryEntry>();
+            this.EmailsNotSent = new HashSet<EmailNotSent>();
         }
 
         public string UserId { get; set; }
@@ -114,5 +115,7 @@ namespace HandyFix.Data.Models
         public virtual ICollection<Payment> Payments { get; set; }
 
         public virtual ICollection<BookingHistoryEntry> History { get; set; }
+
+        public virtual ICollection<EmailNotSent> EmailsNotSent { get; set; }
     }
 }

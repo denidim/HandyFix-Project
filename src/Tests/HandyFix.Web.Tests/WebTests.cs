@@ -373,6 +373,60 @@
             Assert.Single(Regex.Matches(title, "Plumbing Handyman Surrey"));
         }
 
+        // A copy of the site that is not the live one says so across the top of a public page and
+        // of an admin page, and in the tab's title: a test booking meant for staging was once made
+        // on the live site (PROJECT_STATE.md Section 3cq). This host is Development; that the live
+        // site shows neither is in EnvironmentMarkTests.
+        [Fact]
+        public async Task ACopyOfTheSiteSaysSoOnAPublicPageAndInTheAdminPanel()
+        {
+            var browser = this.server.CreateClient();
+            await FormsWebTests.PostFormAsync(browser, "/Identity/Account/Login", new Dictionary<string, string>
+            {
+                ["Input.Email"] = SqliteWebApplicationFactory.AdminEmail,
+                ["Input.Password"] = SqliteWebApplicationFactory.AdminPassword,
+            });
+
+            foreach (var url in new[] { "/", "/Administration/Dashboard" })
+            {
+                var response = await browser.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                Assert.Equal(url, response.RequestMessage.RequestUri.AbsolutePath);
+                var content = await response.Content.ReadAsStringAsync();
+
+                Assert.Contains("<div class=\"environment-strip\" role=\"note\">TEST SITE (development). Bookings, payments and emails here are not real.</div>", content);
+                Assert.Contains("<title>[DEVELOPMENT] ", content);
+            }
+        }
+
+        // On a laptop the admin menu shows its icons alone, and each name comes up on hover from
+        // the link's title (PROJECT_STATE.md Section 3cq). A link added without one would be an
+        // icon nobody can name.
+        [Fact]
+        public async Task EveryLinkInTheAdminMenuCarriesItsNameForTheFoldedMenu()
+        {
+            var browser = this.server.CreateClient();
+            await FormsWebTests.PostFormAsync(browser, "/Identity/Account/Login", new Dictionary<string, string>
+            {
+                ["Input.Email"] = SqliteWebApplicationFactory.AdminEmail,
+                ["Input.Password"] = SqliteWebApplicationFactory.AdminPassword,
+            });
+
+            var content = await (await browser.GetAsync("/Administration/Dashboard")).Content.ReadAsStringAsync();
+            MatchCollection links = Regex.Matches(content, "<a class=\"admin-nav-link\"[^>]*>.*?</a>", RegexOptions.Singleline);
+
+            Assert.Equal(8, links.Count);
+            foreach (Match link in links)
+            {
+                var title = Regex.Match(link.Value, "title=\"([^\"]+)\"").Groups[1].Value;
+                var label = Regex.Match(link.Value, "<span class=\"admin-nav-label\">([^<]+)</span>").Groups[1].Value;
+                Assert.NotEmpty(title);
+                Assert.Equal(title, label);
+            }
+
+            Assert.Contains("aria-controls=\"admin-sidebar\"", content);
+        }
+
         [Theory]
         [MemberData(nameof(PublicPages))]
         public async Task PublicPagesLinkTheRealContactDetailsAndNeverThePlaceholderNumber(string url)

@@ -1,5 +1,4 @@
 @model HandyFix.Web.ViewModels.Administration.Services.ServiceAdminInputModel
-@inject HandyFix.Services.IImageStorageService ImageStorageService
 @{
     this.ViewData["Title"] = $"Edit Service: {Model.Name}";
 }
@@ -25,6 +24,7 @@
         <form asp-area="Administration" asp-controller="Services" asp-action="Edit" method="post" enctype="multipart/form-data" id="serviceForm" class="d-flex flex-column gap-5">
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="Slug" />
+            <input type="hidden" asp-for="CurrentImageUrl" />
 
             <div class="row gy-4">
                 <!-- Service Name -->
@@ -91,11 +91,12 @@
             <div class="form-group">
                 <label asp-for="ImageFile" class="form-label font-label-sm text-on-surface-variant mb-2">Service Image</label>
                 <div class="d-flex flex-column flex-md-row gap-4 align-items-md-center">
-                    @if (!string.IsNullOrEmpty(Model.Slug) && ImageStorageService.ServiceImageExists(Model.Slug))
+                    @* The picture the service has now: one uploaded here, from the photo bucket, or
+                       the one that came with the site. Hidden if it cannot be loaded. *@
+                    @if (!string.IsNullOrEmpty(Model.CurrentImageUrl))
                     {
-                        var imagePath = $"/images/services/{Model.Slug}-hero.webp";
                         <div class="flex-shrink-0 current-image-thumb">
-                            <img src="@imagePath" asp-append-version="true" class="w-100 h-100" alt="Current image" />
+                            <img src="@Model.CurrentImageUrl" asp-append-version="true" class="w-100 h-100" alt="Current image" onerror="this.parentElement.hidden=true" />
                         </div>
                     }
                     <div class="flex-grow-1 w-100">

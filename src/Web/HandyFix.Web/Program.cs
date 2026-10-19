@@ -16,6 +16,7 @@ namespace HandyFix.Web
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Common;
+    using HandyFix.Services.Data.EmailsNotSent;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Data.Reviews;
@@ -205,11 +206,15 @@ namespace HandyFix.Web
             services.AddTransient<IBookingsService, BookingsService>();
             services.AddTransient<ITechniciansService, TechniciansService>();
             services.AddTransient<IPaymentsService, PaymentsService>();
+            services.AddTransient<IEmailsNotSentService, EmailsNotSentService>();
             services.AddSingleton<IStripeGateway, StripeGateway>();
             services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();
             services.AddTransient<IImageService, ImageService>();
+            // Uploaded service pictures go to the photo bucket; the folder is where the built-in ones
+            // are, read and never written (PROJECT_STATE.md Section 3cq).
             services.AddTransient<IImageStorageService>(sp =>
                 new ImageStorageService(
+                    sp.GetRequiredService<ICloudflareR2Service>(),
                     System.IO.Path.Combine(
                         sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>().WebRootPath,
                         "images",

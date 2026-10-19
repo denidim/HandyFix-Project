@@ -88,9 +88,12 @@ jobs:
             set -euo pipefail
             cd /opt/handyfix/deploy
 
-            # "pull" reads the whole compose file first, so a setting missing from
+            # Only the site's own image, which this run has just pushed. Caddy's
+            # comes from Docker Hub, and asking it at every deploy let a Docker Hub
+            # outage fail one; the copy already on the server is used. "pull"
+            # still reads the whole compose file first, so a setting missing from
             # .env stops the deploy here, before a running container is touched.
-            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml pull web
             docker compose -f docker-compose.prod.yml up -d
 
             # Caddy reads its Caddyfile when it starts, so one that has just been

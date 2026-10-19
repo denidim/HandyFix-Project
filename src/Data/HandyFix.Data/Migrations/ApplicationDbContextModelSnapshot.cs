@@ -436,6 +436,38 @@ namespace HandyFix.Data.Migrations
                     b.ToTable("BookingStatuses");
                 });
 
+            modelBuilder.Entity("HandyFix.Data.Models.EmailNotSent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("InquiryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("What")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("InquiryId");
+
+                    b.ToTable("EmailsNotSent");
+                });
+
             modelBuilder.Entity("HandyFix.Data.Models.Inquiry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1155,6 +1187,22 @@ namespace HandyFix.Data.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("HandyFix.Data.Models.EmailNotSent", b =>
+                {
+                    b.HasOne("HandyFix.Data.Models.Booking", "Booking")
+                        .WithMany("EmailsNotSent")
+                        .HasForeignKey("BookingId");
+
+                    b.HasOne("HandyFix.Data.Models.Inquiry", "Inquiry")
+                        .WithMany("EmailsNotSent")
+                        .HasForeignKey("InquiryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Inquiry");
+                });
+
             modelBuilder.Entity("HandyFix.Data.Models.InquiryImage", b =>
                 {
                     b.HasOne("HandyFix.Data.Models.Inquiry", "Inquiry")
@@ -1297,6 +1345,8 @@ namespace HandyFix.Data.Migrations
 
                     b.Navigation("BookingServices");
 
+                    b.Navigation("EmailsNotSent");
+
                     b.Navigation("History");
 
                     b.Navigation("Images");
@@ -1311,6 +1361,8 @@ namespace HandyFix.Data.Migrations
 
             modelBuilder.Entity("HandyFix.Data.Models.Inquiry", b =>
                 {
+                    b.Navigation("EmailsNotSent");
+
                     b.Navigation("Images");
                 });
 

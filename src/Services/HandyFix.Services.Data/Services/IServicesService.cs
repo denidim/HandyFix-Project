@@ -27,7 +27,5 @@ namespace HandyFix.Services.Data.Services
         Task AddOrUpdateServiceImageAsync(Guid serviceId, string imageUrl);
 
         Task SetServiceImageAsync(Guid serviceId, IFormFile imageFile);
-
-        Task UpdateServiceImageAsync(Guid serviceId, string oldSlug, string newSlug, IFormFile imageFile);
     }
 }

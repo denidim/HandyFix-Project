@@ -52,11 +52,24 @@ moved, and nothing at all for a job the admin wrote in by hand, whatever email a
 in each of those the admin is already speaking to the customer (`PROJECT_STATE.md` Section 3ce).
 
 Every one but the reset link follows a save and goes through `TrySendEmailAsync`: a send that fails is logged
-as `Email not sent: {which email}` and does not undo or hide what was saved. The technician email
-is the one whose failure the admin is told about at once, in the line the booking's page answers
-with. For the others nothing in the admin panel shows a failed send yet (`PROJECT_STATE.md`
-Launch Sprint L4 item 15). The reset link goes
-the same way and fails the same way; `WORKFLOW_ADMIN_ACCOUNT.md` has the rest of that flow. It is
+as `Email not sent: {which email}` and does not undo or hide what was saved.
+
+### When an email does not go, the admin panel says so
+
+Since `PROJECT_STATE.md` Section 3cq each failed send is also kept in the `EmailsNotSent` table:
+which email, when, and the job or enquiry it was about. It shows in three places:
+
+| Where | What it shows |
+| --- | --- |
+| The dashboard | A yellow card, only while there is one from the last 7 days: "N emails did not go out", each with its time, which email, and a link to its job or enquiry |
+| A job's history | A line for each: "The email confirming the deposit could not be sent to the customer. Tell them another way that the booking is confirmed.", "The email telling the company of this deposit could not be sent.", and for the technician's email the line it has had since Section 3ce, whose failure the job's page also says at once |
+| An enquiry's page | A yellow note at the top naming which of its two emails did not go |
+
+The services that send each email write the row on the job or the enquiry they have just saved,
+in the same save as its history line. "Delete Permanent" on an enquiry removes its rows with it.
+The reset link is the exception: it fails into the log only, since a note in a panel the admin
+cannot sign in to would reach nobody. It goes
+the same way otherwise; `WORKFLOW_ADMIN_ACCOUNT.md` has the rest of that flow. It is
 the one email that goes to an address chosen in the admin panel, not in a setting, so **the admin's
 login email has to be a mailbox that can be opened**.
 
@@ -141,7 +154,8 @@ All three are public records and can be read with `nslookup -type=TXT`:
 
 1. Send one enquiry through the Contact form on staging, by hand: a browser driven by a program
    cannot pass the real person check (`WORKFLOW_FORMS.md`).
-2. The application log has no `Email not sent` line for it.
+2. The application log has no `Email not sent` line for it, and the admin dashboard shows no
+   "did not go out" card.
 3. Two emails arrive, each with `[STAGING]` in the subject: the notice at the developer address,
    the acknowledgement at the address typed into the form.
 4. Open one in the mail program's "show original" view: SPF, DKIM and DMARC each say `pass`, and
@@ -155,6 +169,7 @@ All three are public records and can be read with `nslookup -type=TXT`:
 
 | Symptom | Cause |
 | --- | --- |
+| The dashboard says emails did not go out | Open each one and tell its customer another way. Then look for `Email not sent` in the log, below, for why. |
 | `Email not sent` in the log, with `Brevo email send failed (401)` | The key in `.env` is wrong or was deleted in Brevo. |
 | `Email not sent`, with a 400 naming the sender | The sender address is not on a domain Brevo has verified for this account. |
 | The log is clean and nothing arrives at a domain address | The forwarding rule for that address in Cloudflare Email Routing is missing or switched off. |

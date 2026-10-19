@@ -21,6 +21,11 @@ namespace HandyFix.Services.Data.Tests
 
     public class ServicesServiceTests
     {
+        // An address the storage service gives an upload in the photo bucket (PROJECT_STATE.md
+        // Section 3cq), and one it gives the next.
+        private const string UploadedPicture = "https://photos.example/services/0123456789abcdef0123456789abcdef_tap-repairs.webp";
+        private const string NextUploadedPicture = "https://photos.example/services/fedcba9876543210fedcba9876543210_tap-repairs.webp";
+
         [Fact]
         public async Task CreateAsyncShouldAddServiceToDatabase()
         {
@@ -80,12 +85,13 @@ namespace HandyFix.Services.Data.Tests
             Assert.True(inDb.IsDeleted);
         }
 
+        // The service goes first and its picture after, so a picture is never missing from a service
+        // still shown. Until PROJECT_STATE.md Section 3cq it was the other way round, because the
+        // picture's file was named after the slug; its address is in the database now. The picture
+        // is handed over whatever it is: the storage service leaves a built-in one alone.
         [Fact]
-        public async Task DeleteAsyncShouldRemoveTheImageBeforeTheRowIsGone()
+        public async Task DeleteAsyncShouldRemoveTheServiceAndThenHandOverItsPicture()
         {
-            // Order is load-bearing: the image path is derived from the service's slug, so once
-            // the row is gone the file can no longer be located and would be orphaned in wwwroot
-            // forever.
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
 
@@ -105,20 +111,22 @@ namespace HandyFix.Services.Data.Tests
                 CategoryId = category.Id,
             };
             dbContext.Services.Add(serviceEntity);
+            dbContext.ServiceImages.Add(new ServiceImage { ServiceId = serviceEntity.Id, ImageUrl = UploadedPicture });
             await dbContext.SaveChangesAsync();
 
-            var rowStillExistedWhenImageWasDeleted = false;
+            var serviceWasGoneFirst = false;
             var imageStorageServiceMock = new Mock<IImageStorageService>();
             imageStorageServiceMock
-                .Setup(x => x.DeleteServiceImage("tap-repairs"))
-                .Callback(() => rowStillExistedWhenImageWasDeleted =
-                    dbContext.Services.IgnoreQueryFilters().Any(x => x.Id == serviceEntity.Id && !x.IsDeleted));
+                .Setup(x => x.DeleteServiceImageAsync(UploadedPicture))
+                .Callback(() => serviceWasGoneFirst =
+                    dbContext.Services.IgnoreQueryFilters().Any(x => x.Id == serviceEntity.Id && x.IsDeleted))
+                .Returns(Task.CompletedTask);
 
             var service = new ServicesService(repository, null, imageStorageServiceMock.Object);
             await service.DeleteAsync(serviceEntity.Id);
 
-            imageStorageServiceMock.Verify(x => x.DeleteServiceImage("tap-repairs"), Times.Once);
-            Assert.True(rowStillExistedWhenImageWasDeleted);
+            imageStorageServiceMock.Verify(x => x.DeleteServiceImageAsync(UploadedPicture), Times.Once);
+            Assert.True(serviceWasGoneFirst);
 
             var inDb = dbContext.Services.IgnoreQueryFilters().First(x => x.Id == serviceEntity.Id);
             Assert.True(inDb.IsDeleted);
@@ -138,7 +146,7 @@ namespace HandyFix.Services.Data.Tests
 
             await service.DeleteAsync(Guid.NewGuid());
 
-            imageStorageServiceMock.Verify(x => x.DeleteServiceImage(It.IsAny<string>()), Times.Never);
+            imageStorageServiceMock.Verify(x => x.DeleteServiceImageAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
@@ -531,8 +539,11 @@ namespace HandyFix.Services.Data.Tests
             Assert.Equal("/images/services/tap-repair-hero.webp", image.ImageUrl);
         }
 
+        // A new picture goes up, the service points at it, and only then does the admin's previous
+        // upload leave the bucket: a failure at any step leaves the service with a picture
+        // (PROJECT_STATE.md Section 3cq).
         [Fact]
-        public async Task UpdateServiceImageAsyncShouldDeleteBothOldAndNewImagesWhenSlugChangesWithNewFile()
+        public async Task SetServiceImageAsyncShouldHandOverThePreviousPictureOnlyOnceTheNewOneIsLinked()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
@@ -543,82 +554,72 @@ namespace HandyFix.Services.Data.Tests
 
             var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
             dbContext.ServiceCategories.Add(category);
-            var serviceEntity = new Service { Id = Guid.NewGuid(), Name = "Tap Repair", Description = "d", Slug = "tap-replacement", BasePrice = 50, CategoryId = category.Id };
+            var serviceEntity = new Service { Id = Guid.NewGuid(), Name = "Tap Repairs", Description = "d", Slug = "tap-repairs", BasePrice = 50, CategoryId = category.Id };
             dbContext.Services.Add(serviceEntity);
+            dbContext.ServiceImages.Add(new ServiceImage { ServiceId = serviceEntity.Id, ImageUrl = UploadedPicture });
+            await dbContext.SaveChangesAsync();
+
+            string linkedWhenTheOldOneWent = null;
+            var imageStorageServiceMock = new Mock<IImageStorageService>();
+            imageStorageServiceMock
+                .Setup(x => x.SaveServiceImageAsync(It.IsAny<Stream>(), "photo.jpg", "image/jpeg", "tap-repairs"))
+                .ReturnsAsync(NextUploadedPicture);
+            imageStorageServiceMock
+                .Setup(x => x.DeleteServiceImageAsync(UploadedPicture))
+                .Callback(() => linkedWhenTheOldOneWent = dbContext.ServiceImages.Single().ImageUrl)
+                .Returns(Task.CompletedTask);
+
+            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
+            await service.SetServiceImageAsync(serviceEntity.Id, Upload());
+
+            Assert.Equal(NextUploadedPicture, dbContext.ServiceImages.Single().ImageUrl);
+            imageStorageServiceMock.Verify(x => x.DeleteServiceImageAsync(UploadedPicture), Times.Once);
+            Assert.Equal(NextUploadedPicture, linkedWhenTheOldOneWent);
+        }
+
+        // A rename used to move the picture's file inside the container, and the next deploy, which
+        // starts a container from what git holds, left the service pointing at a file it did not
+        // have. The picture is not touched by a rename now, built-in or uploaded.
+        [Theory]
+        [InlineData("/images/services/tap-repairs-hero.webp")]
+        [InlineData(UploadedPicture)]
+        public async Task ARenameLeavesThePictureWhereItIs(string picture)
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
+            using var imageRepository = new EfDeletableEntityRepository<ServiceImage>(dbContext);
+
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
+            dbContext.ServiceCategories.Add(category);
+            var serviceEntity = new Service { Id = Guid.NewGuid(), Name = "Tap Repairs", Description = "some description", Slug = "tap-repairs", BasePrice = 50, CategoryId = category.Id };
+            dbContext.Services.Add(serviceEntity);
+            dbContext.ServiceImages.Add(new ServiceImage { ServiceId = serviceEntity.Id, ImageUrl = picture });
             await dbContext.SaveChangesAsync();
 
             var imageStorageServiceMock = new Mock<IImageStorageService>();
-            imageStorageServiceMock
-                .Setup(x => x.SaveServiceImageAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), "tap-replacement"))
-                .ReturnsAsync("/images/services/tap-replacement-hero.webp");
+            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
 
+            await service.UpdateAsync(serviceEntity.Id, "Tap Fixing", "some description", 50m, 60, true, category.Id, Service.DefaultDisplayOrder, false);
+            await service.SetServiceImageAsync(serviceEntity.Id, null);
+
+            Assert.Equal("tap-fixing", dbContext.Services.Single().Slug);
+            Assert.Equal(picture, dbContext.ServiceImages.Single().ImageUrl);
+            imageStorageServiceMock.VerifyNoOtherCalls();
+            Assert.Equal(picture, (await service.GetBySlugAsync<ServiceViewModel>("tap-fixing")).ImageUrl);
+        }
+
+        // A file as the admin's form sends it.
+        private static IFormFile Upload()
+        {
             var fileMock = new Mock<IFormFile>();
             fileMock.Setup(x => x.Length).Returns(10);
             fileMock.Setup(x => x.FileName).Returns("photo.jpg");
             fileMock.Setup(x => x.ContentType).Returns("image/jpeg");
             fileMock.Setup(x => x.OpenReadStream()).Returns(new MemoryStream(new byte[10]));
-
-            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
-            await service.UpdateServiceImageAsync(serviceEntity.Id, "tap-repair", "tap-replacement", fileMock.Object);
-
-            imageStorageServiceMock.Verify(x => x.DeleteServiceImage("tap-repair"), Times.Once);
-            imageStorageServiceMock.Verify(x => x.DeleteServiceImage("tap-replacement"), Times.Once);
-            Assert.Equal("/images/services/tap-replacement-hero.webp", dbContext.ServiceImages.First().ImageUrl);
-        }
-
-        [Fact]
-        public async Task UpdateServiceImageAsyncShouldRenameImageWhenSlugChangesWithNoNewFile()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-
-            using var dbContext = new ApplicationDbContext(options);
-            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
-            using var imageRepository = new EfDeletableEntityRepository<ServiceImage>(dbContext);
-
-            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
-            dbContext.ServiceCategories.Add(category);
-            var serviceEntity = new Service { Id = Guid.NewGuid(), Name = "Tap Repair", Description = "d", Slug = "tap-replacement", BasePrice = 50, CategoryId = category.Id };
-            dbContext.Services.Add(serviceEntity);
-            await dbContext.SaveChangesAsync();
-
-            var imageStorageServiceMock = new Mock<IImageStorageService>();
-            imageStorageServiceMock
-                .Setup(x => x.GetServiceImagePublicUrl("tap-replacement"))
-                .Returns("/images/services/tap-replacement-hero.webp");
-
-            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
-            await service.UpdateServiceImageAsync(serviceEntity.Id, "tap-repair", "tap-replacement", null);
-
-            imageStorageServiceMock.Verify(x => x.RenameServiceImage("tap-repair", "tap-replacement"), Times.Once);
-            imageStorageServiceMock.Verify(x => x.DeleteServiceImage(It.IsAny<string>()), Times.Never);
-            imageStorageServiceMock.Verify(
-                x => x.SaveServiceImageAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
-                Times.Never);
-            Assert.Equal("/images/services/tap-replacement-hero.webp", dbContext.ServiceImages.First().ImageUrl);
-        }
-
-        [Fact]
-        public async Task UpdateServiceImageAsyncShouldDoNothingWhenNoNewFileAndSlugUnchanged()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-
-            using var dbContext = new ApplicationDbContext(options);
-            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
-            using var imageRepository = new EfDeletableEntityRepository<ServiceImage>(dbContext);
-
-            var imageStorageServiceMock = new Mock<IImageStorageService>();
-
-            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
-            await service.UpdateServiceImageAsync(Guid.NewGuid(), "tap-repair", "tap-repair", null);
-
-            imageStorageServiceMock.Verify(x => x.RenameServiceImage(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-            imageStorageServiceMock.Verify(x => x.DeleteServiceImage(It.IsAny<string>()), Times.Never);
-            imageStorageServiceMock.Verify(
-                x => x.SaveServiceImageAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
-                Times.Never);
-            Assert.Equal(0, dbContext.ServiceImages.Count());
+            return fileMock.Object;
         }
     }
 }

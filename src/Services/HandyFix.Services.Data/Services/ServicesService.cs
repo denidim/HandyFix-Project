@@ -116,6 +116,10 @@ namespace HandyFix.Services.Data.Services
                 service.CategoryId = categoryId;
                 service.DisplayOrder = displayOrder;
                 service.IsPopular = isPopular;
+
+                // A new name gives the page a new address, and the picture stays where it is: its
+                // address is in the database and nothing renames it. A built-in picture keeps the
+                // file name it came with (PROJECT_STATE.md Section 3cq).
                 service.Slug = SlugGenerator.Slugify(name);
 
                 await this.servicesRepository.SaveChangesAsync();
@@ -136,13 +140,23 @@ namespace HandyFix.Services.Data.Services
         public async Task DeleteAsync(Guid id)
         {
             Service service = await this.servicesRepository.All()
+                .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (service != null)
             {
-                this.imageStorageService.DeleteServiceImage(service.Slug);
+                List<string> pictures = service.Images.Select(x => x.ImageUrl).ToList();
+
                 this.servicesRepository.Delete(service);
                 await this.servicesRepository.SaveChangesAsync();
+
+                // After the service is gone, so a picture is never missing from a service still
+                // shown. An upload leaves the bucket; a built-in picture stays in the site's files,
+                // where it used to be deleted until the next deploy put it back.
+                foreach (var picture in pictures)
+                {
+                    await this.imageStorageService.DeleteServiceImageAsync(picture);
+                }
             }
         }
 
@@ -172,6 +186,9 @@ namespace HandyFix.Services.Data.Services
             await this.serviceImageRepository.SaveChangesAsync();
         }
 
+        // The picture the admin uploads, on a new service or an existing one. In this order: the new
+        // picture goes up, the service points at it, and only then does the admin's previous upload
+        // leave the bucket, so a failure at any step leaves the service with a picture.
         public async Task SetServiceImageAsync(Guid serviceId, IFormFile imageFile)
         {
             if (imageFile == null || imageFile.Length == 0)
@@ -193,38 +210,21 @@ namespace HandyFix.Services.Data.Services
                 imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, imageFile.FileName, imageFile.ContentType, service.Slug);
             }
 
-            if (!string.IsNullOrEmpty(imageUrl))
+            if (string.IsNullOrEmpty(imageUrl))
             {
-                await this.AddOrUpdateServiceImageAsync(serviceId, imageUrl);
+                return;
             }
-        }
 
-        public async Task UpdateServiceImageAsync(Guid serviceId, string oldSlug, string newSlug, IFormFile imageFile)
-        {
-            if (imageFile != null && imageFile.Length > 0)
+            string previous = await this.serviceImageRepository.All()
+                .Where(x => x.ServiceId == serviceId)
+                .Select(x => x.ImageUrl)
+                .FirstOrDefaultAsync();
+
+            await this.AddOrUpdateServiceImageAsync(serviceId, imageUrl);
+
+            if (previous != null && previous != imageUrl)
             {
-                this.imageStorageService.DeleteServiceImage(oldSlug);
-                if (oldSlug != newSlug)
-                {
-                    this.imageStorageService.DeleteServiceImage(newSlug);
-                }
-
-                string imageUrl;
-                using (Stream stream = imageFile.OpenReadStream())
-                {
-                    imageUrl = await this.imageStorageService.SaveServiceImageAsync(stream, imageFile.FileName, imageFile.ContentType, newSlug);
-                }
-
-                if (!string.IsNullOrEmpty(imageUrl))
-                {
-                    await this.AddOrUpdateServiceImageAsync(serviceId, imageUrl);
-                }
-            }
-            else if (oldSlug != newSlug)
-            {
-                this.imageStorageService.RenameServiceImage(oldSlug, newSlug);
-                string newImageUrl = this.imageStorageService.GetServiceImagePublicUrl(newSlug);
-                await this.AddOrUpdateServiceImageAsync(serviceId, newImageUrl);
+                await this.imageStorageService.DeleteServiceImageAsync(previous);
             }
         }
     }

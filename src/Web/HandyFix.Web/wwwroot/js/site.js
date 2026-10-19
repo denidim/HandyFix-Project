@@ -24,8 +24,30 @@ document.addEventListener("DOMContentLoaded", function () {
     const adminToggleBtn = document.getElementById('admin-sidebar-btn');
     const adminSidebar = document.querySelector('.admin-sidebar');
     if (adminToggleBtn && adminSidebar) {
+        const setAdminMenu = function (open) {
+            adminSidebar.classList.toggle('open', open);
+            adminToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            adminToggleBtn.setAttribute('aria-label', open ? 'Close the menu' : 'Open the menu');
+        };
+
         adminToggleBtn.addEventListener('click', function () {
-            adminSidebar.classList.toggle('open');
+            setAdminMenu(!adminSidebar.classList.contains('open'));
+        });
+
+        // The open menu lies over the page and over its own button, so a click anywhere else
+        // closes it, and so does Escape.
+        document.addEventListener('click', function (event) {
+            if (adminSidebar.classList.contains('open')
+                && !adminSidebar.contains(event.target)
+                && !adminToggleBtn.contains(event.target)) {
+                setAdminMenu(false);
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && adminSidebar.classList.contains('open')) {
+                setAdminMenu(false);
+                adminToggleBtn.focus();
+            }
         });
     }
 
@@ -60,6 +82,43 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Cloudflare's "are you a person" check (the _FormGuard partial) is fetched the first time the
+    // visitor touches a form that carries it, not with the page. Fetched with the page, on the
+    // booking page it did more work than the page itself, and held the page's phone score at 64
+    // where it was 90 without (PROJECT_STATE.md Section 3cq). Each widget is drawn from its own
+    // box's settings; a visitor who presses Send before it has finished gets the hint below.
+    const turnstileBoxes = document.querySelectorAll('.cf-turnstile');
+    let turnstileRequested = false;
+    const loadTurnstile = function () {
+        if (turnstileRequested || turnstileBoxes.length === 0) return;
+        turnstileRequested = true;
+
+        window.onTurnstileLoaded = function () {
+            turnstileBoxes.forEach(function (box) {
+                window.turnstile.render(box, {
+                    sitekey: box.dataset.sitekey,
+                    action: box.dataset.action,
+                    theme: box.dataset.theme,
+                    size: box.dataset.size,
+                });
+            });
+        };
+
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoaded';
+        script.async = true;
+        document.head.appendChild(script);
+    };
+
+    if (turnstileBoxes.length > 0) {
+        ['pointerdown', 'focusin', 'input'].forEach(function (type) {
+            document.addEventListener(type, function (event) {
+                const form = event.target instanceof Element ? event.target.closest('form') : null;
+                if (form && form.querySelector('.cf-turnstile')) loadTurnstile();
+            }, { passive: true });
+        });
+    }
+
     // One click, one submission. A form that is being sent is marked, and until the next page
     // arrives a second submit of it is stopped and its button shows a spinner (buttons.css). A
     // double click on "Send" used to save an enquiry twice (PROJECT_STATE Section 3cb).
@@ -92,6 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const hint = form.querySelector('.form-turnstile-hint');
             if (!token || !token.value) {
                 event.preventDefault();
+                loadTurnstile();
                 if (hint) hint.hidden = false;
                 challenge.scrollIntoView({ block: 'center' });
                 return;

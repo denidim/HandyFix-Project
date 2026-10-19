@@ -27,13 +27,20 @@ The two pipelines are the same shape on purpose. Staging is described first and 
    ```bash
    set -euo pipefail
    cd /opt/handyfix/deploy
-   docker compose -f docker-compose.staging.yml pull
+   docker compose -f docker-compose.staging.yml pull web
    docker compose -f docker-compose.staging.yml up -d
    # then: caddy reload, tried up to five times (see below)
    docker image prune -f
    ```
    `set -euo pipefail` matters here: an earlier version of this script had no `set -e` and could
    silently do nothing for multiple runs when `docker compose` failed to find the compose file.
+
+   **`pull web`, not `pull`** (`PROJECT_STATE.md` Section 3cq). A bare `pull` also asked Docker Hub
+   for `caddy:2-alpine` at every deploy, and when Docker Hub was down that failed the deploy. Now
+   the copy of Caddy already on the server is used; `up -d` fetches it only on a server that has
+   none. `pull web` still reads the whole compose file, so a setting missing from `.env` still
+   stops the deploy there. To take a newer Caddy on purpose, run `docker compose pull caddy` on
+   the server by hand.
 
 **GitHub Secrets this depends on** (names only): `STAGING_HOST`, `STAGING_SSH_KEY`, plus the
 automatic `GITHUB_TOKEN`.
@@ -82,6 +89,11 @@ the rest of the source tree — this makes `dotnet restore` its own cached Docke
 source-only change doesn't re-download the whole dependency graph on every build. Runtime stage is
 `mcr.microsoft.com/dotnet/aspnet:10.0`, listens on port `8080` (`ASPNETCORE_HTTP_PORTS=8080`).
 
+The file has no `# syntax=docker/dockerfile:1` line at the top, on purpose (`PROJECT_STATE.md`
+Section 3cq). That line makes every build fetch a newer Dockerfile reader from Docker Hub before it
+starts, and a Docker Hub outage failed three production runs that way on 2026-10-09. Nothing in
+the file needs the newer reader; both base images come from Microsoft's own registry.
+
 `.dockerignore` excludes `bin/`/`obj/`/`.git/`/docs/`*.md` (README kept) from the build context.
 
 ---
@@ -97,7 +109,7 @@ Two services on a private `internal` Docker network:
   staging: a copy of the real site under another address — belt and braces alongside the Basic
   Auth itself.
 
-Two lines in the compose file are not secrets and are the same on staging and on the live site:
+Three things in the compose file are not secrets and are the same on staging and on the live site:
 
 - **`TZ: Europe/London`.** A container's own clock is UTC, an hour behind the UK from late March
   to late October. Wherever the code asks what time or what day it is (which slots have passed,
@@ -110,6 +122,13 @@ Two lines in the compose file are not secrets and are the same on staging and on
   link already sent stopped working. The keys are stored as they are, not encrypted, and the
   framework says so in the log at start (`No XML encryptor configured`); the volume is on the same
   server as the `.env` that holds every other secret, so that is accepted.
+- **`logging: *logging`** on both services, from the `x-logging` block at the top: Docker keeps
+  five log files of 10 MB per container and drops the oldest (`PROJECT_STATE.md` Section 3cq).
+  Docker keeps a container's log for as long as the container lives unless told otherwise, and
+  Caddy's lives across deploys. The site itself no longer logs every database command
+  (`Microsoft.EntityFrameworkCore.Database.Command` at `Warning` in `appsettings.json`), which was
+  most of what its log held. Changing these options makes the next `up -d` start both containers
+  afresh, Caddy included, which is a second's gap.
 
 ### Environment variables the compose file maps into the `web` container
 

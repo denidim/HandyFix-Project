@@ -446,6 +446,12 @@ namespace HandyFix.Services.Data.Bookings
             booking.History.Add(JobHistory.Line(emailed
                 ? $"Technician picked: {newName}. The customer was emailed."
                 : $"Technician picked: {newName}. The email to the customer could not be sent."));
+            if (!emailed)
+            {
+                // For the dashboard's list of emails that did not go (PROJECT_STATE.md Section 3cq).
+                booking.EmailsNotSent.Add(new EmailNotSent { What = "The technician's name, to the customer" });
+            }
+
             await this.bookingRepository.SaveChangesAsync();
 
             return new TechnicianAssignmentResult

@@ -1,4 +1,5 @@
 @using HandyFix.Common
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +16,7 @@
     {
         <link rel="canonical" href="@this.ViewData["Canonical"]" />
     }
-    <title>@this.ViewData["Title"] - @GlobalConstants.SystemName</title>
+    <title>@EnvironmentMark.TitlePrefix(HostEnvironment)@this.ViewData["Title"] - @GlobalConstants.SystemName</title>
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="@GlobalConstants.SystemName" />
     <meta property="og:title" content="@this.ViewData["Title"] - @GlobalConstants.SystemName" />
@@ -36,6 +37,7 @@
     <link rel="stylesheet" href="~/css/site.min.css" />
 </head>
 <body class="@this.ViewData["BodyClass"]">
+    <partial name="_EnvironmentStrip" />
     <partial name="_Navbar" />
     
     <partial name="_CookieConsentPartial" />

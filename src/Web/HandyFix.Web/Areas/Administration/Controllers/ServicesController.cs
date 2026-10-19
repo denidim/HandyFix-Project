@@ -100,6 +100,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 IsActive = service.IsActive,
                 DisplayOrder = service.DisplayOrder,
                 IsPopular = service.IsPopular,
+                CurrentImageUrl = service.ImageUrl,
             };
 
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
@@ -128,27 +129,20 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
-            ServiceDetailsViewModel oldService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
-            var oldSlug = oldService?.Slug;
-
             await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId, model.DisplayOrder, model.IsPopular);
 
-            ServiceDetailsViewModel newService = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(model.Id.Value);
-            var newSlug = newService?.Slug;
-
-            if (oldSlug != null && newSlug != null)
+            // A rename no longer touches the picture; only a new upload does (PROJECT_STATE.md
+            // Section 3cq).
+            try
             {
-                try
-                {
-                    await this.servicesService.UpdateServiceImageAsync(model.Id.Value, oldSlug, newSlug, model.ImageFile);
-                }
-                catch (Exception ex)
-                {
-                    this.ModelState.AddModelError("ImageFile", ex.Message);
-                    IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-                    model.Categories = new SelectList(categories, "Id", "Name", model.CategoryId);
-                    return this.View(model);
-                }
+                await this.servicesService.SetServiceImageAsync(model.Id.Value, model.ImageFile);
+            }
+            catch (Exception ex)
+            {
+                this.ModelState.AddModelError("ImageFile", ex.Message);
+                IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+                model.Categories = new SelectList(categories, "Id", "Name", model.CategoryId);
+                return this.View(model);
             }
 
             return this.RedirectToList();

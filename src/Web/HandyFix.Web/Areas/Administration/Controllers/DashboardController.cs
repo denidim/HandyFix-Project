@@ -1,9 +1,11 @@
 namespace HandyFix.Web.Areas.Administration.Controllers
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.EmailsNotSent;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Web.ViewModels.Administration.Dashboard;
@@ -16,15 +18,18 @@ namespace HandyFix.Web.Areas.Administration.Controllers
         private readonly IBookingsService bookingsService;
         private readonly IInquiriesService inquiriesService;
         private readonly IPaymentsService paymentsService;
+        private readonly IEmailsNotSentService emailsNotSentService;
 
         public DashboardController(
             IBookingsService bookingsService,
             IInquiriesService inquiriesService,
-            IPaymentsService paymentsService)
+            IPaymentsService paymentsService,
+            IEmailsNotSentService emailsNotSentService)
         {
             this.bookingsService = bookingsService;
             this.inquiriesService = inquiriesService;
             this.paymentsService = paymentsService;
+            this.emailsNotSentService = emailsNotSentService;
         }
 
         public async Task<IActionResult> Index()
@@ -41,6 +46,8 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 AwaitingTechnicianCount = summary.AwaitingTechnicianCount,
                 TotalEnquiriesCount = await this.inquiriesService.GetTotalCountAsync(),
                 TotalRevenue = await this.paymentsService.GetTotalRevenueAsync(),
+                EmailsNotSent = await this.emailsNotSentService.GetSinceAsync<EmailNotSentViewModel>(
+                    DateTime.UtcNow.AddDays(-IndexViewModel.EmailsNotSentDays)),
             };
 
             return this.View(viewModel);

@@ -108,39 +108,58 @@ new admin controller that shares a name with a public one needs the same.
 
 ---
 
-## Step 3 — The image pipeline: local WebP, not R2
+## Step 3 — A service's picture: built in, or uploaded to the photo bucket
 
-Service hero images are the **only** admin-uploaded images that go through
-`ImageStorageService` (SkiaSharp), writing straight to local disk under
-`wwwroot/images/services/` — a completely different path from the Cloudflare R2 pipeline used for
-booking/enquiry customer photo uploads (`ImageService`/`ICloudflareR2Service`, capped at 5 files ×
-15MB, no format conversion). Don't reach for one when you mean the other.
+A service's picture is one of two kinds (`PROJECT_STATE.md` Section 3cq):
 
-| Step | Behaviour |
+- **Built in.** The forty pictures that come with the site are files in
+  `wwwroot/images/services/`, named `{slug}-hero.webp`, with a 320px copy beside each
+  (`{slug}-hero-320.webp`, made by `tools/image-gen/make-phone-copies.mjs`; a test fails if one has
+  none). They are each service's default. The code reads that folder and never writes to it.
+- **Uploaded** in the admin panel, on Create or Edit. `ImageStorageService` (SkiaSharp) makes it no
+  wider than 1920px and WebP at quality 80, with a 320px copy, and puts both in the photo bucket
+  (Cloudflare R2, through `ICloudflareR2Service.PutFileAsync`) as
+  `services/{random}_{slug}.webp` and `services/{random}_{slug}-320.webp`. The service's
+  `ServiceImage` row keeps the picture's address.
+
+Each service's address for its picture is in the database, in its `ServiceImage` row, and the pages
+use that. So:
+
+| The admin… | What happens to the picture |
 | --- | --- |
-| Resize | only if source width > **1920px** — resized to 1920 wide, proportional height |
-| Encode | always WebP, quality **80** |
-| Output path | `wwwroot/images/services/{slug}-hero.webp` (always, regardless of input format) |
-| Small copy | `{slug}-hero-320.webp`, 320 wide, written with every upload and deleted or renamed with the picture; a category page's card sends it to a phone (`GetSmallCopyPublicUrl`). The pictures that come with the site get theirs from `tools/image-gen/make-phone-copies.mjs`, and a test fails if one has none (`PROJECT_STATE.md` Section 3cn) |
-| Legacy cleanup | `DeleteLegacyImages` removes any leftover `{slug}-hero.jpg/.jpeg/.png` after a successful WebP write |
-| Slug validation | rejects empty slugs, `..`, or invalid filename characters before touching disk |
+| uploads a picture | the new pair goes up under a new name, the service points at it, and only then does the previous upload leave the bucket (`ServicesService.SetServiceImageAsync`); a built-in picture is never deleted |
+| renames the service | nothing: the address does not change, whatever the slug becomes |
+| deletes the service | after the service is gone, its upload leaves the bucket; a built-in picture stays |
 
-### The `{slug}-hero.webp` convention is hardcoded in **four** places
+A delete the bucket refuses is logged, not thrown: an object left there costs nothing, and the
+admin's save should not fail for it. A new name for every upload also means a browser that kept
+the last picture can never show it in place of the new one.
 
-`ImageStorageService.GetServiceImagePublicUrl(slug)` is the one canonical, callable source —
-`SaveServiceImageAsync`'s return value and `ServicesService.UpdateServiceImageAsync`'s slug-rename
-case both call it rather than rebuilding the string (the admin controller used to hardcode this
-inline before the Phase 3 thin-controller pass moved the whole image-update flow into the service —
-see `PROJECT_STATE.md` Section 3aa). What's left, genuinely unable to reach that method:
+**Why not the site's own folder, as before.** Until Section 3cq an upload was written over
+`wwwroot/images/services/{slug}-hero.webp` inside the running container. A deploy starts a new
+container from what git holds, so the old picture came back, a new service lost its picture, and a
+rename (which moved the file inside the container) left the database pointing at a name the next
+container did not have. An upload never reaches git, nor should it. The photo bucket was chosen
+over a Docker volume because it ties nothing to one server and the enquiry photos already use it.
+
+The customer photo uploads of bookings and enquiries are a different path
+(`ImageService`, capped at 5 files × 15MB, no conversion), into the same bucket under their own
+folders.
+
+### Where the `{slug}-hero.webp` convention is still written
+
+For a service with no `ServiceImage` row, by convention only:
 
 1. `src/Data/HandyFix.Data/Seeding/ServicesSeeder.cs`, its last loop — back-fills `ServiceImage` rows
-   for services that don't have one yet. Can't call the helper: `HandyFix.Data` doesn't (and
-   architecturally shouldn't) depend on `HandyFix.Services`.
-2. `ServiceViewModel`'s Mapster fallback — if a service has no `ImageUrl` row at all, falls back to
-   this path by convention.
+   for services that don't have one yet. `HandyFix.Data` doesn't (and architecturally shouldn't)
+   depend on `HandyFix.Services`.
+2. `ServiceViewModel`'s Mapster fallback.
 3. `ServiceDetailsViewModel`'s Mapster fallback — same pattern, separate file.
-4. `Areas/Administration/Views/Services/Edit.cshtml` — builds the same path client-side (paired with
-   `ImageStorageService.ServiceImageExists`) to decide whether to show a "current image" preview.
+
+A service made in the admin panel without a picture therefore points at a built-in name that does
+not exist, and its pages show the general hero picture in its place (each `<img>` has an
+`onerror`). The admin's Edit form shows the picture the service has, from its row, and hides the
+preview if it cannot be loaded.
 
 **Category hero tiles break this pattern entirely**: they use `{slug}-category-hero.webp` (note
 `-category-` inserted), and there is **no admin upload path for them at all** — `ServiceCategory` has

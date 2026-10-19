@@ -11,10 +11,20 @@
 # stops with that message before it touches a running container, so a missing
 # setting stops the deploy and not the site.
 
+# Docker keeps everything a container writes to its log, for as long as the
+# container lives, unless told otherwise. With this it keeps five files of
+# 10 MB each and drops the oldest. Both services take it below.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   web:
     image: ghcr.io/denidim/handyfix-web:${IMAGE_TAG:-prod}
     restart: unless-stopped
+    logging: *logging
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       # The container's own clock is UTC, an hour behind the UK all summer.
@@ -61,6 +71,7 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    logging: *logging
     ports:
       # 443 only. Cloudflare speaks HTTPS to this server and turns a visitor's
       # plain-HTTP request into HTTPS itself, so nothing needs port 80 here.

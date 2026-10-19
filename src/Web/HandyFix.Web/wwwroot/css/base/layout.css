@@ -1,3 +1,15 @@
+/* Across the top of every page of a copy of the site that is not the live one, the admin
+   panel's too (EnvironmentMark, _EnvironmentStrip). White on #b45309 reads at 5.0:1. */
+.environment-strip {
+  background-color: #b45309;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+  padding: 6px 16px;
+}
+
 .page-container {
   width: min(1320px, calc(100% - 48px));
   margin-inline: auto;

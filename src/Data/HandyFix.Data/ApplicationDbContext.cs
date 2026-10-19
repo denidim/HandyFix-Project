@@ -41,6 +41,8 @@ namespace HandyFix.Data
 
         public DbSet<BookingStatus> BookingStatuses { get; set; }
 
+        public DbSet<EmailNotSent> EmailsNotSent { get; set; }
+
         public DbSet<Inquiry> Inquiries { get; set; }
 
         public DbSet<InquiryImage> InquiryImages { get; set; }
@@ -109,6 +111,16 @@ namespace HandyFix.Data
             {
                 foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
             }
+
+            // The one cascade, set after the loop above so it stays: an enquiry deleted for good
+            // takes with it the record of an email about it that did not go. That row holds
+            // nothing of the sender's, and nothing else could remove it (PROJECT_STATE.md
+            // Section 3cq).
+            builder.Entity<EmailNotSent>()
+                .HasOne(x => x.Inquiry)
+                .WithMany(x => x.EmailsNotSent)
+                .HasForeignKey(x => x.InquiryId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         private static void SetIsDeletedQueryFilter<T>(ModelBuilder builder)

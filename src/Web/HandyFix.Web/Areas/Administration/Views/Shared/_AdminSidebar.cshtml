@@ -1,41 +1,43 @@
-<aside class="admin-sidebar">
+@* Between a phone and a wide screen the menu folds to its icons, each name shown on hover and
+   still read out by a screen reader, and the menu button opens it whole (admin.css says why). *@
+<aside class="admin-sidebar" id="admin-sidebar">
     <div class="admin-sidebar-header">
         <a class="site-logo" asp-area="Administration" asp-controller="Dashboard" asp-action="Index"><partial name="_Logo" model="@("admin")" /></a>
     </div>
     <nav class="admin-sidebar-nav">
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="Dashboard" asp-action="Index">
-            <span class="material-symbols-outlined">dashboard</span>
-            Dashboard
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Dashboard" asp-action="Index" title="Dashboard">
+            <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+            <span class="admin-nav-label">Dashboard</span>
         </a>
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="Bookings" asp-action="Index">
-            <span class="material-symbols-outlined">calendar_month</span>
-            Jobs
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Bookings" asp-action="Index" title="Jobs">
+            <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+            <span class="admin-nav-label">Jobs</span>
         </a>
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="Calendar" asp-action="Index">
-            <span class="material-symbols-outlined">access_time</span>
-            Availability Slot
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Calendar" asp-action="Index" title="Availability Slot">
+            <span class="material-symbols-outlined" aria-hidden="true">access_time</span>
+            <span class="admin-nav-label">Availability Slot</span>
         </a>
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="Services" asp-action="Index">
-            <span class="material-symbols-outlined">plumbing</span>
-            Services
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Services" asp-action="Index" title="Services">
+            <span class="material-symbols-outlined" aria-hidden="true">plumbing</span>
+            <span class="admin-nav-label">Services</span>
         </a>
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="ServiceAreas" asp-action="Index">
-            <span class="material-symbols-outlined">location_on</span>
-            Service Areas
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="ServiceAreas" asp-action="Index" title="Service Areas">
+            <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
+            <span class="admin-nav-label">Service Areas</span>
         </a>
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="Technicians" asp-action="Index">
-            <span class="material-symbols-outlined">engineering</span>
-            Technicians
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Technicians" asp-action="Index" title="Technicians">
+            <span class="material-symbols-outlined" aria-hidden="true">engineering</span>
+            <span class="admin-nav-label">Technicians</span>
         </a>
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="Enquiries" asp-action="Index">
-            <span class="material-symbols-outlined">mail</span>
-            Enquiries
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Enquiries" asp-action="Index" title="Enquiries">
+            <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+            <span class="admin-nav-label">Enquiries</span>
         </a>
         @* No "Reviews" link: no review can reach the site until the Google import is built
            (PROJECT_STATE.md Sections 3n and 3ch). The page is still at /Administration/Reviews. *@
-        <a class="admin-nav-link" asp-area="Administration" asp-controller="Account" asp-action="Index">
-            <span class="material-symbols-outlined">manage_accounts</span>
-            Account
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Account" asp-action="Index" title="Account">
+            <span class="material-symbols-outlined" aria-hidden="true">manage_accounts</span>
+            <span class="admin-nav-label">Account</span>
         </a>
     </nav>
 </aside>
