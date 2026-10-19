@@ -47,6 +47,10 @@ namespace HandyFix.Web.ViewModels.Administration.Services
         [MaxFileSize(20 * 1024 * 1024)]
         public IFormFile ImageFile { get; set; }
 
+        // The picture the service has now, shown on the Edit form. Only shown: saving the form
+        // changes the picture through ImageFile alone.
+        public string CurrentImageUrl { get; set; }
+
         public IEnumerable<SelectListItem> Categories { get; set; }
     }
 }

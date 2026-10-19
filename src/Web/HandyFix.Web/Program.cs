@@ -210,8 +210,11 @@ namespace HandyFix.Web
             services.AddSingleton<IStripeGateway, StripeGateway>();
             services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();
             services.AddTransient<IImageService, ImageService>();
+            // Uploaded service pictures go to the photo bucket; the folder is where the built-in ones
+            // are, read and never written (PROJECT_STATE.md Section 3cq).
             services.AddTransient<IImageStorageService>(sp =>
                 new ImageStorageService(
+                    sp.GetRequiredService<ICloudflareR2Service>(),
                     System.IO.Path.Combine(
                         sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>().WebRootPath,
                         "images",

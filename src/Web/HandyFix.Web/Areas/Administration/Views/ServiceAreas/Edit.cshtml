@@ -4,8 +4,8 @@
     this.ViewData["Title"] = $"Edit Service Area: {Model.Name}";
     this.ViewData["IsCreate"] = false;
 
-    // Same idea as Services/Edit.cshtml checking ServiceImageExists - surface whether step 2 of
-    // the workflow has actually been done, rather than leaving the admin to guess.
+    // Surface whether step 2 of the workflow has actually been done, rather than leaving the
+    // admin to guess.
     var heroImagePath = $"/images/areas/{Model.Slug}-hero.webp";
     var heroImageExists = !string.IsNullOrWhiteSpace(Model.Slug)
         && System.IO.File.Exists(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "images", "areas", $"{Model.Slug}-hero.webp"));

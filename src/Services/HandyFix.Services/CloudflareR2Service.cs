@@ -40,12 +40,13 @@ namespace HandyFix.Services
 
         public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string folder)
         {
+            return await this.PutFileAsync(fileStream, $"{folder.Trim('/')}/{Guid.NewGuid()}_{fileName}", contentType);
+        }
+
+        public async Task<string> PutFileAsync(Stream fileStream, string key, string contentType)
+        {
             using (AmazonS3Client client = this.CreateClient(out var bucketName, out var publicUrl))
             {
-                var sanitizedFolder = folder.Trim('/');
-                var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
-                var key = $"{sanitizedFolder}/{uniqueFileName}";
-
                 var putRequest = new PutObjectRequest
                 {
                     BucketName = bucketName,
@@ -57,7 +58,7 @@ namespace HandyFix.Services
 
                 await client.PutObjectAsync(putRequest);
 
-                return $"{publicUrl.TrimEnd('/')}/{sanitizedFolder}/{uniqueFileName}";
+                return $"{publicUrl.TrimEnd('/')}/{key}";
             }
         }
 

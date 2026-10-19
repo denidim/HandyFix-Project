@@ -3,34 +3,50 @@ namespace HandyFix.Services
     using System;
     using System.IO;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using Microsoft.Extensions.Logging;
 
     using SkiaSharp;
 
+    // A service's picture. The forty that come with the site are files in wwwroot/images/services,
+    // each service's default, and this service never writes there. A picture the admin uploads goes
+    // to the photo bucket under a new name each time, "services/{random}_{slug}.webp", with its small
+    // copy beside it as "...-320.webp", and the database keeps its address.
+    //
+    // Until PROJECT_STATE.md Section 3cq an upload was written over the built-in file inside the
+    // running container, and a deploy, which starts a new container from what git holds, brought
+    // the old picture back; a new service lost its picture, and a rename moved the file to a name
+    // the next container did not have. A picture's address no longer holds the service's name, so
+    // a rename moves nothing.
     public class ImageStorageService : IImageStorageService
     {
         /// <summary>
-        /// The width of a picture's small copy, written beside it as <c>{slug}-hero-320.webp</c>.
-        /// A category page's card shows the picture 88 pixels wide on a phone, where the picture
-        /// itself is 1024 (PROJECT_STATE Section 3cn). The pictures that come with the site get
-        /// theirs from tools/image-gen/make-phone-copies.mjs.
+        /// The width of a picture's small copy. A category page's card shows the picture 88 pixels
+        /// wide on a phone, where the picture itself is 1024 (PROJECT_STATE Section 3cn). The
+        /// pictures that come with the site get theirs from tools/image-gen/make-phone-copies.mjs.
         /// </summary>
         public const int SmallCopyWidth = 320;
 
-        private const string PublicFolder = "/images/services/";
-        private const string PictureSuffix = "-hero.webp";
+        private const string BuiltInFolder = "/images/services/";
+        private const string BuiltInSuffix = "-hero.webp";
+        private const string UploadFolder = "services";
 
-        private readonly string targetDirectory;
+        // The end of an address this service gave an upload: the folder, 32 hex characters, the
+        // slug's letters, digits and dashes.
+        private static readonly Regex UploadedName = new Regex("/" + UploadFolder + "/[0-9a-f]{32}_[a-z0-9-]+\\.webp$", RegexOptions.CultureInvariant);
+
+        private readonly ICloudflareR2Service r2Service;
+        private readonly string builtInDirectory;
         private readonly ILogger<ImageStorageService> logger;
         private readonly string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
         private readonly string[] allowedContentTypes = { "image/jpeg", "image/png", "image/webp" };
-        private readonly string[] legacyExtensions = { ".jpg", ".jpeg", ".png" };
 
-        public ImageStorageService(string targetDirectory, ILogger<ImageStorageService> logger)
+        public ImageStorageService(ICloudflareR2Service r2Service, string builtInDirectory, ILogger<ImageStorageService> logger)
         {
-            this.targetDirectory = targetDirectory;
+            this.r2Service = r2Service;
+            this.builtInDirectory = builtInDirectory;
             this.logger = logger;
         }
 
@@ -47,228 +63,168 @@ namespace HandyFix.Services
                 throw new InvalidOperationException("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed.");
             }
 
+            byte[] picture;
+            byte[] smallCopy;
             try
             {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await stream.CopyToAsync(memoryStream);
-                    memoryStream.Position = 0;
-
-                    using (var originalBitmap = SKBitmap.Decode(memoryStream))
-                    {
-                        if (originalBitmap == null)
-                        {
-                            throw new InvalidOperationException("Failed to decode uploaded image.");
-                        }
-
-                        SKBitmap targetBitmap = originalBitmap;
-                        var isResized = false;
-
-                        if (originalBitmap.Width > 1920)
-                        {
-                            var targetWidth = 1920;
-                            var targetHeight = (int)Math.Round((double)originalBitmap.Height * targetWidth / originalBitmap.Width);
-                            targetBitmap = originalBitmap.Resize(new SKImageInfo(targetWidth, targetHeight), SKFilterQuality.High);
-                            isResized = true;
-                        }
-
-                        try
-                        {
-                            using (var image = SKImage.FromBitmap(targetBitmap))
-                            using (SKData data = image.Encode(SKEncodedImageFormat.Webp, 80))
-                            {
-                                var filePath = this.GetServiceImagePath(slug);
-                                var directory = Path.GetDirectoryName(filePath);
-                                if (!Directory.Exists(directory))
-                                {
-                                    Directory.CreateDirectory(directory);
-                                }
-
-                                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-                                {
-                                    data.SaveTo(fileStream);
-                                }
-                            }
-
-                            // Written every time, so the copy is never an older picture than the
-                            // one it stands for: the new picture takes the same file name.
-                            this.SaveSmallCopy(targetBitmap, slug);
-                            this.DeleteLegacyImages(slug);
-                        }
-                        finally
-                        {
-                            if (isResized && targetBitmap != null)
-                            {
-                                targetBitmap.Dispose();
-                            }
-                        }
-                    }
-                }
+                (picture, smallCopy) = await EncodeAsync(stream);
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Failed to process and save service image using SkiaSharp for slug: {Slug}", slug);
+                this.logger.LogError(ex, "Failed to process service image using SkiaSharp for slug: {Slug}", slug);
                 throw;
             }
 
-            return this.GetServiceImagePublicUrl(slug);
-        }
+            // A new name for every upload: a browser that kept the last picture can never show it
+            // for this one.
+            var name = $"{UploadFolder}/{Guid.NewGuid():N}_{NameFrom(slug)}";
 
-        public void DeleteServiceImage(string slug)
-        {
+            string pictureUrl;
+            using (var pictureStream = new MemoryStream(picture))
+            {
+                pictureUrl = await this.r2Service.PutFileAsync(pictureStream, name + ".webp", "image/webp");
+            }
+
             try
             {
-                foreach (var filePath in new[] { this.GetServiceImagePath(slug), this.GetSmallCopyPath(slug) })
+                using (var copyStream = new MemoryStream(smallCopy))
                 {
-                    if (File.Exists(filePath))
-                    {
-                        File.Delete(filePath);
-                    }
+                    await this.r2Service.PutFileAsync(copyStream, $"{name}-{SmallCopyWidth}.webp", "image/webp");
                 }
-
-                this.DeleteLegacyImages(slug);
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Failed to delete service image for slug: {Slug}", slug);
+                // The upload has failed as far as the admin is told, so the picture that did go up
+                // is taken down again rather than left with nothing pointing at it.
+                this.logger.LogError(ex, "Failed to upload the small copy of a service image for slug: {Slug}", slug);
+                await this.DeleteQuietlyAsync(pictureUrl);
+                throw;
             }
+
+            return pictureUrl;
         }
 
-        public void RenameServiceImage(string oldSlug, string newSlug)
+        public async Task DeleteServiceImageAsync(string imageUrl)
         {
-            try
+            // A built-in picture is in the site's files, and is never deleted.
+            if (!IsUpload(imageUrl))
             {
-                var oldPath = this.GetServiceImagePath(oldSlug);
-                var newPath = this.GetServiceImagePath(newSlug);
-
-                if (File.Exists(oldPath))
-                {
-                    var directory = Path.GetDirectoryName(newPath);
-                    if (!Directory.Exists(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                    }
-
-                    if (File.Exists(newPath))
-                    {
-                        File.Delete(newPath);
-                    }
-
-                    File.Move(oldPath, newPath);
-
-                    // The small copy goes with it. One already under the new name belongs to an
-                    // earlier picture and would stand for this one, so it goes either way.
-                    var oldCopy = this.GetSmallCopyPath(oldSlug);
-                    var newCopy = this.GetSmallCopyPath(newSlug);
-                    if (File.Exists(newCopy))
-                    {
-                        File.Delete(newCopy);
-                    }
-
-                    if (File.Exists(oldCopy))
-                    {
-                        File.Move(oldCopy, newCopy);
-                    }
-                }
-
-                this.DeleteLegacyImages(oldSlug);
-                this.DeleteLegacyImages(newSlug);
+                return;
             }
-            catch (Exception ex)
-            {
-                this.logger.LogError(ex, "Failed to rename service image from {OldSlug} to {NewSlug}", oldSlug, newSlug);
-            }
-        }
 
-        public bool ServiceImageExists(string slug)
-        {
-            try
-            {
-                var filePath = this.GetServiceImagePath(slug);
-                if (File.Exists(filePath))
-                {
-                    return true;
-                }
-
-                return this.legacyExtensions.Any(ext => File.Exists(Path.Combine(this.targetDirectory, $"{slug}-hero{ext}")));
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogWarning(ex, "Error checking existence of service image for slug: {Slug}", slug);
-                return false;
-            }
-        }
-
-        public string GetServiceImagePublicUrl(string slug)
-        {
-            return $"{PublicFolder}{slug}{PictureSuffix}";
+            await this.DeleteQuietlyAsync(imageUrl);
+            await this.DeleteQuietlyAsync(SmallCopyOf(imageUrl));
         }
 
         public string GetSmallCopyPublicUrl(string imageUrl)
         {
+            // An upload always goes up with its copy.
+            if (IsUpload(imageUrl))
+            {
+                return SmallCopyOf(imageUrl);
+            }
+
             if (imageUrl == null
-                || !imageUrl.StartsWith(PublicFolder, StringComparison.Ordinal)
-                || !imageUrl.EndsWith(PictureSuffix, StringComparison.Ordinal))
+                || !imageUrl.StartsWith(BuiltInFolder, StringComparison.Ordinal)
+                || !imageUrl.EndsWith(BuiltInSuffix, StringComparison.Ordinal))
             {
                 return null;
             }
 
-            var slug = imageUrl.Substring(PublicFolder.Length, imageUrl.Length - PublicFolder.Length - PictureSuffix.Length);
-            try
-            {
-                return File.Exists(this.GetSmallCopyPath(slug)) ? $"{PublicFolder}{slug}-hero-{SmallCopyWidth}.webp" : null;
-            }
-            catch (ArgumentException)
-            {
-                // Not a name this service would have written; the page sends the picture itself.
-                return null;
-            }
-        }
-
-        private string GetServiceImagePath(string slug)
-        {
+            var slug = imageUrl.Substring(BuiltInFolder.Length, imageUrl.Length - BuiltInFolder.Length - BuiltInSuffix.Length);
             if (string.IsNullOrWhiteSpace(slug) || slug.Contains("..") || slug.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             {
-                throw new ArgumentException("Invalid or unsafe service slug.");
+                // Not a name a built-in picture has; the page sends the picture itself.
+                return null;
             }
 
-            return Path.Combine(this.targetDirectory, $"{slug}{PictureSuffix}");
+            var copyName = $"{slug}-hero-{SmallCopyWidth}.webp";
+            return File.Exists(Path.Combine(this.builtInDirectory, copyName)) ? BuiltInFolder + copyName : null;
         }
 
-        private string GetSmallCopyPath(string slug)
+        private static bool IsUpload(string imageUrl)
         {
-            // The same checks on the slug as the picture's own path.
-            return Path.ChangeExtension(this.GetServiceImagePath(slug), null) + $"-{SmallCopyWidth}.webp";
+            return imageUrl != null && UploadedName.IsMatch(imageUrl);
         }
 
-        private void SaveSmallCopy(SKBitmap picture, string slug)
+        private static string SmallCopyOf(string uploadUrl)
         {
-            var height = (int)Math.Round((double)picture.Height * SmallCopyWidth / picture.Width);
-            using (var small = picture.Resize(new SKImageInfo(SmallCopyWidth, height), SKFilterQuality.High))
-            using (var image = SKImage.FromBitmap(small))
-            using (SKData data = image.Encode(SKEncodedImageFormat.Webp, 80))
-            using (var fileStream = new FileStream(this.GetSmallCopyPath(slug), FileMode.Create, FileAccess.Write))
+            return uploadUrl.Substring(0, uploadUrl.Length - ".webp".Length) + $"-{SmallCopyWidth}.webp";
+        }
+
+        // The slug is in the name only so that the bucket reads sensibly. Kept to what a web address
+        // carries as it is, whatever an admin typed into the service's name.
+        private static string NameFrom(string slug)
+        {
+            var name = Regex.Replace((slug ?? string.Empty).ToLowerInvariant(), "[^a-z0-9-]", string.Empty);
+            return name.Length == 0 ? "service" : name;
+        }
+
+        // The picture, made no wider than 1920, and its small copy, both as WebP.
+        private static async Task<(byte[] Picture, byte[] SmallCopy)> EncodeAsync(Stream stream)
+        {
+            using (var memoryStream = new MemoryStream())
             {
-                data.SaveTo(fileStream);
-            }
-        }
+                await stream.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
 
-        private void DeleteLegacyImages(string slug)
-        {
-            foreach (var ext in this.legacyExtensions)
-            {
-                var legacyPath = Path.Combine(this.targetDirectory, $"{slug}-hero{ext}");
-                if (File.Exists(legacyPath))
+                using (var originalBitmap = SKBitmap.Decode(memoryStream))
                 {
+                    if (originalBitmap == null)
+                    {
+                        throw new InvalidOperationException("Failed to decode uploaded image.");
+                    }
+
+                    SKBitmap targetBitmap = originalBitmap;
+                    var isResized = false;
+
+                    if (originalBitmap.Width > 1920)
+                    {
+                        var targetWidth = 1920;
+                        var targetHeight = (int)Math.Round((double)originalBitmap.Height * targetWidth / originalBitmap.Width);
+                        targetBitmap = originalBitmap.Resize(new SKImageInfo(targetWidth, targetHeight), SKFilterQuality.High);
+                        isResized = true;
+                    }
+
                     try
                     {
-                        File.Delete(legacyPath);
+                        var smallHeight = (int)Math.Round((double)targetBitmap.Height * SmallCopyWidth / targetBitmap.Width);
+                        using (var small = targetBitmap.Resize(new SKImageInfo(SmallCopyWidth, smallHeight), SKFilterQuality.High))
+                        {
+                            return (ToWebp(targetBitmap), ToWebp(small));
+                        }
                     }
-                    catch (Exception ex)
+                    finally
                     {
-                        this.logger.LogWarning(ex, "Could not delete legacy file {LegacyPath}", legacyPath);
+                        if (isResized)
+                        {
+                            targetBitmap.Dispose();
+                        }
                     }
                 }
+            }
+        }
+
+        private static byte[] ToWebp(SKBitmap bitmap)
+        {
+            using (var image = SKImage.FromBitmap(bitmap))
+            using (SKData data = image.Encode(SKEncodedImageFormat.Webp, 80))
+            {
+                return data.ToArray();
+            }
+        }
+
+        // An object left in the bucket costs nothing and harms nobody; a save that failed because
+        // of one would. So a delete that fails is logged and the admin's change goes ahead.
+        private async Task DeleteQuietlyAsync(string url)
+        {
+            try
+            {
+                await this.r2Service.DeleteFileAsync(url);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning(ex, "Could not delete service image {ImageUrl} from the bucket", url);
             }
         }
     }

@@ -5,15 +5,17 @@ namespace HandyFix.Services
 
     public interface IImageStorageService
     {
+        /// <summary>
+        /// Puts an uploaded picture and its small copy in the photo bucket under a new name, and
+        /// returns the picture's address. Nothing is written to the site's own files.
+        /// </summary>
         Task<string> SaveServiceImageAsync(Stream stream, string fileName, string contentType, string slug);
 
-        void DeleteServiceImage(string slug);
-
-        void RenameServiceImage(string oldSlug, string newSlug);
-
-        bool ServiceImageExists(string slug);
-
-        string GetServiceImagePublicUrl(string slug);
+        /// <summary>
+        /// Takes an uploaded picture and its small copy out of the bucket. A built-in picture is
+        /// left alone, and a delete that fails is logged, not thrown.
+        /// </summary>
+        Task DeleteServiceImageAsync(string imageUrl);
 
         /// <summary>
         /// The address of a service picture's small copy, for a page that shows the picture small;
