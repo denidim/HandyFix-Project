@@ -9,10 +9,20 @@
 # for the real values). docker compose reads a .env file in the same
 # directory automatically, no extra flag needed.
 
+# Docker keeps everything a container writes to its log, for as long as the
+# container lives, unless told otherwise. With this it keeps five files of
+# 10 MB each and drops the oldest. Both services take it below.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   web:
     image: ghcr.io/denidim/handyfix-web:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    logging: *logging
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       # The container's own clock is UTC, an hour behind the UK all summer.
@@ -70,6 +80,7 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    logging: *logging
     ports:
       - "80:80"
       - "443:443"
