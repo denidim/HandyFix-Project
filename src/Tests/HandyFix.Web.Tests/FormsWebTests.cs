@@ -358,7 +358,8 @@
         }
 
         // With keys, each public form shows Cloudflare's "are you a person" check just above its
-        // button, told which form it is on, and loads Cloudflare's script for it.
+        // button, told which form it is on. Cloudflare's script is not in the page: site.js fetches
+        // it when the visitor first touches the form (PROJECT_STATE.md Section 3cq).
         [Theory]
         [InlineData("/Contact", "contact")]
         [InlineData("/JoinOurTeam", "join-team")]
@@ -372,7 +373,9 @@
             var content = await (await client.GetAsync(url)).Content.ReadAsStringAsync();
 
             Assert.Contains("<div class=\"cf-turnstile\" data-sitekey=\"site-key-for-tests\" data-action=\"" + action + "\"", content);
-            Assert.Contains("<script src=\"https://challenges.cloudflare.com/turnstile/v0/api.js\" async defer></script>", content);
+            Assert.DoesNotContain("challenges.cloudflare.com", content);
+            var script = await client.GetStringAsync("/js/site.js");
+            Assert.Contains("https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoaded", script);
 
             // Inside the form, and before its button.
             var form = content.Substring(content.IndexOf("<form", content.IndexOf("<main", StringComparison.Ordinal), StringComparison.Ordinal));

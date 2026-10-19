@@ -8,9 +8,11 @@
    The text box is moved off the page by forms.css and skipped by the Tab key: no person fills it
    in, a program filling in every field does. The stamp says when the form was first shown.
 
-   The Turnstile widget is Cloudflare's "are you a person" check. Its script finds the div, does
-   its work in the browser and adds a token to the form, which the server asks Cloudflare about.
-   It is left out when there are no keys, which is allowed in Development only. *@
+   The Turnstile widget is Cloudflare's "are you a person" check. Its script draws it in the div
+   from the div's data-* settings, does its work in the browser and adds a token to the form,
+   which the server asks Cloudflare about. site.js fetches that script the first time the visitor
+   touches the form, not with the page (PROJECT_STATE.md Section 3cq). It is left out when there
+   are no keys, which is allowed in Development only. *@
 @{
     var siteKey = Turnstile.SiteKey;
 }
@@ -26,7 +28,7 @@
         <script>
             // The widget is never narrower than 300px, and on a phone the inside of a form is.
             // There it is asked for in its compact shape instead. This runs as the page is read,
-            // before Cloudflare's script (below, deferred) draws the widget.
+            // long before Cloudflare's script draws the widget.
             (function () {
                 var box = document.currentScript.parentElement;
                 if (box.clientWidth < 300) {
@@ -39,5 +41,4 @@
             The check above has not finished yet. Please give it a moment and try again. If it does not appear at all, call us or message us on WhatsApp on @GlobalConstants.BusinessPhone.
         </p>
     </div>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 }
