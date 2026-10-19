@@ -24,8 +24,10 @@
   gap: var(--spacing-4);
 }
 
+/* An h2 since Section 3co (an h5 skipped levels after a page's h3); the size is the h5's it was. */
 .footer-title {
   color: var(--on-primary);
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: var(--spacing-4);
 }

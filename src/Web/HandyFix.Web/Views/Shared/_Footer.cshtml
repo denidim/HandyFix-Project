@@ -11,10 +11,10 @@
             </p>
             <div class="footer-social">
                 <a class="footer-social-icon" href="mailto:@GlobalConstants.BusinessEmail" aria-label="Email us">
-                    <span class="material-symbols-outlined">mail</span>
+                    <span class="material-symbols-outlined" aria-hidden="true">mail</span>
                 </a>
                 <a class="footer-social-icon" href="tel:@GlobalConstants.BusinessPhoneInternational" aria-label="Call us">
-                    <span class="material-symbols-outlined">phone</span>
+                    <span class="material-symbols-outlined" aria-hidden="true">phone</span>
                 </a>
                 <a class="footer-social-icon" href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener" aria-label="Message us on WhatsApp">
                     <partial name="_WhatsAppIcon" />
@@ -22,7 +22,7 @@
             </div>
         </div>
         <div class="footer-column">
-            <h5 class="footer-title">Quick Links</h5>
+            <h2 class="footer-title">Quick Links</h2>
             <a class="footer-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
             <a class="footer-link" asp-area="" asp-controller="Home" asp-action="Terms">Terms of Service</a>
             <a class="footer-link" asp-area="" asp-controller="Home" asp-action="FAQ">FAQ</a>
@@ -32,7 +32,7 @@
             <a class="footer-link" asp-area="" asp-controller="Home" asp-action="Reviews">Reviews</a>
         </div>
         <div>
-            <h5 class="footer-title">Service Areas</h5>
+            <h2 class="footer-title">Service Areas</h2>
             <vc:footer-service-areas></vc:footer-service-areas>
             <div class="footer-copyright">
                 <p>© @DateTime.Now.Year @GlobalConstants.SystemName. All rights reserved.</p>
