@@ -393,6 +393,20 @@
 }
 </script>
 
+<!-- JSON-LD: BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@@type": "ListItem", "position": 1, "name": "Home", "item": @Json.Serialize(this.Url.Action("Index", "Home", null, this.Context.Request.Scheme)) },
+    { "@@type": "ListItem", "position": 2, "name": "Services", "item": @Json.Serialize(this.Url.Action("Index", "Services", null, this.Context.Request.Scheme)) },
+    { "@@type": "ListItem", "position": 3, "name": @Json.Serialize(Model.CategoryName), "item": @Json.Serialize(this.Url.RouteUrl("ServiceCategory", new { categorySlug = Model.CategorySlug }, this.Context.Request.Scheme)) },
+    { "@@type": "ListItem", "position": 4, "name": @Json.Serialize(Model.Name), "item": @Json.Serialize(this.ViewData["Canonical"]) }
+  ]
+}
+</script>
+
 <script>
     (function () {
         var heroBg = document.getElementById("service-hero-bg");

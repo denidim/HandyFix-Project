@@ -372,6 +372,7 @@
         [InlineData("/Services/plumbing/radiator-trv-replacement", "How much does Radiator & TRV Replacement cost?")]
         [InlineData("/Services/plumbing/radiator-trv-replacement", "starts from £")]
         [InlineData("/Areas/worcester-park-ewell", "Worcester Park & Ewell")]
+        [InlineData("/Services/small-building-works", "Small Building & Refurbishments")]
         public async Task StructuredDataHoldsNamesAndPricesAsTheyAreTyped(string url, string expected)
         {
             // The same bug, read the way a search engine reads the page: each JSON-LD block parsed
@@ -389,6 +390,64 @@
             }
 
             Assert.Contains(values, value => value.Contains(expected));
+        }
+
+        // A category page told search engines nothing while the area pages did (PROJECT_STATE
+        // Section 3cm). It describes itself as a service, with each service it lists at its own
+        // address and price, the areas it covers, and its breadcrumb trail.
+        [Fact]
+        public async Task CategoryPageDescribesItsServicesToSearchEngines()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/Services/plumbing");
+            var blocks = JsonLdElements(page);
+
+            var service = Assert.Single(blocks, b => b.GetProperty("@type").GetString() == "Service");
+            Assert.Equal("Plumbing", service.GetProperty("serviceType").GetString());
+            Assert.Equal("http://localhost/Services/plumbing", service.GetProperty("url").GetString());
+            Assert.Contains(service.GetProperty("areaServed").EnumerateArray(), area => area.GetProperty("name").GetString() == "Chessington");
+
+            var tapRepairs = Assert.Single(
+                service.GetProperty("hasOfferCatalog").GetProperty("itemListElement").EnumerateArray(),
+                offer => offer.GetProperty("itemOffered").GetProperty("name").GetString() == "Tap Repairs");
+            Assert.Equal("http://localhost/Services/plumbing/tap-repairs", tapRepairs.GetProperty("itemOffered").GetProperty("url").GetString());
+            Assert.Equal("90.00", tapRepairs.GetProperty("price").GetString());
+            Assert.Equal("GBP", tapRepairs.GetProperty("priceCurrency").GetString());
+
+            var breadcrumb = Assert.Single(blocks, b => b.GetProperty("@type").GetString() == "BreadcrumbList");
+            Assert.Equal(
+                new[] { "Home", "Services", "Plumbing" },
+                breadcrumb.GetProperty("itemListElement").EnumerateArray().Select(item => item.GetProperty("name").GetString()));
+        }
+
+        // Building work is quoted after a survey and its cards show no price, so neither does what
+        // the page tells a search engine.
+        [Fact]
+        public async Task QuoteOnlyCategoryPageGivesSearchEnginesNoPrice()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/Services/small-building-works");
+            var service = Assert.Single(JsonLdElements(page), b => b.GetProperty("@type").GetString() == "Service");
+
+            var offers = service.GetProperty("hasOfferCatalog").GetProperty("itemListElement").EnumerateArray().ToList();
+            Assert.NotEmpty(offers);
+            Assert.All(offers, offer => Assert.False(offer.TryGetProperty("price", out _)));
+        }
+
+        // A service page shows its trail (Services, the category, the service); search engines get
+        // the same trail from the home page down, as on the area and category pages.
+        [Fact]
+        public async Task ServicePageGivesSearchEnginesItsBreadcrumb()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/Services/plumbing/tap-repairs");
+            var breadcrumb = Assert.Single(JsonLdElements(page), b => b.GetProperty("@type").GetString() == "BreadcrumbList");
+
+            var items = breadcrumb.GetProperty("itemListElement").EnumerateArray().ToList();
+            Assert.Equal(new[] { "Home", "Services", "Plumbing", "Tap Repairs" }, items.Select(item => item.GetProperty("name").GetString()));
+            Assert.Equal(
+                new[] { "http://localhost/", "http://localhost/Services", "http://localhost/Services/plumbing", "http://localhost/Services/plumbing/tap-repairs" },
+                items.Select(item => item.GetProperty("item").GetString()));
         }
 
         [Theory]
@@ -675,6 +734,19 @@
         {
             return Regex.Matches(html, "<script type=\"application/ld(?:\\+|&#x2B;)json\">(.*?)</script>", RegexOptions.Singleline)
                 .Select(match => match.Groups[1].Value);
+        }
+
+        // The JSON-LD blocks of a page, parsed, each copied out of its document before the
+        // document is let go.
+        private static List<JsonElement> JsonLdElements(string html)
+        {
+            return JsonLdBlocks(html)
+                .Select(block =>
+                {
+                    using var json = JsonDocument.Parse(block);
+                    return json.RootElement.Clone();
+                })
+                .ToList();
         }
 
         // Every text value in a JSON document, at any depth, unescaped.
