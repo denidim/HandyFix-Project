@@ -39,7 +39,10 @@
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             var content = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
             Assert.Contains("We can't find that page.", content);
-            Assert.Contains("<title>Page Not Found - " + GlobalConstants.SystemName + "</title>", content);
+
+            // The start of the title is left out: a copy of the site that is not the live one
+            // puts its name there (EnvironmentMark).
+            Assert.Contains("Page Not Found - " + GlobalConstants.SystemName + "</title>", content);
 
             // The whole site is one click away: its header, a way home, the phone number.
             Assert.Contains("Back to the home page", content);

@@ -373,6 +373,32 @@
             Assert.Single(Regex.Matches(title, "Plumbing Handyman Surrey"));
         }
 
+        // A copy of the site that is not the live one says so across the top of a public page and
+        // of an admin page, and in the tab's title: a test booking meant for staging was once made
+        // on the live site (PROJECT_STATE.md Section 3cq). This host is Development; that the live
+        // site shows neither is in EnvironmentMarkTests.
+        [Fact]
+        public async Task ACopyOfTheSiteSaysSoOnAPublicPageAndInTheAdminPanel()
+        {
+            var browser = this.server.CreateClient();
+            await FormsWebTests.PostFormAsync(browser, "/Identity/Account/Login", new Dictionary<string, string>
+            {
+                ["Input.Email"] = SqliteWebApplicationFactory.AdminEmail,
+                ["Input.Password"] = SqliteWebApplicationFactory.AdminPassword,
+            });
+
+            foreach (var url in new[] { "/", "/Administration/Dashboard" })
+            {
+                var response = await browser.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                Assert.Equal(url, response.RequestMessage.RequestUri.AbsolutePath);
+                var content = await response.Content.ReadAsStringAsync();
+
+                Assert.Contains("<div class=\"environment-strip\" role=\"note\">TEST SITE (development). Bookings, payments and emails here are not real.</div>", content);
+                Assert.Contains("<title>[DEVELOPMENT] ", content);
+            }
+        }
+
         [Theory]
         [MemberData(nameof(PublicPages))]
         public async Task PublicPagesLinkTheRealContactDetailsAndNeverThePlaceholderNumber(string url)
