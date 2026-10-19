@@ -134,6 +134,47 @@
             Assert.Contains("/Areas/guildford</loc>", responseContent);
         }
 
+        // Every page the sitemap hands a search engine names itself as the page. Only the area
+        // pages did (PROJECT_STATE Section 3cm); a page added to the sitemap without a canonical
+        // link fails here.
+        [Fact]
+        public async Task EveryPageInTheSitemapNamesItselfAsTheCanonicalAddress()
+        {
+            var client = this.server.CreateClient();
+            var sitemap = await client.GetStringAsync("/sitemap.xml");
+            var addresses = Regex.Matches(sitemap, "<loc>([^<]+)</loc>")
+                .Select(m => WebUtility.HtmlDecode(m.Groups[1].Value))
+                .ToList();
+            Assert.NotEmpty(addresses);
+
+            foreach (var address in addresses)
+            {
+                var page = await client.GetStringAsync(address);
+                var canonical = Regex.Match(page, "<link rel=\"canonical\" href=\"([^\"]+)\"");
+                Assert.True(canonical.Success, $"{address} has no canonical link");
+                Assert.Equal(address, WebUtility.HtmlDecode(canonical.Groups[1].Value));
+            }
+        }
+
+        // A link with a query string, or in other letter case, shows the same page, and the page
+        // names the one address the sitemap gives for it, so a search engine counts them as one.
+        // Upper case in a slug is the same case on the live database, whose comparisons ignore
+        // case; the test database's do not, so it is not asked here.
+        [Theory]
+        [InlineData("/?utm_source=facebook", "/")]
+        [InlineData("/Booking?categorySlug=handyman&date=2026-10-20", "/Booking")]
+        [InlineData("/Contact?service=Tap%20Repairs", "/Contact")]
+        [InlineData("/services/plumbing", "/Services/plumbing")]
+        [InlineData("/SERVICES/plumbing/tap-repairs", "/Services/plumbing/tap-repairs")]
+        public async Task APageReachedThroughAnotherAddressNamesItsOwn(string link, string canonicalPath)
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync(link);
+            var canonical = Regex.Match(page, "<link rel=\"canonical\" href=\"([^\"]+)\"");
+            Assert.True(canonical.Success, $"{link} has no canonical link");
+            Assert.Equal(new Uri(client.BaseAddress, canonicalPath).ToString(), WebUtility.HtmlDecode(canonical.Groups[1].Value));
+        }
+
         [Fact]
         public async Task AreaDetailsPageNearbyAreasShouldBeOrderedByDriveTimeNotFeaturedStatus()
         {

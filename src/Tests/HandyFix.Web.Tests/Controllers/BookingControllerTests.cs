@@ -636,7 +636,14 @@
                 imageService.Object,
                 serviceAreasService.Object,
                 (formGuard ?? new Mock<IFormGuard>()).Object,
-                NullLogger<BookingController>.Instance);
+                NullLogger<BookingController>.Instance)
+            {
+                // The booking page names its own address for search engines, which needs a request
+                // and the site's routes. With no routes here the address comes back empty;
+                // WebTests checks the real one.
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+                Url = Mock.Of<IUrlHelper>(),
+            };
         }
     }
 }

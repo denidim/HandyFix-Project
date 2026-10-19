@@ -101,6 +101,10 @@
             return new ServicesController(categoriesService.Object, servicesService.Object, serviceAreasService.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+
+                // A page names its own address for search engines, which needs the site's routes.
+                // There are none here, so the address comes back empty; WebTests checks the real ones.
+                Url = Mock.Of<IUrlHelper>(),
             };
         }
     }

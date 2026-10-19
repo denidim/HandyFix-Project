@@ -86,6 +86,7 @@ namespace HandyFix.Web.Controllers
 
             this.ViewData["Title"] = "Plumbers & Handymen in Surrey & South London";
             this.ViewData["MetaDescription"] = "Plumbing Handyman Surrey provides reliable local plumbing and handyman services across Surrey and South London, including Chessington, Cobham, Esher, Guildford, Epsom, and Kingston. Book hourly slots online.";
+            this.ViewData["Canonical"] = this.Url.Action("Index", "Home", null, this.Request.Scheme);
 
             return this.View(model);
         }
@@ -96,6 +97,7 @@ namespace HandyFix.Web.Controllers
         {
             this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
             this.ViewData["MetaDescription"] = "Get in touch with Plumbing Handyman Surrey for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.";
+            this.ViewData["Canonical"] = this.Url.Action("Contact", "Home", null, this.Request.Scheme);
             var model = new ContactInputModel();
             if (!string.IsNullOrWhiteSpace(service))
             {
@@ -266,6 +268,7 @@ namespace HandyFix.Web.Controllers
 
             this.ViewData["Title"] = "Customer Reviews";
             this.ViewData["MetaDescription"] = "Read verified customer reviews of our plumbing and handyman services across Surrey and South London, or leave your own.";
+            this.ViewData["Canonical"] = this.Url.Action("Reviews", "Home", null, this.Request.Scheme);
             return this.View(model);
         }
 
@@ -274,6 +277,7 @@ namespace HandyFix.Web.Controllers
         {
             this.ViewData["Title"] = "About Us";
             this.ViewData["MetaDescription"] = "Learn about Plumbing Handyman Surrey, the dedicated plumbing, handyman and refurbishment specialists serving Surrey and South London from Chessington.";
+            this.ViewData["Canonical"] = this.Url.Action("About", "Home", null, this.Request.Scheme);
             return this.View();
         }
 
@@ -282,6 +286,7 @@ namespace HandyFix.Web.Controllers
         {
             this.ViewData["Title"] = "Frequently Asked Questions";
             this.ViewData["MetaDescription"] = "Answers to common questions about booking, pricing, and scheduling plumbing and handyman services with Plumbing Handyman Surrey.";
+            this.ViewData["Canonical"] = this.Url.Action("FAQ", "Home", null, this.Request.Scheme);
             return this.View();
         }
 
@@ -299,6 +304,7 @@ namespace HandyFix.Web.Controllers
         {
             this.ViewData["Title"] = "Privacy Policy";
             this.ViewData["MetaDescription"] = "How Plumbing Handyman Surrey collects, uses, and protects your personal data.";
+            this.ViewData["Canonical"] = this.Url.Action("Privacy", "Home", null, this.Request.Scheme);
             return this.View();
         }
 
@@ -307,6 +313,7 @@ namespace HandyFix.Web.Controllers
         {
             this.ViewData["Title"] = "Terms & Conditions";
             this.ViewData["MetaDescription"] = "The terms and conditions governing bookings and service delivery with Plumbing Handyman Surrey.";
+            this.ViewData["Canonical"] = this.Url.Action("Terms", "Home", null, this.Request.Scheme);
             return this.View();
         }
 
@@ -315,6 +322,7 @@ namespace HandyFix.Web.Controllers
         {
             this.ViewData["Title"] = "Cookie Policy";
             this.ViewData["MetaDescription"] = "How Plumbing Handyman Surrey uses cookies on this website.";
+            this.ViewData["Canonical"] = this.Url.Action("CookiePolicy", "Home", null, this.Request.Scheme);
             return this.View();
         }
 
@@ -341,6 +349,7 @@ namespace HandyFix.Web.Controllers
         {
             this.ViewData["Title"] = "Join Our Team - Careers";
             this.ViewData["MetaDescription"] = "Skilled plumber, handyman or building tradesperson in Surrey or South London? Apply to join our Chessington-based team.";
+            this.ViewData["Canonical"] = this.Url.Action("JoinTeam", "Home", null, this.Request.Scheme);
         }
 
         // The Contact form's category options come from the real service categories, so a category

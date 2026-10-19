@@ -547,6 +547,10 @@
             };
             controller.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
 
+            // A page names its own address for search engines, which needs the site's routes. There
+            // are none here, so the address comes back empty; WebTests checks the real ones.
+            controller.Url = Mock.Of<IUrlHelper>();
+
             return controller;
         }
 
