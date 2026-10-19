@@ -65,7 +65,10 @@ Every `--on-*` token is the readable text/icon color for its matching container.
 ## 2. Typography (`base/typography.css`)
 
 **Font**: `'Outfit', sans-serif` for both body and display (`--font-family-base` /
-`--font-family-display`), loaded via Google Fonts in `css/fonts.css`.
+`--font-family-display`), from Google Fonts. It and the Material Symbols icon font are linked from
+the page head by `Views/Shared/_WebFonts.cshtml`, which both layouts include. The icon font is asked
+for at one weight (400), size (24) and grade (0), with fill on and off: a weight other than 400
+draws at 400 unless that request is changed (`PROJECT_STATE.md` Section 3cn).
 
 Headings (`h1`–`h6`) default to `var(--font-family-display)` + `color: var(--primary)`.
 
@@ -245,7 +248,6 @@ address carries a hash of its content; in Development each file is linked by its
 order (`PROJECT_STATE.md` Section 3bs).
 
 ```
-fonts.css                (the Google Fonts @imports, which must open the combined file)
 base/variables.css → base/reset.css → base/typography.css → base/layout.css → base/utilities.css
 components/navbar.css → footer.css → logo.css → buttons.css → cards.css → forms.css → image-upload.css
 pages/home.css → services.css → pricing.css → service-details.css → booking.css

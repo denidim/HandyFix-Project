@@ -134,6 +134,20 @@
             Assert.Contains("/Areas/guildford</loc>", responseContent);
         }
 
+        // The icon font was asked for twice, once with every weight, 1.1 MB on every page; it is
+        // asked for once now, at the one weight the site draws icons at (PROJECT_STATE Section 3cn).
+        [Fact]
+        public async Task PagesAskForTheIconFontOnceAtTheOneWeightTheSiteUses()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/");
+
+            var iconFont = Assert.Single(Regex.Matches(page, "href=\"(https://fonts\\.googleapis\\.com/css2\\?family=Material\\+Symbols[^\"]+)\"")).Groups[1].Value;
+            Assert.Contains("opsz,wght,FILL,GRAD@24,400,0..1,0", iconFont);
+            Assert.EndsWith("display=block", iconFont);
+            Assert.Single(Regex.Matches(page, "family=Outfit"));
+        }
+
         // Every page the sitemap hands a search engine names itself as the page. Only the area
         // pages did (PROJECT_STATE Section 3cm); a page added to the sitemap without a canonical
         // link fails here.
@@ -722,8 +736,7 @@
             Assert.True(response.Headers.CacheControl?.MaxAge >= TimeSpan.FromDays(365));
 
             var css = await response.Content.ReadAsStringAsync();
-            Assert.StartsWith("@import url(", css); // web fonts, which must open the file
-            Assert.Equal(2, Regex.Matches(css, "@import").Count); // and no stylesheet of ours is left as an import
+            Assert.DoesNotContain("@import", css); // the web fonts are linked from the page head, and no stylesheet of ours is an import
             Assert.Contains(".site-logo", css); // a file from the middle of the list
             Assert.Contains(".material-symbols-filled", css); // the last file
         }

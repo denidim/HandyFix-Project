@@ -21,9 +21,6 @@
         /// </summary>
         public static readonly string[] SourceFiles =
         {
-            // Web fonts: @import lines, which only work at the very top.
-            "/css/fonts.css",
-
             "/css/base/variables.css",
             "/css/base/reset.css",
             "/css/base/typography.css",
