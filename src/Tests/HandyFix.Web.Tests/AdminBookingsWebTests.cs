@@ -868,17 +868,19 @@
         }
 
         // The admin layout had no font link of its own and took both web fonts from the combined
-        // stylesheet's imports, which are gone (PROJECT_STATE.md Section 3cn).
+        // stylesheet's imports, which are gone (PROJECT_STATE.md Section 3cn). Both fonts are the
+        // site's own files since Section 3cz, and the admin pages load them the same way.
         [Fact]
-        public async Task AdminPagesLinkTheSameTwoWebFontsAsThePublicSite()
+        public async Task AdminPagesLoadTheSameTwoWebFontsAsThePublicSite()
         {
             using var site = new Site();
             HttpClient admin = await site.SignedInAdminAsync();
 
             var dashboard = await admin.GetStringAsync("/Administration/Dashboard");
 
-            Assert.Contains("family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block", dashboard);
-            Assert.Contains("family=Outfit", dashboard);
+            Assert.Matches("src: url\\(/fonts/material-symbols-outlined\\.woff2\\?v=[\\w-]+\\)", dashboard);
+            Assert.Matches("src: url\\(/fonts/outfit-latin\\.woff2\\?v=[\\w-]+\\)", dashboard);
+            Assert.DoesNotContain("fonts.googleapis.com", dashboard);
         }
 
         // Most of the dashboard was the design mock-up's own text: "+12.5%" beside the revenue,

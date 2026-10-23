@@ -1,11 +1,65 @@
-@* The two web fonts, for the public layout and the admin layout. They are linked here, in the
-   head, so the browser asks for them as soon as it reads it; imported from the combined
-   stylesheet, they waited for that whole file first (PROJECT_STATE Section 3cn).
-   The icon font is asked for at the one size, weight and grade icons.css uses, with fill on and
-   off: 1.1 MB with every weight, 450 KB like this. A weight other than 400 now draws at 400.
-   "block" keeps an icon hidden for the moment the font takes to arrive, where "swap" showed its
-   name ("chevron_right") in its place and moved the page when the font came. *@
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" />
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
+@* The two web fonts, for the public layout and the admin layout. They are the site's own files
+   in wwwroot/fonts, downloaded from Google Fonts by tools/fonts/fetch-fonts.mjs: loaded from
+   Google, each font cost a stylesheet from one Google server and then the font from another,
+   before the page could show, and a phone on a slow line waited seconds for it.
+   The rules are written in the page head, where Google's stylesheets were linked, so they come
+   before Bootstrap and the site's stylesheet as Google's did, and anything there still wins.
+   The two files every page needs are asked for at once ("preload"), not only when the browser
+   finds a use for them. "crossorigin" is what a browser asks a font with, even from its own site;
+   without it the preloaded copy goes unused and the font is fetched twice.
+   The icon font holds only the icons in tools/fonts/icon-names.txt (15 KB where all of them are
+   450 KB), at the one size, weight and grade icons.css uses, with fill on and off. "block" keeps
+   an icon hidden for the moment the font takes to arrive, where "swap" showed its name
+   ("chevron_right") in its place and moved the page when the font came. *@
+@{
+    string Font(string file) => this.FileVersions.AddFileVersionToPath(this.Context.Request.PathBase, "/fonts/" + file);
+}
+<link rel="preload" href="@Font("outfit-latin.woff2")" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="@Font("material-symbols-outlined.woff2")" as="font" type="font/woff2" crossorigin />
+<style>
+    /* latin-ext */
+    @@font-face {
+        font-family: 'Outfit';
+        font-style: normal;
+        font-weight: 300 800;
+        font-display: swap;
+        src: url(@Font("outfit-latin-ext.woff2")) format('woff2');
+        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+
+    /* latin */
+    @@font-face {
+        font-family: 'Outfit';
+        font-style: normal;
+        font-weight: 300 800;
+        font-display: swap;
+        src: url(@Font("outfit-latin.woff2")) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    @@font-face {
+        font-family: 'Material Symbols Outlined';
+        font-style: normal;
+        font-weight: 400;
+        font-display: block;
+        src: url(@Font("material-symbols-outlined.woff2")) format('woff2');
+    }
+
+    /* As Google's stylesheet had it. */
+    .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+    }
+</style>

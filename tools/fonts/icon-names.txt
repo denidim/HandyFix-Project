@@ -1,0 +1,116 @@
+# Every Material Symbols icon the site shows, one name per line, in alphabetical order.
+# The icon font in wwwroot/fonts holds these icons and no others: the full font is 450 KB,
+# this one about 15 KB. An icon that is not on this list shows as its name ("arrow_upward").
+#
+# After adding a name here, download the font again from this folder:
+#   node fetch-fonts.mjs
+# A test reads every page for icons and fails on one that is missing here. It cannot see a name
+# that is picked in code, so these are listed by hand: the sort arrows on the admin lists
+# (arrow_upward, arrow_downward), the admin calendar's day arrows (chevron_left, chevron_right),
+# the stars on the admin reviews (star, star_outline), the admin services list (plumbing,
+# home_repair_service), the payment pages (check_circle, event_busy, schedule, warning), and the
+# category icons on the service, category, area and pricing pages (foundation, verified, handyman,
+# water_drop, faucet, shelves, construction, build, home_repair_service).
+access_time
+add
+add_a_photo
+add_location_alt
+alternate_email
+analytics
+apartment
+arrow_back
+arrow_downward
+arrow_forward
+arrow_right
+arrow_upward
+assignment_add
+assignment_ind
+auto_awesome
+bolt
+build
+calendar_month
+calendar_today
+call
+cancel
+category
+chat_bubble
+check
+check_circle
+checklist
+chevron_left
+chevron_right
+close
+construction
+cookie
+cottage
+credit_card
+dashboard
+delete
+directions_car
+do_not_disturb_on
+done_all
+download
+edit
+emergency
+engineering
+event_available
+event_busy
+event_note
+event_repeat
+expand_more
+faucet
+forum
+foundation
+gavel
+groups
+handshake
+handyman
+health_and_safety
+history
+home
+home_repair_service
+image
+image_not_supported
+info
+inventory_2
+key
+list_alt
+location_off
+location_on
+lock
+logout
+mail
+manage_accounts
+map
+menu
+open_in_new
+payments
+person
+person_add
+person_pin_circle
+phone
+plumbing
+rate_review
+refresh
+reply
+request_quote
+save
+schedule
+search
+security
+sell
+send
+shelves
+shield_with_heart
+star
+star_outline
+sticky_note_2
+task_alt
+timer
+tune
+verified
+verified_user
+visibility
+warning
+water_drop
+workspace_premium
