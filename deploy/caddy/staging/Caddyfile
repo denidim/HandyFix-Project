@@ -13,5 +13,10 @@
 	# site under another address.
 	header X-Robots-Tag "noindex, nofollow"
 
+	# The live site is behind Cloudflare, which compresses every page and file it sends; staging
+	# is not, so without this it sent Bootstrap's stylesheet at 227 KB where the live site sends
+	# 34, and a speed test there measured something the live site does not do.
+	encode zstd gzip
+
 	reverse_proxy web:8080
 }

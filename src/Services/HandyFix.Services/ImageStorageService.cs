@@ -29,6 +29,14 @@ namespace HandyFix.Services
         /// </summary>
         public const int SmallCopyWidth = 320;
 
+        /// <summary>
+        /// The width of a built-in picture's middle copy. A service card on an area, pricing or
+        /// service page shows the picture about 340 pixels wide on a phone and never more than 422
+        /// on a computer, where the picture is 1024 (PROJECT_STATE Section 3cz). The copies come
+        /// from tools/image-gen/make-phone-copies.mjs; an upload has none, and is sent whole.
+        /// </summary>
+        public const int MediumCopyWidth = 640;
+
         private const string BuiltInFolder = "/images/services/";
         private const string BuiltInSuffix = "-hero.webp";
         private const string UploadFolder = "services";
@@ -124,22 +132,14 @@ namespace HandyFix.Services
                 return SmallCopyOf(imageUrl);
             }
 
-            if (imageUrl == null
-                || !imageUrl.StartsWith(BuiltInFolder, StringComparison.Ordinal)
-                || !imageUrl.EndsWith(BuiltInSuffix, StringComparison.Ordinal))
-            {
-                return null;
-            }
+            return this.BuiltInCopy(imageUrl, SmallCopyWidth);
+        }
 
-            var slug = imageUrl.Substring(BuiltInFolder.Length, imageUrl.Length - BuiltInFolder.Length - BuiltInSuffix.Length);
-            if (string.IsNullOrWhiteSpace(slug) || slug.Contains("..") || slug.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-            {
-                // Not a name a built-in picture has; the page sends the picture itself.
-                return null;
-            }
-
-            var copyName = $"{slug}-hero-{SmallCopyWidth}.webp";
-            return File.Exists(Path.Combine(this.builtInDirectory, copyName)) ? BuiltInFolder + copyName : null;
+        public string GetMediumCopyPublicUrl(string imageUrl)
+        {
+            // Uploads made before this copy existed have none, and the bucket cannot be asked
+            // cheaply, so an upload is sent whole, as it always was.
+            return IsUpload(imageUrl) ? null : this.BuiltInCopy(imageUrl, MediumCopyWidth);
         }
 
         private static bool IsUpload(string imageUrl)
@@ -212,6 +212,28 @@ namespace HandyFix.Services
             {
                 return data.ToArray();
             }
+        }
+
+        // The address of a built-in picture's copy of the given width, when the copy is in the
+        // site's files; null for any other address.
+        private string BuiltInCopy(string imageUrl, int width)
+        {
+            if (imageUrl == null
+                || !imageUrl.StartsWith(BuiltInFolder, StringComparison.Ordinal)
+                || !imageUrl.EndsWith(BuiltInSuffix, StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            var slug = imageUrl.Substring(BuiltInFolder.Length, imageUrl.Length - BuiltInFolder.Length - BuiltInSuffix.Length);
+            if (string.IsNullOrWhiteSpace(slug) || slug.Contains("..") || slug.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                // Not a name a built-in picture has; the page sends the picture itself.
+                return null;
+            }
+
+            var copyName = $"{slug}-hero-{width}.webp";
+            return File.Exists(Path.Combine(this.builtInDirectory, copyName)) ? BuiltInFolder + copyName : null;
         }
 
         // An object left in the bucket costs nothing and harms nobody; a save that failed because

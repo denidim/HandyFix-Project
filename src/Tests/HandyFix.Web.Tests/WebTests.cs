@@ -134,18 +134,19 @@
             Assert.Contains("/Areas/guildford</loc>", responseContent);
         }
 
-        // The icon font was asked for twice, once with every weight, 1.1 MB on every page; it is
-        // asked for once now, at the one weight the site draws icons at (PROJECT_STATE Section 3cn).
+        // The icon font was asked for twice, once with every weight, 1.1 MB on every page; it was
+        // asked for once at the one weight the site draws icons at (PROJECT_STATE Section 3cn), and
+        // is now the site's own file holding only the icons it uses (Section 3cz).
         [Fact]
-        public async Task PagesAskForTheIconFontOnceAtTheOneWeightTheSiteUses()
+        public async Task PagesAskForTheIconFontOnceFromTheSiteItself()
         {
             var client = this.server.CreateClient();
             var page = await client.GetStringAsync("/");
 
-            var iconFont = Assert.Single(Regex.Matches(page, "href=\"(https://fonts\\.googleapis\\.com/css2\\?family=Material\\+Symbols[^\"]+)\"")).Groups[1].Value;
-            Assert.Contains("opsz,wght,FILL,GRAD@24,400,0..1,0", iconFont);
-            Assert.EndsWith("display=block", iconFont);
-            Assert.Single(Regex.Matches(page, "family=Outfit"));
+            var iconFont = Assert.Single(Regex.Matches(page, "@font-face \\{[^}]*font-family: 'Material Symbols Outlined';[^}]*\\}")).Value;
+            Assert.Matches("src: url\\(/fonts/material-symbols-outlined\\.woff2\\?v=[\\w-]+\\)", iconFont);
+            Assert.Contains("font-display: block;", iconFont);
+            Assert.Equal(2, Regex.Matches(page, "@font-face \\{[^}]*font-family: 'Outfit';").Count); // Latin and the extra Latin letters
         }
 
         // Every page the sitemap hands a search engine names itself as the page. Only the area
@@ -278,6 +279,54 @@
             var pictures = Directory.GetFiles(folder, "*-hero.webp");
             Assert.NotEmpty(pictures);
             Assert.All(pictures, picture => Assert.True(File.Exists(picture[..^".webp".Length] + "-320.webp"), $"{Path.GetFileName(picture)} has no small copy"));
+        }
+
+        // Every service picture that comes with the site has its middle copy, which the service
+        // cards on the home, area, pricing and service pages offer (PROJECT_STATE Section 3cz).
+        [Fact]
+        public void EveryServicePictureHasItsMiddleCopy()
+        {
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            var pictures = Directory.GetFiles(Path.Combine(webRoot, "images", "services"), "*-hero.webp");
+            Assert.NotEmpty(pictures);
+            Assert.All(pictures, picture => Assert.True(File.Exists(picture[..^".webp".Length] + "-640.webp"), $"{Path.GetFileName(picture)} has no middle copy"));
+        }
+
+        // The service cards offer the middle copy beside the picture, on every page that has them.
+        [Theory]
+        [InlineData("/", "<img src=\"/images/services/plumbing-category-hero\\.webp[^>]*>")]
+        [InlineData("/Areas/cobham", "<img class=\"pricing-card-image\"[^>]*>")]
+        [InlineData("/Pricing", "<img class=\"pricing-card-image\"[^>]*>")]
+        [InlineData("/Services/plumbing/tap-repairs", "<img class=\"pricing-card-image\"[^>]*>")]
+        public async Task ServiceCardsOfferThePicturesMiddleCopy(string path, string cardPattern)
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync(path);
+
+            var card = Regex.Match(page, cardPattern, RegexOptions.Singleline).Value;
+            Assert.NotEmpty(card);
+            var picture = Regex.Match(card, "src=\"([^\"?]+)").Groups[1].Value;
+            Assert.EndsWith("-hero.webp", picture);
+            Assert.Contains($"srcset=\"{picture[..^".webp".Length]}-640.webp 640w, {picture} 1024w\"", card);
+            Assert.Matches("sizes=\"\\(max-width: 575\\.98px\\) calc\\(100vw - 48px\\), \\d+px\"", card);
+        }
+
+        // An area page sends a phone the strip from the middle of its main picture that a phone
+        // shows; every area that comes with the site has one.
+        [Fact]
+        public async Task AreaPagesSendAPhoneTheStripOfTheMainPictureItShows()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/Areas/cobham");
+
+            var picture = Regex.Match(page, "<picture>.*?</picture>", RegexOptions.Singleline).Value;
+            Assert.Contains("<source media=\"(max-width: 575.98px)\" srcset=\"/images/areas/cobham-hero-phone.webp\"", picture);
+            Assert.Matches("<img src=\"/images/areas/cobham-hero\\.webp\\?v=[^\"]+\"[^>]*fetchpriority=\"high\"", picture);
+
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            var pictures = Directory.GetFiles(Path.Combine(webRoot, "images", "areas"), "*-hero.webp");
+            Assert.NotEmpty(pictures);
+            Assert.All(pictures, area => Assert.True(File.Exists(area[..^".webp".Length] + "-phone.webp"), $"{Path.GetFileName(area)} has no phone strip"));
         }
 
         // A phone shows a narrow strip from the middle of the home page's main picture and is sent
@@ -884,6 +933,78 @@
             Assert.DoesNotContain("@import", css); // the web fonts are linked from the page head, and no stylesheet of ours is an import
             Assert.Contains(".site-logo", css); // a file from the middle of the list
             Assert.Contains(".material-symbols-filled", css); // the last file
+        }
+
+        [Theory]
+        [MemberData(nameof(PublicPages))]
+        public async Task PagesLoadTheirFontsFromTheSiteItself(string path)
+        {
+            // Loaded from Google, each font cost a stylesheet from one server and the font from
+            // another before the page could show (PROJECT_STATE Section 3cz).
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(path);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.DoesNotContain("fonts.googleapis.com", content);
+            Assert.DoesNotContain("fonts.gstatic.com", content);
+
+            // Both preloaded fonts are the same address the font rules use, version and all, or
+            // the browser fetches each one twice.
+            var preloaded = Regex.Matches(content, "<link rel=\"preload\" href=\"([^\"]+)\" as=\"font\" type=\"font/woff2\" crossorigin")
+                .Select(m => m.Groups[1].Value)
+                .ToList();
+            Assert.Equal(2, preloaded.Count);
+            foreach (var font in preloaded)
+            {
+                Assert.Matches("^/fonts/[a-z-]+\\.woff2\\?v=[\\w-]+$", font);
+                Assert.Contains($"src: url({font})", content);
+            }
+        }
+
+        [Fact]
+        public async Task TheFontFilesAreServedForAYear()
+        {
+            var client = this.server.CreateClient();
+            var page = await (await client.GetAsync("/")).Content.ReadAsStringAsync();
+            var fonts = Regex.Matches(page, "src: url\\((/fonts/[^)]+)\\)").Select(m => m.Groups[1].Value).ToList();
+            Assert.Equal(3, fonts.Count);
+
+            foreach (var font in fonts)
+            {
+                var response = await client.GetAsync(font);
+                response.EnsureSuccessStatusCode();
+                Assert.Equal("font/woff2", response.Content.Headers.ContentType?.MediaType);
+                Assert.True(response.Headers.CacheControl?.MaxAge >= TimeSpan.FromDays(365));
+            }
+        }
+
+        [Fact]
+        public void EveryIconOnThePagesIsInTheIconFont()
+        {
+            // The icon font holds only the icons in tools/fonts/icon-names.txt. One written into a
+            // page and left off that list would show as its name ("arrow_upward"), with nothing
+            // to say so. Names picked in code are on the list by hand; this cannot see them.
+            var contentRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
+            var listFile = Path.Combine(contentRoot, "..", "..", "..", "tools", "fonts", "icon-names.txt");
+            var inFont = File.ReadAllLines(listFile)
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0 && !line.StartsWith('#'))
+                .ToHashSet(StringComparer.Ordinal);
+
+            var used = Directory
+                .EnumerateFiles(contentRoot, "*.cshtml", SearchOption.AllDirectories)
+                .Concat(Directory.EnumerateFiles(Path.Combine(contentRoot, "wwwroot", "js"), "*.js", SearchOption.AllDirectories))
+                .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+                .SelectMany(file => Regex.Matches(File.ReadAllText(file), "material-symbols-(?:outlined|filled)[^>]*>\\s*([a-z0-9_]+)\\s*<")
+                    .Select(m => m.Groups[1].Value))
+                .ToHashSet(StringComparer.Ordinal);
+
+            Assert.True(used.Count > 50, $"only {used.Count} icons found: is the pattern still right?");
+            var missing = used.Where(name => !inFont.Contains(name)).OrderBy(name => name, StringComparer.Ordinal).ToList();
+            Assert.True(
+                missing.Count == 0,
+                $"Not in the icon font: {string.Join(", ", missing)}. Add them to tools/fonts/icon-names.txt and run fetch-fonts.mjs there.");
         }
 
         // The JSON-LD blocks of a page. The "+" in the tag's type is rendered as an entity, which

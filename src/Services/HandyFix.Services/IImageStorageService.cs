@@ -22,5 +22,12 @@ namespace HandyFix.Services
         /// null when the picture has none, and the page sends the picture itself.
         /// </summary>
         string GetSmallCopyPublicUrl(string imageUrl);
+
+        /// <summary>
+        /// The address of a built-in service picture's middle copy, for a card that shows it about
+        /// a third of the picture's width; null when it has none (an upload never has), and the
+        /// page sends the picture itself.
+        /// </summary>
+        string GetMediumCopyPublicUrl(string imageUrl);
     }
 }

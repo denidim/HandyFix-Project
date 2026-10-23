@@ -65,10 +65,13 @@ Every `--on-*` token is the readable text/icon color for its matching container.
 ## 2. Typography (`base/typography.css`)
 
 **Font**: `'Outfit', sans-serif` for both body and display (`--font-family-base` /
-`--font-family-display`), from Google Fonts. It and the Material Symbols icon font are linked from
-the page head by `Views/Shared/_WebFonts.cshtml`, which both layouts include. The icon font is asked
-for at one weight (400), size (24) and grade (0), with fill on and off: a weight other than 400
-draws at 400 unless that request is changed (`PROJECT_STATE.md` Section 3cn).
+`--font-family-display`). It and the Material Symbols icon font are the site's own files in
+`wwwroot/fonts`, downloaded from Google Fonts by `tools/fonts/fetch-fonts.mjs` and declared in the
+page head by `Views/Shared/_WebFonts.cshtml`, which both layouts include. The icon font is cut to the
+icons listed in `tools/fonts/icon-names.txt`, at one weight (400), size (24) and grade (0), with
+fill on and off: a weight other than 400 draws at 400, and **an icon not on that list shows as its
+name**. Add a new icon's name there and run the script again; a test fails until it is
+(`PROJECT_STATE.md` Sections 3cn and 3cz).
 
 Headings (`h1`–`h6`) default to `var(--font-family-display)` + `color: var(--primary)`.
 

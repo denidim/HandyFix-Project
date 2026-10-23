@@ -1,8 +1,25 @@
+@using HandyFix.Services
 @model HandyFix.Web.ViewModels.Home.HomeIndexViewModel
+@inject IImageStorageService ImageStorage
 @{
     var categories = this.Model.Categories;
     var popularServices = this.Model.PopularServices;
     var reviews = this.Model.SliderReviews;
+
+    // The division and popular-service cards draw their picture the screen's width less 48px on
+    // a phone, from a picture 1024 wide; with a middle copy beside it the browser takes the copy
+    // whenever that has every pixel the screen can show (PROJECT_STATE Section 3cz). A computer
+    // draws a popular-service card up to 873px wide, so there it still takes the picture.
+    string CardSrcset(string picture)
+    {
+        var copy = ImageStorage.GetMediumCopyPublicUrl(picture);
+        return copy == null ? null : $"{copy} {ImageStorageService.MediumCopyWidth}w, {picture} 1024w";
+    }
+
+    string CardSizes(string picture, int widest)
+    {
+        return ImageStorage.GetMediumCopyPublicUrl(picture) == null ? null : $"(max-width: 575.98px) calc(100vw - 48px), {widest}px";
+    }
 }
 
 <!-- HERO SECTION -->
@@ -138,7 +155,8 @@
       <!-- Plumbing Division -->
       <div class="division-card division-card-plumbing">
         <a class="img-container card-image-link" asp-route="ServiceCategory" asp-route-categorySlug="plumbing" tabindex="-1" aria-hidden="true">
-          <img src="~/images/services/plumbing-category-hero.webp" alt="Plumbing" asp-append-version="true" width="1024" height="1024" loading="lazy">
+          <img src="~/images/services/plumbing-category-hero.webp" alt="Plumbing" asp-append-version="true" width="1024" height="1024" loading="lazy"
+               srcset="@CardSrcset("/images/services/plumbing-category-hero.webp")" sizes="@CardSizes("/images/services/plumbing-category-hero.webp", 412)">
         </a>
         <div class="division-card-content">
           <div class="division-header-title">
@@ -163,7 +181,8 @@
       <!-- Handyman Division -->
       <div class="division-card division-card-handyman">
         <a class="img-container card-image-link" asp-route="ServiceCategory" asp-route-categorySlug="handyman" tabindex="-1" aria-hidden="true">
-          <img src="~/images/services/handyman-category-hero.webp" alt="Handyman" asp-append-version="true" width="1024" height="1024" loading="lazy">
+          <img src="~/images/services/handyman-category-hero.webp" alt="Handyman" asp-append-version="true" width="1024" height="1024" loading="lazy"
+               srcset="@CardSrcset("/images/services/handyman-category-hero.webp")" sizes="@CardSizes("/images/services/handyman-category-hero.webp", 412)">
         </a>
         <div class="division-card-content">
           <div class="division-header-title">
@@ -188,7 +207,8 @@
       <!-- Small Building Division -->
       <div class="division-card division-card-building">
         <a class="img-container card-image-link" asp-route="ServiceCategory" asp-route-categorySlug="small-building-works" tabindex="-1" aria-hidden="true">
-          <img src="~/images/services/small-building-category-hero.webp" alt="Small Building &amp; Refurbishments" asp-append-version="true" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
+          <img src="~/images/services/small-building-category-hero.webp" alt="Small Building &amp; Refurbishments" asp-append-version="true" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src='/images/hero.webp';"
+               srcset="@CardSrcset("/images/services/small-building-category-hero.webp")" sizes="@CardSizes("/images/services/small-building-category-hero.webp", 412)">
         </a>
         <div class="division-card-content">
           <div class="division-header-title">
@@ -245,8 +265,11 @@
                          alt="@svc.Name"
                          asp-append-version="true"
                          loading="lazy"
+                         srcset="@CardSrcset(svc.ImageUrl)"
+                         sizes="@CardSizes(svc.ImageUrl, 876)"
                          onerror="
                     this.onerror = null;
+                    this.srcset = '';
                     this.src = '/images/hero.webp';
                     " />
 
