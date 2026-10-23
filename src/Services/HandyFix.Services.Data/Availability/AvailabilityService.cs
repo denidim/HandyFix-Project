@@ -75,9 +75,27 @@ namespace HandyFix.Services.Data.Availability
                 .ToListAsync();
         }
 
-        public async Task<bool> HasSlotsOnDayAsync(DateTime date)
+        // Any slot counts, on sale or not, because the calendar's list of a day shows them all.
+        public async Task<DateTime?> GetNextDayWithSlotsAsync(DateTime date)
         {
-            return await this.slotRepository.All().AnyAsync(x => x.StartTime.Date == date.Date);
+            DateTime from = date.Date.AddDays(1);
+
+            DateTime? start = await this.slotRepository.All()
+                .Where(x => x.StartTime >= from)
+                .MinAsync(x => (DateTime?)x.StartTime);
+
+            return start?.Date;
+        }
+
+        public async Task<DateTime?> GetPreviousDayWithSlotsAsync(DateTime date)
+        {
+            DateTime before = date.Date;
+
+            DateTime? start = await this.slotRepository.All()
+                .Where(x => x.StartTime < before)
+                .MaxAsync(x => (DateTime?)x.StartTime);
+
+            return start?.Date;
         }
 
         public async Task<DateTime?> GetSlotDateAsync(Guid slotId)

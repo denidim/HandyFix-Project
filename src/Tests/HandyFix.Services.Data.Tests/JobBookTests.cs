@@ -502,43 +502,53 @@
             Assert.DoesNotContain("Pending", JobLabels.StatusNames("Booked"));
         }
 
-        // The calendar's arrows light up for a neighbouring day that has something to show
-        // (PROJECT_STATE.md Section 3ch). The jobs arrow asks what the day's own list answers,
-        // so a lit arrow never opens an empty list: a job that was called off lights nothing.
+        // The calendar's jobs arrows lead to the nearest day with a job, however far away. They
+        // asked about the next day only, so a job three days away left the arrow grey
+        // (PROJECT_STATE.md Section 3cs). They read what a day's own list reads, so a lit arrow
+        // never opens an empty list: a job that was called off counts for nothing.
         [Fact]
-        public async Task ADayHasJobsOnlyWhileOneOnItIsStillOnOrDone()
+        public async Task TheNearestDayWithJobsIsFoundHoweverFarAwayItIs()
         {
             using var world = new BookingWorld();
             DateTime day = world.SlotStart.Date;
-            Assert.False(await world.Bookings.HasJobsOnDayAsync(day));
+            Assert.Null(await world.Bookings.GetNextDayWithJobsAsync(day));
+            Assert.Null(await world.Bookings.GetPreviousDayWithJobsAsync(day));
 
-            Booking job = await world.SeedWrittenInJobAsync(world.SlotStart);
+            Booking near = await world.SeedWrittenInJobAsync(day.AddDays(3).AddHours(15));
+            await world.SeedWrittenInJobAsync(day.AddDays(10).AddHours(9));
 
-            Assert.True(await world.Bookings.HasJobsOnDayAsync(day));
-            Assert.True(await world.Bookings.HasJobsOnDayAsync(day.AddHours(23)));
-            Assert.False(await world.Bookings.HasJobsOnDayAsync(day.AddDays(-1)));
-            Assert.False(await world.Bookings.HasJobsOnDayAsync(day.AddDays(1)));
+            Assert.Equal(day.AddDays(3), await world.Bookings.GetNextDayWithJobsAsync(day));
+            Assert.Equal(day.AddDays(3), await world.Bookings.GetNextDayWithJobsAsync(day.AddHours(23)));
+            Assert.Equal(day.AddDays(10), await world.Bookings.GetNextDayWithJobsAsync(day.AddDays(3)));
+            Assert.Null(await world.Bookings.GetNextDayWithJobsAsync(day.AddDays(10)));
+            Assert.Equal(day.AddDays(3), await world.Bookings.GetPreviousDayWithJobsAsync(day.AddDays(10)));
+            Assert.Null(await world.Bookings.GetPreviousDayWithJobsAsync(day.AddDays(3)));
 
-            await world.Bookings.CancelBookingAsync(job.Id, "Called off.");
+            await world.Bookings.CancelBookingAsync(near.Id, "Called off.");
 
-            Assert.False(await world.Bookings.HasJobsOnDayAsync(day));
-            Assert.Empty(await world.Bookings.GetJobsForDayAsync<BookingDetailsViewModel>(day));
+            Assert.Equal(day.AddDays(10), await world.Bookings.GetNextDayWithJobsAsync(day));
+            Assert.Empty(await world.Bookings.GetJobsForDayAsync<BookingDetailsViewModel>(day.AddDays(3)));
         }
 
-        // The slots arrow: any slot counts, on sale or not, because the list under it shows
-        // them all.
+        // The slots arrows: any slot counts, on sale or not, because the list under them shows
+        // them all. A Saturday's arrow leads on to the Monday, where it stood grey towards the
+        // Sunday.
         [Fact]
-        public async Task ADayHasSlotsWhateverStateTheyAreIn()
+        public async Task TheNearestDayWithSlotsIsFoundWhateverStateTheyAreIn()
         {
             using var world = new BookingWorld();
             DateTime day = world.SlotStart.Date.AddDays(30);
-            Assert.False(await world.Availability.HasSlotsOnDayAsync(day));
+            Assert.Null(await world.Availability.GetNextDayWithSlotsAsync(day));
 
-            world.AddSlot(day.AddHours(9), blocked: true);
+            world.AddSlot(day.AddDays(2).AddHours(9), blocked: true);
 
-            Assert.True(await world.Availability.HasSlotsOnDayAsync(day));
-            Assert.True(await world.Availability.HasSlotsOnDayAsync(day.AddHours(17)));
-            Assert.False(await world.Availability.HasSlotsOnDayAsync(day.AddDays(1)));
+            Assert.Equal(day.AddDays(2), await world.Availability.GetNextDayWithSlotsAsync(day));
+            Assert.Equal(day.AddDays(2), await world.Availability.GetNextDayWithSlotsAsync(day.AddHours(17)));
+            Assert.Null(await world.Availability.GetNextDayWithSlotsAsync(day.AddDays(2)));
+            Assert.Equal(day.AddDays(2), await world.Availability.GetPreviousDayWithSlotsAsync(day.AddDays(5)));
+
+            // Back from there, past the empty days, to the world's own slot.
+            Assert.Equal(world.SlotStart.Date, await world.Availability.GetPreviousDayWithSlotsAsync(day.AddDays(2)));
         }
 
         // A website booking's deposit promised the time, so it carries its hour in the calendar
