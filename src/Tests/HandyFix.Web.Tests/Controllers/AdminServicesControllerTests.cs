@@ -13,6 +13,7 @@
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
     using Moq;
 
@@ -144,6 +145,45 @@
             servicesService.Verify(x => x.DeleteAsync(id), Times.Once);
         }
 
+        // A save that left no line on the list gave the admin no sign it had gone through
+        // (PROJECT_STATE Section 3cr). Service areas and technicians already said so.
+        [Fact]
+        public async Task CreateShouldSayTheServiceWasAdded()
+        {
+            var controller = BuildController(out _, out _);
+
+            await controller.Create(ValidService());
+
+            Assert.Equal("Service \"Gutter Clearing\" was added.", controller.TempData["SuccessMessage"]);
+        }
+
+        [Fact]
+        public async Task EditShouldSayTheServiceWasUpdated()
+        {
+            var controller = BuildController(out _, out _);
+            var model = ValidService();
+            model.Id = Guid.NewGuid();
+
+            await controller.Edit(model);
+
+            Assert.Equal("Service \"Gutter Clearing\" was updated.", controller.TempData["SuccessMessage"]);
+        }
+
+        [Fact]
+        public async Task DeleteShouldSayWhichServiceWasDeleted()
+        {
+            var controller = BuildController(out var servicesService, out _);
+            var id = Guid.NewGuid();
+            servicesService
+                .Setup(x => x.GetByIdAsync<ServiceDetailsViewModel>(id))
+                .ReturnsAsync(new ServiceDetailsViewModel { Id = id, Name = "Gutter Clearing" });
+
+            await controller.Delete(id);
+
+            Assert.Equal("Service \"Gutter Clearing\" was deleted.", controller.TempData["SuccessMessage"]);
+            servicesService.Verify(x => x.DeleteAsync(id), Times.Once);
+        }
+
         [Fact]
         public void ANewServiceFormShouldStartOnTheSharedDefaultOrder()
         {
@@ -183,6 +223,7 @@
             return new ServicesController(servicesService.Object, categoriesService.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>()),
             };
         }
     }

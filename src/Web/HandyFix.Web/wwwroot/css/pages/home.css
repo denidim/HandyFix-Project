@@ -833,6 +833,13 @@
   font-size: 14px;
 }
 
+/* The glow behind the picture reaches 2.5rem past it, and past the screen's edge, so the page
+   scrolled sideways. Clipped at the section, which spans the screen: clipping the picture's own
+   box would cut its card's shadow too. */
+.trust-section {
+  overflow-x: clip;
+}
+
 .trust-image-wrapper {
   position: relative;
 }
