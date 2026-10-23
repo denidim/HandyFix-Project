@@ -3065,6 +3065,7 @@ The cancelled "Quality Check" job, the slots for 14 to 19 December, and the test
 - **Before the code**: both CSS rules injected into the live pages in a test browser, the home page and the Cookie Policy at 390, 576, 768 and 1366px: as wide as the screen each time, where the home page was 16px over at all four.
 - **Locally, in a browser**: the same eight measurements, each the screen's width; a service saved shows its line, gone after a reload.
 - **Staging, after the push**: the pipeline green; the home page and the Cookie Policy as wide as the screen at 390, 576, 768 and 1366px, with the new rule in the stylesheet served; a service saved unchanged shows "Service "General Handyman Call-Out" was updated."; no error and no `Email not sent` in the web log since the deploy.
+- **The live site, after the merge of PR #57**: the pipeline green, both jobs; the home page and the Cookie Policy as wide as the screen at 390, 576, 768 and 1366px, with the new rule served; no error in the web log since the deploy.
 
 ---
 
