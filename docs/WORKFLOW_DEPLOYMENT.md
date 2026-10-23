@@ -203,7 +203,7 @@ The same pipeline, pointed at the live server. What differs, and why:
 | In front of Caddy | nothing | Cloudflare's proxy |
 | Certificate | Let's Encrypt, got by Caddy itself | Cloudflare's origin certificate, two files in `certs/` on the server |
 | Ports published | 80 and 443 | 443 only |
-| Password prompt, `noindex` header | both, always | both until the site launches, then neither (see "Before launch" below) |
+| Password prompt, `noindex` header | both, always | neither since the site opened on 2026-10-23; both before it (see "Before launch" below) |
 | A setting missing from `.env` | the page that needs it fails | the deploy stops and says which one |
 | Email settings | its own notice address and a `[STAGING]` mark | none: the code's own (`bookings@` sends, `info@` receives, no mark) |
 | Photo bucket | shared with development | its own |
@@ -249,26 +249,20 @@ listed as a trusted proxy, the same request reached the app as the address in `C
 and nothing else; `www` redirected; a request sent while the app's container was stopped was
 answered `200` ten seconds later, once it was back, and `502` at once with the wait taken out.
 
-### Before launch: the real domain behind a password
+### Before launch: the real domain behind a password (until 2026-10-23)
 
-Pointing the domain at the live server and opening the site to people are two different moments.
-Between them the live Caddyfile asks for a name and a password on every page, exactly as staging's
-does, and sends `X-Robots-Tag: noindex, nofollow`. That lets everything be checked on the real
-address (the forms, a real payment, the emails) without a visitor or a search engine walking in.
+Pointing the domain at the live server and opening the site to people were two different moments.
+Between them, from 2026-10-09 to 2026-10-23, the live Caddyfile asked for a name and a password on
+every page, exactly as staging's does, and sent `X-Robots-Tag: noindex, nofollow`. That let
+everything be checked on the real address (the forms, the emails, Stripe's live page) without a
+visitor or a search engine walking in. Stripe's webhook and the emails' logo were left outside it,
+since neither can answer a password prompt.
 
-- The block is marked `BEFORE LAUNCH ONLY` in `deploy/caddy/prod/Caddyfile`. It reads
-  `BASIC_AUTH_USER` and `BASIC_AUTH_HASH`, which the compose file passes to Caddy from the server's
-  `.env`.
-- `/api/payment/webhook` is left outside it, because Stripe cannot answer a password prompt. The
-  app refuses a call there that does not carry Stripe's signature.
-- `www` only redirects, so it asks for nothing.
-- `/images/email/*` is left outside it too. That folder holds the logo the site's emails show,
-  and a mail program fetching it cannot answer a password prompt either (`WORKFLOW_EMAIL.md`).
-
-**Launching the site** is one small change: delete that block, the two `BASIC_AUTH` lines in
-`deploy/docker-compose.prod.yml` and the same two in the server's `.env`, and merge. A search
-engine that met the password before launch saw a closed door and nothing else, so nothing has to
-be undone with it afterwards.
+**The site was opened** on 2026-10-23 by deleting that block from `deploy/caddy/prod/Caddyfile`
+and the two `BASIC_AUTH` lines from `deploy/docker-compose.prod.yml` and `.env.prod.example`
+(`PROJECT_STATE.md` Section 3cu). The same two lines may still be in the live server's `.env`;
+nothing reads them now, and they can be deleted by hand. A search engine that met the password
+before launch saw a closed door and nothing else, so nothing had to be undone with it.
 
 ### What has to be on the live server before its first deploy
 

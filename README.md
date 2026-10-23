@@ -7,7 +7,7 @@ A booking website for a real plumbing and handyman business based in **Chessingt
 
 `HandyFix` is the project's internal codename: namespaces, the solution, the databases and the repository keep it, while everything a visitor sees says Plumbing Handyman Surrey.
 
-**Status**: the site runs on its live server and answers on `plumbing-handyman-surrey.co.uk`, behind a password until the business launches it. A staging copy runs beside it and takes every change first.
+**Status**: live and open to the public at `plumbing-handyman-surrey.co.uk` since 23 October 2026. A staging copy runs beside it, behind a password, and takes every change first.
 
 ---
 
@@ -91,7 +91,7 @@ The application is a layered ASP.NET Core MVC solution (see [Project Structure](
                      └───────────────────────────┘
 ```
 
-Staging is reached directly, on the server's own hostname, with a certificate Caddy gets from Let's Encrypt. It uses the same Turnstile and R2 services. Until the site launches, production's Caddy asks for a password and sends `noindex` as well, the way staging's always does.
+Staging is reached directly, on the server's own hostname, with a certificate Caddy gets from Let's Encrypt. It uses the same Turnstile and R2 services.
 
 ### The database is kept off the internet
 

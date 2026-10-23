@@ -98,8 +98,7 @@ email looks, change `EmailLayout`. To change what one email says, change its ser
   stylesheet, in the head, is for phones, where each labelled line stacks under its label.
 - **The logo is a file on the live site**, `wwwroot/images/email/logo-header.png`, and every email
   points at it there (`EmailLayout.LogoUrl`), whichever copy of the site sent it. Gmail does not
-  show a picture packed inside an email, and staging sits behind a password. Until launch the live
-  Caddyfile leaves `/images/email/*` outside its password for the same reason. **Do not rename or
+  show a picture packed inside an email, and staging sits behind a password. **Do not rename or
   move the file**: every email already sent points at that address.
 - **A button in a notice opens the admin panel of the site that sent it**: the job's own page for
   a deposit, the Enquiries list for an enquiry. The address comes from `Site:PublicUrl`
@@ -176,5 +175,5 @@ All three are public records and can be read with `nslookup -type=TXT`:
 | `Email not sent`, with a 400 naming the sender | The sender address is not on a domain Brevo has verified for this account. |
 | The log is clean and nothing arrives at a domain address | The forwarding rule for that address in Cloudflare Email Routing is missing or switched off. |
 | A real email carries `[STAGING]`, or a test one does not | `EMAIL_SUBJECT_PREFIX` is set on the wrong server. The line is in that server's `.env`, which is written by hand (`WORKFLOW_DEPLOYMENT.md`). |
-| An email shows the business's name in words where the logo should be | The mail program could not fetch the logo from the live site. Open `/images/email/logo-header.png` on the real domain in a private window: it has to show without asking for a password. Before launch, the live Caddyfile's `BEFORE LAUNCH ONLY` block must still leave `/images/email/*` outside the password. Some mail programs also hide every picture until the reader allows them. |
+| An email shows the business's name in words where the logo should be | The mail program could not fetch the logo from the live site. Open `/images/email/logo-header.png` on the real domain in a private window: it has to show without asking for a password. Some mail programs also hide every picture until the reader allows them. |
 | The button in a notice sent from staging opens the live site | `Site__PublicUrl` is missing from staging's compose file, or `STAGING_HOSTNAME` is empty in its `.env`. |
