@@ -30,7 +30,6 @@
                 var isBuilding = category.Slug == "small-building-works" || category.Name.Contains("Building", StringComparison.OrdinalIgnoreCase);
 
                 var divisionClass = isBuilding ? "division-card-building" : (isPlumbing ? "division-card-plumbing" : "division-card-handyman");
-                var tintClass = isBuilding ? "division-tint-building" : (isPlumbing ? "division-tint-plumbing" : "division-tint-handyman");
                 var categoryIcon = isBuilding ? "foundation" : (isPlumbing ? "water_drop" : "handyman");
                 var categoryTitle = isBuilding ? "Building & Refurb" : (isPlumbing ? "Plumbing & Heating" : "General Handyman");
                 var categoryHero = isBuilding ? "small-building-category-hero.webp" : (isPlumbing ? "plumbing-category-hero.webp" : "handyman-category-hero.webp");
@@ -45,7 +44,6 @@
                 <div class="division-card @divisionClass">
                     <a class="img-container card-image-link" asp-route="ServiceCategory" asp-route-categorySlug="@category.Slug" tabindex="-1" aria-hidden="true">
                         <img src="~/images/services/@categoryHero" alt="@category.Name" asp-append-version="true" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
-                        <div class="division-tint @tintClass"></div>
                     </a>
                     <div class="division-card-content">
                         <div class="division-header-title">
