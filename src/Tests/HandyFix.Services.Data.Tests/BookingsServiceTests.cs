@@ -3,6 +3,7 @@ namespace HandyFix.Services.Data.Tests
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using HandyFix.Data;
@@ -11,6 +12,7 @@ namespace HandyFix.Services.Data.Tests
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Payments;
+    using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
 
@@ -711,6 +713,32 @@ namespace HandyFix.Services.Data.Tests
 
             Assert.Single(results);
             Assert.Equal(cancelled.Id, results.Single().Id);
+        }
+
+        // A job's row asks its yes-or-no and money fields of the payments in place, and joins
+        // the services and the photos once each. A "!= null" on one of those lists made EF fetch
+        // the whole list again: the job list's query joined the payments three times, the
+        // services three times and the photos twice, and SQL Server took about three seconds to
+        // plan it the first time each filter or sort was used (PROJECT_STATE.md Section 3cs).
+        [Fact]
+        public void AJobsRowJoinsEachOfItsListsAtMostOnce()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseSqlite("DataSource=:memory:")
+                .Options;
+            using var dbContext = new ApplicationDbContext(options);
+
+            var sql = dbContext.Bookings.To<BookingDetailsViewModel>().ToQueryString();
+
+            // The table each LEFT JOIN reads.
+            var joined = Regex.Matches(sql, @"LEFT JOIN (?:\(\s*SELECT [^()]*?FROM )?""(\w+)""")
+                .Select(m => m.Groups[1].Value)
+                .ToList();
+
+            Assert.NotEmpty(joined);
+            Assert.DoesNotContain("Payments", joined);
+            Assert.Single(joined, "BookingServices");
+            Assert.Single(joined, "BookingImages");
         }
 
         private static BookingsService CreateBookingsServiceWithThreeBookings(out Booking older, out Booking newer, out Booking cancelled)
