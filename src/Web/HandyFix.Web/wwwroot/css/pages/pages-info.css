@@ -48,6 +48,12 @@
   margin: 0;
 }
 
+/* A cookie's name is one long word (".AspNetCore.Mvc.CookieTempDataProvider"); let it break on a
+   phone, or the Cookie Policy scrolls sideways. */
+.info-section code {
+  overflow-wrap: anywhere;
+}
+
 /* Help Box (Questions CTA) */
 .info-help-box {
   margin-top: var(--spacing-8);
