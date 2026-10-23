@@ -19,6 +19,11 @@
     </a>
 </div>
 
+@if (this.TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4" role="alert">@this.TempData["SuccessMessage"]</div>
+}
+
 <!-- Quick Stats Bento-lite -->
 <div class="bento-grid bento-grid-3 mb-5">
     <div class="glass-card p-4 rounded-xl d-flex align-items-center justify-content-between admin-stat-card">

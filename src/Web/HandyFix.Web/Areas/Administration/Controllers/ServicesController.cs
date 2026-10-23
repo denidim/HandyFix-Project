@@ -1,4 +1,4 @@
-namespace HandyFix.Web.Areas.Administration.Controllers
+﻿namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -74,6 +74,7 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
+            this.TempData["SuccessMessage"] = $"Service \"{model.Name}\" was added.";
             return this.RedirectToList();
         }
 
@@ -145,16 +146,29 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 return this.View(model);
             }
 
+            this.TempData["SuccessMessage"] = $"Service \"{model.Name}\" was updated.";
             return this.RedirectToList();
         }
 
         [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
+            // The name is read first: it is gone once the service is.
+            ServiceDetailsViewModel service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(id);
+
             await this.servicesService.DeleteAsync(id);
+
+            if (service != null)
+            {
+                this.TempData["SuccessMessage"] = $"Service \"{service.Name}\" was deleted.";
+            }
+
             return this.RedirectToList();
         }
 
+        // Each save above leaves a line on the list saying what it did, as service areas and
+        // technicians do. Until PROJECT_STATE Section 3cr a saved service gave no sign at all.
+        //
         // Controller and area are named in full. The public site has a ServicesController too,
         // with a fixed address of its own, and a redirect naming only the action resolved to that
         // one: every save or delete left the admin on the public /Services page, outside the
