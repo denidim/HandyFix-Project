@@ -141,6 +141,38 @@
             Assert.Null(this.storage.GetSmallCopyPublicUrl(imageUrl));
         }
 
+        [Fact]
+        public void ABuiltInPictureWithAMiddleCopyBesideItOffersThatCopy()
+        {
+            File.WriteAllText(this.PathOf("tap-repairs-hero.webp"), "picture");
+            File.WriteAllText(this.PathOf("tap-repairs-hero-640.webp"), "copy");
+
+            Assert.Equal("/images/services/tap-repairs-hero-640.webp", this.storage.GetMediumCopyPublicUrl("/images/services/tap-repairs-hero.webp"));
+        }
+
+        // Uploads made before the middle copy existed have none, so no upload is offered one: a
+        // page that asked for a copy the bucket does not hold would show a broken picture.
+        [Fact]
+        public async Task AnUploadIsNeverOfferedAMiddleCopy()
+        {
+            var url = await this.UploadAsync("tap-repairs", SKColors.Red);
+
+            Assert.Null(this.storage.GetMediumCopyPublicUrl(url));
+        }
+
+        [Theory]
+        [InlineData("/images/services/tap-repairs-hero.webp")]
+        [InlineData("/images/hero.webp")]
+        [InlineData("/images/services/../hero-hero.webp")]
+        [InlineData(null)]
+        public void AnAddressWithoutAMiddleCopyGetsNone(string imageUrl)
+        {
+            File.WriteAllText(this.PathOf("tap-repairs-hero.webp"), "a picture with no copy");
+            File.WriteAllText(this.PathOf("tap-repairs-hero-320.webp"), "only the small copy");
+
+            Assert.Null(this.storage.GetMediumCopyPublicUrl(imageUrl));
+        }
+
         public void Dispose()
         {
             Directory.Delete(this.builtInFolder, recursive: true);

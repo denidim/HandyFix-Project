@@ -1,4 +1,6 @@
+@using HandyFix.Services
 @model HandyFix.Web.ViewModels.Services.PricingCardViewModel
+@inject IImageStorageService ImageStorage
 
 @functions {
     string FormatDuration(int minutes)
@@ -12,10 +14,18 @@
 <article class="pricing-card @Model.DivisionClass">
     @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
     {
+        // The card draws its picture the screen's width less 48px on a phone and at most 422px
+        // on a computer, from a picture 1024 wide. With a middle copy beside it the browser takes
+        // the copy whenever that has every pixel the screen can show; a sharper screen still gets
+        // the picture itself (PROJECT_STATE Section 3cz).
+        var mediumCopy = ImageStorage.GetMediumCopyPublicUrl(Model.ImageUrl);
+
         @* Links to the same place as the card's button; with no button, href="@null" drops the
            attribute and the <a> is a plain, non-interactive box. *@
         <a class="pricing-card-media card-image-link" href="@(string.IsNullOrWhiteSpace(Model.CtaUrl) ? null : Model.CtaUrl)" tabindex="-1" aria-hidden="true">
-            <img class="pricing-card-image" src="@Model.ImageUrl" alt="@Model.Name" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.src='/images/hero.webp';">
+            <img class="pricing-card-image" src="@Model.ImageUrl" alt="@Model.Name" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src='/images/hero.webp';"
+                 srcset="@(mediumCopy == null ? null : $"{mediumCopy} {ImageStorageService.MediumCopyWidth}w, {Model.ImageUrl} 1024w")"
+                 sizes="@(mediumCopy == null ? null : "(max-width: 575.98px) calc(100vw - 48px), 424px")">
             <span class="pricing-card-media-icon">
                 <span class="material-symbols-outlined">@Model.IconName</span>
             </span>

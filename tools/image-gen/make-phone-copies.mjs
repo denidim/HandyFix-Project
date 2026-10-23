@@ -4,6 +4,12 @@
 // - every service picture: a copy 320 wide, {slug}-hero-320.webp, for the category page's cards
 //   (88px on a phone). ImageStorageService writes the same copy for a picture uploaded in the
 //   admin panel.
+// - every service picture: a copy 640 wide, {slug}-hero-640.webp, for the service cards on the
+//   home, area, pricing and service pages (about 340px on a phone, at most 422 on a computer;
+//   PROJECT_STATE Section 3cz). A phone with a sharper screen still takes the picture itself.
+// - every area's main picture: a crop of its middle, 928 wide, {slug}-hero-phone.webp. On a
+//   phone the picture fills a box 400px tall, so it is drawn 914px wide and only the middle of it
+//   shows: 928 of its 1600 pixels at the widest phone (575px), the same pixels as before.
 // - the home page's main picture and the wide background: a crop of their middle, 720 wide. A
 //   phone shows only a narrow strip from the middle of each (object-fit/background-size: cover,
 //   centred), so the crop keeps every pixel a phone was shown.
@@ -16,8 +22,22 @@ const report = (file, out) => console.log(`${file} -> ${out} (${Math.round(fs.st
 
 for (const file of fs.readdirSync(`${WWWROOT}/services`)) {
   if (!file.endsWith("-hero.webp")) continue;
-  const out = `${WWWROOT}/services/${file.replace(/\.webp$/, "-320.webp")}`;
-  await sharp(`${WWWROOT}/services/${file}`).resize({ width: 320 }).webp({ quality: 80 }).toFile(out);
+  for (const width of [320, 640]) {
+    const out = `${WWWROOT}/services/${file.replace(/\.webp$/, `-${width}.webp`)}`;
+    await sharp(`${WWWROOT}/services/${file}`).resize({ width }).webp({ quality: 80 }).toFile(out);
+    report(file, out);
+  }
+}
+
+for (const file of fs.readdirSync(`${WWWROOT}/areas`)) {
+  if (!file.endsWith("-hero.webp")) continue;
+  const source = `${WWWROOT}/areas/${file}`;
+  const { width, height } = await sharp(source).metadata();
+  const out = `${WWWROOT}/areas/${file.replace(/\.webp$/, "-phone.webp")}`;
+  await sharp(source)
+    .extract({ left: Math.round((width - 928) / 2), top: 0, width: 928, height })
+    .webp({ quality: 80 })
+    .toFile(out);
   report(file, out);
 }
 

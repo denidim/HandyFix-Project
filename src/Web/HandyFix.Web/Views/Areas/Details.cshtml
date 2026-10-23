@@ -1,9 +1,18 @@
 @model HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaDetailsPageViewModel
+@using System.Text.RegularExpressions
 @using HandyFix.Web.ViewModels.Services
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
 @{
     this.Layout = "_Layout";
 
     var area = Model.Area;
+
+    // A phone draws the main picture to fill a box 400px tall, so only a strip from its middle
+    // shows; it is sent that strip, cut out by tools/image-gen/make-phone-copies.mjs (PROJECT_STATE
+    // Section 3cz). An area added in the admin panel has no strip, and gets the picture itself.
+    var phonePicture = $"/images/areas/{area.Slug}-hero-phone.webp";
+    var hasPhonePicture = Regex.IsMatch(area.Slug ?? string.Empty, "^[a-z0-9-]+$")
+        && HostEnvironment.WebRootFileProvider.GetFileInfo(phonePicture).Exists;
     var driveTimeText = area.DriveTimeMinutes == 0 ? "Home Base" : $"~{area.DriveTimeMinutes} min from Chessington";
 
     var faqJsonEntries = area.Faqs != null && area.Faqs.Any()
@@ -15,13 +24,19 @@
 <div class="page-container services-page">
     <!-- Hero -->
     <section class="service-hero-section">
-        <img src="~/images/areas/@(area.Slug)-hero.webp"
-             alt="Handyman and plumbing services in @area.Name"
-             class="area-hero-image"
-             asp-append-version="true"
-             width="1600" height="700"
-             loading="eager" fetchpriority="high"
-             onerror="this.src='/images/hero.webp';" />
+        <picture>
+            @if (hasPhonePicture)
+            {
+                <source media="(max-width: 575.98px)" srcset="@phonePicture" width="928" height="700">
+            }
+            <img src="~/images/areas/@(area.Slug)-hero.webp"
+                 alt="Handyman and plumbing services in @area.Name"
+                 class="area-hero-image"
+                 asp-append-version="true"
+                 width="1600" height="700"
+                 loading="eager" fetchpriority="high"
+                 onerror="this.src='/images/hero.webp';" />
+        </picture>
         <div class="service-hero-overlay"></div>
         <div class="service-hero-content">
             <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
