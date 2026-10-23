@@ -390,9 +390,9 @@ technician — a different hour does not change who is doing it.
 
 ## Step 4 — Done, and the money
 
-**Mark as Done** asks for the **final price**: what the job came to. One hour is the least a
-customer pays for, then 30-minute blocks at the same rate. Until it is typed in the page shows an
-estimate (the service's price) and no job can be "Paid in full".
+**Mark as Done** asks for the **final price**. The line under the button reads *"Enter the final
+total for the job (minimum 1 hour, then billed in 30-minute blocks)."* Until it is typed in the
+page shows an estimate (the service's price) and no job can be "Paid in full".
 
 **The money list** has one line per payment, and under it the final price, what has been paid and
 what is still owed:
