@@ -217,6 +217,11 @@
 
             await PostFromAsync(admin, jobPage, JobsPage + "/AssignTechnician", With(id, "technicianId", site.LaunchTechnicianId().ToString()));
 
+            // The line under "Mark as Done", in the owner's words (PROJECT_STATE.md Section 3ct).
+            // "30-minute" is kept on one line by a span, so the words are read without the tags.
+            var before = WebUtility.HtmlDecode(await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
+            Assert.Contains("Enter the final total for the job (minimum 1 hour, then billed in 30-minute blocks).", Regex.Replace(before, "<[^>]+>", string.Empty));
+
             // Done, with what it came to: an hour and one 30-minute block at £90 an hour.
             HttpResponseMessage done = await PostFromAsync(admin, jobPage, JobsPage + "/Complete", With(id, "finalPrice", "135.00"));
             var page = WebUtility.HtmlDecode(await done.Content.ReadAsStringAsync());
