@@ -919,32 +919,40 @@
             Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync("/Administration/Reviews")).StatusCode);
         }
 
-        // The calendar had only a date box to get from one day to another. Each of its two lists
-        // now has an arrow a day back and a day on, lit when the day it leads to has something
-        // for that list, and the menu has the calendar straight after the jobs
-        // (PROJECT_STATE.md Section 3ch).
+        // The calendar had only a date box to get from one day to another, and the menu had the
+        // calendar further down (PROJECT_STATE.md Section 3ch). Each of its two lists has an
+        // arrow either side. Lit, it leads to the nearest day that way with something for that
+        // list, however far away; grey, there is nothing that way and it moves one day. The
+        // arrows asked about the next day only, so a job three days away left them grey
+        // (Section 3cs).
         [Fact]
-        public async Task TheCalendarsArrowsStepADayAndLightUpForADayThatHasJobsOrSlots()
+        public async Task TheCalendarsArrowsLeadToTheNearestDayWithJobsOrSlots()
         {
             using var site = new Site();
             HttpClient admin = await site.SignedInAdminAsync();
 
-            // A day years away, where nothing is seeded: a job is written in on the day after it.
+            // A day years away, after every seeded slot: a job is written in three days on.
             DateTime day = DateTime.Today.AddYears(3);
-            await site.WriteAJobInAsync(admin, day.AddDays(1).AddHours(15));
+            await site.WriteAJobInAsync(admin, day.AddDays(3).AddHours(15));
+            DateTime firstSlotDay = site.Read(db => db.AvailabilitySlots.Min(x => x.StartTime)).Date;
+            DateTime lastSlotDay = site.Read(db => db.AvailabilitySlots.Max(x => x.StartTime)).Date;
 
             var page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(day))).Content.ReadAsStringAsync());
-            Assert.Matches(Arrow("jobs-day-after", lit: true, day.AddDays(1), "has jobs"), page);
-            Assert.Matches(Arrow("jobs-day-before", lit: false, day.AddDays(-1), "no jobs"), page);
-            Assert.Matches(Arrow("slots-day-after", lit: false, day.AddDays(1), "no slots"), page);
-            Assert.Matches(Arrow("slots-day-before", lit: false, day.AddDays(-1), "no slots"), page);
+            Assert.Matches(Arrow("jobs-day-after", lit: true, day.AddDays(3), "Next day with jobs"), page);
+            Assert.Matches(Arrow("slots-day-after", lit: false, day.AddDays(1), "No slots after this day"), page);
+            Assert.Matches(Arrow("slots-day-before", lit: true, lastSlotDay, "Previous day with slots"), page);
 
-            // The day before one that has slots, and the day after it.
-            DateTime slotDay = site.AFreeSlot().StartTime.Date;
-            page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(slotDay.AddDays(-1)))).Content.ReadAsStringAsync());
-            Assert.Matches(Arrow("slots-day-after", lit: true, slotDay, "has slots"), page);
-            page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(slotDay.AddDays(1)))).Content.ReadAsStringAsync());
-            Assert.Matches(Arrow("slots-day-before", lit: true, slotDay, "has slots"), page);
+            // From after the job: back to it, and nothing further on.
+            page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(day.AddDays(5)))).Content.ReadAsStringAsync());
+            Assert.Matches(Arrow("jobs-day-before", lit: true, day.AddDays(3), "Previous day with jobs"), page);
+            Assert.Matches(Arrow("jobs-day-after", lit: false, day.AddDays(6), "No jobs after this day"), page);
+
+            // A day years back, before every seeded slot and job.
+            DateTime longAgo = DateTime.Today.AddYears(-3);
+            page = WebUtility.HtmlDecode(await (await admin.GetAsync(CalendarDay(longAgo))).Content.ReadAsStringAsync());
+            Assert.Matches(Arrow("jobs-day-before", lit: false, longAgo.AddDays(-1), "No jobs before this day"), page);
+            Assert.Matches(Arrow("slots-day-before", lit: false, longAgo.AddDays(-1), "No slots before this day"), page);
+            Assert.Matches(Arrow("slots-day-after", lit: true, firstSlotDay, "Next day with slots"), page);
 
             // On a phone the button beside the arrow has no plus, which reached the arrow.
             Assert.Matches("d-none d-md-inline-block\">add</span>\\s*<span>Write a job in</span>", page);
@@ -998,13 +1006,13 @@
         private static string CalendarDay(DateTime day) => "/Administration/Calendar?date=" + day.ToString("yyyy-MM-dd");
 
         // One of the calendar's four day arrows, as it should stand in the page: where it leads,
-        // whether it is lit, and what it says when pointed at.
+        // whether it is lit, and how what it says when pointed at begins.
         private static string Arrow(string id, bool lit, DateTime leadsTo, string says)
         {
             return "<a\\b(?=[^>]*id=\"" + id + "\")"
                 + "(?=[^>]*class=\"day-arrow" + (lit ? " day-arrow-lit" : "\\s*") + "\")"
                 + "(?=[^>]*href=\"" + Regex.Escape(CalendarDay(leadsTo)) + "\")"
-                + "(?=[^>]*title=\"[^\"]*: " + says + "\")[^>]*>";
+                + "(?=[^>]*title=\"" + Regex.Escape(says) + "[^\"]*\")[^>]*>";
         }
 
         // The two labels at the top of a job's page: where the work stands, and the money.

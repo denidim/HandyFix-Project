@@ -901,9 +901,26 @@ namespace HandyFix.Services.Data.Bookings
                 .ToListAsync();
         }
 
-        public async Task<bool> HasJobsOnDayAsync(DateTime day)
+        public async Task<DateTime?> GetNextDayWithJobsAsync(DateTime day)
         {
-            return await this.JobsOnDay(day).AnyAsync();
+            DateTime from = day.Date.AddDays(1);
+
+            DateTime? start = await this.JobsInTheCalendar()
+                .Where(x => x.ScheduledStart >= from)
+                .MinAsync(x => x.ScheduledStart);
+
+            return start?.Date;
+        }
+
+        public async Task<DateTime?> GetPreviousDayWithJobsAsync(DateTime day)
+        {
+            DateTime before = day.Date;
+
+            DateTime? start = await this.JobsInTheCalendar()
+                .Where(x => x.ScheduledStart < before)
+                .MaxAsync(x => x.ScheduledStart);
+
+            return start?.Date;
         }
 
         public async Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan)
@@ -1063,17 +1080,22 @@ namespace HandyFix.Services.Data.Bookings
             return (text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Trim();
         }
 
-        // Every job that is on or done that day, written-in ones too. A cancelled or abandoned job
-        // is left out: the admin opens the day to see who is going where. The day's list and the
-        // arrow that says the day has jobs both read this, so a lit arrow never opens an empty list.
+        // Every job that is on or done, written-in ones too. A cancelled or abandoned job is left
+        // out: the admin opens a day to see who is going where. A day's list and the arrows that
+        // lead to the nearest day with jobs all read this, so a lit arrow never opens an empty list.
+        private IQueryable<Booking> JobsInTheCalendar()
+        {
+            return this.bookingRepository.All()
+                .Where(x => x.Status.Name != "Cancelled" && x.Status.Name != "Abandoned");
+        }
+
         private IQueryable<Booking> JobsOnDay(DateTime day)
         {
             DateTime from = day.Date;
             DateTime to = from.AddDays(1);
 
-            return this.bookingRepository.All()
-                .Where(x => x.ScheduledStart >= from && x.ScheduledStart < to)
-                .Where(x => x.Status.Name != "Cancelled" && x.Status.Name != "Abandoned");
+            return this.JobsInTheCalendar()
+                .Where(x => x.ScheduledStart >= from && x.ScheduledStart < to);
         }
 
         // The one customer email that names the technician, sent when an admin picks one. It used

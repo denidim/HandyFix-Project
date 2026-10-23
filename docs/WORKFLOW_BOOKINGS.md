@@ -96,19 +96,23 @@ though #A7C30F12 is at this hour. Block it if nobody else should be booked then.
 in** on this page opens the form with the day filled in.
 
 **From one day to the next: the arrows.** Each of the two lists, *Jobs on …* and *Slots for …*, has
-an arrow on either side of its heading: a day back and a day on. Any of the four moves the whole
-page. An arrow is **lit** (filled, with a halo and a ring that beats) when the day it leads to has
-something for that list, and a grey ring when it has not; it works either way. Pointing at one
-says which day it is and what it has.
+an arrow on either side of its heading, one looking back and one looking on. Any of the four moves
+the whole page. An arrow is **lit** (filled, with a halo and a ring that beats) when some day that
+way has something for its list, however far away, and it leads straight to the nearest such day.
+With nothing that way it is a grey ring and moves one day, so the days can still be stepped
+through. Pointing at one says which day it leads to: *"Next day with jobs: Mon 27 Oct"*, or
+*"No jobs after this day. The day after: Sat 25 Oct"*.
 
-| Arrows beside | Lit when that day has |
+| Arrows beside | Lit when a day that way has |
 | --- | --- |
 | *Jobs on …* | a job that is on or done: what that day's own list would show. A cancelled or abandoned job lights nothing, so a lit arrow never opens an empty list. |
-| *Slots for …* | any slot at all, on sale, taken or blocked. |
+| *Slots for …* | any slot at all, on sale, taken or blocked. A Saturday's arrow leads on to the Monday. |
 
-The page asks two yes-or-no questions about each neighbouring day
-(`BookingsService.HasJobsOnDayAsync`, `AvailabilityService.HasSlotsOnDayAsync`), not for that day's
-lists. The date box at the top still jumps to any day.
+The page asks for the nearest day each way (`BookingsService.GetNextDayWithJobsAsync` and
+`GetPreviousDayWithJobsAsync`, `AvailabilityService.GetNextDayWithSlotsAsync` and
+`GetPreviousDayWithSlotsAsync`), not for any day's lists. Until `PROJECT_STATE.md` Section 3cs an
+arrow asked about the next day only, so a job three days away left it grey. The date box at the top
+still jumps to any day.
 
 > "Unblock" did nothing until `PROJECT_STATE.md` Section 3ce: it called the method that frees a
 > slot from its booking, which leaves the block where it is. A blocked hour could not be opened

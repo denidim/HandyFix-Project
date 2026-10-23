@@ -146,7 +146,9 @@ All three are public records and can be read with `nslookup -type=TXT`:
 - **DKIM**: Brevo's two selectors, `brevo1._domainkey` and `brevo2._domainkey`.
 - **DMARC**: `_dmarc`, at `p=none`, which reports and refuses nothing. Do not tighten it until a
   reply sent from the company mailbox as a domain address has been checked to pass, or those
-  replies are what gets refused.
+  replies are what gets refused. *Checked 2026-10-23 (`PROJECT_STATE.md` Section 3cr): SPF, DKIM
+  and DMARC all pass on such a reply. Gmail's "Send mail as" sends it through Brevo's SMTP relay,
+  which the SPF record already names. Tightening is now a decision of its own.*
 
 ---
 

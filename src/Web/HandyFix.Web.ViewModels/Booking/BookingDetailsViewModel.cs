@@ -170,13 +170,18 @@ namespace HandyFix.Web.ViewModels.Booking
                 .Map(dest => dest.CreatedOn, src => src.CreatedOn)
                 .Map(dest => dest.TechnicianName, src => src.Technician != null ? NameFormat.Full(src.Technician.FirstName, src.Technician.LastName) : "Not Assigned")
                 .Map(dest => dest.TechnicianPhoneNumber, src => src.Technician != null ? src.Technician.PhoneNumber : null)
-                .Map(dest => dest.IsDepositPaid, src => src.Payments != null && src.Payments.Any(p => p.Status.Name == "DepositPaid"))
-                .Map(dest => dest.IsDepositRefunded, src => src.Payments != null && src.Payments.Any(p => p.Status.Name == "Refunded"))
-                .Map(dest => dest.HasOtherPayments, src => src.Payments != null && src.Payments.Any(p => p.Status.Name == "Completed"))
+
+                // No "!= null" on a job's lists below. This runs as SQL, where a list is never
+                // null, and EF fetched the whole list to check: the job list's query joined the
+                // payments three times more, the services twice and the photos once, and SQL
+                // Server took about three seconds to plan it (PROJECT_STATE.md Section 3cs).
+                .Map(dest => dest.IsDepositPaid, src => src.Payments.Any(p => p.Status.Name == "DepositPaid"))
+                .Map(dest => dest.IsDepositRefunded, src => src.Payments.Any(p => p.Status.Name == "Refunded"))
+                .Map(dest => dest.HasOtherPayments, src => src.Payments.Any(p => p.Status.Name == "Completed"))
                 .Map(dest => dest.PaidRaw, src => src.Payments.Where(p => p.Status.Name == "DepositPaid" || p.Status.Name == "Completed").Sum(p => (double)p.Amount))
-                .Map(dest => dest.Services, src => src.BookingServices != null ? src.BookingServices.Select(x => x.Service.Name) : new List<string>())
-                .Map(dest => dest.ServiceId, src => src.BookingServices != null ? src.BookingServices.OrderBy(x => x.CreatedOn).Select(x => (Guid?)x.ServiceId).FirstOrDefault() : null)
-                .Map(dest => dest.ImageUrls, src => src.Images != null ? src.Images.Select(x => x.ImageUrl) : new List<string>());
+                .Map(dest => dest.Services, src => src.BookingServices.Select(x => x.Service.Name))
+                .Map(dest => dest.ServiceId, src => src.BookingServices.OrderBy(x => x.CreatedOn).Select(x => (Guid?)x.ServiceId).FirstOrDefault())
+                .Map(dest => dest.ImageUrls, src => src.Images.Select(x => x.ImageUrl));
         }
     }
 }

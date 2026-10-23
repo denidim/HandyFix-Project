@@ -86,10 +86,16 @@ namespace HandyFix.Services.Data.Bookings
         Task<IEnumerable<T>> GetJobsForDayAsync<T>(DateTime day);
 
         /// <summary>
-        /// Whether <see cref="GetJobsForDayAsync"/> would list anything for that day. The
-        /// calendar's arrows ask it about the day before and the day after.
+        /// The nearest day after this one that <see cref="GetJobsForDayAsync"/> lists anything
+        /// for, however far away, or null when there is none. The calendar's arrow leads there.
         /// </summary>
-        Task<bool> HasJobsOnDayAsync(DateTime day);
+        Task<DateTime?> GetNextDayWithJobsAsync(DateTime day);
+
+        /// <summary>
+        /// The nearest day before this one that <see cref="GetJobsForDayAsync"/> lists anything
+        /// for, or null when there is none.
+        /// </summary>
+        Task<DateTime?> GetPreviousDayWithJobsAsync(DateTime day);
 
         Task RescheduleBookingAsync(Guid bookingId, Guid newSlotId);
 

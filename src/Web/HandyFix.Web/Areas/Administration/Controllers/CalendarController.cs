@@ -48,8 +48,10 @@ namespace HandyFix.Web.Areas.Administration.Controllers
                 TargetDate = targetDate,
                 Slots = slots,
                 Jobs = jobs,
-                PreviousDay = await this.NeighbourAsync(targetDate.Date.AddDays(-1)),
-                NextDay = await this.NeighbourAsync(targetDate.Date.AddDays(1)),
+                JobsBefore = Arrow(await this.bookingsService.GetPreviousDayWithJobsAsync(targetDate), targetDate.Date.AddDays(-1)),
+                JobsAfter = Arrow(await this.bookingsService.GetNextDayWithJobsAsync(targetDate), targetDate.Date.AddDays(1)),
+                SlotsBefore = Arrow(await this.availabilityService.GetPreviousDayWithSlotsAsync(targetDate), targetDate.Date.AddDays(-1)),
+                SlotsAfter = Arrow(await this.availabilityService.GetNextDayWithSlotsAsync(targetDate), targetDate.Date.AddDays(1)),
             };
 
             return this.View(model);
@@ -126,15 +128,16 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             return date.ToString("dddd d MMMM yyyy", CultureInfo.InvariantCulture);
         }
 
-        // What an arrow needs to know about the day it leads to: two yes-or-no questions, not
-        // that day's whole lists (PROJECT_STATE.md Section 3ch).
-        private async Task<CalendarNeighbourDayViewModel> NeighbourAsync(DateTime day)
+        // An arrow leads to the nearest day that way with something for its list, and is lit.
+        // It asked about the next day only, so a job three days away left it grey. With nothing
+        // that way it is grey and moves the page one day, so the days can still be stepped
+        // through one at a time (PROJECT_STATE.md Section 3cs).
+        private static CalendarArrowViewModel Arrow(DateTime? nearest, DateTime oneDayOn)
         {
-            return new CalendarNeighbourDayViewModel
+            return new CalendarArrowViewModel
             {
-                Date = day,
-                HasJobs = await this.bookingsService.HasJobsOnDayAsync(day),
-                HasSlots = await this.availabilityService.HasSlotsOnDayAsync(day),
+                Date = nearest ?? oneDayOn,
+                Lit = nearest.HasValue,
             };
         }
     }

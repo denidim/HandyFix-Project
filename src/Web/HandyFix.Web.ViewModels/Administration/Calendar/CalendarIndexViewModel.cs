@@ -18,8 +18,13 @@ namespace HandyFix.Web.ViewModels.Administration.Calendar
         /// </summary>
         public IEnumerable<BookingDetailsViewModel> Jobs { get; set; } = new List<BookingDetailsViewModel>();
 
-        public CalendarNeighbourDayViewModel PreviousDay { get; set; } = new CalendarNeighbourDayViewModel();
+        // The arrows either side of "Jobs on …" and of "Slots for …".
+        public CalendarArrowViewModel JobsBefore { get; set; } = new CalendarArrowViewModel();
 
-        public CalendarNeighbourDayViewModel NextDay { get; set; } = new CalendarNeighbourDayViewModel();
+        public CalendarArrowViewModel JobsAfter { get; set; } = new CalendarArrowViewModel();
+
+        public CalendarArrowViewModel SlotsBefore { get; set; } = new CalendarArrowViewModel();
+
+        public CalendarArrowViewModel SlotsAfter { get; set; } = new CalendarArrowViewModel();
     }
 }
