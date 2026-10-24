@@ -962,6 +962,46 @@
             }
         }
 
+        // A link sent in WhatsApp or posted on Facebook showed no picture, except an area page's
+        // (PROJECT_STATE Section 3da). Every other page names the site's share picture.
+        [Theory]
+        [InlineData("/")]
+        [InlineData("/Services/plumbing")]
+        [InlineData("/Pricing")]
+        [InlineData("/Contact")]
+        public async Task PagesWithoutAPictureOfTheirOwnNameTheSitesSharePicture(string path)
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync(path);
+
+            Assert.Matches("<meta property=\"og:image\" content=\"https?://[^/\"]+/images/share\\.jpg\\?v=[\\w-]+\" />", page);
+            Assert.Contains("<meta property=\"og:image:width\" content=\"1200\" />", page);
+            Assert.Contains("<meta property=\"og:image:height\" content=\"630\" />", page);
+            Assert.Contains("<meta name=\"twitter:card\" content=\"summary_large_image\" />", page);
+        }
+
+        [Fact]
+        public async Task AnAreaPageKeepsItsOwnTownsSharePicture()
+        {
+            var client = this.server.CreateClient();
+            var page = await client.GetStringAsync("/Areas/cobham");
+
+            var pictures = Regex.Matches(page, "<meta property=\"og:image\" content=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList();
+            Assert.EndsWith("/images/areas/cobham-hero.webp", Assert.Single(pictures));
+            Assert.DoesNotContain("og:image:width", page);
+        }
+
+        // WhatsApp shows no picture at all for one over about 300 KB.
+        [Fact]
+        public void TheSharePictureIsSmallEnoughForWhatsApp()
+        {
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            var picture = new FileInfo(Path.Combine(webRoot, "images", "share.jpg"));
+
+            Assert.True(picture.Exists);
+            Assert.True(picture.Length < 280 * 1024, $"share.jpg is {picture.Length / 1024} KB");
+        }
+
         [Fact]
         public async Task TheFontFilesAreServedForAYear()
         {
