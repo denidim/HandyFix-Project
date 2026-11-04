@@ -1,6 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="232 161 560 560">
-  <!-- Browser-tab icon: the logo's shield, solid, with the water drop cut out in white. The
-       full emblem (Views/Shared/_Logo.cshtml) is thin line work and smudges at 16-32px. -->
-  <path d="M308 247 L512 189 L716 247 L716 500 C716 592 626 652 512 694 C398 652 308 592 308 500 Z" fill="#13284b" stroke="#13284b" stroke-width="30" stroke-linejoin="round"/>
-  <path d="M512 307 C500 365 440 412 440 468 A72 72 0 0 0 584 468 C584 412 524 365 512 307 Z" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="232 146 560 560">
+  <!-- Browser-tab icon: the logo's full emblem (shield, drop, wrench, roof) without the text. -->
+  <defs>
+    <linearGradient id="teal" gradientUnits="userSpaceOnUse" x1="0" y1="157" x2="0" y2="390">
+      <stop offset="0" stop-color="#14697e"/>
+      <stop offset="1" stop-color="#0c4862"/>
+    </linearGradient>
+    <linearGradient id="copper" gradientUnits="userSpaceOnUse" x1="0" y1="-66" x2="0" y2="321">
+      <stop offset="0" stop-color="#8f3f15"/>
+      <stop offset="0.6" stop-color="#cf7c3e"/>
+      <stop offset="1" stop-color="#a65220"/>
+    </linearGradient>
+    <mask id="shield-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <g fill="#000" stroke="#000" stroke-linejoin="round">
+        <path d="M512 157 C500 215 440 262 440 318 A72 72 0 0 0 584 318 C584 262 524 215 512 157 Z" stroke-width="33"/>
+        <path d="M-54.8 -36.8 A66 66 0 0 0 -25 61.1 L-25 296 A25 25 0 0 0 25 296 L25 61.1 A66 66 0 0 0 -9.0 -65.4 L12.3 -31.3 L9.1 -8.1 L-11.2 4.7 L-33.5 -2.7 Z" transform="translate(334 396) rotate(-45) scale(1.05)" stroke-width="31"/>
+        <path d="M400 572 L610 362 L744 496 L702 496 L610 404 L424 590 Z" stroke="none"/>
+        <path d="M400 572 L610 362 L744 496 L702 496 L610 404 L424 590" fill="none" stroke-linejoin="miter" stroke-width="32"/>
+        <path d="M676 428 L676 382 L712 382 L712 464 Z" stroke-linejoin="miter" stroke-width="32"/>
+      </g>
+    </mask>
+    <mask id="roof-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <path d="M-54.8 -36.8 A66 66 0 0 0 -25 61.1 L-25 296 A25 25 0 0 0 25 296 L25 61.1 A66 66 0 0 0 -9.0 -65.4 L12.3 -31.3 L9.1 -8.1 L-11.2 4.7 L-33.5 -2.7 Z" transform="translate(334 396) rotate(-45) scale(1.05)" fill="#000" stroke="#000" stroke-width="31"/>
+    </mask>
+  </defs>
+  <g mask="url(#shield-cut)" fill="none" stroke="#13284b" stroke-width="12" stroke-linejoin="miter">
+    <path d="M308 247 L512 189 L716 247 L716 500 C716 592 626 652 512 694 C398 652 308 592 308 500 Z"/>
+    <path d="M345 283 L512 236 L679 283 L679 498 C679 570 604 622 512 656 C420 622 345 570 345 498 Z"/>
+  </g>
+  <g mask="url(#roof-cut)" fill="none" stroke="#b8975a" stroke-width="14" stroke-linejoin="miter">
+    <path d="M400 572 L610 362 L744 496 L702 496 L610 404 L424 590"/>
+    <path d="M676 428 L676 382 L712 382 L712 464"/>
+  </g>
+  <g transform="translate(334 396) rotate(-45) scale(1.05)" fill="none" stroke="url(#copper)" stroke-linejoin="round">
+    <path d="M-54.8 -36.8 A66 66 0 0 0 -25 61.1 L-25 296 A25 25 0 0 0 25 296 L25 61.1 A66 66 0 0 0 -9.0 -65.4 L12.3 -31.3 L9.1 -8.1 L-11.2 4.7 L-33.5 -2.7 Z" stroke-width="13"/>
+    <rect x="-14" y="20" width="28" height="36" rx="4" stroke-width="6"/>
+    <path d="M-14 32 H14 M-14 44 H14" stroke-width="5"/>
+    <rect x="-7" y="106" width="14" height="170" rx="7" stroke-width="6"/>
+  </g>
+  <g stroke="url(#teal)" stroke-linejoin="round">
+    <path d="M512 157 C500 215 440 262 440 318 A72 72 0 0 0 584 318 C584 262 524 215 512 157 Z" fill="none" stroke-width="15"/>
+    <path d="M512 243 C506 272 478 296 478 322 A34 34 0 0 0 546 322 C546 296 518 272 512 243 Z" fill="none" stroke-width="8"/>
+    <path d="M512 243 C518 272 546 296 546 322 A34 34 0 0 1 512 356 Z" fill="url(#teal)" stroke-width="8"/>
+  </g>
 </svg>

@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Tests
+namespace HandyFix.Web.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -700,7 +700,7 @@
             Assert.Contains("id=\"footer-shield-cut\"", content);
             var logoIds = Regex.Matches(content, "id=\"((?:nav|footer)-[^\"]+)\"").Select(m => m.Groups[1].Value).ToList();
             Assert.Equal(logoIds.Count, logoIds.Distinct().Count());
-            Assert.Contains("href=\"/favicon.svg\"", content);
+            Assert.Matches("href=\"/favicon\\.svg\\?v=[^\"]+\"", content);
         }
 
         [Theory]
