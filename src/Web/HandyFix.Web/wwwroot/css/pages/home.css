@@ -58,19 +58,9 @@
 .hero-bg-overlay {
   position: absolute;
   inset: 0;
-  /* Legibility wash (unchanged) plus the diagonal plumbing-to-handyman colour
-     accent, CSS-only per Section 4 Tier 1 item 1 -- retunable without touching
-     the underlying image. Transparent middle band keeps the text/booking-card
-     area close to neutral white; the corners carry the colour. */
-  background:
-    linear-gradient(
-      135deg,
-      rgba(14, 165, 233, 0.28) 0%,
-      rgba(255, 255, 255, 0) 45%,
-      rgba(255, 255, 255, 0) 55%,
-      rgba(225, 29, 72, 0.28) 100%
-    ),
-    rgba(255, 255, 255, 0.5);
+  /* A plain white wash so the navy text reads over the photo. The blue and red
+     corner tint that sat on top of it was taken off (PROJECT_STATE Section 3db). */
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .hero-content {
