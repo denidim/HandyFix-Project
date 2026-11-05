@@ -263,6 +263,7 @@ namespace HandyFix.Web.Controllers
             {
                 Reviews = approvedReviews,
                 GoogleReviewsUrl = this.configuration["Business:GoogleReviewsUrl"],
+                GoogleLeaveReviewUrl = this.configuration["Business:GoogleLeaveReviewUrl"],
                 ShowOnSiteReviews = showOnSiteReviews,
             };
 

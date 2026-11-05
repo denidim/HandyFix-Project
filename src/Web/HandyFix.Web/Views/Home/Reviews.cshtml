@@ -1,6 +1,8 @@
 @model HandyFix.Web.ViewModels.Reviews.ReviewsListViewModel
 @{
     this.ViewData["Title"] = "Customer Reviews";
+    var hasReadLink = !string.IsNullOrWhiteSpace(Model.GoogleReviewsUrl);
+    var hasLeaveLink = !string.IsNullOrWhiteSpace(Model.GoogleLeaveReviewUrl);
 }
 
 <div class="page-container services-page">
@@ -28,12 +30,22 @@
                     <span class="material-symbols-outlined text-secondary fs-36 mb-2">rate_review</span>
                     <h2 class="font-headline-md text-primary mb-2">Loved our work?</h2>
                     <p class="text-muted mb-4">We'd love it if you shared your experience on Google. It's the best way to help other homeowners find us.</p>
-                    @if (!string.IsNullOrWhiteSpace(Model.GoogleReviewsUrl))
+                    @if (hasReadLink || hasLeaveLink)
                     {
-                        <a href="@Model.GoogleReviewsUrl" target="_blank" rel="noopener" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
-                            <span>Read Reviews on Google</span>
-                            <span class="material-symbols-outlined">open_in_new</span>
-                        </a>
+                        @if (hasReadLink)
+                        {
+                            <a href="@Model.GoogleReviewsUrl" target="_blank" rel="noopener" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
+                                <span>Read Our Google Reviews</span>
+                                <span class="material-symbols-outlined">open_in_new</span>
+                            </a>
+                        }
+                        @if (hasLeaveLink)
+                        {
+                            <a href="@Model.GoogleLeaveReviewUrl" target="_blank" rel="noopener" class="btn btn-outline-primary btn-block py-3 mt-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
+                                <span>Leave a Google Review</span>
+                                <span class="material-symbols-outlined">open_in_new</span>
+                            </a>
+                        }
                     }
                     else
                     {
@@ -106,16 +118,27 @@
     else
     {
         <div class="text-center mt-12">
-            <div class="glass-card rounded-xl p-5 mx-auto max-w-2xl">
+            <!-- Less padding on phones, so each button's label fits on one line. -->
+            <div class="glass-card rounded-xl p-4 p-md-5 mx-auto max-w-2xl">
                 <span class="material-symbols-outlined text-secondary fs-36 mb-2">rate_review</span>
                 <h2 class="font-headline-md text-primary mb-2">Loved our work?</h2>
-                @if (!string.IsNullOrWhiteSpace(Model.GoogleReviewsUrl))
+                @if (hasReadLink || hasLeaveLink)
                 {
-                    <p class="text-muted mb-4">We're setting up our Google Business Profile so you can read (and leave) reviews there.</p>
-                    <a href="@Model.GoogleReviewsUrl" target="_blank" rel="noopener" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold max-w-xl mx-auto">
-                        <span>Read Reviews on Google</span>
-                        <span class="material-symbols-outlined">open_in_new</span>
-                    </a>
+                    <p class="text-muted mb-4">Read what our customers say on Google. Had us round recently? Your review helps other homeowners find us.</p>
+                    @if (hasReadLink)
+                    {
+                        <a href="@Model.GoogleReviewsUrl" target="_blank" rel="noopener" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold max-w-xl mx-auto">
+                            <span>Read Our Google Reviews</span>
+                            <span class="material-symbols-outlined">open_in_new</span>
+                        </a>
+                    }
+                    @if (hasLeaveLink)
+                    {
+                        <a href="@Model.GoogleLeaveReviewUrl" target="_blank" rel="noopener" class="btn btn-outline-primary btn-block py-3 mt-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold max-w-xl mx-auto">
+                            <span>Leave a Google Review</span>
+                            <span class="material-symbols-outlined">open_in_new</span>
+                        </a>
+                    }
                 }
                 else
                 {

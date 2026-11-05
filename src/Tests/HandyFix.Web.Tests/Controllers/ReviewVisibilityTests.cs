@@ -63,31 +63,36 @@
         }
 
         [Fact]
-        public async Task ReviewsPageShouldCarryTheConfiguredGoogleUrlThroughToTheCta()
+        public async Task ReviewsPageShouldCarryBothConfiguredGoogleLinksThroughToTheCard()
         {
-            // The whole point of the config key is that adding the real profile later is an
-            // edit to appsettings, not a code change (VISION_AND_CONTEXT.md section 7).
+            // The two links are config keys, so a new Business Profile is an edit to appsettings,
+            // not a code change (VISION_AND_CONTEXT.md section 7). Each must reach its own button:
+            // swapped, "Read Our Google Reviews" would open the form for writing one.
             var controller = BuildHomeController(
                 showOnSiteReviews: false,
                 out _,
-                googleReviewsUrl: "https://g.page/r/example/review");
+                googleReviewsUrl: "https://g.page/r/example",
+                googleLeaveReviewUrl: "https://g.page/r/example/review");
 
             var result = await controller.Reviews();
             var model = Assert.IsType<ReviewsListViewModel>(Assert.IsType<ViewResult>(result).Model);
 
-            Assert.Equal("https://g.page/r/example/review", model.GoogleReviewsUrl);
+            Assert.Equal("https://g.page/r/example", model.GoogleReviewsUrl);
+            Assert.Equal("https://g.page/r/example/review", model.GoogleLeaveReviewUrl);
         }
 
         [Fact]
-        public async Task ReviewsPageShouldLeaveTheGoogleUrlEmptyWhenItIsNotConfiguredYet()
+        public async Task ReviewsPageShouldLeaveTheGoogleLinksEmptyWhenTheyAreNotConfigured()
         {
-            // Empty by default and deliberately not guessed - no Business Profile exists yet.
+            // Not guessed: with no links the view shows the card without buttons, rather than
+            // buttons that go nowhere.
             var controller = BuildHomeController(showOnSiteReviews: false, out _);
 
             var result = await controller.Reviews();
             var model = Assert.IsType<ReviewsListViewModel>(Assert.IsType<ViewResult>(result).Model);
 
             Assert.True(string.IsNullOrEmpty(model.GoogleReviewsUrl));
+            Assert.True(string.IsNullOrEmpty(model.GoogleLeaveReviewUrl));
         }
 
         [Fact]
@@ -121,7 +126,8 @@
         private static HomeController BuildHomeController(
             bool showOnSiteReviews,
             out Mock<IReviewsService> reviewsService,
-            string googleReviewsUrl = null)
+            string googleReviewsUrl = null,
+            string googleLeaveReviewUrl = null)
         {
             reviewsService = new Mock<IReviewsService>();
             reviewsService
@@ -146,6 +152,11 @@
             if (googleReviewsUrl != null)
             {
                 settings["Business:GoogleReviewsUrl"] = googleReviewsUrl;
+            }
+
+            if (googleLeaveReviewUrl != null)
+            {
+                settings["Business:GoogleLeaveReviewUrl"] = googleLeaveReviewUrl;
             }
 
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
