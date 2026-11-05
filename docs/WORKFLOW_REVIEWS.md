@@ -40,19 +40,27 @@ on what you're looking at shouldn't change what the dashboard reports.
 
 ## The public-display gate is separate from approval
 
-Two config keys, read as raw `IConfiguration` values (not a typed options class) — `appsettings.json`:
+Three config keys, read as raw `IConfiguration` values (not a typed options class) — `appsettings.json`:
 
 ```json
-"Business": { "GoogleReviewsUrl": "", "ShowOnSiteReviews": false }
+"Business": {
+  "GoogleReviewsUrl": "https://g.page/r/CRa4VR4BecsDEBM",
+  "GoogleLeaveReviewUrl": "https://g.page/r/CRa4VR4BecsDEBM/review",
+  "ShowOnSiteReviews": false
+}
 ```
 
 - **`Business:ShowOnSiteReviews`** — when `false`, the homepage slider, the full `/Reviews` page, and
   each Area Details page **never call `GetLatestApprovedAsync` at all** — reviews aren't fetched and
   hidden, they're simply not queried. Toggling this to `true` is what actually makes approved
   reviews visible anywhere public.
-- **`Business:GoogleReviewsUrl`** — passed straight through to the Reviews page view model
-  regardless of the toggle above, for a "See more reviews on Google" link once a real profile
-  exists.
+- **`Business:GoogleReviewsUrl`** and **`Business:GoogleLeaveReviewUrl`** — passed straight
+  through to the Reviews page view model regardless of the toggle above. The first opens the
+  Business Profile on Google Maps ("Read Our Google Reviews"), the second opens Google's form for
+  writing a review ("Leave a Google Review"); they are the same link with and without `/review` at
+  the end. Each button shows only when its link is set; with neither, the card shows a short
+  "coming soon" line instead. The links are public, which is why they live in `appsettings.json`
+  rather than in the server's settings.
 
 **This gate does not touch the admin panel.** Approve/Delete work identically whether
 `ShowOnSiteReviews` is on or off — it's purely a public-display switch, easy to conflate with
