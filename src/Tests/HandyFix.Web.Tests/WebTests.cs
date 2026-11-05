@@ -12,9 +12,11 @@ namespace HandyFix.Web.Tests
     using HandyFix.Common;
 
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.AspNetCore.HttpsPolicy;
     using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Options;
 
     using WebOptimizer;
 
@@ -252,6 +254,35 @@ namespace HandyFix.Web.Tests
             response.EnsureSuccessStatusCode();
             Assert.Equal(TimeSpan.FromDays(365), response.Headers.CacheControl?.MaxAge);
             Assert.True(response.Headers.CacheControl?.Public);
+        }
+
+        // Every answer, a page, a file or a page that is not there, carries the three headers
+        // Program.Configure sets, each once.
+        [Theory]
+        [InlineData("/")]
+        [InlineData("/Contact")]
+        [InlineData("/favicon.svg")]
+        [InlineData("/no-such-page")]
+        public async Task EveryAnswerCarriesTheThreeBrowserHeaders(string path)
+        {
+            var client = this.server.CreateClient();
+            var response = await client.GetAsync(path);
+
+            Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+            Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
+            Assert.Equal("SAMEORIGIN", response.Headers.GetValues("X-Frame-Options").Single());
+        }
+
+        // Outside Development a browser is told to use HTTPS only, for a year. The header itself is
+        // never sent to localhost, which is what a test talks to, so the setting is what is read.
+        [Fact]
+        public void BrowsersAreToldToUseHttpsOnlyForAYear()
+        {
+            HstsOptions options = this.server.Services.GetRequiredService<IOptions<HstsOptions>>().Value;
+
+            Assert.Equal(TimeSpan.FromDays(365), options.MaxAge);
+            Assert.False(options.IncludeSubDomains);
+            Assert.False(options.Preload);
         }
 
         // A category card shows its picture 88px wide on a phone; with the small copy offered the

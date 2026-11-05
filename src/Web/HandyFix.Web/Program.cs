@@ -136,6 +136,12 @@ namespace HandyFix.Web
                     options.KnownProxies.Clear();
                 });
 
+            // A browser that has seen the site goes to it over HTTPS only, for a year, where
+            // ASP.NET's own default is 30 days (UseHsts below, outside Development). This address
+            // only, not its subdomains, and not on the browsers' preload list, which is slow to
+            // leave.
+            services.AddHsts(options => options.MaxAge = TimeSpan.FromDays(365));
+
             services.AddControllersWithViews(
                 options =>
                 {
@@ -246,6 +252,20 @@ namespace HandyFix.Web
             // middleware and every action that reads Request.Scheme/Request.Host/RemoteIpAddress
             // depends on this having already corrected them from the forwarded headers.
             app.UseForwardedHeaders();
+
+            // Three headers on every answer, pages, files and error pages alike: the browser takes
+            // a file as the type it is sent as and does not guess; another site is told only this
+            // site's name as where a visitor came from, never the page's address; and the site is
+            // shown inside a frame only on the site itself, so no other page can lay it under
+            // buttons of its own.
+            app.Use((context, next) =>
+            {
+                IHeaderDictionary headers = context.Response.Headers;
+                headers["X-Content-Type-Options"] = "nosniff";
+                headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+                headers["X-Frame-Options"] = "SAMEORIGIN";
+                return next(context);
+            });
 
             // Seed data on application startup
             using (IServiceScope serviceScope = app.Services.CreateScope())
