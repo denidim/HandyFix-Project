@@ -415,7 +415,8 @@ namespace HandyFix.Services.Data.Payments
                     EmailLayout.Divider(),
                     EmailLayout.MoneyRow("Deposit Paid", $"{deposit} (Paid)"))
                 + EmailLayout.Text("<strong>What happens next?</strong><br />We will send you a follow-up email with your assigned technician's name and direct contact number as soon as one is allocated. If you need to send photos of the job or additional directions, feel free to message us on WhatsApp below.")
-                + EmailLayout.WhatsAppButton("Message Us on WhatsApp"));
+                + EmailLayout.WhatsAppButton("Message Us on WhatsApp")
+                + CancellationNote(deposit, EmailSettings.SiteUrl(this.configuration)));
 
             var customerTold = await this.emailSender.TrySendEmailAsync(
                 this.logger,
@@ -719,6 +720,23 @@ namespace HandyFix.Services.Data.Payments
             return EmailLayout.Link("tel:" + EmailText.PhoneLink(booking.PhoneNumber), EmailText.Encode(booking.PhoneNumber))
                 + " &bull; "
                 + EmailLayout.Link("mailto:" + EmailText.Encode(booking.Email), EmailText.Encode(booking.Email));
+        }
+
+        // Section 4 of the Terms & Conditions page (Views/Home/Terms.cshtml), word for word, so the
+        // customer has the cancellation rules in writing the moment the deposit is taken. The page
+        // and this note say the same thing: change them together.
+        private static string CancellationNote(string deposit, string siteUrl)
+        {
+            const string Free = "<span style=\"color: #16a34a; font-weight: 700;\">&#10003;</span>";
+            const string Forfeited = "<span style=\"color: #dc2626; font-weight: 700;\">&#10007;</span>";
+
+            var rules = "To cancel or reschedule, call or email us."
+                + $"<div style=\"margin-top: 10px;\">{Free} <strong>More than 24 hours before:</strong> cancelling or rescheduling is free. Your deposit is refunded in full to your card, or moved to the new appointment.</div>"
+                + $"<div style=\"margin-top: 8px;\">{Forfeited} <strong>Within 24 hours of the appointment:</strong> the {deposit} deposit is forfeited.</div>"
+                + $"<div style=\"margin-top: 8px;\">{Free} <strong>If we have to cancel:</strong> we'll offer you a new time or refund your deposit in full.</div>"
+                + $"<div style=\"margin-top: 10px;\">Full terms: {EmailLayout.Link(siteUrl + "/TermsAndConditions", "Terms &amp; Conditions")}</div>";
+
+            return EmailLayout.Note("Cancellations &amp; Rescheduling", rules);
         }
 
         private static bool IsPaid(Session session)
