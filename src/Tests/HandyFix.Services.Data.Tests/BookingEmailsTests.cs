@@ -159,6 +159,30 @@
             Assert.DoesNotContain("Registered office", toCompany.Body);
         }
 
+        // The customer has the cancellation rules in writing the moment the deposit is taken, in
+        // the words of the Terms & Conditions page, with a link to the whole page. The company's
+        // notice does not need them.
+        [Fact]
+        public async Task TheCustomersDepositEmailShouldCarryTheCancellationRulesAndLinkTheTerms()
+        {
+            using var world = new BookingWorld();
+            var checkoutSessionId = await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
+            List<SentEmail> sent = world.CaptureEmails();
+
+            await world.Payments.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_1");
+
+            SentEmail toCustomer = sent.Single(e => e.To == "ada@example.com");
+            Assert.Contains("Cancellations &amp; Rescheduling", toCustomer.Body);
+            Assert.Contains("To cancel or reschedule, call or email us.", toCustomer.Body);
+            Assert.Contains("<strong>More than 24 hours before:</strong> cancelling or rescheduling is free. Your deposit is refunded in full to your card, or moved to the new appointment.", toCustomer.Body);
+            Assert.Contains("<strong>Within 24 hours of the appointment:</strong> the &pound;50.00 deposit is forfeited.", toCustomer.Body);
+            Assert.Contains("<strong>If we have to cancel:</strong> we'll offer you a new time or refund your deposit in full.", toCustomer.Body);
+            Assert.Matches("<a href=\"https://plumbing-handyman-surrey\\.co\\.uk/TermsAndConditions\"[^>]*>Terms &amp; Conditions</a>", toCustomer.Body);
+
+            SentEmail toCompany = sent.Single(e => e.To == "info@plumbing-handyman-surrey.co.uk");
+            Assert.DoesNotContain("Cancellations &amp; Rescheduling", toCompany.Body);
+        }
+
         // A technician may be on the roster under a first name alone, and a number is written
         // with spaces (PROJECT_STATE.md Section 3cd). The name must not drag a space behind it,
         // and the link's address holds the number without the spaces the text keeps.
@@ -182,6 +206,7 @@
             Assert.Equal("ada@example.com", email.To);
             Assert.Equal("Your technician for your Plumbing Handyman Surrey booking", email.Subject);
             Assert.Contains(expectedName, email.Body);
+            Assert.Contains("<strong>" + NameFormat.Full("Zapryan", lastName) + " will call you before the visit</strong> to ask for further job-specific information if needed.", email.Body);
             Assert.Matches("<a href=\"tel:02039515915\"[^>]*>020 3951 5915</a>", email.Body);
             Assert.Contains(BookingReference.Short(booking.Id), email.Body);
             Assert.DoesNotContain(booking.Id.ToString(), email.Body);

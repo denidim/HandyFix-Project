@@ -51,6 +51,15 @@ that is never paid is dropped fifteen minutes later. Nothing goes out when a job
 moved, and nothing at all for a job the admin wrote in by hand, whatever email address is on it:
 in each of those the admin is already speaking to the customer (`PROJECT_STATE.md` Section 3ce).
 
+**Besides the booking's details, the two say** (`PROJECT_STATE.md` Section 3dd):
+
+- **Deposit paid**: the cancellation rules, in a box under the WhatsApp button. They are Section 4
+  of the Terms & Conditions page word for word (free more than 24 hours before, the deposit kept
+  within 24 hours, a new time or a full refund if the business cancels), with a link to the whole
+  page. The page and `PaymentsService.CancellationNote` say the same thing: change them together.
+- **Technician picked**: under the technician's name and number, that the technician will call
+  the customer before the visit to ask for further job-specific information if needed.
+
 Every one but the reset link follows a save and goes through `TrySendEmailAsync`: a send that fails is logged
 as `Email not sent: {which email}` and does not undo or hide what was saved.
 
