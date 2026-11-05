@@ -1128,6 +1128,7 @@ namespace HandyFix.Services.Data.Bookings
                 + EmailLayout.Heading($"Hi {EmailText.Encode(booking.CustomerFirstName)},")
                 + EmailLayout.Lead($"Your technician for your visit{visit} is <strong>{technicianName}</strong>.")
                 + EmailLayout.Spotlight("Assigned Specialist", technicianName, contact)
+                + EmailLayout.Text($"<strong>{technicianName} will call you before the visit</strong> to ask for further job-specific information if needed.")
                 + EmailLayout.Details(
                     EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
                     EmailLayout.Row("Service(s)", EmailText.Encode(string.Join(", ", serviceNames))),

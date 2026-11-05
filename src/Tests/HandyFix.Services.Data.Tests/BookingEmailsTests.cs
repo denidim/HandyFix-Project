@@ -206,6 +206,7 @@
             Assert.Equal("ada@example.com", email.To);
             Assert.Equal("Your technician for your Plumbing Handyman Surrey booking", email.Subject);
             Assert.Contains(expectedName, email.Body);
+            Assert.Contains("<strong>" + NameFormat.Full("Zapryan", lastName) + " will call you before the visit</strong> to ask for further job-specific information if needed.", email.Body);
             Assert.Matches("<a href=\"tel:02039515915\"[^>]*>020 3951 5915</a>", email.Body);
             Assert.Contains(BookingReference.Short(booking.Id), email.Body);
             Assert.DoesNotContain(booking.Id.ToString(), email.Body);
