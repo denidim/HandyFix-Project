@@ -329,7 +329,7 @@
             Booking booking = world.DbContext.Bookings.Single();
             world.Stripe.Setup(x => x.ExpireCheckoutAsync(sessionId)).ReturnsAsync(new Session { Id = sessionId, Status = "expired", PaymentStatus = "unpaid" });
 
-            Assert.Equal(JobCancelOutcome.Cancelled, await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off"));
+            Assert.Equal(JobCancelOutcome.Cancelled, await world.Jobs.CancelBookingAsync(booking.Id, "The customer rang to call it off"));
 
             world.Stripe.Verify(x => x.ExpireCheckoutAsync(sessionId), Times.Once);
             Assert.Equal("Cancelled", world.StatusOf(booking));
@@ -349,7 +349,7 @@
             Booking booking = world.DbContext.Bookings.Single();
             world.Stripe.Setup(x => x.ExpireCheckoutAsync(sessionId)).ReturnsAsync(Paid(sessionId, "pi_same_moment"));
 
-            JobCancelOutcome outcome = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off");
+            JobCancelOutcome outcome = await world.Jobs.CancelBookingAsync(booking.Id, "The customer rang to call it off");
 
             Assert.Equal(JobCancelOutcome.PaidJustNow, outcome);
             Assert.Equal("Approved", world.StatusOf(booking));
@@ -371,7 +371,7 @@
             Booking booking = world.DbContext.Bookings.Single();
             world.Stripe.Setup(x => x.ExpireCheckoutAsync(sessionId)).ThrowsAsync(new TimeoutException("Stripe did not answer"));
 
-            JobCancelOutcome outcome = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off");
+            JobCancelOutcome outcome = await world.Jobs.CancelBookingAsync(booking.Id, "The customer rang to call it off");
 
             Assert.Equal(JobCancelOutcome.Cancelled, outcome);
             Assert.Equal("Cancelled", world.StatusOf(booking));

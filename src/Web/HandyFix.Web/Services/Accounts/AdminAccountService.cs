@@ -7,12 +7,10 @@
 
     using HandyFix.Common;
     using HandyFix.Data.Models;
-    using HandyFix.Services.Data.Common;
-    using HandyFix.Services.Messaging;
+    using HandyFix.Services.Data.Emails;
 
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.WebUtilities;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
 
     public class AdminAccountService : IAdminAccountService
@@ -23,21 +21,18 @@
 
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
-        private readonly IEmailSender emailSender;
-        private readonly IConfiguration configuration;
+        private readonly IAccountEmails accountEmails;
         private readonly ILogger<AdminAccountService> logger;
 
         public AdminAccountService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IEmailSender emailSender,
-            IConfiguration configuration,
+            IAccountEmails accountEmails,
             ILogger<AdminAccountService> logger)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
-            this.emailSender = emailSender;
-            this.configuration = configuration;
+            this.accountEmails = accountEmails;
             this.logger = logger;
         }
 
@@ -118,23 +113,9 @@
             var token = await this.userManager.GeneratePasswordResetTokenAsync(user);
             var link = linkFor(user.Id, WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token)));
 
-            var address = EmailText.Encode(link);
-            var body = EmailLayout.ForAccountSecurity(
-                EmailLayout.Badge(EmailColour.Red, "&#128274; Security Notification")
-                + EmailLayout.Heading("Reset your admin password")
-                + EmailLayout.Lead($"A request was received to reset the password for the <strong>{GlobalConstants.SystemName}</strong> admin panel account.")
-                + EmailLayout.Button("Choose a New Password &rarr;", address)
-                + EmailLayout.Note("Important security note:", $"&bull; This password reset link works for <strong>{ResetLinkHours} hours</strong> and can only be used once.<br />&bull; If you did not request this reset, you can safely ignore this email. Your current password remains unchanged and secure.")
-                + EmailLayout.SmallPrint($"If the button above does not work, copy and paste this link into your browser:<br />{EmailLayout.LinkInFull(address)}"));
-
-            await this.emailSender.TrySendEmailAsync(
-                this.logger,
-                "password reset link, to the admin",
-                EmailSettings.SystemFromAddress(this.configuration),
-                EmailSettings.WebsiteFromName,
-                user.Email,
-                $"Reset your {GlobalConstants.SystemName} admin password",
-                body);
+            // Whether it went is not told to the page: it says the same either way, so it gives
+            // away nothing about which addresses are an admin's login.
+            await this.accountEmails.PasswordResetLinkAsync(user.Email, link, ResetLinkHours);
         }
 
         public async Task<IdentityResult> ResetPasswordAsync(string userId, string code, string newPassword)

@@ -325,7 +325,7 @@ its first word is taken as the first name. The enquiry itself stays where it is.
 A box typed wrongly is put right afterwards with **Edit the Details** on the job's page (see
 "Editing the details" below); the day and time, with **Move**.
 
-**Code:** `BookingsService.CreateWrittenInJobAsync`, `JobInputModel`,
+**Code:** `JobsService.CreateWrittenInJobAsync`, `JobInputModel`,
 `BookingsController.Create`, `Areas/Administration/Views/Bookings/Create.cshtml`.
 
 ---
@@ -386,7 +386,7 @@ admin's assignment by copying from the destination slot. Moving a job explicitly
 technician — a different hour does not change who is doing it.
 
 **Code:** `Areas/Administration/Controllers/TechniciansController.cs`, `TechniciansService`,
-`BookingsService.AssignTechnicianAsync`, `HandyFix.Common/BookingRules.cs`,
+`JobsService.AssignTechnicianAsync`, `HandyFix.Common/BookingRules.cs`,
 `Areas/Administration/Views/Bookings/Details.cshtml`.
 
 ---
@@ -409,7 +409,7 @@ A payment can be written on a job that is on or done, not on one that is cancell
 and not on a website booking before its deposit, which is paid on the website and nowhere else.
 The final price of a done job can be put right afterwards (**Change the Final Price**).
 
-**Code:** `BookingsService.CompleteBookingAsync` / `ChangeFinalPriceAsync`,
+**Code:** `JobsService.CompleteBookingAsync` / `ChangeFinalPriceAsync`,
 `PaymentsService.AddPaymentAsync` / `RemovePaymentAsync` / `GetMoneyListAsync`,
 `HandyFix.Common/PaymentMethods.cs`.
 
@@ -442,7 +442,7 @@ characters; a rewritten description gets what is left of the line, which holds 7
 for both forms, and the two partial views `_JobCustomerFields` and `_JobWorkFields` draw them for
 both pages, so the two cannot come to disagree about what a name or a phone number may be.
 
-**Code:** `BookingsService.EditDetailsAsync`, `BookingRules.CanEditDetails`,
+**Code:** `JobsService.EditDetailsAsync`, `BookingRules.CanEditDetails`,
 `JobEditInputModel`, `BookingsController.Edit`,
 `Areas/Administration/Views/Bookings/Edit.cshtml`, `JobHistory.Was`.
 
@@ -489,7 +489,7 @@ deposit, the technician, details changed, moved, done, each payment, cancelled, 
 by the same code that makes the change (`JobHistory`), and nothing ever edits or deletes one. A
 job made before this has no lines for what happened before.
 
-**Code:** `BookingsService.CancelBookingAsync` / `MoveBookingAsync` / `SaveNotesAsync` /
+**Code:** `JobsService.CancelBookingAsync` / `MoveBookingAsync` / `SaveNotesAsync` /
 `GetHistoryAsync`, `PaymentsService.SetDepositRefundedAsync`,
 `Services/Data/Common/JobHistory.cs`, `BookingHistoryEntry`.
 

@@ -28,7 +28,7 @@
             using var world = new BookingWorld();
             DateTime start = DateTime.Today.AddDays(2).AddHours(14);
 
-            Guid id = await world.Bookings.CreateWrittenInJobAsync(world.WrittenInJob(start, BookingSource.WhatsApp));
+            Guid id = await world.Jobs.CreateWrittenInJobAsync(world.WrittenInJob(start, BookingSource.WhatsApp));
 
             Booking job = world.DbContext.Bookings.Include(x => x.Status).Single(x => x.Id == id);
             Assert.Equal("Grace", job.CustomerFirstName);
@@ -58,7 +58,7 @@
             JobInputModel form = world.WrittenInJob(world.SlotStart);
             form.Email = "grace@example.com";
 
-            await world.Bookings.CreateWrittenInJobAsync(form);
+            await world.Jobs.CreateWrittenInJobAsync(form);
 
             Assert.False(world.Slot(world.SlotId).IsBooked);
             Assert.Null(world.Slot(world.SlotId).BookingId);
@@ -74,7 +74,7 @@
             form.CustomerLastName = "  Hopper ";
             form.Address = " 3 Navy Row, Epsom ";
 
-            Guid id = await world.Bookings.CreateWrittenInJobAsync(form);
+            Guid id = await world.Jobs.CreateWrittenInJobAsync(form);
 
             Booking job = world.DbContext.Bookings.Include(x => x.BookingServices).Single(x => x.Id == id);
             Assert.Equal(90.00m, job.TotalAmount);
@@ -91,7 +91,7 @@
             using var world = new BookingWorld();
 
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => world.Bookings.CreateWrittenInJobAsync(world.WrittenInJob(source: BookingSource.Website)));
+                () => world.Jobs.CreateWrittenInJobAsync(world.WrittenInJob(source: BookingSource.Website)));
 
             Assert.Empty(world.DbContext.Bookings);
         }
@@ -120,12 +120,12 @@
             using var world = new BookingWorld();
             JobInputModel form = world.WrittenInJob();
             form.Email = "grace@example.com";
-            Guid id = await world.Bookings.CreateWrittenInJobAsync(form);
+            Guid id = await world.Jobs.CreateWrittenInJobAsync(form);
             Booking job = world.DbContext.Bookings.Single(x => x.Id == id);
             Technician technician = world.AddTechnician("Zapryan");
             List<SentEmail> sent = world.CaptureEmails();
 
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(id, technician.Id);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(id, technician.Id);
 
             Assert.Equal(TechnicianAssignmentOutcome.AssignedNoEmailForWrittenInJob, result.Outcome);
             Assert.Equal("Zapryan", result.TechnicianName);
@@ -176,8 +176,8 @@
                 world.EmailsFail();
             }
 
-            await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
-            await world.Bookings.AssignTechnicianAsync(booking.Id, null);
+            await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
+            await world.Jobs.AssignTechnicianAsync(booking.Id, null);
 
             List<string> history = world.HistoryOf(booking);
             Assert.Equal(expectedLine, history[history.Count - 2]);
@@ -192,7 +192,7 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
 
-            var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "  The customer rang: the tap was fixed by a neighbour.  ");
+            var cancelled = await world.Jobs.CancelBookingAsync(booking.Id, "  The customer rang: the tap was fixed by a neighbour.  ");
 
             Assert.Equal(JobCancelOutcome.Cancelled, cancelled);
             Booking after = world.DbContext.Bookings.Single();
@@ -214,7 +214,7 @@
             booking.ScheduledEnd = null;
             await world.DbContext.SaveChangesAsync();
 
-            await world.Bookings.CancelBookingAsync(booking.Id, "Called off.");
+            await world.Jobs.CancelBookingAsync(booking.Id, "Called off.");
 
             Booking after = world.DbContext.Bookings.Single();
             Assert.Equal(world.SlotStart, after.ScheduledStart);
@@ -230,7 +230,7 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
 
-            var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, reason);
+            var cancelled = await world.Jobs.CancelBookingAsync(booking.Id, reason);
 
             Assert.Equal(JobCancelOutcome.NotAllowed, cancelled);
             Assert.Equal("Approved", world.StatusOf(booking));
@@ -264,7 +264,7 @@
         {
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
-            await world.Bookings.CancelBookingAsync(booking.Id, "Called off two days before.");
+            await world.Jobs.CancelBookingAsync(booking.Id, "Called off two days before.");
 
             var ticked = await world.Payments.SetDepositRefundedAsync(booking.Id, true);
 
@@ -300,7 +300,7 @@
         {
             using var world = new BookingWorld();
             Booking job = await world.SeedWrittenInJobAsync();
-            await world.Bookings.CancelBookingAsync(job.Id, "Called off.");
+            await world.Jobs.CancelBookingAsync(job.Id, "Called off.");
 
             Assert.False(await world.Payments.SetDepositRefundedAsync(job.Id, true));
         }
@@ -311,7 +311,7 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
 
-            var done = await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            var done = await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
 
             Assert.True(done);
             Assert.Equal("Completed", world.StatusOf(booking));
@@ -328,7 +328,7 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
 
-            var done = await world.Bookings.CompleteBookingAsync(booking.Id, (decimal)finalPrice);
+            var done = await world.Jobs.CompleteBookingAsync(booking.Id, (decimal)finalPrice);
 
             Assert.False(done);
             Assert.Equal("Approved", world.StatusOf(booking));
@@ -341,7 +341,7 @@
             using var world = new BookingWorld();
             Booking job = await world.SeedWrittenInJobAsync();
 
-            Assert.True(await world.Bookings.CompleteBookingAsync(job.Id, 60.00m));
+            Assert.True(await world.Jobs.CompleteBookingAsync(job.Id, 60.00m));
             Assert.Equal("Completed", world.StatusOf(job));
         }
 
@@ -351,21 +351,21 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
 
-            Assert.False(await world.Bookings.ChangeFinalPriceAsync(booking.Id, 140.00m));
+            Assert.False(await world.Jobs.ChangeFinalPriceAsync(booking.Id, 140.00m));
             Assert.Null(world.DbContext.Bookings.Single().FinalPrice);
 
-            await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
 
-            Assert.True(await world.Bookings.ChangeFinalPriceAsync(booking.Id, 140.00m));
+            Assert.True(await world.Jobs.ChangeFinalPriceAsync(booking.Id, 140.00m));
             Assert.Equal(140.00m, world.DbContext.Bookings.Single().FinalPrice);
             Assert.Equal("Final price changed from £135.00 to £140.00.", world.HistoryOf(booking).Last());
 
             // Saved as it stands, it leaves no line.
             var lines = world.HistoryOf(booking).Count;
-            Assert.True(await world.Bookings.ChangeFinalPriceAsync(booking.Id, 140.00m));
+            Assert.True(await world.Jobs.ChangeFinalPriceAsync(booking.Id, 140.00m));
             Assert.Equal(lines, world.HistoryOf(booking).Count);
 
-            Assert.False(await world.Bookings.ChangeFinalPriceAsync(booking.Id, 0m));
+            Assert.False(await world.Jobs.ChangeFinalPriceAsync(booking.Id, 0m));
         }
 
         [Theory]
@@ -376,7 +376,7 @@
         {
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
-            await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
 
             var added = await world.Payments.AddPaymentAsync(booking.Id, 85.00m, method);
 
@@ -525,7 +525,7 @@
             Assert.Equal(day.AddDays(3), await world.Bookings.GetPreviousDayWithJobsAsync(day.AddDays(10)));
             Assert.Null(await world.Bookings.GetPreviousDayWithJobsAsync(day.AddDays(3)));
 
-            await world.Bookings.CancelBookingAsync(near.Id, "Called off.");
+            await world.Jobs.CancelBookingAsync(near.Id, "Called off.");
 
             Assert.Equal(day.AddDays(10), await world.Bookings.GetNextDayWithJobsAsync(day));
             Assert.Empty(await world.Bookings.GetJobsForDayAsync<BookingDetailsViewModel>(day.AddDays(3)));
@@ -562,7 +562,7 @@
             DateTime newStart = world.SlotStart.AddDays(1).AddHours(2);
             AvailabilitySlot newSlot = world.AddSlot(newStart);
 
-            JobMoveResult result = await world.Bookings.MoveBookingAsync(booking.Id, newStart);
+            JobMoveResult result = await world.Jobs.MoveBookingAsync(booking.Id, newStart);
 
             Assert.Equal(JobMoveOutcome.Moved, result.Outcome);
             Assert.True(result.OldHourFreed);
@@ -602,7 +602,7 @@
                 _ => null,
             };
 
-            JobMoveResult result = await world.Bookings.MoveBookingAsync(booking.Id, newStart);
+            JobMoveResult result = await world.Jobs.MoveBookingAsync(booking.Id, newStart);
 
             Assert.Equal(JobMoveOutcome.Moved, result.Outcome);
             Assert.True(result.OldHourFreed);
@@ -629,7 +629,7 @@
             using var world = new BookingWorld();
             Booking job = await world.SeedWrittenInJobAsync();
 
-            JobMoveResult result = await world.Bookings.MoveBookingAsync(job.Id, world.SlotStart);
+            JobMoveResult result = await world.Jobs.MoveBookingAsync(job.Id, world.SlotStart);
 
             Assert.Equal(JobMoveOutcome.Moved, result.Outcome);
             Assert.False(result.OldHourFreed);
@@ -646,7 +646,7 @@
             Booking booking = await world.SeedPaidBookingAsync();
             var lines = world.HistoryOf(booking).Count;
 
-            JobMoveResult result = await world.Bookings.MoveBookingAsync(booking.Id, world.SlotStart);
+            JobMoveResult result = await world.Jobs.MoveBookingAsync(booking.Id, world.SlotStart);
 
             Assert.Equal(JobMoveOutcome.Unchanged, result.Outcome);
             Assert.True(world.Slot(world.SlotId).IsBooked);
@@ -664,7 +664,7 @@
             Booking booking = await world.SeedPaidBookingAsync();
             world.SetStatus(booking, status);
 
-            JobMoveResult result = await world.Bookings.MoveBookingAsync(booking.Id, world.SlotStart.AddDays(3));
+            JobMoveResult result = await world.Jobs.MoveBookingAsync(booking.Id, world.SlotStart.AddDays(3));
 
             Assert.Equal(JobMoveOutcome.NotAllowed, result.Outcome);
             Assert.Equal(world.SlotStart, world.DbContext.Bookings.Single().ScheduledStart);
@@ -676,7 +676,7 @@
         {
             using var world = new BookingWorld();
 
-            Assert.Equal(JobMoveOutcome.BookingNotFound, (await world.Bookings.MoveBookingAsync(Guid.NewGuid(), DateTime.Today)).Outcome);
+            Assert.Equal(JobMoveOutcome.BookingNotFound, (await world.Jobs.MoveBookingAsync(Guid.NewGuid(), DateTime.Today)).Outcome);
         }
 
         [Fact]
@@ -686,14 +686,14 @@
             Booking job = await world.SeedWrittenInJobAsync();
             var lines = world.HistoryOf(job).Count;
 
-            Assert.True(await world.Bookings.SaveNotesAsync(job.Id, "  Stopcock is under the kitchen sink.  "));
+            Assert.True(await world.Jobs.SaveNotesAsync(job.Id, "  Stopcock is under the kitchen sink.  "));
             Assert.Equal("Stopcock is under the kitchen sink.", world.DbContext.Bookings.Single().AdminNotes);
 
-            Assert.True(await world.Bookings.SaveNotesAsync(job.Id, "   "));
+            Assert.True(await world.Jobs.SaveNotesAsync(job.Id, "   "));
             Assert.Null(world.DbContext.Bookings.Single().AdminNotes);
 
             Assert.Equal(lines, world.HistoryOf(job).Count);
-            Assert.False(await world.Bookings.SaveNotesAsync(Guid.NewGuid(), "Nobody's."));
+            Assert.False(await world.Jobs.SaveNotesAsync(Guid.NewGuid(), "Nobody's."));
         }
 
         [Fact]
@@ -701,9 +701,9 @@
         {
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
-            await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
 
-            List<BookingHistoryViewModel> history = (await world.Bookings.GetHistoryAsync<BookingHistoryViewModel>(booking.Id)).ToList();
+            List<BookingHistoryViewModel> history = (await world.Jobs.GetHistoryAsync<BookingHistoryViewModel>(booking.Id)).ToList();
 
             Assert.Equal(
                 new[] { "Deposit of £50.00 paid on the website.", "Marked done. Final price £135.00." },

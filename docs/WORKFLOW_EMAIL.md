@@ -5,9 +5,9 @@ email says, and why, stays with its feature: `WORKFLOW_BOOKINGS.md` for the four
 `WORKFLOW_ENQUIRIES.md` for the two enquiry emails.
 
 **Code:** `src/Services/HandyFix.Services.Messaging/` (the senders),
-`src/Services/HandyFix.Services.Data/Common/EmailSettings.cs` (the addresses and their settings),
-`src/Services/HandyFix.Services.Data/Common/EmailSenderExtensions.cs` (`TrySendEmailAsync`),
-`src/Services/HandyFix.Services.Data/Common/EmailLayout.cs` (how every email looks).
+`src/Services/HandyFix.Services.Data/Emails/`: `BookingEmails`, `EnquiryEmails` and
+`AccountEmails` (what each email says), `EmailSettings.cs` (the addresses and their settings),
+`EmailSenderExtensions.cs` (`TrySendEmailAsync`), `EmailLayout.cs` (how every email looks).
 
 ---
 
@@ -56,7 +56,7 @@ in each of those the admin is already speaking to the customer (`PROJECT_STATE.m
 - **Deposit paid**: the cancellation rules, in a box under the WhatsApp button. They are Section 4
   of the Terms & Conditions page word for word (free more than 24 hours before, the deposit kept
   within 24 hours, a new time or a full refund if the business cancels), with a link to the whole
-  page. The page and `PaymentsService.CancellationNote` say the same thing: change them together.
+  page. The page and `BookingEmails.CancellationNote` say the same thing: change them together.
 - **Technician picked**: under the technician's name and number, that the technician will call
   the customer before the visit to ask for further job-specific information if needed.
 
@@ -95,10 +95,13 @@ top, a coloured line under it, a badge that says what the email is, the content,
 | `ForCompany` | the three notices to the company | teal | one line |
 | `ForAccountSecurity` | the password reset link | navy | one line |
 
-An email's own words stay in the service that sends it. The service puts its content together from
-`EmailLayout`'s pieces (`Badge`, `Heading`, `Lead`, `Details` and its rows, `Note`, `Advice`,
-`Button` and a few more) and hands it to one of the three methods above. **To change how every
-email looks, change `EmailLayout`. To change what one email says, change its service.**
+An email's own words are in its email class: `BookingEmails` for the four about a booking,
+`EnquiryEmails` for the two about an enquiry, `AccountEmails` for the reset link
+(`PROJECT_STATE.md` Section 3di). The class puts the content together from `EmailLayout`'s pieces
+(`Badge`, `Heading`, `Lead`, `Details` and its rows, `Note`, `Advice`, `Button` and a few more),
+hands it to one of the three methods above and sends it. The service that calls it decides when,
+and what is kept when it does not go. **To change how every email looks, change `EmailLayout`. To
+change what one email says, change its email class. To change when it goes, change the service.**
 
 - **Every piece takes HTML.** What a person typed goes through `EmailText.Encode` first, as it
   always did. `EmailLayout` encodes nothing.

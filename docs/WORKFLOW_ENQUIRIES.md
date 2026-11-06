@@ -62,7 +62,8 @@ people do send a correction straight after the first.
 
 ### Two emails go out for each enquiry
 
-`InquiriesService.CreateInquiryAsync` saves the enquiry first and then sends:
+`InquiriesService.CreateInquiryAsync` saves the enquiry first and then sends these two, whose
+words are in `EnquiryEmails`:
 
 1. **A notice to the company's inbox** (`Admin:NotificationEmail`, by default `info@` on the real
    domain; the same inbox the paid-deposit notice goes to). It carries the name, email, phone, the

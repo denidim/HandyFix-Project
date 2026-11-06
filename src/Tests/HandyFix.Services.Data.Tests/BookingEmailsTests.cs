@@ -196,7 +196,7 @@
             Technician technician = world.AddTechnician("Zapryan", lastName);
             List<SentEmail> sent = world.CaptureEmails();
 
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
 
             Assert.Equal(TechnicianAssignmentOutcome.AssignedAndCustomerEmailed, result.Outcome);
             Assert.Equal(NameFormat.Full("Zapryan", lastName), result.TechnicianName);
@@ -222,7 +222,7 @@
             Technician technician = world.AddTechnician("Zapryan");
             List<SentEmail> sent = world.CaptureEmails();
 
-            await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
 
             SentEmail email = Assert.Single(sent);
             Assert.Contains("&lt;b&gt;12 Main Rd&lt;/b&gt; &amp; Sons, Sutton", email.Body);
@@ -240,7 +240,7 @@
             Technician technician = world.AddTechnician("Zapryan");
             world.EmailsFail();
 
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
 
             Assert.Equal(TechnicianAssignmentOutcome.AssignedButEmailNotSent, result.Outcome);
             Assert.Equal("Zapryan", result.TechnicianName);
@@ -259,7 +259,7 @@
             Technician technician = world.AddTechnician("Zapryan");
             List<SentEmail> sent = world.CaptureEmails();
 
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
 
             Assert.Equal(TechnicianAssignmentOutcome.NotAllowed, result.Outcome);
             Assert.Null(world.DbContext.Bookings.Single().TechnicianId);
@@ -280,7 +280,7 @@
             Technician technician = world.AddTechnician("Zapryan");
             List<SentEmail> sent = world.CaptureEmails();
 
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
 
             Assert.Equal(TechnicianAssignmentOutcome.NotAllowed, result.Outcome);
             Assert.Null(world.DbContext.Bookings.Single().TechnicianId);
@@ -296,8 +296,8 @@
             Technician technician = world.AddTechnician("Zapryan");
             List<SentEmail> sent = world.CaptureEmails();
 
-            await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
-            TechnicianAssignmentResult again = await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
+            TechnicianAssignmentResult again = await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
 
             Assert.Equal(TechnicianAssignmentOutcome.Unchanged, again.Outcome);
             Assert.Equal("Zapryan", again.TechnicianName);
@@ -314,8 +314,8 @@
             Technician second = world.AddTechnician("Sam", "Reed", "07700 900456");
             List<SentEmail> sent = world.CaptureEmails();
 
-            await world.Bookings.AssignTechnicianAsync(booking.Id, first.Id);
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(booking.Id, second.Id);
+            await world.Jobs.AssignTechnicianAsync(booking.Id, first.Id);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(booking.Id, second.Id);
 
             Assert.Equal(TechnicianAssignmentOutcome.AssignedAndCustomerEmailed, result.Outcome);
             Assert.Equal("Sam Reed", result.TechnicianName);
@@ -331,10 +331,10 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             Technician technician = world.AddTechnician("Zapryan");
-            await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
             List<SentEmail> sent = world.CaptureEmails();
 
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(booking.Id, null);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(booking.Id, null);
 
             Assert.Equal(TechnicianAssignmentOutcome.Cleared, result.Outcome);
             Assert.Null(result.TechnicianName);
@@ -351,7 +351,7 @@
             Booking booking = await world.SeedPaidBookingAsync();
             List<SentEmail> sent = world.CaptureEmails();
 
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(booking.Id, Guid.Empty);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(booking.Id, Guid.Empty);
 
             Assert.Equal(TechnicianAssignmentOutcome.TechnicianNotFound, result.Outcome);
             Assert.Null(world.DbContext.Bookings.Single().TechnicianId);
@@ -363,7 +363,7 @@
         {
             using var world = new BookingWorld();
 
-            TechnicianAssignmentResult result = await world.Bookings.AssignTechnicianAsync(Guid.NewGuid(), null);
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(Guid.NewGuid(), null);
 
             Assert.Equal(TechnicianAssignmentOutcome.BookingNotFound, result.Outcome);
         }
@@ -374,7 +374,7 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
 
-            var completed = await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            var completed = await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
 
             Assert.True(completed);
             Assert.Equal("Completed", world.StatusOf(booking));
@@ -388,7 +388,7 @@
             await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
             Booking booking = world.DbContext.Bookings.Single();
 
-            var completed = await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            var completed = await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
 
             Assert.False(completed);
             Assert.Equal("Pending", world.StatusOf(booking));
@@ -404,7 +404,7 @@
             Booking booking = await world.SeedPaidBookingAsync();
             world.SetStatus(booking, status);
 
-            var completed = await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            var completed = await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
 
             Assert.False(completed);
             Assert.Equal(status, world.StatusOf(booking));
@@ -427,7 +427,7 @@
 
             Booking booking = world.DbContext.Bookings.Single();
 
-            var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
+            var cancelled = await world.Jobs.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
 
             Assert.Equal(JobCancelOutcome.Cancelled, cancelled);
             Assert.Equal("Cancelled", world.StatusOf(booking));
@@ -446,7 +446,7 @@
             Booking booking = await world.SeedPaidBookingAsync();
             world.SetStatus(booking, status);
 
-            var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
+            var cancelled = await world.Jobs.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
 
             Assert.Equal(JobCancelOutcome.NotAllowed, cancelled);
             Assert.Equal(status, world.StatusOf(booking));
