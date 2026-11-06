@@ -21,7 +21,7 @@
     <!-- Main Content Canvas -->
     <div class="info-canvas">
     <!-- FAQ Categories & Accordion -->
-    <div class="faq-accordion" id="generalFaq">
+    <div class="faq-accordion" id="generalFaq" data-accordion data-accordion-open-first>
 
         <!-- Category: Booking & Process -->
         <div class="d-flex flex-column gap-3">
@@ -31,7 +31,7 @@
             </h2>
 
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
                     <span class="font-headline-sm text-primary fs-16 fw-bold">How do I book a service?</span>
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
@@ -41,7 +41,7 @@
             </div>
 
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
                     <span class="font-headline-sm text-primary fs-16 fw-bold">What is the £@Deposit.Pounds deposit for?</span>
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
@@ -51,7 +51,7 @@
             </div>
 
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
                     <span class="font-headline-sm text-primary fs-16 fw-bold">How is my time charged?</span>
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
@@ -69,7 +69,7 @@
             </h2>
 
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
                     <span class="font-headline-sm text-primary fs-16 fw-bold">Can I cancel my booking?</span>
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
@@ -87,7 +87,7 @@
             </h2>
 
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden faq-emergency-highlight">
-                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" onclick="toggleAccordion(this)">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
                     <span class="font-headline-sm text-primary fs-16 fw-bold">Do you offer 24/7 emergency services?</span>
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
@@ -124,25 +124,6 @@
     </div>
 </div>
 
-<script>
-    function toggleAccordion(button) {
-        const item = button.closest('.accordion-item');
-        const isActive = item.classList.contains('active');
-
-        // Close all items
-        document.querySelectorAll('.accordion-item').forEach(el => {
-            el.classList.remove('active');
-        });
-
-        // If the clicked item wasn't active, open it
-        if (!isActive) {
-            item.classList.add('active');
-        }
-    }
-
-    // Initialize first item as active
-    window.addEventListener('DOMContentLoaded', () => {
-        const firstItem = document.querySelector('.accordion-item');
-        if (firstItem) firstItem.classList.add('active');
-    });
-</script>
+@section Scripts {
+    <script src="~/js/accordion.js" asp-append-version="true"></script>
+}

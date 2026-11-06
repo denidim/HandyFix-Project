@@ -11,6 +11,10 @@
 
     public class BookingInputModel
     {
+        // The fewest characters a problem description may have. The page's script reads it too,
+        // to keep "Proceed to Payment" off until the description is long enough.
+        public const int ProblemDescriptionMinLength = 20;
+
         [Required(ErrorMessage = "First name is required.")]
         [MinLength(2, ErrorMessage = "First name must be at least 2 characters.")]
         [MaxLength(100, ErrorMessage = "First name cannot exceed 100 characters.")]
@@ -49,7 +53,7 @@
         public string Postcode { get; set; }
 
         [Required(ErrorMessage = "Please describe the problem you need fixed.")]
-        [MinLength(20, ErrorMessage = "Please tell us a little more: at least 20 characters.")]
+        [MinLength(ProblemDescriptionMinLength, ErrorMessage = "Please tell us a little more: at least 20 characters.")]
         [MaxLength(3000, ErrorMessage = "Problem description cannot exceed 3000 characters.")]
         [NotMostlyLinks]
         public string ProblemDescription { get; set; }
@@ -65,8 +69,6 @@
         public List<IFormFile> Images { get; set; } = new List<IFormFile>();
 
         public IEnumerable<ServiceViewModel> Services { get; set; } = new List<ServiceViewModel>();
-
-        public IEnumerable<DateTime> AvailableDates { get; set; } = new List<DateTime>();
 
         public string SelectedCategorySlug { get; set; }
 

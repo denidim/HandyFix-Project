@@ -12,5 +12,23 @@
     [Authorize]
     public class BaseController : Controller
     {
+        /// <summary>
+        /// What a public page tells the layout about itself: its title, the description search
+        /// engines show, and its one address. Every action used to set the three by hand, and a
+        /// form shown again after an error lost the last two (PROJECT_STATE.md Section 3dj).
+        /// </summary>
+        /// <param name="title">The page's title, or null when its view names it.</param>
+        /// <param name="description">The description for search engines and link previews.</param>
+        /// <param name="canonical">The page's address without whatever the link added to it.</param>
+        protected void SetPageMeta(string title, string description, string canonical)
+        {
+            if (title != null)
+            {
+                this.ViewData["Title"] = title;
+            }
+
+            this.ViewData["MetaDescription"] = description;
+            this.ViewData["Canonical"] = canonical;
+        }
     }
 }

@@ -13,6 +13,7 @@
     using HandyFix.Data;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.Services.Forms;
+    using HandyFix.Web.ViewModels.Booking;
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -67,15 +68,46 @@
             Assert.Contains("id=\"Postcode\"", content);
 
             // The districts the page checks a typed postcode against come from the service areas.
-            var written = Regex.Match(content, "const servedDistricts = (\\[[^\\r\\n]*\\]);");
+            // They reach the page's script as a JSON list in an attribute of the form.
+            var written = Regex.Match(content, "data-served-districts=\"([^\"]*)\"");
             Assert.True(written.Success);
-            var districts = JsonSerializer.Deserialize<string[]>(written.Groups[1].Value);
+            var districts = JsonSerializer.Deserialize<string[]>(WebUtility.HtmlDecode(written.Groups[1].Value));
             Assert.Contains("KT9", districts);
             Assert.Contains("GU1", districts);
             Assert.Equal(districts.Distinct().OrderBy(d => d), districts);
 
             // Nothing has been turned down yet, so the "we don't cover this postcode" notice is hidden.
             Assert.Matches("id=\"postcode-not-served\"[^>]*\\shidden", content);
+        }
+
+        // A form sent with nothing in it comes back with its messages, and the page still has its
+        // description and its one address, as when it was first opened. Both were lost there
+        // until PROJECT_STATE.md Section 3dj.
+        [Theory]
+        [InlineData("/Contact")]
+        [InlineData("/Booking")]
+        public async Task AFormShownAgainKeepsThePagesDescriptionAndAddress(string url)
+        {
+            var response = await PostFormAsync(this.server.CreateClient(), url, new Dictionary<string, string>());
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("field-validation-error", content);
+            Assert.Matches("<meta name=\"description\" content=\"[^\"]+\" />", content);
+            Assert.Contains("<link rel=\"canonical\" href=\"http://localhost" + url + "\" />", content);
+        }
+
+        // The wizard's script is a file of its own (PROJECT_STATE.md Section 3dj). What it needs
+        // from the server is on the form: the deposit the summary shows, and the description's
+        // minimum, the same number the server checks.
+        [Fact]
+        public async Task BookingPageGivesItsScriptTheDepositAndTheDescriptionMinimum()
+        {
+            var content = await (await this.server.CreateClient().GetAsync("/Booking")).Content.ReadAsStringAsync();
+
+            Assert.Matches("<script src=\"/js/booking\\.js\\?v=[^\"]+\"></script>", content);
+            Assert.Contains("data-deposit=\"" + Deposit.PoundsAndPence + "\"", content);
+            Assert.Contains("data-description-min=\"" + BookingInputModel.ProblemDescriptionMinLength + "\"", content);
+            Assert.DoesNotContain("initialDateStr", content);
         }
 
         // On a phone the floating Book Now button sat on top of the booking form's own fields,
@@ -149,8 +181,8 @@
             var response = await PostFormAsync(client, "/Booking", fields);
 
             var content = await response.Content.ReadAsStringAsync();
-            Assert.Contains("let initialDateStr = \"" + slotDay.ToString("yyyy-MM-dd") + "\";", content);
-            Assert.Contains("let keptSlotId = \"" + slotId + "\";", content);
+            Assert.Contains("data-selected-date=\"" + slotDay.ToString("yyyy-MM-dd") + "\"", content);
+            Assert.Contains("data-kept-slot-id=\"" + slotId + "\"", content);
         }
 
         // A page opened fresh has no slot to go back to.
@@ -159,7 +191,7 @@
         {
             var content = await (await this.server.CreateClient().GetAsync("/Booking")).Content.ReadAsStringAsync();
 
-            Assert.Contains("let keptSlotId = \"\";", content);
+            Assert.Contains("data-kept-slot-id=\"\"", content);
         }
 
         [Fact]

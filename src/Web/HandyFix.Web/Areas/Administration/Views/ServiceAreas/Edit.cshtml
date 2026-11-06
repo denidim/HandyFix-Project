@@ -1,14 +1,11 @@
 @model HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaAdminInputModel
-@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
 @{
     this.ViewData["Title"] = $"Edit Service Area: {Model.Name}";
-    this.ViewData["IsCreate"] = false;
 
     // Surface whether step 2 of the workflow has actually been done, rather than leaving the
-    // admin to guess.
+    // admin to guess. The controller looks for the picture before the page is drawn.
     var heroImagePath = $"/images/areas/{Model.Slug}-hero.webp";
-    var heroImageExists = !string.IsNullOrWhiteSpace(Model.Slug)
-        && System.IO.File.Exists(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "images", "areas", $"{Model.Slug}-hero.webp"));
+    var heroImageExists = Model.HasHeroImage;
 }
 
 <nav class="breadcrumb-nav mb-4 admin-header-row" aria-label="breadcrumb">

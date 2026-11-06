@@ -6,13 +6,6 @@
     var bookings = Model.Bookings;
 }
 
-@functions {
-    bool NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField field)
-    {
-        return this.Model.SortField == field ? !this.Model.Descending : false;
-    }
-}
-
 <!-- Sticky Header -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <div>
@@ -27,7 +20,7 @@
         <form method="get" asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="m-0">
             <input type="hidden" name="sortField" value="@Model.SortField" />
             <input type="hidden" name="descending" value="@(Model.Descending.ToString())" />
-            <select name="status" class="admin-status-filter font-body-md" onchange="this.form.submit()" aria-label="Show jobs that are">
+            <select name="status" class="admin-status-filter font-body-md" data-submit-on-change aria-label="Show jobs that are">
                 <option value="">All jobs</option>
                 @foreach (var statusOption in Model.StatusOptions)
                 {
@@ -37,7 +30,7 @@
         </form>
         <div class="position-relative max-w-sm w-100 admin-search-wrap">
             <span class="material-symbols-outlined position-absolute text-outline admin-search-icon">search</span>
-            <input class="w-100 py-2 border rounded-lg outline-none font-body-md admin-search-input" placeholder="Search Ref ID or Name..." type="text" id="bookings-search">
+            <input class="w-100 py-2 border rounded-lg outline-none font-body-md admin-search-input" placeholder="Search Ref ID or Name..." type="text" id="bookings-search" data-search-target="#bookings-table-body">
         </div>
     </div>
 </div>
@@ -92,7 +85,7 @@
                 <tr class="admin-table-head">
                     <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="CreatedOn" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="CreatedOn" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn ? "active" : "")">
                             Ref, Came In
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)
@@ -103,7 +96,7 @@
                     </th>
                     <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="CustomerName" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="CustomerName" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName ? "active" : "")">
                             Customer
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName)
@@ -114,7 +107,7 @@
                     </th>
                     <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="AppointmentTime" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="AppointmentTime" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime ? "active" : "")">
                             Day and Time
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime)
@@ -127,7 +120,7 @@
                     <th class="px-3 py-3 font-label-sm uppercase">Price</th>
                     <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="Status" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.Status)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="Status" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.Status)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.Status ? "active" : "")">
                             The Job
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.Status)
@@ -147,12 +140,6 @@
                     {
                         // A job that was written in may have a first name and nothing else.
                         var initials = string.Concat(booking.CustomerFirstName?.FirstOrDefault(), booking.CustomerLastName?.FirstOrDefault());
-
-                        var jobBadgeClass = booking.JobLabel == JobLabels.Done ? "tint-success" :
-                                            booking.JobLabel == JobLabels.Cancelled ? "tint-error" :
-                                            booking.JobLabel == JobLabels.Abandoned ? "tint-neutral" :
-                                            booking.JobLabel == JobLabels.WaitingForDeposit ? "tint-waiting" :
-                                            "tint-secondary";
 
                         var cameIn = UkTime.FromUtc(booking.CreatedOn);
 
@@ -219,7 +206,7 @@
                             <td class="px-3 py-3">
                                 @* "Waiting for deposit" is the one label long enough to widen the table, so it
                                    goes onto two lines where the others stay on one. *@
-                                <span class="px-3 py-1 font-label-sm font-bold @(booking.JobLabel == JobLabels.WaitingForDeposit ? "job-badge-two-lines" : "rounded-full text-nowrap") @jobBadgeClass">@booking.JobLabel</span>
+                                <span class="px-3 py-1 font-label-sm font-bold @(booking.JobLabel == JobLabels.WaitingForDeposit ? "job-badge-two-lines" : "rounded-full text-nowrap") @StatusBadges.ForJob(booking.JobLabel)">@booking.JobLabel</span>
                             </td>
                             <td class="px-3 py-3">
                                 <span class="d-flex align-items-center gap-2 font-label-sm font-bold text-nowrap @paymentTextClass">
@@ -245,18 +232,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('bookings-search');
-            const rows = document.querySelectorAll('#bookings-table-body tr');
-
-            searchInput?.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                rows.forEach(row => {
-                    const text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(term) ? '' : 'none';
-                });
-            });
-        });
-    </script>
+    <script src="~/js/admin-table-search.js" asp-append-version="true"></script>
 }

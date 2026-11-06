@@ -33,11 +33,20 @@
         private const string EnquiryReceivedMessage = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
         private const string ApplicationReceivedMessage = "Thanks for applying! We've received your details and will be in touch soon.";
 
+        // The pictures of the home page's three division cards.
+        private static readonly string[] DivisionPictures =
+        {
+            "/images/services/plumbing-category-hero.webp",
+            "/images/services/handyman-category-hero.webp",
+            "/images/services/small-building-category-hero.webp",
+        };
+
         private readonly IReviewsService reviewsService;
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
         private readonly IImageService imageService;
+        private readonly IImageStorageService imageStorage;
         private readonly IFormGuard formGuard;
         private readonly IConfiguration configuration;
         private readonly ILogger<HomeController> logger;
@@ -48,6 +57,7 @@
             IServicesService servicesService,
             ICategoriesService categoriesService,
             IImageService imageService,
+            IImageStorageService imageStorage,
             IFormGuard formGuard,
             IConfiguration configuration,
             ILogger<HomeController> logger)
@@ -57,6 +67,7 @@
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
             this.imageService = imageService;
+            this.imageStorage = imageStorage;
             this.formGuard = formGuard;
             this.configuration = configuration;
             this.logger = logger;
@@ -84,9 +95,18 @@
                 PopularServices = PickPopularServices(services),
             };
 
-            this.ViewData["Title"] = "Plumbers & Handymen in Surrey & South London";
-            this.ViewData["MetaDescription"] = "Plumbing Handyman Surrey provides reliable local plumbing and handyman services across Surrey and South London, including Chessington, Cobham, Esher, Guildford, Epsom, and Kingston. Book hourly slots online.";
-            this.ViewData["Canonical"] = this.Url.Action("Index", "Home", null, this.Request.Scheme);
+            // Each card picture's middle copy, looked up once here; the page used to look each one
+            // up twice while it was drawn (PROJECT_STATE.md Section 3dj).
+            model.MediumCopies = DivisionPictures
+                .Concat(model.PopularServices.Select(s => s.ImageUrl))
+                .Where(picture => picture != null)
+                .Distinct()
+                .ToDictionary(picture => picture, picture => this.imageStorage.GetMediumCopyPublicUrl(picture));
+
+            this.SetPageMeta(
+                "Plumbers & Handymen in Surrey & South London",
+                "Plumbing Handyman Surrey provides reliable local plumbing and handyman services across Surrey and South London, including Chessington, Cobham, Esher, Guildford, Epsom, and Kingston. Book hourly slots online.",
+                this.Url.Action("Index", "Home", null, this.Request.Scheme));
 
             return this.View(model);
         }
@@ -95,9 +115,7 @@
         [Route("Contact")]
         public async Task<IActionResult> Contact(string service = null, string date = null, string categorySlug = null)
         {
-            this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
-            this.ViewData["MetaDescription"] = "Get in touch with Plumbing Handyman Surrey for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.";
-            this.ViewData["Canonical"] = this.Url.Action("Contact", "Home", null, this.Request.Scheme);
+            this.SetContactPageMeta();
             var model = new ContactInputModel();
             if (!string.IsNullOrWhiteSpace(service))
             {
@@ -121,7 +139,7 @@
                     ?.CategoryName;
             }
 
-            IEnumerable<CategoryViewModel> categories = await this.SetContactCategoriesAsync();
+            IEnumerable<CategoryViewModel> categories = await this.SetContactCategoriesAsync(model);
 
             // The home booking widget sends a category's slug, with no service, when a quote-only
             // category is chosen there (PROJECT_STATE Section 3bz). A slug that matches nothing
@@ -267,27 +285,30 @@
                 ShowOnSiteReviews = showOnSiteReviews,
             };
 
-            this.ViewData["Title"] = "Customer Reviews";
-            this.ViewData["MetaDescription"] = "Read verified customer reviews of our plumbing and handyman services across Surrey and South London, or leave your own.";
-            this.ViewData["Canonical"] = this.Url.Action("Reviews", "Home", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "Customer Reviews",
+                "Read verified customer reviews of our plumbing and handyman services across Surrey and South London, or leave your own.",
+                this.Url.Action("Reviews", "Home", null, this.Request.Scheme));
             return this.View(model);
         }
 
         [Route("About")]
         public IActionResult About()
         {
-            this.ViewData["Title"] = "About Us";
-            this.ViewData["MetaDescription"] = "Learn about Plumbing Handyman Surrey, the dedicated plumbing, handyman and refurbishment specialists serving Surrey and South London from Chessington.";
-            this.ViewData["Canonical"] = this.Url.Action("About", "Home", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "About Us",
+                "Learn about Plumbing Handyman Surrey, the dedicated plumbing, handyman and refurbishment specialists serving Surrey and South London from Chessington.",
+                this.Url.Action("About", "Home", null, this.Request.Scheme));
             return this.View();
         }
 
         [Route("FAQ")]
         public IActionResult FAQ()
         {
-            this.ViewData["Title"] = "Frequently Asked Questions";
-            this.ViewData["MetaDescription"] = "Answers to common questions about booking, pricing, and scheduling plumbing and handyman services with Plumbing Handyman Surrey.";
-            this.ViewData["Canonical"] = this.Url.Action("FAQ", "Home", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "Frequently Asked Questions",
+                "Answers to common questions about booking, pricing, and scheduling plumbing and handyman services with Plumbing Handyman Surrey.",
+                this.Url.Action("FAQ", "Home", null, this.Request.Scheme));
             return this.View();
         }
 
@@ -303,27 +324,30 @@
         [Route("PrivacyPolicy")]
         public IActionResult Privacy()
         {
-            this.ViewData["Title"] = "Privacy Policy";
-            this.ViewData["MetaDescription"] = "How Plumbing Handyman Surrey collects, uses, and protects your personal data.";
-            this.ViewData["Canonical"] = this.Url.Action("Privacy", "Home", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "Privacy Policy",
+                "How Plumbing Handyman Surrey collects, uses, and protects your personal data.",
+                this.Url.Action("Privacy", "Home", null, this.Request.Scheme));
             return this.View();
         }
 
         [Route("TermsAndConditions")]
         public IActionResult Terms()
         {
-            this.ViewData["Title"] = "Terms & Conditions";
-            this.ViewData["MetaDescription"] = "The terms and conditions governing bookings and service delivery with Plumbing Handyman Surrey.";
-            this.ViewData["Canonical"] = this.Url.Action("Terms", "Home", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "Terms & Conditions",
+                "The terms and conditions governing bookings and service delivery with Plumbing Handyman Surrey.",
+                this.Url.Action("Terms", "Home", null, this.Request.Scheme));
             return this.View();
         }
 
         [Route("CookiePolicy")]
         public IActionResult CookiePolicy()
         {
-            this.ViewData["Title"] = "Cookie Policy";
-            this.ViewData["MetaDescription"] = "How Plumbing Handyman Surrey uses cookies on this website.";
-            this.ViewData["Canonical"] = this.Url.Action("CookiePolicy", "Home", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "Cookie Policy",
+                "How Plumbing Handyman Surrey uses cookies on this website.",
+                this.Url.Action("CookiePolicy", "Home", null, this.Request.Scheme));
             return this.View();
         }
 
@@ -339,26 +363,39 @@
                 .ToList();
         }
 
+        // The form shown again keeps the page's description and address. It used to lose both, and
+        // set a title the view replaces with its own "Get a Custom Quote" (PROJECT_STATE.md
+        // Section 3dj).
         private async Task<IActionResult> RedisplayContactFormAsync(ContactInputModel model)
         {
-            this.ViewData["Title"] = "Contact Us - Emergency Plumbing & Handyman";
-            await this.SetContactCategoriesAsync();
+            this.SetContactPageMeta();
+            await this.SetContactCategoriesAsync(model);
             return this.View(model);
+        }
+
+        // The title is the view's own.
+        private void SetContactPageMeta()
+        {
+            this.SetPageMeta(
+                null,
+                "Get in touch with Plumbing Handyman Surrey for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.",
+                this.Url.Action("Contact", "Home", null, this.Request.Scheme));
         }
 
         private void SetJoinTeamMetadata()
         {
-            this.ViewData["Title"] = "Join Our Team - Careers";
-            this.ViewData["MetaDescription"] = "Skilled plumber, handyman or building tradesperson in Surrey or South London? Apply to join our Chessington-based team.";
-            this.ViewData["Canonical"] = this.Url.Action("JoinTeam", "Home", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "Join Our Team - Careers",
+                "Skilled plumber, handyman or building tradesperson in Surrey or South London? Apply to join our Chessington-based team.",
+                this.Url.Action("JoinTeam", "Home", null, this.Request.Scheme));
         }
 
         // The Contact form's category options come from the real service categories, so a category
         // added through the admin panel appears there without a code change.
-        private async Task<IEnumerable<CategoryViewModel>> SetContactCategoriesAsync()
+        private async Task<IEnumerable<CategoryViewModel>> SetContactCategoriesAsync(ContactInputModel model)
         {
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-            this.ViewData["ContactCategories"] = categories.Select(c => c.Name).ToList();
+            model.Categories = categories.Select(c => c.Name).ToList();
             return categories;
         }
     }

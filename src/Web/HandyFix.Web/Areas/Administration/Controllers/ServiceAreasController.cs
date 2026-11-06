@@ -6,17 +6,21 @@
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.ServiceAreas;
+    using HandyFix.Web.Presentation;
     using HandyFix.Web.ViewModels.ServiceAreas;
 
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
 
     public class ServiceAreasController : AdministrationController
     {
         private readonly IServiceAreasService serviceAreasService;
+        private readonly IWebHostEnvironment environment;
 
-        public ServiceAreasController(IServiceAreasService serviceAreasService)
+        public ServiceAreasController(IServiceAreasService serviceAreasService, IWebHostEnvironment environment)
         {
             this.serviceAreasService = serviceAreasService;
+            this.environment = environment;
         }
 
         public async Task<IActionResult> Index()
@@ -69,6 +73,7 @@
             // saved order is restored here explicitly - same reasoning as ServiceAreaDetailsViewModel.
             model.Faqs = model.Faqs?.OrderBy(f => f.DisplayOrder).ToList() ?? new List<ServiceAreaFaqInputModel>();
             this.EnsureAtLeastOneFaqRow(model);
+            model.HasHeroImage = PictureLookups.HasHeroImage(this.environment, model.Slug);
 
             return this.View(model);
         }
@@ -91,6 +96,7 @@
             if (!this.ModelState.IsValid)
             {
                 this.EnsureAtLeastOneFaqRow(model);
+                model.HasHeroImage = PictureLookups.HasHeroImage(this.environment, model.Slug);
                 return this.View(model);
             }
 

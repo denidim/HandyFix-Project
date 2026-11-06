@@ -1,24 +1,23 @@
 @using HandyFix.Services
 @model HandyFix.Web.ViewModels.Home.HomeIndexViewModel
-@inject IImageStorageService ImageStorage
 @{
     var categories = this.Model.Categories;
-    var popularServices = this.Model.PopularServices;
     var reviews = this.Model.SliderReviews;
 
     // The division and popular-service cards draw their picture the screen's width less 48px on
     // a phone, from a picture 1024 wide; with a middle copy beside it the browser takes the copy
     // whenever that has every pixel the screen can show (PROJECT_STATE Section 3cz). A computer
-    // draws a popular-service card up to 873px wide, so there it still takes the picture.
+    // draws a popular-service card up to 873px wide, so there it still takes the picture. The
+    // copies are looked up by the controller before the page is drawn.
     string CardSrcset(string picture)
     {
-        var copy = ImageStorage.GetMediumCopyPublicUrl(picture);
+        var copy = Model.MediumCopies.GetValueOrDefault(picture);
         return copy == null ? null : $"{copy} {ImageStorageService.MediumCopyWidth}w, {picture} 1024w";
     }
 
     string CardSizes(string picture, int widest)
     {
-        return ImageStorage.GetMediumCopyPublicUrl(picture) == null ? null : $"(max-width: 575.98px) calc(100vw - 48px), {widest}px";
+        return Model.MediumCopies.GetValueOrDefault(picture) == null ? null : $"(max-width: 575.98px) calc(100vw - 48px), {widest}px";
     }
 }
 
@@ -507,26 +506,6 @@
     }
 </script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const observerOptions = {
-          threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              entry.target.style.opacity = '1';
-              entry.target.style.transform = 'translateY(0)';
-            }
-          });
-        }, observerOptions);
-
-        document.querySelectorAll('section').forEach(section => {
-          section.style.transition = 'all 0.7s ease';
-          section.style.opacity = '0';
-          section.style.transform = 'translateY(2.5rem)';
-          observer.observe(section);
-        });
-    });
-</script>
+@section Scripts {
+    <script src="~/js/home.js" asp-append-version="true"></script>
+}

@@ -62,33 +62,6 @@
         }
 
         [Fact]
-        public async Task GetAvailableDatesAsyncShouldReturnCorrectDates()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-
-            using var dbContext = new ApplicationDbContext(options);
-            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-
-            // Add slots on different dates
-            var date1 = DateTime.Today.AddDays(1);
-            var date2 = DateTime.Today.AddDays(2);
-
-            dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = date1.AddHours(9), EndTime = date1.AddHours(10), IsBooked = false });
-            dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = date1.AddHours(10), EndTime = date1.AddHours(11), IsBooked = false });
-            dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = date2.AddHours(9), EndTime = date2.AddHours(10), IsBooked = false });
-            dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = date2.AddHours(10), EndTime = date2.AddHours(11), IsBooked = true });
-            await dbContext.SaveChangesAsync();
-
-            var service = new AvailabilityService(slotRepository);
-            var dates = (await service.GetAvailableDatesAsync()).ToList();
-
-            Assert.Equal(2, dates.Count);
-            Assert.Contains(date1.Date, dates);
-            Assert.Contains(date2.Date, dates);
-        }
-
-        [Fact]
         public async Task BookSlotAsyncShouldReturnFalseWhenSlotAlreadyBooked()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -195,58 +168,6 @@
         }
 
         [Fact]
-        public async Task GetAvailableDatesAsyncShouldExcludeTodayWhenAllOfTodaysSlotsHaveAlreadyPassed()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-
-            using var dbContext = new ApplicationDbContext(options);
-            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-
-            // Today's only slot already started an hour ago; tomorrow has a normal slot.
-            var pastSlot = new AvailabilitySlot
-            {
-                StartTime = DateTime.Now.AddHours(-1),
-                EndTime = DateTime.Now,
-                IsBooked = false,
-            };
-            var tomorrow = DateTime.Today.AddDays(1);
-            var futureSlot = new AvailabilitySlot
-            {
-                StartTime = tomorrow.AddHours(9),
-                EndTime = tomorrow.AddHours(10),
-                IsBooked = false,
-            };
-            dbContext.AvailabilitySlots.Add(pastSlot);
-            dbContext.AvailabilitySlots.Add(futureSlot);
-            await dbContext.SaveChangesAsync();
-
-            var service = new AvailabilityService(slotRepository);
-            var dates = (await service.GetAvailableDatesAsync()).ToList();
-
-            Assert.DoesNotContain(DateTime.Today, dates);
-            Assert.Contains(tomorrow.Date, dates);
-        }
-
-        [Fact]
-        public async Task GetAvailableDatesAsyncShouldNotGenerateCapacityWhenNoneExists()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-
-            using var dbContext = new ApplicationDbContext(options);
-            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-
-            var service = new AvailabilityService(slotRepository);
-            var dates = (await service.GetAvailableDatesAsync()).ToList();
-
-            // Reading availability used to generate 30 days of slots as a side effect, which meant
-            // simply browsing the public booking page created capacity nobody had decided to offer.
-            Assert.Empty(dates);
-            Assert.Empty(dbContext.AvailabilitySlots);
-        }
-
-        [Fact]
         public async Task GetAllSlotsForDateAsyncShouldNotGenerateCapacityWhenNoneExists()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -260,6 +181,29 @@
 
             Assert.Empty(slots);
             Assert.Empty(dbContext.AvailabilitySlots);
+        }
+
+        // The booking page's slots for a day leave out the hours already gone, so a customer
+        // cannot pick a time that has passed. Today's slot here starts at midnight, which has
+        // always passed by the time the test runs.
+        [Fact]
+        public async Task GetAllSlotsForDateAsyncShouldLeaveOutSlotsThatHaveAlreadyStarted()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+
+            var tomorrow = DateTime.Today.AddDays(1);
+            dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = DateTime.Today, EndTime = DateTime.Today.AddHours(1) });
+            dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = tomorrow.AddHours(9), EndTime = tomorrow.AddHours(10) });
+            await dbContext.SaveChangesAsync();
+
+            var service = new AvailabilityService(slotRepository);
+
+            Assert.Empty(await service.GetAllSlotsForDateAsync<AvailabilitySlot>(DateTime.Today));
+            Assert.Single(await service.GetAllSlotsForDateAsync<AvailabilitySlot>(tomorrow));
         }
 
         [Fact]

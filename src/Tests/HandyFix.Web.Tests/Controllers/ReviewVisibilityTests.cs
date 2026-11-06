@@ -167,6 +167,7 @@
                 servicesService.Object,
                 categoriesService.Object,
                 new Mock<IImageService>().Object,
+                new Mock<IImageStorageService>().Object,
                 new Mock<IFormGuard>().Object,
                 configuration,
                 NullLogger<HomeController>.Instance)

@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    public class EnquiryListViewModel
+    public class EnquiryListViewModel : ISortableList<InquirySortField>
     {
         public IEnumerable<EnquiryViewModel> Inquiries { get; set; }
 

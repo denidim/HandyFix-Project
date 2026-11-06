@@ -14,5 +14,11 @@
         public IEnumerable<ReviewViewModel> Reviews { get; set; }
 
         public bool ShowOnSiteReviews { get; set; }
+
+        /// <summary>
+        /// The strip of the area's picture a phone is sent, or null when the area has none (one
+        /// added in the admin panel). Looked up before the page is drawn.
+        /// </summary>
+        public string PhonePicture { get; set; }
     }
 }

@@ -44,5 +44,11 @@
         // put into storage, so the notice to the company can say they were lost.
         [BindNever]
         public int PhotosNotSaved { get; set; }
+
+        // Set by the server, never read from the form: the names the "what is it about" list
+        // offers, from the real service categories. It came to the page in ViewData until
+        // PROJECT_STATE.md Section 3dj. Not named "Category", which is the visitor's choice.
+        [BindNever]
+        public IEnumerable<string> Categories { get; set; } = new List<string>();
     }
 }

@@ -12,6 +12,10 @@
     {
         public Guid? Id { get; set; }
 
+        // A technician not saved yet has no id: the form then adds one rather than updating one.
+        // The Create and Edit pages used to tell their shared form in ViewData.
+        public bool IsNew => this.Id == null;
+
         [Required(ErrorMessage = "First name is required.")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "First name must be between 2 and 100 characters.")]
         [Display(Name = "First Name")]

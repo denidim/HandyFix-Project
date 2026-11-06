@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    public class ReviewListViewModel
+    public class ReviewListViewModel : ISortableList<ReviewSortField>
     {
         public IEnumerable<ReviewViewModel> Reviews { get; set; }
 

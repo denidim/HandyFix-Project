@@ -603,6 +603,26 @@
             Assert.DoesNotContain("\"sameAs\"", content);
         }
 
+        // The list of services had no description, so search engines made one up from whatever
+        // text came first (PROJECT_STATE.md Section 3dj).
+        [Fact]
+        public async Task TheServicesPageHasADescription()
+        {
+            var page = await this.server.CreateClient().GetStringAsync("/Services");
+
+            Assert.Contains("<meta name=\"description\" content=\"Plumbing, handyman and small building services across Surrey and South London.", page);
+        }
+
+        [Theory]
+        [MemberData(nameof(PublicPages))]
+        public async Task APublicPageKeepsItsScriptsInFiles(string url)
+        {
+            var response = await this.server.CreateClient().GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            AssertNoInlineCode(await response.Content.ReadAsStringAsync());
+        }
+
         [Theory]
         [MemberData(nameof(PublicPages))]
         public async Task PublicPagesStructuredDataIsJsonWithNoHtmlEntities(string url)
@@ -721,16 +741,18 @@
             // page's script with HTML encoding, one backslash swallowed the closing quote and
             // stopped the whole booking script (PROJECT_STATE Section 3bv), and anything that was
             // not a date opened the calendar on "undefined NaN" (Section 3bw). The model binder
-            // now reads it as a date: a real one reaches the script as yyyy-MM-dd, anything else
-            // as an empty string, which the script takes to mean today.
+            // now reads it as a date: a real one reaches the form's data-selected-date as
+            // yyyy-MM-dd, anything else as an empty string, which the script takes to mean today.
+            // The script lives in its own file since Section 3dj, and an attribute is encoded by
+            // Razor, so nothing in the link can end it early either.
             var client = this.server.CreateClient();
             var response = await client.GetAsync("/Booking?date=" + Uri.EscapeDataString(date));
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
 
-            var written = Regex.Match(content, "let initialDateStr = (\"[^\\r\\n]*\");\\r?\\n");
+            var written = Regex.Match(content, "data-selected-date=\"([^\"]*)\"");
             Assert.True(written.Success);
-            Assert.Equal(expected, JsonSerializer.Deserialize<string>(written.Groups[1].Value));
+            Assert.Equal(expected, WebUtility.HtmlDecode(written.Groups[1].Value));
         }
 
         [Fact]
@@ -1093,6 +1115,24 @@
             Assert.True(
                 missing.Count == 0,
                 $"Not in the icon font: {string.Join(", ", missing)}. Add them to tools/fonts/icon-names.txt and run fetch-fonts.mjs there.");
+        }
+
+        // A page's scripts are files of their own (PROJECT_STATE.md Section 3dj). What may stay in
+        // the page is data for search engines, and the form guard's few lines, which have to run
+        // while the page is read. Inline onclick, onchange and onsubmit handlers became data-
+        // attributes that site.js reads.
+        internal static void AssertNoInlineCode(string page)
+        {
+            foreach (Match script in Regex.Matches(page, "<script(?<attrs>[^>]*)>(?<body>.*?)</script>", RegexOptions.Singleline))
+            {
+                string attrs = script.Groups["attrs"].Value;
+                bool isFile = attrs.Contains("src=");
+                bool isData = attrs.Contains("type=\"application/ld");
+                bool isFormGuard = script.Groups["body"].Value.Contains("document.currentScript");
+                Assert.True(isFile || isData || isFormGuard, "An inline script: " + script.Groups["body"].Value.Trim());
+            }
+
+            Assert.DoesNotMatch("\\son(click|change|submit)=", page);
         }
 
         // The JSON-LD blocks of a page. The "+" in the tag's type is rendered as an entity, which

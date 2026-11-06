@@ -280,7 +280,8 @@
 
             Assert.Same(model, Assert.IsType<ViewResult>(result).Model);
             Assert.Contains("unsupported type", controller.ModelState[nameof(ContactInputModel.Images)].Errors.Single().ErrorMessage);
-            Assert.NotNull(controller.ViewData["ContactCategories"]);
+            Assert.Equal(new[] { "Plumbing" }, model.Categories);
+            Assert.NotNull(controller.ViewData["MetaDescription"]);
             inquiriesService.Verify(
                 s => s.CreateInquiryAsync(It.IsAny<ContactInputModel>(), It.IsAny<IReadOnlyList<string>>()),
                 Times.Never);
@@ -361,9 +362,7 @@
             var model = Assert.IsType<ContactInputModel>(Assert.IsType<ViewResult>(result).Model);
             Assert.Equal("Small Building & Refurbishments", model.Category);
             Assert.StartsWith("Hi, I would like to request a quote / survey for: Wall & Floor Tiling.", model.Message);
-            Assert.Equal(
-                new[] { "Handyman", "Plumbing", "Small Building & Refurbishments" },
-                (IEnumerable<string>)controller.ViewData["ContactCategories"]);
+            Assert.Equal(new[] { "Handyman", "Plumbing", "Small Building & Refurbishments" }, model.Categories);
         }
 
         [Fact]
@@ -536,6 +535,7 @@
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
                 (imageService ?? ImageServiceReturning()).Object,
+                new Mock<IImageStorageService>().Object,
                 (formGuard ?? new Mock<IFormGuard>()).Object,
                 new ConfigurationBuilder().Build(),
                 NullLogger<HomeController>.Instance);

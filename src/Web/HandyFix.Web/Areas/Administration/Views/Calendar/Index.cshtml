@@ -37,7 +37,7 @@
     <div class="d-flex align-items-center gap-3 p-2 rounded-xl border shadow-sm date-nav-card">
         <form method="get" asp-area="Administration" asp-controller="Calendar" asp-action="Index" class="form-inline d-flex align-items-center gap-2 m-0">
             <span class="font-button-text px-2 fs-13 text-on-surface-variant">Select Date:</span>
-            <input type="date" name="date" class="form-control form-control-sm date-input-compact" value="@targetDate.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+            <input type="date" name="date" class="form-control form-control-sm date-input-compact" value="@targetDate.ToString("yyyy-MM-dd")" data-submit-on-change />
         </form>
     </div>
 </div>
@@ -86,7 +86,7 @@
                                 <p class="text-on-surface-variant mb-0 fs-13">@(job.Services.Any() ? string.Join(", ", job.Services) : "No service picked") &middot; @(job.TechnicianId != null ? job.TechnicianName : "No technician yet") &middot; @job.Source</p>
                             </div>
                         </div>
-                        <span class="status-badge @(job.JobLabel == JobLabels.Done ? "tint-success" : job.JobLabel == JobLabels.WaitingForDeposit ? "tint-waiting" : "tint-secondary")">@job.JobLabel</span>
+                        <span class="status-badge @StatusBadges.ForJob(job.JobLabel)">@job.JobLabel</span>
                     </a>
                 }
             }
@@ -135,7 +135,7 @@
                                 {
                                     // A website booking holds its hour from the moment the form is sent, a
                                     // quarter of an hour before it is dropped if the deposit does not come.
-                                    var waitingForDeposit = Model.Jobs.Any(j => j.Id == slot.BookingId && j.JobLabel == JobLabels.WaitingForDeposit);
+                                    var waitingForDeposit = Model.IsWaitingForDeposit(slot.BookingId);
 
                                     <span class="rounded slot-tag @(waitingForDeposit ? "tint-waiting" : "slot-tag-booked") mb-1">@(waitingForDeposit ? JobLabels.WaitingForDeposit : "Booked")</span>
                                     <p class="font-body-md text-primary mb-0 fs-13">
@@ -152,7 +152,7 @@
                                     <span class="rounded slot-tag slot-tag-available mb-1">Available</span>
 
                                     // A job that was written in holds no slot, so its hour is still on sale.
-                                    var jobsAtThisHour = Model.Jobs.Where(j => j.ScheduledTime == slot.StartTime).ToList();
+                                    var jobsAtThisHour = Model.JobsAt(slot.StartTime).ToList();
                                     if (jobsAtThisHour.Any())
                                     {
                                         <p class="font-body-md text-primary mb-0 fs-13 calendar-slot-warning">
