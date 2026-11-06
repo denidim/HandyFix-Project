@@ -60,7 +60,7 @@
 <div class="page-container services-page">
     <!-- Hero Section -->
     <section class="service-hero-section">
-        <div class="service-hero-image" id="service-hero-bg" style="background-image: url('@serviceImage')"></div>
+        <div class="service-hero-image" id="service-hero-bg" style="background-image: url('@serviceImage')" data-bg-src="@serviceImage" data-bg-fallback="/images/hero.webp"></div>
         <div class="service-hero-overlay"></div>
         <div class="service-hero-content">
             <nav class="service-hero-breadcrumbs" aria-label="breadcrumb">
@@ -407,13 +407,3 @@
 }
 </script>
 
-<script>
-    (function () {
-        var heroBg = document.getElementById("service-hero-bg");
-        var probe = new Image();
-        probe.onerror = function () {
-            heroBg.style.backgroundImage = "url('/images/hero.webp')";
-        };
-        probe.src = @Json.Serialize(serviceImage);
-    })();
-</script>

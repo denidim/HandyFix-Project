@@ -27,7 +27,7 @@
     <form method="get" asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="m-0">
         <input type="hidden" name="sortField" value="@Model.SortField" />
         <input type="hidden" name="descending" value="@(Model.Descending.ToString())" />
-        <select name="status" class="admin-status-filter font-body-md" onchange="this.form.submit()">
+        <select name="status" class="admin-status-filter font-body-md" data-submit-on-change>
             <option value="">All Statuses</option>
             <option value="Approved" selected="@(Model.StatusFilter == "Approved")">Approved</option>
             <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>

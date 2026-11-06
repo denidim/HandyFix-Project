@@ -89,7 +89,7 @@
             <form asp-area="Administration" asp-controller="Bookings" asp-action="DepositRefunded" method="post" class="m-0 mt-3">
                 <input type="hidden" name="id" value="@Model.Id" />
                 <label class="d-flex align-items-center gap-2 font-body-md text-primary font-bold m-0 label-clickable">
-                    <input type="checkbox" name="refunded" value="true" class="form-check-input checkbox-lg m-0" checked="@Model.IsDepositRefunded" onchange="this.form.submit()" />
+                    <input type="checkbox" name="refunded" value="true" class="form-check-input checkbox-lg m-0" checked="@Model.IsDepositRefunded" data-submit-on-change />
                     <span>Deposit refunded</span>
                 </label>
                 <p class="text-on-surface-variant mb-0 mt-1 fs-13 lh-snug">Tick this once the @pounds(Model.DepositAmount) has been sent back in Stripe. The refund itself is made by hand.</p>

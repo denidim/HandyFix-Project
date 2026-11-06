@@ -62,7 +62,7 @@
     <div class="px-4 py-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4 admin-table-toolbar">
         <div class="position-relative max-w-sm w-100 admin-search-wrap">
             <span class="material-symbols-outlined position-absolute text-outline admin-search-icon">search</span>
-            <input class="w-100 py-2 border rounded-lg outline-none font-body-md admin-search-input" placeholder="Search areas..." type="text" id="areas-search">
+            <input class="w-100 py-2 border rounded-lg outline-none font-body-md admin-search-input" placeholder="Search areas..." type="text" id="areas-search" data-search-target="#areas-table-body">
         </div>
     </div>
 
@@ -157,18 +157,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('areas-search');
-            const rows = document.querySelectorAll('#areas-table-body tr');
-
-            searchInput?.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                rows.forEach(row => {
-                    const text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(term) ? '' : 'none';
-                });
-            });
-        });
-    </script>
+    <script src="~/js/admin-table-search.js" asp-append-version="true"></script>
 }

@@ -94,7 +94,7 @@
             <!-- Photo Upload -->
             <div class="form-field">
                 <label class="form-label fw-semibold">Project Photos (Optional)</label>
-                <div class="border-dashed-upload d-flex flex-column align-items-center justify-content-center" onclick="document.getElementById('imageUpload').click()">
+                <div class="border-dashed-upload d-flex flex-column align-items-center justify-content-center" data-click-target="#imageUpload">
                     <input asp-for="Images" id="imageUpload" type="file" multiple accept="image/jpeg,image/png,image/webp" class="d-none" data-max-files="5" data-max-size-mb="15" data-preview-grid="#contact-image-previews" />
                     <span class="material-symbols-outlined text-secondary fs-36 mb-2">add_a_photo</span>
                     <p class="font-body-md text-on-surface-variant mb-0" id="uploadLabel">Click to upload or drag and drop</p>

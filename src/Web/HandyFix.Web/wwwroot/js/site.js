@@ -16,6 +16,50 @@ document.addEventListener('submit', function (event) {
     }
 }, true);
 
+// What a page asks for in its markup, where it used to have an inline onclick or onchange
+// (PROJECT_STATE.md Section 3dj): data-print prints the page (Terms, Privacy); data-click-target
+// clicks the element it names (a photo drop zone opens its hidden file box); data-submit-on-change
+// sends the form as soon as the value changes (the admin filters, the calendar's day, the
+// refund box). submit() skips the submit event, as this.form.submit() did.
+document.addEventListener('click', function (event) {
+    const el = event.target.closest('[data-print], [data-click-target]');
+    if (!el) return;
+    if (el.hasAttribute('data-print')) {
+        window.print();
+    } else {
+        document.querySelector(el.dataset.clickTarget).click();
+    }
+});
+
+document.addEventListener('change', function (event) {
+    const el = event.target;
+    if (el instanceof HTMLElement && el.hasAttribute('data-submit-on-change') && el.form) {
+        el.form.submit();
+    }
+});
+
+// The cookie banner's Accept button stores the consent cookie and takes the banner away. The
+// banner is drawn only until the visitor has accepted (_CookieConsentPartial).
+(function () {
+    const banner = document.getElementById('cookieConsent');
+    if (!banner) return;
+    const button = banner.querySelector('button[data-cookie-string]');
+    button.addEventListener('click', function () {
+        document.cookie = button.dataset.cookieString;
+        banner.remove();
+    }, false);
+})();
+
+// A picture drawn as a background has no onerror of its own (the service page's hero), so it is
+// tried as an image; if it does not load, the background becomes data-bg-fallback.
+document.querySelectorAll('[data-bg-fallback]').forEach(function (el) {
+    const probe = new Image();
+    probe.onerror = function () {
+        el.style.backgroundImage = "url('" + el.dataset.bgFallback + "')";
+    };
+    probe.src = el.dataset.bgSrc;
+});
+
 document.addEventListener("DOMContentLoaded", function () {
     // Mobile Nav Toggle (Public)
     const mobileBtn = document.getElementById('mobile-menu-btn');

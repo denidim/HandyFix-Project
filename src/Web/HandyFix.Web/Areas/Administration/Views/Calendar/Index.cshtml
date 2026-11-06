@@ -37,7 +37,7 @@
     <div class="d-flex align-items-center gap-3 p-2 rounded-xl border shadow-sm date-nav-card">
         <form method="get" asp-area="Administration" asp-controller="Calendar" asp-action="Index" class="form-inline d-flex align-items-center gap-2 m-0">
             <span class="font-button-text px-2 fs-13 text-on-surface-variant">Select Date:</span>
-            <input type="date" name="date" class="form-control form-control-sm date-input-compact" value="@targetDate.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+            <input type="date" name="date" class="form-control form-control-sm date-input-compact" value="@targetDate.ToString("yyyy-MM-dd")" data-submit-on-change />
         </form>
     </div>
 </div>

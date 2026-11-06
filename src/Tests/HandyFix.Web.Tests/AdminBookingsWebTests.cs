@@ -87,6 +87,40 @@
             Assert.Contains("We'll email you your technician's name and phone number as soon as one is assigned.", page);
         }
 
+        // The pages a booking goes through keep their scripts in files (PROJECT_STATE.md Section
+        // 3dj): the confirmation's confetti, the payment page's "Try again", the admin lists'
+        // search boxes and filters, the job page, the calendar's day.
+        [Fact]
+        public async Task TheBookingAndAdminPagesKeepTheirScriptsInFiles()
+        {
+            using var site = new Site();
+            AvailabilitySlot slot = site.AFreeSlot();
+            Booking booking = await site.BookAndPayAsync(slot);
+            HttpClient admin = await site.SignedInAdminAsync();
+
+            var pages = new List<(HttpClient Client, string Url)>
+            {
+                (site.Browser(), "/Booking/Confirmed/" + booking.Id),
+                (site.Browser(), "/Payment/Cancel"),
+                (admin, "/Administration/Dashboard"),
+                (admin, JobsPage),
+                (admin, JobPage(booking.Id)),
+                (admin, "/Administration/Calendar?date=" + slot.StartTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+                (admin, "/Administration/Enquiries"),
+                (admin, "/Administration/Reviews"),
+                (admin, "/Administration/Services"),
+                (admin, "/Administration/ServiceAreas"),
+                (admin, "/Administration/Technicians"),
+            };
+
+            foreach (var (client, url) in pages)
+            {
+                var response = await client.GetAsync(url);
+                Assert.True(response.IsSuccessStatusCode, url + " answered " + response.StatusCode);
+                WebTests.AssertNoInlineCode(await response.Content.ReadAsStringAsync());
+            }
+        }
+
         // The email naming the technician used to hang off the "Approve" button, which a paid
         // booking never showed, so it could not be sent. It goes out when the admin picks one,
         // and the page says it went.

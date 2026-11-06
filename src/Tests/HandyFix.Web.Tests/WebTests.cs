@@ -605,6 +605,16 @@
 
         [Theory]
         [MemberData(nameof(PublicPages))]
+        public async Task APublicPageKeepsItsScriptsInFiles(string url)
+        {
+            var response = await this.server.CreateClient().GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            AssertNoInlineCode(await response.Content.ReadAsStringAsync());
+        }
+
+        [Theory]
+        [MemberData(nameof(PublicPages))]
         public async Task PublicPagesStructuredDataIsJsonWithNoHtmlEntities(string url)
         {
             // Razor HTML-encodes whatever it writes, and a script block is never HTML-decoded. A
@@ -1095,6 +1105,24 @@
             Assert.True(
                 missing.Count == 0,
                 $"Not in the icon font: {string.Join(", ", missing)}. Add them to tools/fonts/icon-names.txt and run fetch-fonts.mjs there.");
+        }
+
+        // A page's scripts are files of their own (PROJECT_STATE.md Section 3dj). What may stay in
+        // the page is data for search engines, and the form guard's few lines, which have to run
+        // while the page is read. Inline onclick, onchange and onsubmit handlers became data-
+        // attributes that site.js reads.
+        internal static void AssertNoInlineCode(string page)
+        {
+            foreach (Match script in Regex.Matches(page, "<script(?<attrs>[^>]*)>(?<body>.*?)</script>", RegexOptions.Singleline))
+            {
+                string attrs = script.Groups["attrs"].Value;
+                bool isFile = attrs.Contains("src=");
+                bool isData = attrs.Contains("type=\"application/ld");
+                bool isFormGuard = script.Groups["body"].Value.Contains("document.currentScript");
+                Assert.True(isFile || isData || isFormGuard, "An inline script: " + script.Groups["body"].Value.Trim());
+            }
+
+            Assert.DoesNotMatch("\\son(click|change|submit)=", page);
         }
 
         // The JSON-LD blocks of a page. The "+" in the tag's type is rendered as an entity, which

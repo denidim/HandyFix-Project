@@ -27,7 +27,7 @@
         <form method="get" asp-area="Administration" asp-controller="Bookings" asp-action="Index" class="m-0">
             <input type="hidden" name="sortField" value="@Model.SortField" />
             <input type="hidden" name="descending" value="@(Model.Descending.ToString())" />
-            <select name="status" class="admin-status-filter font-body-md" onchange="this.form.submit()" aria-label="Show jobs that are">
+            <select name="status" class="admin-status-filter font-body-md" data-submit-on-change aria-label="Show jobs that are">
                 <option value="">All jobs</option>
                 @foreach (var statusOption in Model.StatusOptions)
                 {
@@ -37,7 +37,7 @@
         </form>
         <div class="position-relative max-w-sm w-100 admin-search-wrap">
             <span class="material-symbols-outlined position-absolute text-outline admin-search-icon">search</span>
-            <input class="w-100 py-2 border rounded-lg outline-none font-body-md admin-search-input" placeholder="Search Ref ID or Name..." type="text" id="bookings-search">
+            <input class="w-100 py-2 border rounded-lg outline-none font-body-md admin-search-input" placeholder="Search Ref ID or Name..." type="text" id="bookings-search" data-search-target="#bookings-table-body">
         </div>
     </div>
 </div>
@@ -245,18 +245,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('bookings-search');
-            const rows = document.querySelectorAll('#bookings-table-body tr');
-
-            searchInput?.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                rows.forEach(row => {
-                    const text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(term) ? '' : 'none';
-                });
-            });
-        });
-    </script>
+    <script src="~/js/admin-table-search.js" asp-append-version="true"></script>
 }
