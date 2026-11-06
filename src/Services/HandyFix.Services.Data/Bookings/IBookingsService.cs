@@ -5,12 +5,16 @@
     using System.Threading.Tasks;
 
     using HandyFix.Common;
-    using HandyFix.Data.Models;
     using HandyFix.Web.ViewModels.Booking;
 
     public interface IBookingsService
     {
-        Task<Booking> CreateBookingAsync(
+        /// <summary>
+        /// Makes a website booking, waiting for its deposit, with the photos already stored, and
+        /// takes its slot. The result says whether it was made or why not (the slot is not in
+        /// the calendar, or was taken first); when it was not, nothing is saved.
+        /// </summary>
+        Task<BookingCreateResult> CreateBookingAsync(
             BookingInputModel model,
             IReadOnlyList<string> imageUrls);
 

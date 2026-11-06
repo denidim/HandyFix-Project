@@ -96,10 +96,12 @@
                 : $"{street}, {normalized}";
         }
 
-        public async Task<Booking> CreateBookingAsync(
+        public async Task<BookingCreateResult> CreateBookingAsync(
             BookingInputModel model,
             IReadOnlyList<string> imageUrls)
         {
+            // A broken install, not the customer's problem: it stays an exception, and the
+            // booking page logs it and shows its general message.
             BookingStatus pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == BookingStatusNames.Pending);
             if (pendingStatus == null)
             {
@@ -111,7 +113,7 @@
             AvailabilitySlot slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == model.SlotId);
             if (slot == null)
             {
-                throw new InvalidOperationException("The selected time slot does not exist. Please choose a different time.");
+                return new BookingCreateResult { Outcome = BookingCreateOutcome.SlotNotFound };
             }
 
             Guid[] serviceIds = new[] { model.ServiceId };
@@ -164,32 +166,34 @@
             await using (IDbContextTransaction transaction = await this.dbQueryRunner.BeginTransactionAsync())
             {
                 await this.bookingRepository.AddAsync(booking);
+
+                // The photos go into the booking's own save (the repositories share one
+                // context), so they are written with it or not at all. They used to be saved
+                // after the commit: a photo save that failed left the booking holding its slot
+                // while the customer was told to try again, and the retry found the slot taken
+                // by their own booking.
+                if (imageUrls != null)
+                {
+                    foreach (var url in imageUrls)
+                    {
+                        await this.imageRepository.AddAsync(new BookingImage
+                        {
+                            BookingId = booking.Id,
+                            ImageUrl = url,
+                        });
+                    }
+                }
+
                 await this.bookingRepository.SaveChangesAsync();
 
                 var slotBooked = await this.availabilityService.BookSlotAsync(model.SlotId, booking.Id);
                 if (!slotBooked)
                 {
                     await transaction.RollbackAsync();
-                    throw new SlotUnavailableException("The selected time slot is no longer available. Please choose a different time.");
+                    return new BookingCreateResult { Outcome = BookingCreateOutcome.SlotTaken };
                 }
 
                 await transaction.CommitAsync();
-            }
-
-            // 4. Persist uploaded image URLs as BookingImage records
-            if (imageUrls != null && imageUrls.Count > 0)
-            {
-                foreach (var url in imageUrls)
-                {
-                    var image = new BookingImage
-                    {
-                        BookingId = booking.Id,
-                        ImageUrl = url,
-                    };
-                    await this.imageRepository.AddAsync(image);
-                }
-
-                await this.imageRepository.SaveChangesAsync();
             }
 
             // No email goes out here, on purpose. A booking that is never paid is abandoned after
@@ -197,7 +201,7 @@
             // booking" promised something that could be gone before it was read. The first email a
             // customer gets is the one that follows the deposit (PaymentsService;
             // PROJECT_STATE.md Section 3ce).
-            return booking;
+            return new BookingCreateResult { Outcome = BookingCreateOutcome.Created, BookingId = booking.Id };
         }
 
         public async Task<Guid> CreateWrittenInJobAsync(JobInputModel model)

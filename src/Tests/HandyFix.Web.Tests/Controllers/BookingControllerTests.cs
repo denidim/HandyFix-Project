@@ -18,7 +18,7 @@
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
@@ -31,15 +31,10 @@
         // they lose the slot, not the twenty other fields they already filled in.
         private const string SlotTakenMessage = "This slot was just taken by someone else, please pick another.";
 
-        public static TheoryData<Exception> SlotRaceExceptions => new TheoryData<Exception>
-        {
-            new SlotUnavailableException("Slot already booked."),
-            new DbUpdateConcurrencyException("Row version mismatch."),
-        };
+        private const string GeneralMessage = "An error occurred while saving your booking. Please try again.";
 
-        [Theory]
-        [MemberData(nameof(SlotRaceExceptions))]
-        public async Task IndexPostShouldRedisplayTheFormWhenTheSlotWasTakenMidSubmission(Exception slotRaceException)
+        [Fact]
+        public async Task IndexPostShouldRedisplayTheFormWhenTheSlotWasTakenMidSubmission()
         {
             var controller = BuildController(
                 out var servicesService,
@@ -49,7 +44,7 @@
 
             bookingsService
                 .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
-                .ThrowsAsync(slotRaceException);
+                .ReturnsAsync(new BookingCreateResult { Outcome = BookingCreateOutcome.SlotTaken });
 
             var model = ValidModel();
 
@@ -106,7 +101,7 @@
             var controller = BuildController(out _, out var availabilityService, out var bookingsService, out _);
             bookingsService
                 .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
-                .ThrowsAsync(new SlotUnavailableException("Slot already booked."));
+                .ReturnsAsync(new BookingCreateResult { Outcome = BookingCreateOutcome.SlotTaken });
 
             var result = await controller.Index(ValidModel());
 
@@ -144,17 +139,17 @@
         {
             var controller = BuildController(out _, out _, out var bookingsService, out var imageService);
 
-            var booking = new Booking();
+            var bookingId = Guid.NewGuid();
             bookingsService
                 .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
-                .ReturnsAsync(booking);
+                .ReturnsAsync(new BookingCreateResult { Outcome = BookingCreateOutcome.Created, BookingId = bookingId });
 
             var result = await controller.Index(ValidModel());
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Pay", redirect.ActionName);
             Assert.Equal("Payment", redirect.ControllerName);
-            Assert.Equal(booking.Id, redirect.RouteValues["bookingId"]);
+            Assert.Equal(bookingId, redirect.RouteValues["bookingId"]);
 
             // Uploaded photos are pushed to storage before the booking is created,
             // so a failed upload can never leave a booking pointing at nothing.
@@ -301,39 +296,68 @@
             imageService
                 .Setup(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))
                 .ThrowsAsync(new InvalidOperationException("Cloudflare R2 is not fully configured. Missing one or more required settings in CloudflareR2 section."));
-            var booking = new Booking();
+            var bookingId = Guid.NewGuid();
             bookingsService
                 .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.Is<IReadOnlyList<string>>(urls => urls.Count == 0)))
-                .ReturnsAsync(booking);
+                .ReturnsAsync(new BookingCreateResult { Outcome = BookingCreateOutcome.Created, BookingId = bookingId });
 
             var result = await controller.Index(ValidModel());
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Pay", redirect.ActionName);
-            Assert.Equal(booking.Id, redirect.RouteValues["bookingId"]);
+            Assert.Equal(bookingId, redirect.RouteValues["bookingId"]);
             Assert.Empty(controller.ModelState.SelectMany(entry => entry.Value.Errors));
         }
 
+        // The slot picked is not in the calendar. That used to come from the service as an
+        // exception whose text was shown, with the slot kept; it is an answer now, in the page's
+        // own words, and the slot is cleared like one that was taken.
         [Fact]
-        public async Task IndexPostShouldSurfaceTheServiceMessageForValidationFailures()
+        public async Task IndexPostShouldAskForAnotherTimeWhenTheSlotDoesNotExist()
         {
-            var controller = BuildController(out _, out _, out var bookingsService, out _);
-
+            var controller = BuildController(out _, out var availabilityService, out var bookingsService, out _);
             bookingsService
                 .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
-                .ThrowsAsync(new InvalidOperationException("That service is no longer offered."));
+                .ReturnsAsync(new BookingCreateResult { Outcome = BookingCreateOutcome.SlotNotFound });
+
+            var result = await controller.Index(ValidModel());
+
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("The selected time slot does not exist. Please choose a different time.", SingleModelError(controller));
+            Assert.Equal(Guid.Empty, returnedModel.SlotId);
+            Assert.Equal("Ada", returnedModel.CustomerFirstName);
+            availabilityService.Verify(x => x.GetSlotDateAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
+        // This used to pass the text of any InvalidOperationException from the service to the
+        // customer as it stood, and log nothing. The real service throws one only for a broken
+        // install, whose text ("Booking status 'Pending' is not seeded.") is not the customer's
+        // to read. It is logged now, and the customer reads the general message with their slot
+        // kept: nothing is wrong with it.
+        [Fact]
+        public async Task IndexPostShouldLogTheServicesOwnTextAndNotShowIt()
+        {
+            var logger = new Mock<ILogger<BookingController>>();
+            var controller = BuildController(out _, out _, out var bookingsService, out _, logger: logger);
+            var notSeeded = new InvalidOperationException("Booking status 'Pending' is not seeded.");
+            bookingsService
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
+                .ThrowsAsync(notSeeded);
 
             var model = ValidModel();
             var result = await controller.Index(model);
 
-            Assert.IsType<ViewResult>(result);
-
-            // InvalidOperationException carries a message written for the customer,
-            // so it is shown as-is rather than replaced with a generic apology.
-            Assert.Equal("That service is no longer offered.", SingleModelError(controller));
-
-            // ...and unlike the slot race, the slot itself is still fine - don't clear it.
-            Assert.Equal(model.SlotId, ((BookingInputModel)((ViewResult)result).Model).SlotId);
+            var returnedModel = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(GeneralMessage, SingleModelError(controller));
+            Assert.Equal(model.SlotId, returnedModel.SlotId);
+            logger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    notSeeded,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
         }
 
         [Fact]
@@ -351,7 +375,7 @@
             Assert.IsType<ViewResult>(result);
 
             var error = SingleModelError(controller);
-            Assert.Equal("An error occurred while saving your booking. Please try again.", error);
+            Assert.Equal(GeneralMessage, error);
             Assert.DoesNotContain("10.0.0.4", error);
             Assert.DoesNotContain("SqlException", error);
         }
@@ -599,7 +623,8 @@
             out Mock<IBookingsService> bookingsService,
             out Mock<IImageService> imageService,
             Mock<IServiceAreasService> serviceAreasService = null,
-            Mock<IFormGuard> formGuard = null)
+            Mock<IFormGuard> formGuard = null,
+            Mock<ILogger<BookingController>> logger = null)
         {
             servicesService = new Mock<IServicesService>();
             availabilityService = new Mock<IAvailabilityService>();
@@ -636,7 +661,7 @@
                 imageService.Object,
                 serviceAreasService.Object,
                 (formGuard ?? new Mock<IFormGuard>()).Object,
-                NullLogger<BookingController>.Instance)
+                logger?.Object ?? NullLogger<BookingController>.Instance)
             {
                 // The booking page names its own address for search engines, which needs a request
                 // and the site's routes. With no routes here the address comes back empty;

@@ -139,8 +139,9 @@
         {
             using var world = new BookingWorld();
 
-            Booking booking = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
+            BookingCreateResult result = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
 
+            Booking booking = world.DbContext.Bookings.Single(x => x.Id == result.BookingId);
             Assert.Equal(BookingSource.Website, booking.Source);
             Assert.Equal(world.SlotStart, booking.ScheduledStart);
             Assert.Equal(world.SlotStart.AddHours(1), booking.ScheduledEnd);

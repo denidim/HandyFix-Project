@@ -41,9 +41,9 @@
             using var world = new BookingWorld();
             List<SentEmail> sent = world.CaptureEmails();
 
-            Booking booking = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
+            BookingCreateResult result = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
 
-            Assert.NotNull(booking);
+            Assert.Equal(BookingCreateOutcome.Created, result.Outcome);
             Assert.Single(world.DbContext.Bookings);
             Assert.True(world.DbContext.AvailabilitySlots.Single().IsBooked);
             Assert.Empty(sent);

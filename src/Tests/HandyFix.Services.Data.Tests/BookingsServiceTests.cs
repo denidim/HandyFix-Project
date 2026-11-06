@@ -124,11 +124,12 @@
                 ServiceId = serviceEntity.Id,
             };
 
-            var booking = await bookingsService.CreateBookingAsync(
+            BookingCreateResult result = await bookingsService.CreateBookingAsync(
                 model,
-                new List<string>());
+                new List<string> { "https://images.example.com/bookings/sink.jpg" });
 
-            Assert.NotNull(booking);
+            Assert.Equal(BookingCreateOutcome.Created, result.Outcome);
+            var booking = dbContext.Bookings.Single(x => x.Id == result.BookingId);
             Assert.Equal("John", booking.CustomerFirstName);
             Assert.Equal("Doe", booking.CustomerLastName);
             Assert.Equal("john@example.com", booking.Email);
@@ -142,6 +143,11 @@
             // Verify slot is marked booked
             var slotInDb = dbContext.AvailabilitySlots.First(x => x.Id == slot.Id);
             Assert.True(slotInDb.IsBooked);
+
+            // The photo the customer sent is on the booking.
+            BookingImage image = Assert.Single(dbContext.BookingImages);
+            Assert.Equal(booking.Id, image.BookingId);
+            Assert.Equal("https://images.example.com/bookings/sink.jpg", image.ImageUrl);
 
             // No email goes out for a booking that is not paid for yet: the first one a customer
             // gets follows the deposit (PROJECT_STATE.md Section 3ce).
@@ -254,8 +260,9 @@
                 ServiceId = serviceEntity.Id,
             };
 
-            await Assert.ThrowsAsync<SlotUnavailableException>(
-                () => bookingsService.CreateBookingAsync(model, new List<string>()));
+            BookingCreateResult result = await bookingsService.CreateBookingAsync(model, new List<string>());
+
+            Assert.Equal(BookingCreateOutcome.SlotTaken, result.Outcome);
 
             // The slot must still point to the original booking, untouched
             var slotInDb = dbContext.AvailabilitySlots.First(x => x.Id == slot.Id);
@@ -274,6 +281,111 @@
                     null,
                     It.IsAny<string>()),
                 Times.Never);
+        }
+
+        // The photos used to be saved after the booking's transaction was committed. A photo
+        // save that failed told the customer to try again while the booking kept its slot, and
+        // the retry found the slot taken by their own booking. They are in the booking's own
+        // save now: all of it or nothing. Sqlite, like the test above, because what is proved
+        // is what the database holds after the failure.
+        [Fact]
+        public async Task CreateBookingAsyncShouldSaveNothingAndLeaveTheSlotFreeWhenAPhotoCannotBeSaved()
+        {
+            using var connection = new SqliteConnection("DataSource=:memory:");
+            connection.Open();
+
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            await dbContext.Database.EnsureCreatedAsync();
+            using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
+            using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
+            using var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
+            using var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
+            using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
+            using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
+            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
+            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
+
+            var availabilityService = new AvailabilityService(slotRepo);
+            var emailSenderMock = new Mock<IEmailSender>();
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var dbQueryRunner = new DbQueryRunner(dbContext);
+
+            dbContext.BookingStatuses.Add(new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending });
+
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
+            dbContext.ServiceCategories.Add(category);
+
+            var serviceEntity = new Service
+            {
+                Id = Guid.NewGuid(),
+                Name = "Leak Fix",
+                Description = "Repair leak",
+                Slug = "leak-fix",
+                BasePrice = 80.00m,
+                CategoryId = category.Id,
+            };
+            dbContext.Services.Add(serviceEntity);
+
+            var slot = new AvailabilitySlot { StartTime = DateTime.Today.AddHours(9), EndTime = DateTime.Today.AddHours(10), IsBooked = false };
+            dbContext.AvailabilitySlots.Add(slot);
+            await dbContext.SaveChangesAsync();
+
+            var bookingsService = new BookingsService(
+                bookingRepo,
+                serviceRepo,
+                slotRepo,
+                bookingStatusRepo,
+                bookingImageRepo,
+                technicianRepo,
+                new EfDeletableEntityRepository<BookingService>(dbContext),
+                availabilityService,
+                paymentsService,
+                dbQueryRunner,
+                emailSenderMock.Object,
+                new ConfigurationBuilder().Build(),
+                NullLogger<BookingsService>.Instance);
+
+            var model = new BookingInputModel
+            {
+                CustomerFirstName = "Jane",
+                CustomerLastName = "Smith",
+                Email = "jane@example.com",
+                PhoneNumber = "07123456780",
+                Address = "5 Other Rd, Sutton",
+                ProblemDescription = "Blocked kitchen drain",
+                SlotId = slot.Id,
+                ServiceId = serviceEntity.Id,
+            };
+
+            // A photo row the database refuses: a picture's address cannot be empty.
+            await Assert.ThrowsAsync<DbUpdateException>(
+                () => bookingsService.CreateBookingAsync(model, new List<string> { null }));
+
+            // Read through a context of its own, so what is checked is what the database holds
+            // and not what the failed context still keeps in memory.
+            using var check = new ApplicationDbContext(options);
+            Assert.Empty(check.Bookings);
+            Assert.Empty(check.BookingImages);
+            AvailabilitySlot slotInDb = check.AvailabilitySlots.Single(x => x.Id == slot.Id);
+            Assert.False(slotInDb.IsBooked);
+            Assert.Null(slotInDb.BookingId);
+        }
+
+        [Fact]
+        public async Task CreateBookingAsyncShouldSaveNothingWhenTheSlotDoesNotExist()
+        {
+            using var world = new BookingWorld();
+            BookingInputModel model = world.BookingFor("12 Main Rd, Sutton");
+            model.SlotId = Guid.NewGuid();
+
+            BookingCreateResult result = await world.Bookings.CreateBookingAsync(model, new List<string>());
+
+            Assert.Equal(BookingCreateOutcome.SlotNotFound, result.Outcome);
+            Assert.Empty(world.DbContext.Bookings);
         }
 
         [Fact]
