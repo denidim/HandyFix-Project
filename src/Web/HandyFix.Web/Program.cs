@@ -162,7 +162,6 @@
             services.AddWebOptimizer(pipeline =>
             {
                 pipeline.AddCssBundle(SiteStylesheets.BundleRoute, SiteStylesheets.SourceFiles);
-                pipeline.AddJavaScriptBundle("/js/site.min.js", "js/site.js");
             });
 
             // Set here rather than left to the package's defaults, so what each environment does

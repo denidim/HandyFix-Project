@@ -157,8 +157,7 @@ src/                                 # Root source folder
 │   └── HandyFix.Web.ViewModels/     # ViewModels and Data Transfer Objects (DTOs)
 └── Tests/                           # Automated tests
     ├── HandyFix.Services.Data.Tests/# Tests for the business services
-    ├── HandyFix.Web.Tests/          # Controller tests and full-stack WebApplicationFactory tests
-    └── Sandbox/                     # Console app for prototyping against the real services
+    └── HandyFix.Web.Tests/          # Controller tests and full-stack WebApplicationFactory tests
 
 deploy/                              # Compose files and Caddyfiles for staging and production
 .github/workflows/                   # deploy-dev.yml (staging) and deploy-prod.yml (production)
