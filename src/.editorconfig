@@ -5,3 +5,13 @@
 [*.cs]
 # AGENTS.md Section 7, StyleCop SA1412: C# files are stored as UTF-8 with a byte order mark.
 charset = utf-8-bom
+
+# Migrations are written by `dotnet ef`, not by hand; their *.Designer.cs files and the model
+# snapshot already say so in their header. Analysers such as StyleCop leave generated code alone.
+[**/Migrations/*.cs]
+generated_code = true
+
+# A Razor page's model is XModel in X.cshtml.cs, as the page's @model line requires, so the file
+# name can never match the first type in it (SA1649).
+[*.cshtml.cs]
+dotnet_diagnostic.SA1649.severity = none
