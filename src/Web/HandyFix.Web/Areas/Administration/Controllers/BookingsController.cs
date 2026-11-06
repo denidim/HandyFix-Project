@@ -30,6 +30,7 @@
         private const string DetailsCannotBeEditedMessage = "Nothing was changed. A job's details can be put right while it is booked or done, not once it is cancelled or abandoned.";
 
         private readonly IBookingsService bookingsService;
+        private readonly IJobsService jobsService;
         private readonly ITechniciansService techniciansService;
         private readonly IPaymentsService paymentsService;
         private readonly IServicesService servicesService;
@@ -37,12 +38,14 @@
 
         public BookingsController(
             IBookingsService bookingsService,
+            IJobsService jobsService,
             ITechniciansService techniciansService,
             IPaymentsService paymentsService,
             IServicesService servicesService,
             IInquiriesService inquiriesService)
         {
             this.bookingsService = bookingsService;
+            this.jobsService = jobsService;
             this.techniciansService = techniciansService;
             this.paymentsService = paymentsService;
             this.servicesService = servicesService;
@@ -88,7 +91,7 @@
             booking.Technicians = await this.techniciansService
                 .GetAssignableAsync<TechnicianOptionViewModel>(booking.TechnicianId);
             booking.Payments = await this.paymentsService.GetMoneyListAsync<PaymentLineViewModel>(id);
-            booking.History = await this.bookingsService.GetHistoryAsync<BookingHistoryViewModel>(id);
+            booking.History = await this.jobsService.GetHistoryAsync<BookingHistoryViewModel>(id);
 
             return this.View(booking);
         }
@@ -145,7 +148,7 @@
                 return await this.JobForm(model);
             }
 
-            Guid id = await this.bookingsService.CreateWrittenInJobAsync(model);
+            Guid id = await this.jobsService.CreateWrittenInJobAsync(model);
 
             this.TempData[SuccessMessageKey] = "The job is written in. Its hour is still on sale on the website: block it in the calendar if nobody else should be booked then. No email was sent to the customer.";
             return this.RedirectToAction(nameof(this.Details), new { id });
@@ -199,7 +202,7 @@
                 return await this.EditForm(model, job);
             }
 
-            JobEditResult result = await this.bookingsService.EditDetailsAsync(model);
+            JobEditResult result = await this.jobsService.EditDetailsAsync(model);
 
             switch (result.Outcome)
             {
@@ -250,7 +253,7 @@
                 return this.RedirectToAction(nameof(this.Details), new { id });
             }
 
-            var completed = await this.bookingsService.CompleteBookingAsync(id, finalPrice.Value);
+            var completed = await this.jobsService.CompleteBookingAsync(id, finalPrice.Value);
 
             this.TempData[completed ? SuccessMessageKey : ErrorMessageKey] = completed
                 ? $"The job is marked as done, at a final price of {Pounds(finalPrice.Value)}."
@@ -262,7 +265,7 @@
         [HttpPost]
         public async Task<IActionResult> FinalPrice(Guid id, decimal? finalPrice)
         {
-            var changed = finalPrice > 0m && await this.bookingsService.ChangeFinalPriceAsync(id, finalPrice.Value);
+            var changed = finalPrice > 0m && await this.jobsService.ChangeFinalPriceAsync(id, finalPrice.Value);
 
             this.TempData[changed ? SuccessMessageKey : ErrorMessageKey] = changed
                 ? $"The final price is now {Pounds(finalPrice.Value)}."
@@ -280,7 +283,7 @@
                 return this.RedirectToAction(nameof(this.Details), new { id });
             }
 
-            JobCancelOutcome outcome = await this.bookingsService.CancelBookingAsync(id, reason);
+            JobCancelOutcome outcome = await this.jobsService.CancelBookingAsync(id, reason);
 
             switch (outcome)
             {
@@ -309,7 +312,7 @@
             // Nullable on purpose: the picker's blank "-- Unassigned --" option posts an empty
             // value, which used to bind to Guid.Empty and then fail the TechnicianId foreign key
             // at SaveChanges. It now clears the assignment, which is what the option says it does.
-            TechnicianAssignmentResult result = await this.bookingsService.AssignTechnicianAsync(id, technicianId);
+            TechnicianAssignmentResult result = await this.jobsService.AssignTechnicianAsync(id, technicianId);
 
             switch (result.Outcome)
             {
@@ -359,7 +362,7 @@
                 return this.RedirectToAction(nameof(this.Details), new { id });
             }
 
-            JobMoveResult result = await this.bookingsService.MoveBookingAsync(id, date.Value.Date + time.Value);
+            JobMoveResult result = await this.jobsService.MoveBookingAsync(id, date.Value.Date + time.Value);
 
             switch (result.Outcome)
             {
@@ -427,7 +430,7 @@
         [HttpPost]
         public async Task<IActionResult> Notes(Guid id, string notes)
         {
-            if (!await this.bookingsService.SaveNotesAsync(id, notes))
+            if (!await this.jobsService.SaveNotesAsync(id, notes))
             {
                 return this.NotFound();
             }

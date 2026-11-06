@@ -102,12 +102,9 @@
                 slotRepo,
                 bookingStatusRepo,
                 bookingImageRepo,
-                technicianRepo,
-                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
-                dbQueryRunner,
-                TestEmails.Booking(emailSenderMock.Object));
+                dbQueryRunner);
 
             var model = new BookingInputModel
             {
@@ -237,12 +234,9 @@
                 slotRepo,
                 bookingStatusRepo,
                 bookingImageRepo,
-                technicianRepo,
-                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
-                dbQueryRunner,
-                TestEmails.Booking(emailSenderMock.Object));
+                dbQueryRunner);
 
             var model = new BookingInputModel
             {
@@ -340,12 +334,9 @@
                 slotRepo,
                 bookingStatusRepo,
                 bookingImageRepo,
-                technicianRepo,
-                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
-                dbQueryRunner,
-                TestEmails.Booking(emailSenderMock.Object));
+                dbQueryRunner);
 
             var model = new BookingInputModel
             {
@@ -435,12 +426,11 @@
             dbContext.AvailabilitySlots.Add(slot);
             await dbContext.SaveChangesAsync();
 
-            var bookingsService = new BookingsService(
+            var jobsService = new JobsService(
                 bookingRepo,
                 serviceRepo,
                 slotRepo,
                 bookingStatusRepo,
-                bookingImageRepo,
                 technicianRepo,
                 new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
@@ -456,7 +446,7 @@
 
             // The concurrency conflict must be absorbed internally rather than
             // bubbling up as an unhandled exception to the controller.
-            await bookingsService.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
+            await jobsService.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
 
             var bookingInDb = dbContext.Bookings.First(x => x.Id == booking.Id);
             var slotInDb = dbContext.AvailabilitySlots.First(x => x.Id == slot.Id);
@@ -558,12 +548,9 @@
                 slotRepo,
                 bookingStatusRepo,
                 bookingImageRepo,
-                technicianRepo,
-                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
-                dbQueryRunner,
-                TestEmails.Booking(emailSenderMock.Object));
+                dbQueryRunner);
 
             var releasedCount = await bookingsService.ReleaseAbandonedBookingsAsync(TimeSpan.FromMinutes(15));
 
@@ -661,7 +648,7 @@
         {
             // A pure computation over whatever list it's handed - no repository access - so it
             // needs none of BookingsService's other dependencies wired up.
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
+            var service = new BookingsService(null, null, null, null, null, null, null, null);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -686,7 +673,7 @@
         [Fact]
         public void GetSummaryStatsShouldCountOnlyPaidOpenBookingsWithNoTechnicianAsWaitingForOne()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
+            var service = new BookingsService(null, null, null, null, null, null, null, null);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -707,7 +694,7 @@
         [Fact]
         public void GetSummaryStatsShouldReturnZeroRevenueForAnEmptyList()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
+            var service = new BookingsService(null, null, null, null, null, null, null, null);
 
             BookingSummaryStats stats = service.GetSummaryStats(new List<BookingDetailsViewModel>());
 
@@ -722,7 +709,7 @@
         [Fact]
         public void GetSummaryStatsShouldLeaveOutJobsThatWereCancelledOrAbandoned()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
+            var service = new BookingsService(null, null, null, null, null, null, null, null);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -823,12 +810,9 @@
                 slotRepo,
                 bookingStatusRepo,
                 bookingImageRepo,
-                technicianRepo,
-                new EfDeletableEntityRepository<BookingService>(dbContext),
                 availabilityService,
                 paymentsService,
-                dbQueryRunner,
-                TestEmails.Booking(emailSenderMock.Object));
+                dbQueryRunner);
         }
 
         /// <summary>

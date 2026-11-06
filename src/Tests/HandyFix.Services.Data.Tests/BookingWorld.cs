@@ -93,17 +93,29 @@
                 NullLogger<PaymentsService>.Instance,
                 this.Stripe.Object);
 
+            var serviceRepo = new EfDeletableEntityRepository<Service>(this.DbContext);
+            var queryRunner = new DbQueryRunner(this.DbContext);
+
             this.Bookings = new BookingsService(
                 bookingRepo,
-                new EfDeletableEntityRepository<Service>(this.DbContext),
+                serviceRepo,
                 slotRepo,
                 bookingStatusRepo,
                 new EfDeletableEntityRepository<BookingImage>(this.DbContext),
+                this.Availability,
+                this.Payments,
+                queryRunner);
+
+            this.Jobs = new JobsService(
+                bookingRepo,
+                serviceRepo,
+                slotRepo,
+                bookingStatusRepo,
                 new EfDeletableEntityRepository<Technician>(this.DbContext),
                 new EfDeletableEntityRepository<BookingService>(this.DbContext),
                 this.Availability,
                 this.Payments,
-                new DbQueryRunner(this.DbContext),
+                queryRunner,
                 bookingEmails);
         }
 
@@ -116,6 +128,8 @@
         public Mock<IStripeGateway> Stripe { get; } = new Mock<IStripeGateway>();
 
         public BookingsService Bookings { get; }
+
+        public JobsService Jobs { get; }
 
         public PaymentsService Payments { get; }
 
@@ -204,7 +218,7 @@
 
         public async Task<Booking> SeedWrittenInJobAsync(DateTime? start = null)
         {
-            Guid id = await this.Bookings.CreateWrittenInJobAsync(this.WrittenInJob(start));
+            Guid id = await this.Jobs.CreateWrittenInJobAsync(this.WrittenInJob(start));
             return this.DbContext.Bookings.Single(x => x.Id == id);
         }
 

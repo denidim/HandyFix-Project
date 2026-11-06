@@ -31,7 +31,7 @@
             form.PhoneNumber = " 07700 900999 ";
             form.Address = "3 Navy Row, Epsom";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.Equal(new[] { "last name", "phone number", "address" }, result.Changed);
@@ -65,7 +65,7 @@
             form.Address = "   ";
             form.CustomerLastName = string.Empty;
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Unchanged, result.Outcome);
             Assert.Empty(result.Changed);
@@ -94,7 +94,7 @@
             JobEditInputModel form = world.EditFormOf(booking);
             form.ProblemDescription = sentBack;
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Unchanged, result.Outcome);
             Assert.Equal(lines, world.HistoryOf(booking).Count);
@@ -115,7 +115,7 @@
             JobEditInputModel form = world.EditFormOf(booking);
             form.PhoneNumber = "07700 900999";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(new[] { "phone number" }, result.Changed);
             Assert.Equal("The kitchen tap drips.\r\n\r\n", world.DbContext.Bookings.Single().ProblemDescription);
@@ -148,7 +148,7 @@
             world.SetStatus(booking, status);
             var lines = world.HistoryOf(booking).Count;
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.NotAllowed, result.Outcome);
             Assert.Equal("07700 900123", world.DbContext.Bookings.Single().PhoneNumber);
@@ -161,11 +161,11 @@
         {
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
-            await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
             JobEditInputModel form = world.EditFormOf(booking);
             form.Address = "14 Main Rd, Sutton";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.Equal("14 Main Rd, Sutton", world.DbContext.Bookings.Single().Address);
@@ -184,7 +184,7 @@
             form.Source = BookingSource.Phone;
             form.PhoneNumber = "07700 900999";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.Equal(new[] { "phone number" }, result.Changed);
@@ -206,7 +206,7 @@
             form.Email = email;
             form.PhoneNumber = "07700 900999";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.EmailNeeded, result.Outcome);
             Booking after = world.DbContext.Bookings.Single();
@@ -222,12 +222,12 @@
             using var world = new BookingWorld();
             JobInputModel written = world.WrittenInJob();
             written.Email = "grace@example.com";
-            Guid id = await world.Bookings.CreateWrittenInJobAsync(written);
+            Guid id = await world.Jobs.CreateWrittenInJobAsync(written);
             Booking job = world.DbContext.Bookings.Single(x => x.Id == id);
             JobEditInputModel form = world.EditFormOf(job);
             form.Email = null;
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.False(result.EmailChangedOnWebsiteBooking);
@@ -243,7 +243,7 @@
             JobEditInputModel form = world.EditFormOf(job);
             form.Source = BookingSource.Agency;
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.Equal(new[] { "where it came from" }, result.Changed);
@@ -264,7 +264,7 @@
             form.Source = source;
             form.PhoneNumber = "07700 900999";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.SourceNeeded, result.Outcome);
             Booking after = world.DbContext.Bookings.Single();
@@ -282,7 +282,7 @@
             JobEditInputModel form = world.EditFormOf(job);
             form.ServiceId = world.ServiceId;
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.Equal(new[] { "service" }, result.Changed);
@@ -302,12 +302,12 @@
         {
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
-            await world.Bookings.CompleteBookingAsync(booking.Id, 135.00m);
+            await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
             Service other = world.AddService("Tap Repair", 60.00m);
             JobEditInputModel form = world.EditFormOf(booking);
             form.ServiceId = other.Id;
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
 
@@ -330,7 +330,7 @@
             JobEditInputModel form = world.EditFormOf(booking);
             form.ServiceId = null;
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.Null(world.DbContext.Bookings.Single().TotalAmount);
@@ -342,7 +342,7 @@
 
             // Picked again later, it is a job with one service, not two.
             form.ServiceId = world.ServiceId;
-            await world.Bookings.EditDetailsAsync(form);
+            await world.Jobs.EditDetailsAsync(form);
             Assert.Equal(world.ServiceId, world.DbContext.BookingServices.Single().ServiceId);
             Assert.Equal(90.00m, world.DbContext.Bookings.Single().TotalAmount);
         }
@@ -356,7 +356,7 @@
             form.ServiceId = Guid.NewGuid();
             form.PhoneNumber = "07700 900999";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.ServiceNotFound, result.Outcome);
             Booking after = world.DbContext.Bookings.Single();
@@ -381,7 +381,7 @@
             JobEditInputModel form = world.EditFormOf(booking);
             form.PhoneNumber = "07700 900999";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.Equal(new[] { "phone number" }, result.Changed);
@@ -390,7 +390,7 @@
 
             // Taken off on purpose, the line still names the service it was.
             form.ServiceId = null;
-            await world.Bookings.EditDetailsAsync(form);
+            await world.Jobs.EditDetailsAsync(form);
             Assert.Equal("Details changed. Service was Leak Fix.", world.HistoryOf(booking).Last());
         }
 
@@ -403,12 +403,12 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             Technician technician = world.AddTechnician("Zapryan");
-            await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
             List<SentEmail> sent = world.CaptureEmails();
             JobEditInputModel form = world.EditFormOf(booking);
             form.Email = "ada.lovelace@example.com";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(JobEditOutcome.Saved, result.Outcome);
             Assert.Equal(new[] { "email" }, result.Changed);
@@ -427,7 +427,7 @@
             JobEditInputModel form = world.EditFormOf(booking);
             form.Email = "ada.lovelace@example.com";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.True(result.EmailChangedOnWebsiteBooking);
             Assert.Null(result.TechnicianName);
@@ -442,7 +442,7 @@
             JobEditInputModel form = world.EditFormOf(booking);
             form.ProblemDescription = "Kitchen tap drips, and the bath tap too.";
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(new[] { "what the job is" }, result.Changed);
             Assert.Equal("Kitchen tap drips, and the bath tap too.", world.DbContext.Bookings.Single().ProblemDescription);
@@ -459,7 +459,7 @@
             JobEditInputModel form = world.EditFormOf(job);
             form.ProblemDescription = "Fit a new kitchen tap.";
 
-            await world.Bookings.EditDetailsAsync(form);
+            await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal("Details changed. The job had no description.", world.HistoryOf(job).Last());
         }
@@ -482,7 +482,7 @@
             form.ServiceId = longNamed.Id;
             form.Source = BookingSource.WhatsApp;
             form.ProblemDescription = "It began in the kitchen.\r\n" + new string('d', 2970);
-            await world.Bookings.EditDetailsAsync(form);
+            await world.Jobs.EditDetailsAsync(form);
 
             form.CustomerFirstName = "Grace";
             form.CustomerLastName = "Hopper";
@@ -492,7 +492,7 @@
             form.ServiceId = world.ServiceId;
             form.Source = BookingSource.Agency;
             form.ProblemDescription = "Fit a new kitchen tap.";
-            JobEditResult result = await world.Bookings.EditDetailsAsync(form);
+            JobEditResult result = await world.Jobs.EditDetailsAsync(form);
 
             Assert.Equal(
                 new[] { "first name", "last name", "phone number", "email", "address", "service", "where it came from", "what the job is" },
@@ -518,7 +518,7 @@
         {
             using var world = new BookingWorld();
 
-            JobEditResult result = await world.Bookings.EditDetailsAsync(new JobEditInputModel
+            JobEditResult result = await world.Jobs.EditDetailsAsync(new JobEditInputModel
             {
                 Id = Guid.NewGuid(),
                 CustomerFirstName = "Grace",

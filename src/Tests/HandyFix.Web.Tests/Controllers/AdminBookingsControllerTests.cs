@@ -42,15 +42,15 @@
             // "-- Unassigned --" option posts an empty value. While the parameter was a
             // non-nullable Guid that bound to Guid.Empty, which is not a real technician id,
             // so SaveChanges failed the TechnicianId foreign key and the admin got a raw 500.
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
 
             var bookingId = Guid.NewGuid();
             var result = await controller.AssignTechnician(bookingId, null);
 
-            bookingsService.Verify(x => x.AssignTechnicianAsync(bookingId, null), Times.Once);
+            jobsService.Verify(x => x.AssignTechnicianAsync(bookingId, null), Times.Once);
 
             // Specifically not Guid.Empty - that is the value that used to blow up.
-            bookingsService.Verify(
+            jobsService.Verify(
                 x => x.AssignTechnicianAsync(It.IsAny<Guid>(), Guid.Empty),
                 Times.Never);
 
@@ -62,14 +62,14 @@
         [Fact]
         public async Task AssignTechnicianShouldPassTheSelectedTechnicianThrough()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
 
             var bookingId = Guid.NewGuid();
             var technicianId = Guid.NewGuid();
 
             await controller.AssignTechnician(bookingId, technicianId);
 
-            bookingsService.Verify(x => x.AssignTechnicianAsync(bookingId, technicianId), Times.Once);
+            jobsService.Verify(x => x.AssignTechnicianAsync(bookingId, technicianId), Times.Once);
         }
 
         [Fact]
@@ -81,7 +81,7 @@
             // BookingsService.GetSummaryStats (see BookingsServiceTests) - this only checks
             // the controller fetches the *unfiltered* list and hands that to it, not the
             // filtered one.
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out _, out _);
 
             var filtered = new List<BookingDetailsViewModel>
             {
@@ -127,7 +127,7 @@
         {
             // The unfiltered list is already in hand when nothing is filtered, so paying
             // for a duplicate round trip would be waste rather than correctness.
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out _, out _);
 
             bookingsService
                 .Setup(x => x.GetAllBookingsAsync<BookingDetailsViewModel>(It.IsAny<BookingSortField>(), It.IsAny<bool>(), It.IsAny<string>()))
@@ -143,7 +143,7 @@
         [Fact]
         public async Task IndexShouldExposeTheStatusOptionsFromTheService()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out _, out _);
 
             bookingsService
                 .Setup(x => x.GetAllBookingsAsync<BookingDetailsViewModel>(It.IsAny<BookingSortField>(), It.IsAny<bool>(), It.IsAny<string>()))
@@ -161,7 +161,7 @@
         [Fact]
         public async Task DetailsShouldReturnNotFoundForAnUnknownBooking()
         {
-            var controller = BuildController(out var bookingsService, out var techniciansService);
+            var controller = BuildController(out var bookingsService, out _, out var techniciansService);
 
             bookingsService
                 .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(It.IsAny<Guid>()))
@@ -182,7 +182,7 @@
             // technician who has since been deactivated still needs to appear in this
             // booking's picker - otherwise saving the form would silently unassign them
             // (PROJECT_STATE.md section 3r).
-            var controller = BuildController(out var bookingsService, out var techniciansService);
+            var controller = BuildController(out var bookingsService, out _, out var techniciansService);
 
             var assignedId = Guid.NewGuid();
             bookingsService
@@ -216,9 +216,9 @@
         [InlineData(TechnicianAssignmentOutcome.NotAllowed, null, "ErrorMessage", "Nothing was changed. A technician can be picked while the job is booked, and on a website booking only once its deposit is paid")]
         public async Task AssignTechnicianShouldSayWhatHappened(TechnicianAssignmentOutcome outcome, string technicianName, string messageKey, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var bookingId = Guid.NewGuid();
-            bookingsService
+            jobsService
                 .Setup(x => x.AssignTechnicianAsync(bookingId, It.IsAny<Guid?>()))
                 .ReturnsAsync(new TechnicianAssignmentResult { Outcome = outcome, TechnicianName = technicianName });
 
@@ -234,8 +234,8 @@
         [Fact]
         public async Task AssignTechnicianShouldReturnNotFoundForAnUnknownBooking()
         {
-            var controller = BuildController(out var bookingsService, out _);
-            bookingsService
+            var controller = BuildController(out _, out var jobsService, out _);
+            jobsService
                 .Setup(x => x.AssignTechnicianAsync(It.IsAny<Guid>(), It.IsAny<Guid?>()))
                 .ReturnsAsync(new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.BookingNotFound });
 
@@ -249,13 +249,13 @@
         [InlineData(false, "ErrorMessage", "Nothing was changed. A job can be marked as done while it is booked, and a website booking only once its deposit is paid.")]
         public async Task CompleteShouldPassTheFinalPriceOnAndSayWhetherTheJobWasMarkedDone(bool completed, string messageKey, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var bookingId = Guid.NewGuid();
-            bookingsService.Setup(x => x.CompleteBookingAsync(bookingId, 135.00m)).ReturnsAsync(completed);
+            jobsService.Setup(x => x.CompleteBookingAsync(bookingId, 135.00m)).ReturnsAsync(completed);
 
             var result = await controller.Complete(bookingId, 135.00m);
 
-            bookingsService.Verify(x => x.CompleteBookingAsync(bookingId, 135.00m), Times.Once);
+            jobsService.Verify(x => x.CompleteBookingAsync(bookingId, 135.00m), Times.Once);
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirect.ActionName);
@@ -271,12 +271,12 @@
         [InlineData(-20.0)]
         public async Task CompleteShouldAskForTheFinalPriceWhenThereIsNone(double? finalPrice)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var bookingId = Guid.NewGuid();
 
             await controller.Complete(bookingId, (decimal?)finalPrice);
 
-            bookingsService.Verify(x => x.CompleteBookingAsync(It.IsAny<Guid>(), It.IsAny<decimal>()), Times.Never);
+            jobsService.Verify(x => x.CompleteBookingAsync(It.IsAny<Guid>(), It.IsAny<decimal>()), Times.Never);
             Assert.Contains("Type the final price, more than £0", Assert.IsType<string>(controller.TempData["ErrorMessage"]));
         }
 
@@ -285,9 +285,9 @@
         [InlineData(false, "ErrorMessage", "Nothing was changed. The final price can be put right on a job that is done")]
         public async Task FinalPriceShouldSayWhetherItWasChanged(bool changed, string messageKey, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var bookingId = Guid.NewGuid();
-            bookingsService.Setup(x => x.ChangeFinalPriceAsync(bookingId, 140.00m)).ReturnsAsync(changed);
+            jobsService.Setup(x => x.ChangeFinalPriceAsync(bookingId, 140.00m)).ReturnsAsync(changed);
 
             await controller.FinalPrice(bookingId, 140.00m);
 
@@ -301,15 +301,15 @@
         [InlineData(JobCancelOutcome.NotAllowed, "ErrorMessage", "Nothing was changed. This job is already done, cancelled or abandoned.")]
         public async Task CancelShouldPassTheReasonOnAndSayWhetherTheJobWasCancelled(JobCancelOutcome outcome, string messageKey, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var bookingId = Guid.NewGuid();
-            bookingsService.Setup(x => x.CancelBookingAsync(bookingId, "The customer moved away.")).ReturnsAsync(outcome);
+            jobsService.Setup(x => x.CancelBookingAsync(bookingId, "The customer moved away.")).ReturnsAsync(outcome);
 
             var result = await controller.Cancel(bookingId, "The customer moved away.");
 
             // Cancelling has to release the slot too, which is CancelBookingAsync's job.
-            bookingsService.Verify(x => x.CancelBookingAsync(bookingId, "The customer moved away."), Times.Once);
-            bookingsService.Verify(x => x.CompleteBookingAsync(It.IsAny<Guid>(), It.IsAny<decimal>()), Times.Never);
+            jobsService.Verify(x => x.CancelBookingAsync(bookingId, "The customer moved away."), Times.Once);
+            jobsService.Verify(x => x.CompleteBookingAsync(It.IsAny<Guid>(), It.IsAny<decimal>()), Times.Never);
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Details", redirect.ActionName);
@@ -328,9 +328,9 @@
         [Fact]
         public async Task CancelShouldSayNothingWasChangedWhenTheCustomerPaidInTheSameMoment()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var bookingId = Guid.NewGuid();
-            bookingsService.Setup(x => x.CancelBookingAsync(bookingId, "The customer moved away.")).ReturnsAsync(JobCancelOutcome.PaidJustNow);
+            jobsService.Setup(x => x.CancelBookingAsync(bookingId, "The customer moved away.")).ReturnsAsync(JobCancelOutcome.PaidJustNow);
 
             var result = await controller.Cancel(bookingId, "The customer moved away.");
 
@@ -348,11 +348,11 @@
         [InlineData("   ")]
         public async Task CancelShouldAskForTheReasonWhenThereIsNone(string reason)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
 
             await controller.Cancel(Guid.NewGuid(), reason);
 
-            bookingsService.Verify(x => x.CancelBookingAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
+            jobsService.Verify(x => x.CancelBookingAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
             Assert.Contains("Write the reason for cancelling", Assert.IsType<string>(controller.TempData["ErrorMessage"]));
         }
 
@@ -365,10 +365,10 @@
         [InlineData(false, false, false, "Nothing was changed in the calendar: block the new hour by hand")]
         public async Task MoveShouldSayWhereTheJobWentAndWhatHappenedInTheCalendar(bool oldHourFreed, bool newHourTaken, bool newHourNotAvailable, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var bookingId = Guid.NewGuid();
             var newStart = new DateTime(2026, 10, 14, 9, 0, 0);
-            bookingsService
+            jobsService
                 .Setup(x => x.MoveBookingAsync(bookingId, newStart))
                 .ReturnsAsync(new JobMoveResult
                 {
@@ -394,8 +394,8 @@
         [InlineData(JobMoveOutcome.NotAllowed, "ErrorMessage", "Nothing was changed. A job can be moved while it is booked")]
         public async Task MoveShouldSayWhyNothingMoved(JobMoveOutcome outcome, string messageKey, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
-            bookingsService
+            var controller = BuildController(out _, out var jobsService, out _);
+            jobsService
                 .Setup(x => x.MoveBookingAsync(It.IsAny<Guid>(), It.IsAny<DateTime>()))
                 .ReturnsAsync(new JobMoveResult { Outcome = outcome });
 
@@ -407,19 +407,19 @@
         [Fact]
         public async Task MoveShouldAskForBothTheDayAndTheTime()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
 
             await controller.Move(Guid.NewGuid(), new DateTime(2026, 10, 14), null);
 
-            bookingsService.Verify(x => x.MoveBookingAsync(It.IsAny<Guid>(), It.IsAny<DateTime>()), Times.Never);
+            jobsService.Verify(x => x.MoveBookingAsync(It.IsAny<Guid>(), It.IsAny<DateTime>()), Times.Never);
             Assert.Contains("Pick both the new day and the new time", Assert.IsType<string>(controller.TempData["ErrorMessage"]));
         }
 
         [Fact]
         public async Task MoveShouldReturnNotFoundForAnUnknownJob()
         {
-            var controller = BuildController(out var bookingsService, out _);
-            bookingsService
+            var controller = BuildController(out _, out var jobsService, out _);
+            jobsService
                 .Setup(x => x.MoveBookingAsync(It.IsAny<Guid>(), It.IsAny<DateTime>()))
                 .ReturnsAsync(new JobMoveResult { Outcome = JobMoveOutcome.BookingNotFound });
 
@@ -431,7 +431,7 @@
         [InlineData("Bank transfer", "£85.00 is written on the job, paid by bank transfer.")]
         public async Task AddPaymentShouldSayWhatWasWrittenOnTheJob(string method, string expectedText)
         {
-            var controller = BuildController(out _, out _, out var paymentsService);
+            var controller = BuildController(out _, out _, out _, out var paymentsService);
             var bookingId = Guid.NewGuid();
             paymentsService.Setup(x => x.AddPaymentAsync(bookingId, 85.00m, method)).ReturnsAsync(true);
 
@@ -446,7 +446,7 @@
         [InlineData(85.0, true)]
         public async Task AddPaymentShouldSayWhenNothingWasWritten(double? amount, bool serviceIsAsked)
         {
-            var controller = BuildController(out _, out _, out var paymentsService);
+            var controller = BuildController(out _, out _, out _, out var paymentsService);
             paymentsService.Setup(x => x.AddPaymentAsync(It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string>())).ReturnsAsync(false);
 
             await controller.AddPayment(Guid.NewGuid(), (decimal?)amount, "Cash");
@@ -462,7 +462,7 @@
         [InlineData(false, "ErrorMessage", "Nothing was changed. Only a payment that was written on the job by hand can be taken off.")]
         public async Task RemovePaymentShouldSayWhetherItWasTakenOff(bool removed, string messageKey, string expectedText)
         {
-            var controller = BuildController(out _, out _, out var paymentsService);
+            var controller = BuildController(out _, out _, out _, out var paymentsService);
             var bookingId = Guid.NewGuid();
             var paymentId = Guid.NewGuid();
             paymentsService.Setup(x => x.RemovePaymentAsync(bookingId, paymentId)).ReturnsAsync(removed);
@@ -478,7 +478,7 @@
         [InlineData(true, false, "ErrorMessage", "Nothing was changed. Only the deposit of a cancelled job can be marked as refunded.")]
         public async Task DepositRefundedShouldSayWhatTheTickDid(bool refunded, bool saved, string messageKey, string expectedText)
         {
-            var controller = BuildController(out _, out _, out var paymentsService);
+            var controller = BuildController(out _, out _, out _, out var paymentsService);
             var bookingId = Guid.NewGuid();
             paymentsService.Setup(x => x.SetDepositRefundedAsync(bookingId, refunded)).ReturnsAsync(saved);
 
@@ -490,9 +490,9 @@
         [Fact]
         public async Task NotesShouldSaveAndSayOnlyTheAdminSeesThem()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var bookingId = Guid.NewGuid();
-            bookingsService.Setup(x => x.SaveNotesAsync(bookingId, "Stopcock under the sink.")).ReturnsAsync(true);
+            jobsService.Setup(x => x.SaveNotesAsync(bookingId, "Stopcock under the sink.")).ReturnsAsync(true);
 
             var result = await controller.Notes(bookingId, "Stopcock under the sink.");
 
@@ -509,7 +509,7 @@
         [InlineData("Cher", "Cher", null)]
         public async Task CreateShouldStartFromTheEnquiryItWasOpenedFrom(string enquiryName, string firstName, string lastName)
         {
-            var controller = BuildController(out _, out _, out _, out var inquiriesService);
+            var controller = BuildController(out _, out _, out _, out _, out var inquiriesService);
             var enquiryId = Guid.NewGuid();
             inquiriesService
                 .Setup(x => x.GetByIdAsync<EnquiryViewModel>(enquiryId))
@@ -541,7 +541,7 @@
         [Fact]
         public async Task CreateShouldStartWithTheDayItWasOpenedFor()
         {
-            var controller = BuildController(out _, out _);
+            var controller = BuildController(out _, out _, out _);
 
             var result = await controller.Create(date: new DateTime(2026, 10, 14, 13, 30, 0));
 
@@ -555,7 +555,7 @@
         [Fact]
         public async Task CreateShouldReturnNotFoundForAnEnquiryThatIsGone()
         {
-            var controller = BuildController(out _, out _);
+            var controller = BuildController(out _, out _, out _);
 
             Assert.IsType<NotFoundResult>(await controller.Create(Guid.NewGuid()));
         }
@@ -563,10 +563,10 @@
         [Fact]
         public async Task CreateShouldWriteTheJobInAndOpenItsPage()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var newId = Guid.NewGuid();
             var form = new JobInputModel { CustomerFirstName = "Grace", PhoneNumber = "07700 900456", Date = new DateTime(2026, 10, 14), Time = new TimeSpan(14, 0, 0), Source = BookingSource.Phone };
-            bookingsService.Setup(x => x.CreateWrittenInJobAsync(form)).ReturnsAsync(newId);
+            jobsService.Setup(x => x.CreateWrittenInJobAsync(form)).ReturnsAsync(newId);
 
             var result = await controller.Create(form);
 
@@ -585,14 +585,14 @@
         [Fact]
         public async Task CreateShouldRefuseAJobThatClaimsToComeFromTheWebsite()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
             var form = new JobInputModel { CustomerFirstName = "Grace", PhoneNumber = "07700 900456", Date = new DateTime(2026, 10, 14), Time = new TimeSpan(14, 0, 0), Source = BookingSource.Website };
 
             var result = await controller.Create(form);
 
             Assert.Equal("Create", Assert.IsType<ViewResult>(result).ViewName);
             Assert.False(controller.ModelState.IsValid);
-            bookingsService.Verify(x => x.CreateWrittenInJobAsync(It.IsAny<JobInputModel>()), Times.Never);
+            jobsService.Verify(x => x.CreateWrittenInJobAsync(It.IsAny<JobInputModel>()), Times.Never);
         }
 
         // The job's page shows its money list and its history, fetched for that page only: the
@@ -600,12 +600,12 @@
         [Fact]
         public async Task DetailsShouldCarryTheMoneyListAndTheHistory()
         {
-            var controller = BuildController(out var bookingsService, out _, out var paymentsService);
+            var controller = BuildController(out var bookingsService, out var jobsService, out _, out var paymentsService);
             var bookingId = Guid.NewGuid();
             var payments = new List<PaymentLineViewModel> { new PaymentLineViewModel { Amount = 50m, StatusName = "DepositPaid" } };
             var history = new List<BookingHistoryViewModel> { new BookingHistoryViewModel { Text = "Booked on the website." } };
             bookingsService.Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(bookingId)).ReturnsAsync(new BookingDetailsViewModel { Id = bookingId });
-            bookingsService.Setup(x => x.GetHistoryAsync<BookingHistoryViewModel>(bookingId)).ReturnsAsync(history);
+            jobsService.Setup(x => x.GetHistoryAsync<BookingHistoryViewModel>(bookingId)).ReturnsAsync(history);
             paymentsService.Setup(x => x.GetMoneyListAsync<PaymentLineViewModel>(bookingId)).ReturnsAsync(payments);
 
             var result = await controller.Details(bookingId);
@@ -620,7 +620,7 @@
         [Fact]
         public async Task EditShouldOpenTheFormFilledInWithWhatTheJobHolds()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out _, out _);
             var jobId = Guid.NewGuid();
             var serviceId = Guid.NewGuid();
             bookingsService
@@ -660,7 +660,7 @@
         [Fact]
         public async Task EditShouldOpenAWebsiteBookingWithNoPlaceItCameFromToPick()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out _, out _);
             var jobId = Guid.NewGuid();
             bookingsService
                 .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(jobId))
@@ -678,7 +678,7 @@
         [InlineData("Abandoned")]
         public async Task EditShouldNotOpenForAJobThatFellAway(string status)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out _, out _);
             var jobId = Guid.NewGuid();
             bookingsService
                 .Setup(x => x.GetByIdAsync<BookingDetailsViewModel>(jobId))
@@ -695,19 +695,19 @@
         [Fact]
         public async Task EditShouldReturnNotFoundForAnUnknownJob()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out _, out var jobsService, out _);
 
             Assert.IsType<NotFoundResult>(await controller.Edit(Guid.NewGuid()));
             Assert.IsType<NotFoundResult>(await controller.Edit(new JobEditInputModel { Id = Guid.NewGuid() }));
-            bookingsService.Verify(x => x.EditDetailsAsync(It.IsAny<JobEditInputModel>()), Times.Never);
+            jobsService.Verify(x => x.EditDetailsAsync(It.IsAny<JobEditInputModel>()), Times.Never);
         }
 
         [Fact]
         public async Task EditShouldSaveTheDetailsAndSayWhichChanged()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out var jobsService, out _);
             JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Phone);
-            bookingsService
+            jobsService
                 .Setup(x => x.EditDetailsAsync(form))
                 .ReturnsAsync(new JobEditResult { Outcome = JobEditOutcome.Saved, Changed = new[] { "phone number", "address" } });
 
@@ -727,9 +727,9 @@
         [InlineData("Zapryan", "The details are saved. Changed: email. The emails the site sent before went to the old address, and nothing was sent to the new one. To send the technician's name and number to the new address, set the technician to \"Unassigned\", save, then pick Zapryan again.")]
         public async Task EditShouldSayWhereTheEarlierEmailsWentWhenAWebsiteBookingsEmailChanges(string technicianName, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out var jobsService, out _);
             JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Website);
-            bookingsService
+            jobsService
                 .Setup(x => x.EditDetailsAsync(form))
                 .ReturnsAsync(new JobEditResult
                 {
@@ -749,9 +749,9 @@
         [InlineData(JobEditOutcome.NotAllowed, "ErrorMessage", "Nothing was changed. A job's details can be put right while it is booked or done, not once it is cancelled or abandoned.")]
         public async Task EditShouldSayWhyNothingWasChanged(JobEditOutcome outcome, string messageKey, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out var jobsService, out _);
             JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Phone);
-            bookingsService.Setup(x => x.EditDetailsAsync(form)).ReturnsAsync(new JobEditResult { Outcome = outcome });
+            jobsService.Setup(x => x.EditDetailsAsync(form)).ReturnsAsync(new JobEditResult { Outcome = outcome });
 
             var result = await controller.Edit(form);
 
@@ -768,9 +768,9 @@
         [InlineData(JobEditOutcome.ServiceNotFound, "ServiceId", "That service is no longer on the list: pick another.")]
         public async Task EditShouldBringTheFormBackWithTheReasonAtTheBox(JobEditOutcome outcome, string field, string expectedText)
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out var jobsService, out _);
             JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Website);
-            bookingsService.Setup(x => x.EditDetailsAsync(form)).ReturnsAsync(new JobEditResult { Outcome = outcome });
+            jobsService.Setup(x => x.EditDetailsAsync(form)).ReturnsAsync(new JobEditResult { Outcome = outcome });
 
             var result = await controller.Edit(form);
 
@@ -787,7 +787,7 @@
         [Fact]
         public async Task EditShouldNotSaveAFormItsOwnRulesRefuse()
         {
-            var controller = BuildController(out var bookingsService, out _);
+            var controller = BuildController(out var bookingsService, out var jobsService, out _);
             JobEditInputModel form = EditFormFor(bookingsService, BookingSource.Website);
             form.CameFromWebsite = false;
             controller.ModelState.AddModelError("PhoneNumber", "Phone number is required.");
@@ -797,7 +797,7 @@
             var view = Assert.IsType<ViewResult>(result);
             Assert.Equal("Edit", view.ViewName);
             Assert.True(Assert.IsType<JobEditInputModel>(view.Model).CameFromWebsite);
-            bookingsService.Verify(x => x.EditDetailsAsync(It.IsAny<JobEditInputModel>()), Times.Never);
+            jobsService.Verify(x => x.EditDetailsAsync(It.IsAny<JobEditInputModel>()), Times.Never);
         }
 
         // A booking is approved by its deposit being paid. The button that did it by hand showed
@@ -838,26 +838,30 @@
 
         private static BookingsController BuildController(
             out Mock<IBookingsService> bookingsService,
+            out Mock<IJobsService> jobsService,
             out Mock<ITechniciansService> techniciansService)
         {
-            return BuildController(out bookingsService, out techniciansService, out _, out _);
+            return BuildController(out bookingsService, out jobsService, out techniciansService, out _, out _);
         }
 
         private static BookingsController BuildController(
             out Mock<IBookingsService> bookingsService,
+            out Mock<IJobsService> jobsService,
             out Mock<ITechniciansService> techniciansService,
             out Mock<IPaymentsService> paymentsService)
         {
-            return BuildController(out bookingsService, out techniciansService, out paymentsService, out _);
+            return BuildController(out bookingsService, out jobsService, out techniciansService, out paymentsService, out _);
         }
 
         private static BookingsController BuildController(
             out Mock<IBookingsService> bookingsService,
+            out Mock<IJobsService> jobsService,
             out Mock<ITechniciansService> techniciansService,
             out Mock<IPaymentsService> paymentsService,
             out Mock<IInquiriesService> inquiriesService)
         {
             bookingsService = new Mock<IBookingsService>();
+            jobsService = new Mock<IJobsService>();
             techniciansService = new Mock<ITechniciansService>();
             paymentsService = new Mock<IPaymentsService>();
             inquiriesService = new Mock<IInquiriesService>();
@@ -875,7 +879,7 @@
             bookingsService
                 .Setup(x => x.GetStatusOptionsAsync())
                 .ReturnsAsync(Array.Empty<string>());
-            bookingsService
+            jobsService
                 .Setup(x => x.AssignTechnicianAsync(It.IsAny<Guid>(), It.IsAny<Guid?>()))
                 .ReturnsAsync(new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.Cleared });
 
@@ -883,6 +887,7 @@
             // does not have until it is given one.
             return new BookingsController(
                 bookingsService.Object,
+                jobsService.Object,
                 techniciansService.Object,
                 paymentsService.Object,
                 servicesService.Object,

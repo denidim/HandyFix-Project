@@ -210,6 +210,7 @@
             services.AddTransient<IInquiriesService, InquiriesService>();
             services.AddTransient<IAvailabilityService, AvailabilityService>();
             services.AddTransient<IBookingsService, BookingsService>();
+            services.AddTransient<IJobsService, JobsService>();
             services.AddTransient<ITechniciansService, TechniciansService>();
             services.AddTransient<IPaymentsService, PaymentsService>();
             services.AddTransient<IBookingEmails, BookingEmails>();

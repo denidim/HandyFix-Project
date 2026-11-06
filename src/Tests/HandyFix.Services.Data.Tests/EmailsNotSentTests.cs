@@ -91,7 +91,7 @@
             Technician technician = world.AddTechnician("Zapryan");
             world.EmailsFail();
 
-            await world.Bookings.AssignTechnicianAsync(booking.Id, technician.Id);
+            await world.Jobs.AssignTechnicianAsync(booking.Id, technician.Id);
 
             Assert.Contains("Technician picked: Zapryan. The email to the customer could not be sent.", world.HistoryOf(booking));
             Assert.Equal(new[] { "The technician's name, to the customer" }, WhatWasNotSent(world, booking));
