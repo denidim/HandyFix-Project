@@ -744,5 +744,46 @@
             Assert.True(world.Slot(world.SlotId).IsBooked);
             Assert.Equal(booking.Id, world.Slot(world.SlotId).BookingId);
         }
+
+        // What a job still owes, as its page says it (worked out in the page until PROJECT_STATE.md
+        // Section 3dj). A job that was cancelled or abandoned owes nothing, whatever its estimate;
+        // the £90 job here has its £50 deposit in.
+        [Theory]
+        [InlineData(BookingStatusNames.Approved, true, "£40.00", "£40.00")]
+        [InlineData(BookingStatusNames.Completed, true, "£40.00", "£40.00")]
+        [InlineData(BookingStatusNames.Cancelled, false, "Nothing: the job is cancelled", "Nothing")]
+        [InlineData(BookingStatusNames.Abandoned, false, "Nothing: the job is abandoned", "Nothing")]
+        public async Task AJobOwesWhatIsLeftUnlessItWasCalledOff(string status, bool owes, string line, string shortLine)
+        {
+            using var world = new BookingWorld();
+            Booking booking = await world.SeedPaidBookingAsync();
+            world.SetStatus(booking, status);
+
+            var job = await world.Bookings.GetByIdAsync<BookingDetailsViewModel>(booking.Id);
+
+            Assert.Equal(owes, job.OwesMoney);
+            Assert.Equal(line, job.StillOwedText);
+            Assert.Equal(shortLine, job.StillOwedShort);
+        }
+
+        // One still waiting for its deposit owes all of it; one with no price yet cannot say.
+        [Fact]
+        public async Task AJobWaitingForItsDepositOwesAllOfItAndOneWithNoPriceCannotSay()
+        {
+            using var world = new BookingWorld();
+            await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
+            var waiting = await world.Bookings.GetByIdAsync<BookingDetailsViewModel>(world.DbContext.Bookings.Single().Id);
+
+            Assert.True(waiting.OwesMoney);
+            Assert.Equal("£90.00", waiting.StillOwedText);
+
+            using var other = new BookingWorld();
+            Booking writtenIn = await other.SeedWrittenInJobAsync();
+            var unpriced = await other.Bookings.GetByIdAsync<BookingDetailsViewModel>(writtenIn.Id);
+
+            Assert.True(unpriced.OwesMoney);
+            Assert.Equal("Not known until the final price is typed in", unpriced.StillOwedText);
+            Assert.Equal("Not known", unpriced.StillOwedShort);
+        }
     }
 }

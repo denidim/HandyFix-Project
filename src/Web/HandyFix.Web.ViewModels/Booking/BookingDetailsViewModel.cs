@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
 
     using HandyFix.Common;
@@ -102,6 +103,43 @@
 
         public decimal StillOwed => Math.Max(0m, this.Price - this.Paid);
 
+        // What the job's page says about the job and its money. These were worked out in the
+        // page itself until PROJECT_STATE.md Section 3dj.
+
+        /// <summary>
+        /// Whether anything can still be owed on the job. One that was cancelled or abandoned owes
+        /// nothing, whatever its estimate was; one still waiting for its deposit owes all of it.
+        /// </summary>
+        public bool OwesMoney => this.JobLabel == JobLabels.WaitingForDeposit || this.JobLabel == JobLabels.Booked || this.JobLabel == JobLabels.Done;
+
+        /// <summary>
+        /// The "Still owed" line of the job's money list.
+        /// </summary>
+        public string StillOwedText => !this.OwesMoney ? "Nothing: the job is " + this.JobLabel.ToLowerInvariant()
+            : this.Price > 0 ? Pounds(this.StillOwed)
+            : "Not known until the final price is typed in";
+
+        /// <summary>
+        /// The same in the few words the summary card has room for.
+        /// </summary>
+        public string StillOwedShort => !this.OwesMoney ? "Nothing" : this.Price > 0 ? Pounds(this.StillOwed) : "Not known";
+
+        /// <summary>
+        /// Whether the customer was promised the time. Only a deposit promises it, and a deposit
+        /// is only paid on the website.
+        /// </summary>
+        public string TimePromised => this.CameFromWebsite
+            ? (this.IsDepositPaid ? "Yes, deposit paid" : this.IsDepositRefunded ? "No, deposit refunded" : "Not yet, deposit not paid")
+            : "No, no deposit";
+
+        /// <summary>
+        /// Why the page offers no technician picker. A job still open has none only because its
+        /// deposit is not in yet.
+        /// </summary>
+        public string TechnicianLockedReason => this.CanCancel
+            ? "A technician can be picked once the deposit is paid."
+            : "The technician can no longer be changed on this job.";
+
         // Which buttons the job's admin page offers. The service asks the same rules again
         // before it acts (BookingRules).
         public bool CanPickTechnician => BookingRules.CanPickTechnician(this.StatusName, this.CameFromWebsite, this.IsDepositPaid);
@@ -183,5 +221,9 @@
                 .Map(dest => dest.ServiceId, src => src.BookingServices.OrderBy(x => x.CreatedOn).Select(x => (Guid?)x.ServiceId).FirstOrDefault())
                 .Map(dest => dest.ImageUrls, src => src.Images.Select(x => x.ImageUrl));
         }
+
+        // An amount as the job's page writes one: a dot before the pence, whatever language the
+        // server is set to.
+        private static string Pounds(decimal amount) => "£" + amount.ToString("0.00", CultureInfo.InvariantCulture);
     }
 }

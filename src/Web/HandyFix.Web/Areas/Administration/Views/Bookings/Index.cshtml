@@ -148,12 +148,6 @@
                         // A job that was written in may have a first name and nothing else.
                         var initials = string.Concat(booking.CustomerFirstName?.FirstOrDefault(), booking.CustomerLastName?.FirstOrDefault());
 
-                        var jobBadgeClass = booking.JobLabel == JobLabels.Done ? "tint-success" :
-                                            booking.JobLabel == JobLabels.Cancelled ? "tint-error" :
-                                            booking.JobLabel == JobLabels.Abandoned ? "tint-neutral" :
-                                            booking.JobLabel == JobLabels.WaitingForDeposit ? "tint-waiting" :
-                                            "tint-secondary";
-
                         var cameIn = UkTime.FromUtc(booking.CreatedOn);
 
                         var moneyIn = booking.Paid > 0;
@@ -219,7 +213,7 @@
                             <td class="px-3 py-3">
                                 @* "Waiting for deposit" is the one label long enough to widen the table, so it
                                    goes onto two lines where the others stay on one. *@
-                                <span class="px-3 py-1 font-label-sm font-bold @(booking.JobLabel == JobLabels.WaitingForDeposit ? "job-badge-two-lines" : "rounded-full text-nowrap") @jobBadgeClass">@booking.JobLabel</span>
+                                <span class="px-3 py-1 font-label-sm font-bold @(booking.JobLabel == JobLabels.WaitingForDeposit ? "job-badge-two-lines" : "rounded-full text-nowrap") @StatusBadges.ForJob(booking.JobLabel)">@booking.JobLabel</span>
                             </td>
                             <td class="px-3 py-3">
                                 <span class="d-flex align-items-center gap-2 font-label-sm font-bold text-nowrap @paymentTextClass">
