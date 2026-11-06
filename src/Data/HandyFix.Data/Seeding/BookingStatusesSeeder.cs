@@ -4,13 +4,22 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data.Models;
 
     internal class BookingStatusesSeeder : ISeeder
     {
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
-            var statusNames = new[] { "Pending", "Approved", "InProgress", "Completed", "Cancelled", "Abandoned" };
+            var statusNames = new[]
+            {
+                BookingStatusNames.Pending,
+                BookingStatusNames.Approved,
+                BookingStatusNames.InProgress,
+                BookingStatusNames.Completed,
+                BookingStatusNames.Cancelled,
+                BookingStatusNames.Abandoned,
+            };
 
             foreach (var name in statusNames)
             {

@@ -62,6 +62,23 @@
             Assert.Contains("<title>", responseContent);
         }
 
+        // Every page that names the deposit prints it from Deposit, after a "£" typed in the page.
+        // The raw HTML is read on purpose: a "£" put inside the value would reach it as "&#xA3;".
+        [Theory]
+        [InlineData("/Booking", false)]
+        [InlineData("/FAQ", false)]
+        [InlineData("/Services/plumbing/tap-repairs", false)]
+        [InlineData("/TermsAndConditions", true)]
+        [InlineData("/Payment/Cancel", true)]
+        public async Task APageThatNamesTheDepositShowsTheAmountFromOnePlace(string url, bool withPence)
+        {
+            var response = await this.server.CreateClient().GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            string amount = withPence ? Deposit.PoundsAndPence : Deposit.Pounds;
+            Assert.Contains("£" + amount + " deposit", await response.Content.ReadAsStringAsync());
+        }
+
         // The Identity UI package's own "manage your account" pages used to answer here: a
         // redirect to the login page for a visitor, the stock pages for a signed-in admin. They
         // are closed now; AdminAccountWebTests has the whole list (PROJECT_STATE.md Section 3cc).

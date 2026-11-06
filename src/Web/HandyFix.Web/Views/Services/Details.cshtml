@@ -9,7 +9,7 @@
     this.ViewData["Title"] = Model.Name;
 
     var isPlumbing = Model.CategoryName == "Plumbing";
-    var isBuilding = Model.CategorySlug == "small-building-works" || Model.CategoryName.Contains("Building");
+    var isBuilding = Model.CategorySlug == CategorySlugs.SmallBuildingWorks;
     var durationHours = isBuilding
         ? "Day Rate / Survey"
         : (Model.EstimatedDurationMinutes >= 60 
@@ -271,7 +271,7 @@
                             <span>Message us on WhatsApp</span>
                         </a>
                     </div>
-                    <p class="sidebar-booking-note">Requests are free &bull; Slots secured with a £50 deposit</p>
+                    <p class="sidebar-booking-note">Requests are free &bull; Slots secured with a £@Deposit.Pounds deposit</p>
                 }
                 </div>
 
@@ -319,8 +319,8 @@
                                                              Description = related.Description,
                                                              BasePrice = related.BasePrice,
                                                              EstimatedDurationMinutes = related.EstimatedDurationMinutes,
-                                                             IsQuoteBased = related.CategorySlug == "small-building-works",
-                                                             DivisionClass = related.CategorySlug == "small-building-works" ? "pricing-card-building" : (related.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
+                                                             IsQuoteBased = related.CategorySlug == CategorySlugs.SmallBuildingWorks,
+                                                             DivisionClass = related.CategorySlug == CategorySlugs.SmallBuildingWorks ? "pricing-card-building" : (related.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
                                                              CtaText = "View Details",
                                                              CtaUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = related.CategorySlug, serviceSlug = related.Slug }),
                                                          })" />

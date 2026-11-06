@@ -10,12 +10,6 @@
     // send anyone to. A job the admin wrote in never has a deposit and is a job from the start.
     public static class BookingRules
     {
-        private const string Pending = "Pending";
-        private const string Approved = "Approved";
-        private const string InProgress = "InProgress";
-        private const string Completed = "Completed";
-        private const string Cancelled = "Cancelled";
-
         public static bool CanPickTechnician(string statusName, bool cameFromWebsite, bool depositPaid)
         {
             return IsOn(statusName, cameFromWebsite, depositPaid);
@@ -36,21 +30,21 @@
         // not by a job the admin wrote in, which has no deposit (PROJECT_STATE.md Section 3cg).
         public static bool CanPayDeposit(string statusName, bool cameFromWebsite, bool depositPaid)
         {
-            return cameFromWebsite && statusName == Pending && !depositPaid;
+            return cameFromWebsite && statusName == BookingStatusNames.Pending && !depositPaid;
         }
 
         // What the customer's "Booking Confirmed" page stands on: a website booking with its
         // deposit in, that is on or done.
         public static bool IsConfirmed(string statusName, bool cameFromWebsite, bool depositPaid)
         {
-            return cameFromWebsite && depositPaid && (IsUnderWay(statusName) || statusName == Completed);
+            return cameFromWebsite && depositPaid && (IsUnderWay(statusName) || statusName == BookingStatusNames.Completed);
         }
 
         // A booking still waiting for its deposit can be called off too. Cancelling one that is
         // already done, cancelled or abandoned would only rewrite what happened to it.
         public static bool CanCancel(string statusName)
         {
-            return statusName == Pending || IsUnderWay(statusName);
+            return statusName == BookingStatusNames.Pending || IsUnderWay(statusName);
         }
 
         // Money is written on a job that is on, and on one that is done: that is when most of it
@@ -58,20 +52,20 @@
         // deposit, which is paid on the website and nowhere else.
         public static bool CanTakePayment(string statusName, bool cameFromWebsite, bool depositPaid)
         {
-            return statusName == Completed || IsOn(statusName, cameFromWebsite, depositPaid);
+            return statusName == BookingStatusNames.Completed || IsOn(statusName, cameFromWebsite, depositPaid);
         }
 
         // The final price is typed when the job is marked done, and can be put right afterwards.
         public static bool CanChangeFinalPrice(string statusName)
         {
-            return statusName == Completed;
+            return statusName == BookingStatusNames.Completed;
         }
 
         // The tick that says a deposit went back. Only a cancelled job's deposit is sent back, and
         // there has to have been one.
         public static bool CanMarkDepositRefunded(string statusName, bool depositPaidOrRefunded)
         {
-            return statusName == Cancelled && depositPaidOrRefunded;
+            return statusName == BookingStatusNames.Cancelled && depositPaidOrRefunded;
         }
 
         // Who the customer is, where the job is and what it is can be put right while the job is
@@ -80,7 +74,7 @@
         // and keeps the details it ended with (PROJECT_STATE.md Section 3cf).
         public static bool CanEditDetails(string statusName)
         {
-            return statusName == Pending || IsUnderWay(statusName) || statusName == Completed;
+            return statusName == BookingStatusNames.Pending || IsUnderWay(statusName) || statusName == BookingStatusNames.Completed;
         }
 
         private static bool IsOn(string statusName, bool cameFromWebsite, bool depositPaid)
@@ -90,7 +84,7 @@
 
         private static bool IsUnderWay(string statusName)
         {
-            return statusName == Approved || statusName == InProgress;
+            return statusName == BookingStatusNames.Approved || statusName == BookingStatusNames.InProgress;
         }
     }
 }

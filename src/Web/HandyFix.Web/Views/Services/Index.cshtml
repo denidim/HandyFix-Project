@@ -26,8 +26,8 @@
         <div class="divisions-grid">
             @foreach (var category in this.Model)
             {
-                var isPlumbing = category.Slug == "plumbing" || string.Equals(category.Name, "Plumbing", StringComparison.OrdinalIgnoreCase);
-                var isBuilding = category.Slug == "small-building-works" || category.Name.Contains("Building", StringComparison.OrdinalIgnoreCase);
+                var isPlumbing = category.Slug == CategorySlugs.Plumbing || string.Equals(category.Name, "Plumbing", StringComparison.OrdinalIgnoreCase);
+                var isBuilding = category.Slug == CategorySlugs.SmallBuildingWorks;
 
                 var divisionClass = isBuilding ? "division-card-building" : (isPlumbing ? "division-card-plumbing" : "division-card-handyman");
                 var categoryIcon = isBuilding ? "foundation" : (isPlumbing ? "water_drop" : "handyman");

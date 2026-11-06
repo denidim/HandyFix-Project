@@ -2,6 +2,7 @@
 {
     using System;
 
+    using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
 
@@ -29,9 +30,9 @@
         /// The deposit paid on the website, whether it stayed or was sent back. Anything else
         /// was typed in by the admin and can be taken off again.
         /// </summary>
-        public bool IsWebsiteDeposit => this.StatusName == "DepositPaid" || this.StatusName == "Refunded";
+        public bool IsWebsiteDeposit => this.StatusName == PaymentStatusNames.DepositPaid || this.StatusName == PaymentStatusNames.Refunded;
 
-        public bool IsRefunded => this.StatusName == "Refunded";
+        public bool IsRefunded => this.StatusName == PaymentStatusNames.Refunded;
 
         public string Description => this.IsRefunded
             ? "Deposit, card on the website (refunded)"

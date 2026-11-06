@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data.Models;
 
     using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,9 @@
     {
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
-            ServiceCategory plumbingCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == "plumbing" || x.Name == "Plumbing");
-            ServiceCategory handymanCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == "handyman" || x.Name == "Handyman");
-            ServiceCategory smallBuildingCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == "small-building-works" || x.Name == "Small Building & Refurbishments");
+            ServiceCategory plumbingCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == CategorySlugs.Plumbing || x.Name == "Plumbing");
+            ServiceCategory handymanCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == CategorySlugs.Handyman || x.Name == "Handyman");
+            ServiceCategory smallBuildingCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == CategorySlugs.SmallBuildingWorks || x.Name == "Small Building & Refurbishments");
 
             if (plumbingCategory == null || handymanCategory == null || smallBuildingCategory == null)
             {

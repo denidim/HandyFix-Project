@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data;
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
@@ -198,7 +199,7 @@
             using var techniciansRepo = new EfDeletableEntityRepository<Technician>(dbContext);
             using var bookingsRepo = new EfDeletableEntityRepository<Booking>(dbContext);
 
-            var status = new BookingStatus { Id = Guid.NewGuid(), Name = "Approved" };
+            var status = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Approved };
             dbContext.BookingStatuses.Add(status);
 
             var technician = new Technician { FirstName = "Busy", LastName = "Tech", PhoneNumber = "07000000004" };

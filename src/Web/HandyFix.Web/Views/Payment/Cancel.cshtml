@@ -29,7 +29,7 @@
         {
             @* The rare late payment: the deposit came in after the booking had been dropped. *@
             <p class="payment-status-desc">
-                Thank you! We've received your £50.00 deposit.
+                Thank you! We've received your £@Deposit.PoundsAndPence deposit.
             </p>
             <p class="payment-status-desc">
                 Because the reservation timed out during checkout, we are double-checking our technician's schedule for your chosen time.
@@ -56,7 +56,7 @@
                 <div>
                     <p class="payment-status-alert-title">Deposit</p>
                     <p class="payment-status-alert-text">
-                        If you cancelled more than 24 hours in advance, your <span class="fw-bold text-primary">£50.00 deposit</span> has been refunded to your card (usually arrives within 5–10 working days).
+                        If you cancelled more than 24 hours in advance, your <span class="fw-bold text-primary">£@Deposit.PoundsAndPence deposit</span> has been refunded to your card (usually arrives within 5–10 working days).
                     </p>
                     <p class="payment-status-alert-title mt-3">Need to rebook?</p>
                     <p class="payment-status-alert-text">
@@ -76,7 +76,7 @@
                 <div>
                     <p class="payment-status-alert-title">Still need a visit?</p>
                     <p class="payment-status-alert-text">
-                        Choose a time again and pay the <span class="fw-bold text-primary">£50.00 deposit</span> to secure it. The deposit is deducted from your final bill once the job is complete.
+                        Choose a time again and pay the <span class="fw-bold text-primary">£@Deposit.PoundsAndPence deposit</span> to secure it. The deposit is deducted from your final bill once the job is complete.
                     </p>
                 </div>
             </div>
@@ -93,7 +93,7 @@
                 <div>
                     <p class="payment-status-alert-title">Important Reminder</p>
                     <p class="payment-status-alert-text">
-                        To secure your chosen time slot and technician, a <span class="fw-bold text-primary">£50.00 deposit</span> is required. This amount will be deducted from your final bill once the job is complete.
+                        To secure your chosen time slot and technician, a <span class="fw-bold text-primary">£@Deposit.PoundsAndPence deposit</span> is required. This amount will be deducted from your final bill once the job is complete.
                     </p>
                 </div>
             </div>
@@ -105,7 +105,7 @@
             {
                 <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@Model.BookingId" class="btn btn-primary payment-status-btn" id="retry-btn">
                     <span class="material-symbols-outlined fs-20">refresh</span>
-                    <span>Retry Payment (£50.00)</span>
+                    <span>Retry Payment (£@Deposit.PoundsAndPence)</span>
                 </a>
             }
             else if (noLongerHeld || cancelled)

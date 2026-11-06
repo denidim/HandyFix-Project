@@ -84,7 +84,7 @@
                     PhoneNumber = "07700 900123",
                     Address = "1 Analytical Engine Way, Chessington, KT9 1AA",
                     ProblemDescription = "The kitchen tap has been dripping for a week.",
-                    StatusId = dbContext.BookingStatuses.Single(x => x.Name == "Approved").Id,
+                    StatusId = dbContext.BookingStatuses.Single(x => x.Name == BookingStatusNames.Approved).Id,
                     TechnicianId = technicianId,
                 };
                 dbContext.Bookings.Add(booking);
@@ -97,7 +97,7 @@
                     Amount = 50.00m,
                     Provider = "Stripe-Mock",
                     CheckoutSessionId = "mock_session_" + Guid.NewGuid(),
-                    StatusId = dbContext.PaymentStatuses.Single(x => x.Name == "DepositPaid").Id,
+                    StatusId = dbContext.PaymentStatuses.Single(x => x.Name == PaymentStatusNames.DepositPaid).Id,
                 });
                 await dbContext.SaveChangesAsync();
                 bookingId = booking.Id;

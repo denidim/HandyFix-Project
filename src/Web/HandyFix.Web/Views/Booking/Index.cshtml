@@ -12,7 +12,7 @@
     // The page has two tabs. A link naming any other category opens on Plumbing: with neither
     // tab ticked the script below stops at its first line and no calendar or slot appears
     // (PROJECT_STATE Section 3bz).
-    var targetCategorySlug = string.Equals(Model.SelectedCategorySlug, "handyman", StringComparison.OrdinalIgnoreCase) ? "handyman" : "plumbing";
+    var targetCategorySlug = string.Equals(Model.SelectedCategorySlug, CategorySlugs.Handyman, StringComparison.OrdinalIgnoreCase) ? CategorySlugs.Handyman : CategorySlugs.Plumbing;
 }
 
 <div class="page-container booking-page">
@@ -54,14 +54,14 @@
                         <h2 class="section-title-centered">Select Service Type</h2>
                         <div class="category-selection-grid mb-6">
                             <label class="cursor-pointer">
-                                <input class="category-radio-input" name="service-category" type="radio" value="plumbing" @(targetCategorySlug == "plumbing" ? "checked" : "")>
+                                <input class="category-radio-input" name="service-category" type="radio" value="@CategorySlugs.Plumbing" @(targetCategorySlug == CategorySlugs.Plumbing ? "checked" : "")>
                                 <div class="category-radio-card">
                                     <span class="material-symbols-outlined category-radio-icon">plumbing</span>
                                     <span class="font-label-sm font-weight-bold">Plumbing</span>
                                 </div>
                             </label>
                             <label class="cursor-pointer">
-                                <input class="category-radio-input" name="service-category" type="radio" value="handyman" @(targetCategorySlug == "handyman" ? "checked" : "")>
+                                <input class="category-radio-input" name="service-category" type="radio" value="@CategorySlugs.Handyman" @(targetCategorySlug == CategorySlugs.Handyman ? "checked" : "")>
                                 <div class="category-radio-card">
                                     <span class="material-symbols-outlined category-radio-icon">home_repair_service</span>
                                     <span class="font-label-sm font-weight-bold">Handyman</span>
@@ -73,7 +73,7 @@
                             <label for="wizard-service" class="form-label font-weight-bold mb-2">Selected Service</label>
                             <select asp-for="ServiceId" class="form-control" id="wizard-service" required>
                                 <option value="">-- Select a Service --</option>
-                                @foreach (var svc in services.Where(s => s.CategorySlug != "small-building-works"))
+                                @foreach (var svc in services.Where(s => s.CategorySlug != CategorySlugs.SmallBuildingWorks))
                                 {
                                     <option value="@svc.Id" data-category="@svc.CategorySlug" data-price="@svc.BasePrice" data-duration="@svc.EstimatedDurationMinutes">
                                         @svc.Name (from £@svc.BasePrice/hr)
@@ -87,7 +87,7 @@
                         <div class="reassuring-info-card">
                             <span class="material-symbols-outlined reassuring-info-icon">info</span>
                             <p class="reassuring-info-text">
-                                Base rates are applied transparently per hour depending on your chosen service category (Plumbing or Handyman). A £50 deposit secures your slot today and is deducted from your final bill once the job is complete.
+                                Base rates are applied transparently per hour depending on your chosen service category (Plumbing or Handyman). A £@Deposit.Pounds deposit secures your slot today and is deducted from your final bill once the job is complete.
                                 <a asp-route="Pricing" class="reassuring-info-link">See full pricing</a>
                             </p>
                         </div>
@@ -413,16 +413,16 @@
                     summaryService.textContent = opt.text.split(" (from")[0];
                 } else {
                     summaryService.textContent = activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) + " Service";
-                    basePrice = activeCategory === "plumbing" ? 90 : 60; // Flat category rates (Plumbing £90, Handyman £60)
+                    basePrice = activeCategory === @Json.Serialize(CategorySlugs.Plumbing) ? 90 : 60; // Flat category rates (Plumbing £90, Handyman £60)
                 }
 
                 updateEnquiryLink();
 
                 const formattedPrice = "£" + basePrice.toFixed(2);
                 summaryMinCharge.textContent = formattedPrice;
-                // The deposit is a flat £50 (BookingsService.CreateBookingAsync), not the first-hour
+                // The deposit is a flat amount (HandyFix.Common.Deposit), not the first-hour
                 // price - showing the hourly rate here promised a different amount than Stripe charges.
-                summaryDeposit.textContent = "£50.00";
+                summaryDeposit.textContent = "£" + @Json.Serialize(Deposit.PoundsAndPence);
                 summaryTotalPrice.textContent = formattedPrice;
 
                 updateSummaryDateTime();
