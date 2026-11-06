@@ -161,7 +161,7 @@
                 .Ignore(dest => dest.History)
                 .Map(dest => dest.TotalAmount, src => src.TotalAmount ?? 0m)
                 .Map(dest => dest.DepositAmount, src => src.DepositAmount ?? 0m)
-                .Map(dest => dest.StatusName, src => src.Status != null ? src.Status.Name : "Pending")
+                .Map(dest => dest.StatusName, src => src.Status != null ? src.Status.Name : BookingStatusNames.Pending)
 
                 // The job's own date first. A booking saved before jobs kept one still has it on
                 // its slot, for as long as it holds the slot.
@@ -175,10 +175,10 @@
                 // null, and EF fetched the whole list to check: the job list's query joined the
                 // payments three times more, the services twice and the photos once, and SQL
                 // Server took about three seconds to plan it (PROJECT_STATE.md Section 3cs).
-                .Map(dest => dest.IsDepositPaid, src => src.Payments.Any(p => p.Status.Name == "DepositPaid"))
-                .Map(dest => dest.IsDepositRefunded, src => src.Payments.Any(p => p.Status.Name == "Refunded"))
-                .Map(dest => dest.HasOtherPayments, src => src.Payments.Any(p => p.Status.Name == "Completed"))
-                .Map(dest => dest.PaidRaw, src => src.Payments.Where(p => p.Status.Name == "DepositPaid" || p.Status.Name == "Completed").Sum(p => (double)p.Amount))
+                .Map(dest => dest.IsDepositPaid, src => src.Payments.Any(p => p.Status.Name == PaymentStatusNames.DepositPaid))
+                .Map(dest => dest.IsDepositRefunded, src => src.Payments.Any(p => p.Status.Name == PaymentStatusNames.Refunded))
+                .Map(dest => dest.HasOtherPayments, src => src.Payments.Any(p => p.Status.Name == PaymentStatusNames.Completed))
+                .Map(dest => dest.PaidRaw, src => src.Payments.Where(p => p.Status.Name == PaymentStatusNames.DepositPaid || p.Status.Name == PaymentStatusNames.Completed).Sum(p => (double)p.Amount))
                 .Map(dest => dest.Services, src => src.BookingServices.Select(x => x.Service.Name))
                 .Map(dest => dest.ServiceId, src => src.BookingServices.OrderBy(x => x.CreatedOn).Select(x => (Guid?)x.ServiceId).FirstOrDefault())
                 .Map(dest => dest.ImageUrls, src => src.Images.Select(x => x.ImageUrl));

@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data;
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
@@ -36,13 +37,13 @@
             using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
 
             // Seed statuses
-            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "DepositPaid" };
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Pending };
+            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.DepositPaid };
             dbContext.PaymentStatuses.Add(pendingPaymentStatus);
             dbContext.PaymentStatuses.Add(paidPaymentStatus);
 
-            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var approvedBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Approved" };
+            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
+            var approvedBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Approved };
             dbContext.BookingStatuses.Add(pendingBookingStatus);
             dbContext.BookingStatuses.Add(approvedBookingStatus);
 
@@ -99,12 +100,12 @@
             using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
             using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
 
-            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "DepositPaid" };
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Pending };
+            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.DepositPaid };
             dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, paidPaymentStatus);
 
-            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var approvedBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Approved" };
+            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
+            var approvedBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Approved };
             dbContext.BookingStatuses.AddRange(pendingBookingStatus, approvedBookingStatus);
 
             var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
@@ -206,12 +207,12 @@
             using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
             using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
 
-            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "DepositPaid" };
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Pending };
+            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.DepositPaid };
             dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, paidPaymentStatus);
 
-            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var approvedBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Approved" };
+            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
+            var approvedBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Approved };
             dbContext.BookingStatuses.AddRange(pendingBookingStatus, approvedBookingStatus);
 
             var booking = new Booking
@@ -303,11 +304,11 @@
             using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
             using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
 
-            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Pending };
+            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Cancelled };
             dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, cancelledPaymentStatus);
 
-            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
+            var pendingBookingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
             dbContext.BookingStatuses.Add(pendingBookingStatus);
 
             var booking = new Booking
@@ -353,8 +354,8 @@
             using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
             using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
 
-            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Pending };
+            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Cancelled };
             dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, cancelledPaymentStatus);
 
             var checkoutSessionId = "cs_test_expired";
@@ -389,9 +390,9 @@
             using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
             using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
 
-            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "DepositPaid" };
-            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Pending };
+            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.DepositPaid };
+            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Cancelled };
             dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, paidPaymentStatus, cancelledPaymentStatus);
 
             // The success webhook (or the Success redirect) already landed before the
@@ -429,9 +430,9 @@
             using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
             using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
 
-            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "DepositPaid" };
-            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Pending };
+            var paidPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.DepositPaid };
+            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Cancelled };
             dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, paidPaymentStatus, cancelledPaymentStatus);
 
             var staleBookingId = Guid.NewGuid();

@@ -69,16 +69,16 @@
 
         public async Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId)
         {
-            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Pending);
             if (pendingStatus == null)
             {
-                throw new InvalidOperationException("Payment status 'Pending' is not seeded.");
+                throw new InvalidOperationException($"Payment status '{PaymentStatusNames.Pending}' is not seeded.");
             }
 
             // Supersede any earlier, still-pending payment attempt for this booking so a
             // customer retrying checkout doesn't pile up orphaned Pending rows pointing
             // at abandoned Stripe sessions.
-            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Cancelled);
             if (cancelledStatus != null)
             {
                 List<Payment> existingPendingPayments = await this.paymentRepository.All()
@@ -128,12 +128,12 @@
             {
                 // The pretend payment counts only where the pretend payment is allowed. With a
                 // real key in place, an address typed with a pretend id confirms nothing.
-                if (statusName == "Pending" && this.MockPaymentsAllowed())
+                if (statusName == PaymentStatusNames.Pending && this.MockPaymentsAllowed())
                 {
                     await this.ProcessPaymentSuccessAsync(checkoutSessionId, $"txn_mock_{Guid.NewGuid()}");
                 }
             }
-            else if (statusName == "Pending" || statusName == "Cancelled")
+            else if (statusName == PaymentStatusNames.Pending || statusName == PaymentStatusNames.Cancelled)
             {
                 // The site never takes the browser's word that a page was paid: an address with
                 // the page's id in it can be typed by anyone who has seen that page. Stripe is
@@ -166,10 +166,10 @@
                 return;
             }
 
-            PaymentStatus paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
+            PaymentStatus paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.DepositPaid);
             if (paidStatus == null)
             {
-                throw new InvalidOperationException("Payment status 'DepositPaid' is not seeded.");
+                throw new InvalidOperationException($"Payment status '{PaymentStatusNames.DepositPaid}' is not seeded.");
             }
 
             // Stripe's message and the customer's return can both arrive for the same payment.
@@ -190,7 +190,7 @@
                 return;
             }
 
-            if (booking.Status?.Name != "Pending")
+            if (booking.Status?.Name != BookingStatusNames.Pending)
             {
                 // Money for a booking that is not waiting for it: one that was dropped or
                 // cancelled while a payment page was still open, or one paid twice. The site
@@ -208,7 +208,7 @@
                 return;
             }
 
-            BookingStatus approvedStatus = await this.bookingStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
+            BookingStatus approvedStatus = await this.bookingStatusRepository.All().FirstOrDefaultAsync(x => x.Name == BookingStatusNames.Approved);
             if (approvedStatus != null)
             {
                 booking.StatusId = approvedStatus.Id;
@@ -223,9 +223,9 @@
 
         public async Task<CheckoutClosure> CloseCheckoutsAsync(Guid bookingId)
         {
-            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Cancelled);
             List<Payment> open = await this.paymentRepository.All()
-                .Where(x => x.BookingId == bookingId && x.Status.Name == "Pending")
+                .Where(x => x.BookingId == bookingId && x.Status.Name == PaymentStatusNames.Pending)
                 .ToListAsync();
 
             if (cancelledStatus == null || open.Count == 0)
@@ -285,11 +285,11 @@
                 .Include(x => x.Status)
                 .Include(x => x.Payments).ThenInclude(p => p.Status)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
-            PaymentStatus completedStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Completed");
+            PaymentStatus completedStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Completed);
 
             if (booking == null
                 || completedStatus == null
-                || !BookingRules.CanTakePayment(booking.Status?.Name, booking.Source == BookingSource.Website, HasPayment(booking, "DepositPaid")))
+                || !BookingRules.CanTakePayment(booking.Status?.Name, booking.Source == BookingSource.Website, HasPayment(booking, PaymentStatusNames.DepositPaid)))
             {
                 return false;
             }
@@ -317,7 +317,7 @@
                 .Include(x => x.Booking)
                 .FirstOrDefaultAsync(x => x.Id == paymentId && x.BookingId == bookingId);
 
-            if (payment == null || payment.Status?.Name != "Completed" || payment.Booking == null)
+            if (payment == null || payment.Status?.Name != PaymentStatusNames.Completed || payment.Booking == null)
             {
                 return false;
             }
@@ -338,18 +338,18 @@
                 .Include(x => x.Status)
                 .Include(x => x.Payments).ThenInclude(p => p.Status)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
-            PaymentStatus paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "DepositPaid");
-            PaymentStatus refundedStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Refunded");
+            PaymentStatus paidStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.DepositPaid);
+            PaymentStatus refundedStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Refunded);
 
             if (booking == null
                 || paidStatus == null
                 || refundedStatus == null
-                || !BookingRules.CanMarkDepositRefunded(booking.Status?.Name, HasPayment(booking, "DepositPaid") || HasPayment(booking, "Refunded")))
+                || !BookingRules.CanMarkDepositRefunded(booking.Status?.Name, HasPayment(booking, PaymentStatusNames.DepositPaid) || HasPayment(booking, PaymentStatusNames.Refunded)))
             {
                 return false;
             }
 
-            Payment deposit = booking.Payments.FirstOrDefault(p => p.Status != null && p.Status.Name == (refunded ? "DepositPaid" : "Refunded"));
+            Payment deposit = booking.Payments.FirstOrDefault(p => p.Status != null && p.Status.Name == (refunded ? PaymentStatusNames.DepositPaid : PaymentStatusNames.Refunded));
             if (deposit == null)
             {
                 // It already stands the way it was asked to.
@@ -369,7 +369,7 @@
         {
             return await this.paymentRepository.All()
                 .Where(x => x.BookingId == bookingId)
-                .Where(x => x.Status.Name == "DepositPaid" || x.Status.Name == "Completed" || x.Status.Name == "Refunded")
+                .Where(x => x.Status.Name == PaymentStatusNames.DepositPaid || x.Status.Name == PaymentStatusNames.Completed || x.Status.Name == PaymentStatusNames.Refunded)
                 .OrderBy(x => x.CreatedOn)
                 .To<T>()
                 .ToListAsync();
@@ -384,8 +384,8 @@
                 return;
             }
 
-            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
-            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Pending);
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Cancelled);
             if (cancelledStatus == null)
             {
                 return;
@@ -404,8 +404,8 @@
 
         public async Task CancelPendingPaymentsForBookingsAsync(IEnumerable<Guid> bookingIds)
         {
-            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
-            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Pending);
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Cancelled);
             if (pendingStatus == null || cancelledStatus == null)
             {
                 return;
@@ -437,7 +437,7 @@
         public async Task<decimal> GetTotalRevenueAsync()
         {
             return await this.paymentRepository.All()
-                .Where(x => x.Status.Name == "DepositPaid" || x.Status.Name == "Completed")
+                .Where(x => x.Status.Name == PaymentStatusNames.DepositPaid || x.Status.Name == PaymentStatusNames.Completed)
                 .SumAsync(x => (decimal?)x.Amount) ?? 0.00m;
         }
 
@@ -452,7 +452,7 @@
             // so it is the booking that says whether there is anything to pay: one already paid
             // would be paid twice, and one that was dropped has no hour held for it.
             if (booking == null
-                || !BookingRules.CanPayDeposit(booking.Status?.Name, booking.Source == BookingSource.Website, HasPayment(booking, "DepositPaid"))
+                || !BookingRules.CanPayDeposit(booking.Status?.Name, booking.Source == BookingSource.Website, HasPayment(booking, PaymentStatusNames.DepositPaid))
                 || booking.DepositAmount.GetValueOrDefault() <= 0m)
             {
                 return null;

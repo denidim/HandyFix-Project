@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data;
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
@@ -41,17 +42,17 @@
                     .Options);
 
             this.DbContext.BookingStatuses.AddRange(
-                new BookingStatus { Name = "Pending" },
-                new BookingStatus { Name = "Approved" },
-                new BookingStatus { Name = "Completed" },
-                new BookingStatus { Name = "Cancelled" },
-                new BookingStatus { Name = "Abandoned" });
+                new BookingStatus { Name = BookingStatusNames.Pending },
+                new BookingStatus { Name = BookingStatusNames.Approved },
+                new BookingStatus { Name = BookingStatusNames.Completed },
+                new BookingStatus { Name = BookingStatusNames.Cancelled },
+                new BookingStatus { Name = BookingStatusNames.Abandoned });
             this.DbContext.PaymentStatuses.AddRange(
-                new PaymentStatus { Name = "Pending" },
-                new PaymentStatus { Name = "DepositPaid" },
-                new PaymentStatus { Name = "Completed" },
-                new PaymentStatus { Name = "Cancelled" },
-                new PaymentStatus { Name = "Refunded" });
+                new PaymentStatus { Name = PaymentStatusNames.Pending },
+                new PaymentStatus { Name = PaymentStatusNames.DepositPaid },
+                new PaymentStatus { Name = PaymentStatusNames.Completed },
+                new PaymentStatus { Name = PaymentStatusNames.Cancelled },
+                new PaymentStatus { Name = PaymentStatusNames.Refunded });
 
             var category = new ServiceCategory { Name = "Plumbing", Description = "Plumbing", Slug = "plumbing" };
             this.DbContext.ServiceCategories.Add(category);
@@ -153,7 +154,7 @@
                 PhoneNumber = "07700 900123",
                 Address = address,
                 ProblemDescription = "The kitchen tap has been dripping for a week.",
-                StatusId = this.DbContext.BookingStatuses.Single(s => s.Name == "Pending").Id,
+                StatusId = this.DbContext.BookingStatuses.Single(s => s.Name == BookingStatusNames.Pending).Id,
                 Source = BookingSource.Website,
                 ScheduledStart = this.slot.StartTime,
                 ScheduledEnd = this.slot.EndTime,
@@ -171,7 +172,7 @@
                 Amount = 50.00m,
                 Provider = "Stripe",
                 CheckoutSessionId = "cs_test_" + Guid.NewGuid().ToString("N"),
-                StatusId = this.DbContext.PaymentStatuses.Single(s => s.Name == "Pending").Id,
+                StatusId = this.DbContext.PaymentStatuses.Single(s => s.Name == PaymentStatusNames.Pending).Id,
             };
             this.DbContext.Payments.Add(payment);
             await this.DbContext.SaveChangesAsync();

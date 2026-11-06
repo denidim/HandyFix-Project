@@ -44,10 +44,10 @@
         {
             return statusName switch
             {
-                "Pending" => WaitingForDeposit,
-                "Completed" => Done,
-                "Cancelled" => Cancelled,
-                "Abandoned" => Abandoned,
+                BookingStatusNames.Pending => WaitingForDeposit,
+                BookingStatusNames.Completed => Done,
+                BookingStatusNames.Cancelled => Cancelled,
+                BookingStatusNames.Abandoned => Abandoned,
                 _ => Booked,
             };
         }
@@ -57,11 +57,11 @@
         {
             return jobLabel switch
             {
-                WaitingForDeposit => new[] { "Pending" },
-                Booked => new[] { "Approved", "InProgress" },
-                Done => new[] { "Completed" },
-                Cancelled => new[] { "Cancelled" },
-                Abandoned => new[] { "Abandoned" },
+                WaitingForDeposit => new[] { BookingStatusNames.Pending },
+                Booked => new[] { BookingStatusNames.Approved, BookingStatusNames.InProgress },
+                Done => new[] { BookingStatusNames.Completed },
+                Cancelled => new[] { BookingStatusNames.Cancelled },
+                Abandoned => new[] { BookingStatusNames.Abandoned },
                 _ => Array.Empty<string>(),
             };
         }

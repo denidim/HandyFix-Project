@@ -6,6 +6,7 @@
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data;
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
@@ -72,7 +73,7 @@
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             // Seed required statuses
-            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
+            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
             dbContext.BookingStatuses.Add(pendingStatus);
 
             // Seed a service
@@ -186,7 +187,7 @@
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
-            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
+            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
             dbContext.BookingStatuses.Add(pendingStatus);
 
             var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
@@ -298,8 +299,8 @@
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
-            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var cancelledStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
+            var cancelledStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Cancelled };
             dbContext.BookingStatuses.AddRange(pendingStatus, cancelledStatus);
 
             var booking = new Booking
@@ -380,13 +381,13 @@
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
-            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var approvedStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Approved" };
-            var abandonedStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Abandoned" };
+            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
+            var approvedStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Approved };
+            var abandonedStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Abandoned };
             dbContext.BookingStatuses.AddRange(pendingStatus, approvedStatus, abandonedStatus);
 
-            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            var pendingPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Pending };
+            var cancelledPaymentStatus = new PaymentStatus { Id = Guid.NewGuid(), Name = PaymentStatusNames.Cancelled };
             dbContext.PaymentStatuses.AddRange(pendingPaymentStatus, cancelledPaymentStatus);
 
             // A ghost checkout: created 20 minutes ago, deposit never paid.
@@ -664,8 +665,8 @@
             var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
-            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            var cancelledStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Cancelled" };
+            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
+            var cancelledStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Cancelled };
             dbContext.BookingStatuses.AddRange(pendingStatus, cancelledStatus);
 
             older = new Booking

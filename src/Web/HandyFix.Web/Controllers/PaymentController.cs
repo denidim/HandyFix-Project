@@ -4,6 +4,7 @@
     using System.IO;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Web.ViewModels.Booking;
@@ -102,7 +103,7 @@
             {
                 state = PaymentPageState.NotPaid;
             }
-            else if (booking.StatusName == "Cancelled")
+            else if (booking.StatusName == BookingStatusNames.Cancelled)
             {
                 state = PaymentPageState.Cancelled;
             }

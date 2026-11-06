@@ -348,7 +348,7 @@
             var sessionId = await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
             Booking booking = world.DbContext.Bookings.Single();
             world.SetStatus(booking, state);
-            world.DbContext.Payments.Single().StatusId = world.DbContext.PaymentStatuses.Single(s => s.Name == "Cancelled").Id;
+            world.DbContext.Payments.Single().StatusId = world.DbContext.PaymentStatuses.Single(s => s.Name == PaymentStatusNames.Cancelled).Id;
             await world.DbContext.SaveChangesAsync();
             StripeAnswers(world, sessionId, paid: true, paymentIntentId: "pi_late");
 

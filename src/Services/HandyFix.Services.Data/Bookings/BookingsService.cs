@@ -100,10 +100,10 @@
             BookingInputModel model,
             IReadOnlyList<string> imageUrls)
         {
-            BookingStatus pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
+            BookingStatus pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == BookingStatusNames.Pending);
             if (pendingStatus == null)
             {
-                throw new InvalidOperationException("Booking status 'Pending' is not seeded.");
+                throw new InvalidOperationException($"Booking status '{BookingStatusNames.Pending}' is not seeded.");
             }
 
             // Slot must exist before we do any work; the actual availability check happens
@@ -215,10 +215,10 @@
             // Booked from the start, with no deposit to wait for. "Pending" is a website booking
             // waiting for its deposit, and the sweep that abandons those after fifteen minutes
             // must never pick up a job the admin wrote in.
-            BookingStatus bookedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Approved");
+            BookingStatus bookedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == BookingStatusNames.Approved);
             if (bookedStatus == null)
             {
-                throw new InvalidOperationException("Booking status 'Approved' is not seeded.");
+                throw new InvalidOperationException($"Booking status '{BookingStatusNames.Approved}' is not seeded.");
             }
 
             Service service = model.ServiceId.HasValue
@@ -312,7 +312,7 @@
                 .Include(x => x.Status)
                 .Include(x => x.Payments).ThenInclude(p => p.Status)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
-            BookingStatus completedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Completed");
+            BookingStatus completedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == BookingStatusNames.Completed);
 
             if (booking == null
                 || completedStatus == null
@@ -457,7 +457,7 @@
                 .Include(x => x.AvailabilitySlot)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
 
-            BookingStatus cancelledStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Cancelled");
+            BookingStatus cancelledStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == BookingStatusNames.Cancelled);
 
             reason = (reason ?? string.Empty).Trim();
 
@@ -469,7 +469,7 @@
                 return false;
             }
 
-            if (booking.Status?.Name == "Pending")
+            if (booking.Status?.Name == BookingStatusNames.Pending)
             {
                 // A website booking still waiting for its deposit has a payment page open at
                 // Stripe. It is closed first, or the customer could go on to pay for a booking
@@ -863,8 +863,8 @@
 
         public async Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan)
         {
-            BookingStatus pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
-            BookingStatus abandonedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Abandoned");
+            BookingStatus pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == BookingStatusNames.Pending);
+            BookingStatus abandonedStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == BookingStatusNames.Abandoned);
             if (pendingStatus == null || abandonedStatus == null)
             {
                 return 0;
@@ -938,7 +938,7 @@
 
         public async Task<int> GetPendingCountAsync()
         {
-            return await this.bookingRepository.All().CountAsync(x => x.Status.Name == "Pending");
+            return await this.bookingRepository.All().CountAsync(x => x.Status.Name == BookingStatusNames.Pending);
         }
 
         public BookingSummaryStats GetSummaryStats(IEnumerable<BookingDetailsViewModel> bookings)
@@ -977,7 +977,7 @@
         // The booking's payments have to be loaded with their statuses for this to say anything.
         private static bool IsDepositPaid(Booking booking)
         {
-            return booking.Payments != null && booking.Payments.Any(p => p.Status != null && p.Status.Name == "DepositPaid");
+            return booking.Payments != null && booking.Payments.Any(p => p.Status != null && p.Status.Name == PaymentStatusNames.DepositPaid);
         }
 
         private static string NullIfBlank(string text)
@@ -1012,7 +1012,7 @@
         private IQueryable<Booking> JobsInTheCalendar()
         {
             return this.bookingRepository.All()
-                .Where(x => x.Status.Name != "Cancelled" && x.Status.Name != "Abandoned");
+                .Where(x => x.Status.Name != BookingStatusNames.Cancelled && x.Status.Name != BookingStatusNames.Abandoned);
         }
 
         private IQueryable<Booking> JobsOnDay(DateTime day)
