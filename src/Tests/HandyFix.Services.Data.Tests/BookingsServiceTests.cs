@@ -260,7 +260,9 @@
                 ServiceId = serviceEntity.Id,
             };
 
-            BookingCreateResult result = await bookingsService.CreateBookingAsync(model, new List<string>());
+            // With a photo: its row is written in the booking's own save, so the rollback has to
+            // take it away with the booking.
+            BookingCreateResult result = await bookingsService.CreateBookingAsync(model, new List<string> { "https://photos.example/drain.jpg" });
 
             Assert.Equal(BookingCreateOutcome.SlotTaken, result.Outcome);
 
@@ -268,8 +270,10 @@
             var slotInDb = dbContext.AvailabilitySlots.First(x => x.Id == slot.Id);
             Assert.Equal(existingBooking.Id, slotInDb.BookingId);
 
-            // No orphaned booking should have been left behind by the failed attempt
+            // No orphaned booking, and no orphaned photo, should have been left behind by the
+            // failed attempt
             Assert.Empty(dbContext.Bookings.Where(x => x.Email == "jane@example.com"));
+            Assert.Empty(dbContext.BookingImages);
 
             emailSenderMock.Verify(
                 x => x.SendEmailAsync(
