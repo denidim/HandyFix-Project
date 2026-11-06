@@ -235,7 +235,8 @@ street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
 
 - **Double-booking is prevented at the database, not in the UI.** `AvailabilitySlot.RowVersion` is a
   real SQL Server `rowversion` concurrency token, and a unique filtered index enforces one booking
-  per slot. A losing request gets `SlotUnavailableException`, never a silent overwrite.
+  per slot. A losing request is answered "slot taken" (`BookingCreateResult`), never a silent
+  overwrite; the customer is asked to pick another time, with the rest of the form kept.
 - **Abandoned checkouts free their slot automatically.** `StaleBookingCleanupService` runs every
   **5 minutes**, finds `Pending` bookings older than **15 minutes** with no completed payment, flips
   them to **`Abandoned`** and releases their slots. Without this, a customer who opened Stripe and
@@ -245,8 +246,10 @@ street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
   "Cancel" does it for a booking still waiting for its deposit, and "Retry Payment" does it to the
   earlier page before opening a new one. Three answers are possible: closed, and the booking is
   dropped; **paid in the moment before**, and the booking is confirmed and keeps its hour; Stripe
-  not reached, and the sweep leaves the booking alone until its next run. Stripe will not let a
-  page end sooner than 30 minutes by itself, which is why the site closes it.
+  not reached, and the sweep leaves the booking alone until its next run. An admin's "Cancel" that
+  finds the page paid changes nothing and says the customer has just paid; one that cannot reach
+  Stripe cancels all the same. Stripe will not let a page end sooner than 30 minutes by itself,
+  which is why the site closes it.
 - **Money never switches a booking back on.** If a deposit still arrives for a booking that was
   dropped or cancelled, it is written on the job, the booking stays as it was, and the company
   gets an email headed "Action needed": ring the customer, then write the job in again or send
