@@ -120,7 +120,7 @@
                 .ToListAsync();
 
             var totalAmount = selectedServices.Sum(x => x.BasePrice);
-            var depositAmount = 50.00m; // Flat booking deposit
+            var depositAmount = Deposit.Amount;
             var address = JoinAddressAndPostcode(model.Address, model.Postcode);
 
             // 1. Build the booking object framework completely in-memory
