@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Availability
+﻿namespace HandyFix.Services.Data.Availability
 {
     using System;
     using System.Collections.Generic;

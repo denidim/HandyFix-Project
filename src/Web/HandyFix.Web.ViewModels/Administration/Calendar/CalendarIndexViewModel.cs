@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Administration.Calendar
+﻿namespace HandyFix.Web.ViewModels.Administration.Calendar
 {
     using System;
     using System.Collections.Generic;

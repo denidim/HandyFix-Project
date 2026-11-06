@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Reviews
+﻿namespace HandyFix.Services.Data.Reviews
 {
     using System;
     using System.Collections.Generic;

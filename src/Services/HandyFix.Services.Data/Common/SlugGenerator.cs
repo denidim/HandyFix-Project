@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Common
+﻿namespace HandyFix.Services.Data.Common
 {
     using System.Text.RegularExpressions;
 

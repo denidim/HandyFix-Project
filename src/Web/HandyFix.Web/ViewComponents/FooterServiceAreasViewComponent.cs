@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewComponents
+﻿namespace HandyFix.Web.ViewComponents
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;

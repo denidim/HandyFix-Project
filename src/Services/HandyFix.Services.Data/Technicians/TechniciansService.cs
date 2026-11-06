@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Technicians
+﻿namespace HandyFix.Services.Data.Technicians
 {
     using System;
     using System.Collections.Generic;

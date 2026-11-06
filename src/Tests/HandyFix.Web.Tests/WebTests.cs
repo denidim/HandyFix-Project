@@ -1,4 +1,4 @@
-namespace HandyFix.Web.Tests
+﻿namespace HandyFix.Web.Tests
 {
     using System;
     using System.Collections.Generic;

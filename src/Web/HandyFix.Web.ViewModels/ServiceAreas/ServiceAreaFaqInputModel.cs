@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.ServiceAreas
+﻿namespace HandyFix.Web.ViewModels.ServiceAreas
 {
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;

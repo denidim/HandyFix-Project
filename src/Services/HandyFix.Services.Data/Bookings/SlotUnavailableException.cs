@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Bookings
+﻿namespace HandyFix.Services.Data.Bookings
 {
     using System;
 

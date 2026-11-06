@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Categories
+﻿namespace HandyFix.Services.Data.Categories
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;

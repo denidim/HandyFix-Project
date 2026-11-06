@@ -1,4 +1,4 @@
-namespace HandyFix.Web.Services
+﻿namespace HandyFix.Web.Services
 {
     using System.Collections.Generic;
     using System.Linq;

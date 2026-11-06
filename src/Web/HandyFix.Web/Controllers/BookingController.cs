@@ -1,4 +1,4 @@
-namespace HandyFix.Web.Controllers
+﻿namespace HandyFix.Web.Controllers
 {
     using System;
     using System.Collections.Generic;

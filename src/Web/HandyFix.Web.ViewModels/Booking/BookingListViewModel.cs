@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Booking
+﻿namespace HandyFix.Web.ViewModels.Booking
 {
     using System.Collections.Generic;
 
