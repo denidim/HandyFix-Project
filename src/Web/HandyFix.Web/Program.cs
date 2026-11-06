@@ -147,6 +147,7 @@
                 {
                     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
                 }).AddRazorRuntimeCompilation();
+
             // Only the Identity pages the site uses can be opened; the rest of what the Identity UI
             // package brings answer 404 (IdentityPages says which and why).
             services.AddRazorPages(options => options.Conventions.AddAreaFolderRouteModelConvention(
@@ -215,6 +216,7 @@
             services.AddSingleton<IStripeGateway, StripeGateway>();
             services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();
             services.AddTransient<IImageService, ImageService>();
+
             // Uploaded service pictures go to the photo bucket; the folder is where the built-in ones
             // are, read and never written (PROJECT_STATE.md Section 3cq).
             services.AddTransient<IImageStorageService>(sp =>

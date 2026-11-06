@@ -56,7 +56,7 @@
                 PhoneNumber = "07123",
                 Address = "12 Main Rd",
                 ProblemDescription = "Leak",
-                StatusId = pendingBookingStatus.Id
+                StatusId = pendingBookingStatus.Id,
             };
             dbContext.Bookings.Add(booking);
 
@@ -68,7 +68,7 @@
                 Amount = 50.00m,
                 Provider = "Stripe",
                 CheckoutSessionId = checkoutSessionId,
-                StatusId = pendingPaymentStatus.Id
+                StatusId = pendingPaymentStatus.Id,
             };
             dbContext.Payments.Add(payment);
             await dbContext.SaveChangesAsync();

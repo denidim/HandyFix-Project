@@ -185,18 +185,6 @@
             return await query.AnyAsync();
         }
 
-        private static string NormalizeSlug(string slug)
-        {
-            return string.IsNullOrWhiteSpace(slug) ? string.Empty : slug.Trim().ToLowerInvariant();
-        }
-
-        // "kt5,KT6 , kt7" is saved as "KT5, KT6, KT7"; an empty box as no list at all.
-        private static string NormalizeDistricts(string districts)
-        {
-            IReadOnlyList<string> parsed = UkPostcode.ParseDistricts(districts);
-            return parsed.Count == 0 ? null : string.Join(", ", parsed);
-        }
-
         public IEnumerable<ServiceAreaFaqValidationError> PruneAndValidateFaqs(ServiceAreaAdminInputModel model)
         {
             model.Faqs ??= new List<ServiceAreaFaqInputModel>();
@@ -234,6 +222,18 @@
             }
 
             return errors;
+        }
+
+        private static string NormalizeSlug(string slug)
+        {
+            return string.IsNullOrWhiteSpace(slug) ? string.Empty : slug.Trim().ToLowerInvariant();
+        }
+
+        // "kt5,KT6 , kt7" is saved as "KT5, KT6, KT7"; an empty box as no list at all.
+        private static string NormalizeDistricts(string districts)
+        {
+            IReadOnlyList<string> parsed = UkPostcode.ParseDistricts(districts);
+            return parsed.Count == 0 ? null : string.Join(", ", parsed);
         }
 
         /// <summary>
