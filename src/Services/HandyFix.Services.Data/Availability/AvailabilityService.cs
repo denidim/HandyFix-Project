@@ -20,22 +20,6 @@
             this.slotRepository = slotRepository;
         }
 
-        public async Task<IEnumerable<DateTime>> GetAvailableDatesAsync(int daysAhead = 30)
-        {
-            DateTime now = DateTime.Now;
-            DateTime today = DateTime.Today;
-            DateTime endDate = today.AddDays(daysAhead);
-
-            List<DateTime> dates = await this.slotRepository.All()
-                .Where(x => x.StartTime > now && x.StartTime <= endDate && !x.IsBooked && !x.IsBlocked)
-                .Select(x => x.StartTime.Date)
-                .Distinct()
-                .OrderBy(x => x)
-                .ToListAsync();
-
-            return dates;
-        }
-
         public async Task<IEnumerable<T>> GetAllSlotsForDateAsync<T>(DateTime date)
         {
             DateTime targetDate = date.Date;

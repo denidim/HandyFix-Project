@@ -38,7 +38,7 @@
         {
             var controller = BuildController(
                 out var servicesService,
-                out var availabilityService,
+                out _,
                 out var bookingsService,
                 out _);
 
@@ -69,11 +69,9 @@
             Assert.Equal("KT9 1AA", returnedModel.Postcode);
             Assert.Equal("The kitchen tap has been dripping for a week.", returnedModel.ProblemDescription);
 
-            // And the form has to be usable again, which means its dropdowns get repopulated.
+            // And the form has to be usable again, which means its service list gets repopulated.
             Assert.Single(returnedModel.Services);
-            Assert.Single(returnedModel.AvailableDates);
             servicesService.Verify(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()), Times.Once);
-            availabilityService.Verify(x => x.GetAvailableDatesAsync(It.IsAny<int>()), Times.Once);
         }
 
         // A form that comes back used to open on today with no slot chosen, so the customer
@@ -645,10 +643,6 @@
             servicesService
                 .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
                 .ReturnsAsync(new List<ServiceViewModel> { new ServiceViewModel() });
-
-            availabilityService
-                .Setup(x => x.GetAvailableDatesAsync(It.IsAny<int>()))
-                .ReturnsAsync(new List<DateTime> { new DateTime(2026, 8, 14) });
 
             imageService
                 .Setup(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()))

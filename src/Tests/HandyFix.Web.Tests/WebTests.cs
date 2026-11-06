@@ -721,16 +721,18 @@
             // page's script with HTML encoding, one backslash swallowed the closing quote and
             // stopped the whole booking script (PROJECT_STATE Section 3bv), and anything that was
             // not a date opened the calendar on "undefined NaN" (Section 3bw). The model binder
-            // now reads it as a date: a real one reaches the script as yyyy-MM-dd, anything else
-            // as an empty string, which the script takes to mean today.
+            // now reads it as a date: a real one reaches the form's data-selected-date as
+            // yyyy-MM-dd, anything else as an empty string, which the script takes to mean today.
+            // The script lives in its own file since Section 3dj, and an attribute is encoded by
+            // Razor, so nothing in the link can end it early either.
             var client = this.server.CreateClient();
             var response = await client.GetAsync("/Booking?date=" + Uri.EscapeDataString(date));
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
 
-            var written = Regex.Match(content, "let initialDateStr = (\"[^\\r\\n]*\");\\r?\\n");
+            var written = Regex.Match(content, "data-selected-date=\"([^\"]*)\"");
             Assert.True(written.Success);
-            Assert.Equal(expected, JsonSerializer.Deserialize<string>(written.Groups[1].Value));
+            Assert.Equal(expected, WebUtility.HtmlDecode(written.Groups[1].Value));
         }
 
         [Fact]

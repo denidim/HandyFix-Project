@@ -73,7 +73,6 @@
             try
             {
                 IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-                IEnumerable<DateTime> dates = await this.availabilityService.GetAvailableDatesAsync();
 
                 // A link that names a service but no category would open on the default Plumbing
                 // tab, where a handyman service is not in the list and gets replaced by the
@@ -90,7 +89,6 @@
                 var model = new BookingInputModel
                 {
                     Services = services,
-                    AvailableDates = dates,
                     SelectedCategorySlug = categorySlug,
                     SelectedDate = date,
                     SelectedServiceId = selectedServiceId,
@@ -276,7 +274,6 @@
             }
 
             model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
-            model.AvailableDates = await this.availabilityService.GetAvailableDatesAsync();
             model.ServedPostcodeDistricts = await this.serviceAreasService.GetServedPostcodeDistrictsAsync();
             model.SelectedServiceId = model.ServiceId;
 
