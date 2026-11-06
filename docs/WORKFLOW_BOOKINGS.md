@@ -128,7 +128,7 @@ Two consequences developers should not "helpfully" undo:
 
 - **Read paths never generate.** Loading the public booking page, calling `/Booking/GetSlots`, or
   opening a day in the admin Calendar creates **nothing**. This used to be the opposite:
-  `GetAvailableDatesAsync` generated 30 days of slots as a side effect of being read, which meant
+  `GetAvailableDatesAsync` (since removed) generated 30 days of slots as a side effect of being read, which meant
   merely browsing the site created capacity nobody had decided to offer. Any "get" that mutates is
   a bug here, not a convenience.
 - **Generation does not depend on a technician existing.** `GenerateSlotsForRangeAsync` runs
@@ -278,7 +278,7 @@ street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
 - **A form that comes back opens where the customer left it.** Whatever sent it back (a field the
   rules refuse, a postcode we do not cover, a photo too large, the person check), the page opens on
   the day of the slot they had chosen and its script picks that slot again if it is still free
-  (`IAvailabilityService.GetSlotDateAsync`, `keptSlotId` in the page). The one exception is a slot
+  (`IAvailabilityService.GetSlotDateAsync`, the form's `data-kept-slot-id`, read by `wwwroot/js/booking.js`). The one exception is a slot
   somebody else took meanwhile: it is cleared, and the customer picks another.
 - **Photos never cost a booking.** A photo the site does not take (more than 5, over 15 MB, not
   JPEG/PNG/WEBP) brings the form back with the reason. If storage itself cannot be reached, the
