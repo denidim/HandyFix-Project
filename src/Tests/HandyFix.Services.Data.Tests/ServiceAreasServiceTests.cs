@@ -102,6 +102,38 @@
             Assert.Equal(closest.Id, results.First().Id);
         }
 
+        // Two areas the same drive away came back in whatever order the database gave, so an area
+        // page could show a different neighbour from one visit to the next. A tie goes to the
+        // order the area lists use, then to the name. Each pair is added the other way round, so
+        // an order left to the database fails here.
+        [Fact]
+        public async Task GetNearestAsyncShouldBreakATieInDriveTimeTheSameWayEveryTime()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<ServiceArea>(dbContext);
+
+            var current = CreateArea("cobham", "Cobham", isFeatured: false, displayOrder: 1, driveTimeMinutes: 15);
+
+            // Five minutes either side, with the same display order: by name.
+            var weybridge = CreateArea("weybridge", "Weybridge", isFeatured: false, displayOrder: 7, driveTimeMinutes: 20);
+            var esher = CreateArea("esher", "Esher", isFeatured: false, displayOrder: 7, driveTimeMinutes: 10);
+
+            // Ten minutes either side: by display order, ahead of the name.
+            var addlestone = CreateArea("addlestone", "Addlestone", isFeatured: false, displayOrder: 9, driveTimeMinutes: 25);
+            var walton = CreateArea("walton-on-thames", "Walton-on-Thames", isFeatured: false, displayOrder: 8, driveTimeMinutes: 5);
+
+            dbContext.ServiceAreas.AddRange(current, weybridge, esher, addlestone, walton);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var results = await service.GetNearestAsync<ServiceArea>(current.Id, take: 4);
+
+            Assert.Equal(new[] { "Esher", "Weybridge", "Walton-on-Thames", "Addlestone" }, results.Select(x => x.Name));
+        }
+
         [Fact]
         public async Task GetNearestAsyncShouldReturnEmptyWhenAreaDoesNotExist()
         {

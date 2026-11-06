@@ -297,13 +297,13 @@
         // The site sends no email when a job is cancelled, and refunds are made by hand. The
         // line the admin is left with has to say both, or nobody tells the customer.
         [Theory]
-        [InlineData(true, "SuccessMessage", "The job is cancelled. It keeps its date and the reason, and an hour it held in the calendar can be booked again. The customer has not been emailed: please tell them yourself.")]
-        [InlineData(false, "ErrorMessage", "Nothing was changed. This job is already done, cancelled or abandoned.")]
-        public async Task CancelShouldPassTheReasonOnAndSayWhetherTheJobWasCancelled(bool cancelled, string messageKey, string expectedText)
+        [InlineData(JobCancelOutcome.Cancelled, "SuccessMessage", "The job is cancelled. It keeps its date and the reason, and an hour it held in the calendar can be booked again. The customer has not been emailed: please tell them yourself.")]
+        [InlineData(JobCancelOutcome.NotAllowed, "ErrorMessage", "Nothing was changed. This job is already done, cancelled or abandoned.")]
+        public async Task CancelShouldPassTheReasonOnAndSayWhetherTheJobWasCancelled(JobCancelOutcome outcome, string messageKey, string expectedText)
         {
             var controller = BuildController(out var bookingsService, out _);
             var bookingId = Guid.NewGuid();
-            bookingsService.Setup(x => x.CancelBookingAsync(bookingId, "The customer moved away.")).ReturnsAsync(cancelled);
+            bookingsService.Setup(x => x.CancelBookingAsync(bookingId, "The customer moved away.")).ReturnsAsync(outcome);
 
             var result = await controller.Cancel(bookingId, "The customer moved away.");
 
@@ -315,10 +315,31 @@
             Assert.Equal("Details", redirect.ActionName);
             Assert.Equal(bookingId, redirect.RouteValues["id"]);
             Assert.Contains(expectedText, Assert.IsType<string>(controller.TempData[messageKey]));
-            if (cancelled)
+            if (outcome == JobCancelOutcome.Cancelled)
             {
                 Assert.Contains("refunded by hand in Stripe", Assert.IsType<string>(controller.TempData[messageKey]));
             }
+        }
+
+        // The customer paid the deposit in the same moment the admin cancelled. The booking is
+        // confirmed and the customer has been told so; it used to be cancelled anyway, with the
+        // admin told the customer had not been emailed. Nothing is cancelled now, and the line
+        // says why and what to do.
+        [Fact]
+        public async Task CancelShouldSayNothingWasChangedWhenTheCustomerPaidInTheSameMoment()
+        {
+            var controller = BuildController(out var bookingsService, out _);
+            var bookingId = Guid.NewGuid();
+            bookingsService.Setup(x => x.CancelBookingAsync(bookingId, "The customer moved away.")).ReturnsAsync(JobCancelOutcome.PaidJustNow);
+
+            var result = await controller.Cancel(bookingId, "The customer moved away.");
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirect.ActionName);
+            Assert.Equal(
+                "Nothing was changed: the customer paid the deposit just now, so the booking is confirmed and they have been emailed. Cancel it again if it still has to be cancelled.",
+                controller.TempData["ErrorMessage"]);
+            Assert.Null(controller.TempData["SuccessMessage"]);
         }
 
         [Theory]

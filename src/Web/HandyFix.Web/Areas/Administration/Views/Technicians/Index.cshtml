@@ -124,7 +124,7 @@
                                     </a>
                                     @if (technician.BookingCount == 0)
                                     {
-                                        <form asp-area="Administration" asp-controller="Technicians" asp-action="Delete" asp-route-id="@technician.Id" method="post" class="d-inline-block" onsubmit="return confirm('Delete @technician.FullName? They have no bookings, so nothing else is affected.');">
+                                        <form asp-area="Administration" asp-controller="Technicians" asp-action="Delete" asp-route-id="@technician.Id" method="post" class="d-inline-block" data-confirm="Delete @technician.FullName? They have no bookings, so nothing else is affected.">
                                             <button type="submit" class="p-2 text-danger rounded-lg d-flex align-items-center justify-content-center dim-36 tint-error-soft border-error-soft" title="Delete">
                                                 <span class="material-symbols-outlined fs-20">delete</span>
                                             </button>

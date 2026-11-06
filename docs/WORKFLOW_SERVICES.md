@@ -134,6 +134,13 @@ A delete the bucket refuses is logged, not thrown: an object left there costs no
 admin's save should not fail for it. A new name for every upload also means a browser that kept
 the last picture can never show it in place of the new one.
 
+**A picture that cannot be saved.** The service is saved first, so its other changes are kept. A
+file the site does not take (not JPEG, PNG or WebP, or not a picture at all) shows its reason under
+the picture box; anything else (the bucket out of reach) is logged and reads "The picture could not
+be saved. The service itself is saved: try the picture again." A new service whose picture fails
+opens on its Edit page with that line, since the Create form sent again would only say the name is
+taken (`PROJECT_STATE.md` Section 3dh).
+
 **Why not the site's own folder, as before.** Until Section 3cq an upload was written over
 `wwwroot/images/services/{slug}-hero.webp` inside the running container. A deploy starts a new
 container from what git holds, so the old picture came back, a new service lost its picture, and a

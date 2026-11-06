@@ -115,6 +115,44 @@
             Assert.Matches("<option value=\"" + technicianId + "\" selected=\"selected\">\\s*Sam\\s*</option>", bookingPage);
         }
 
+        // A name with an apostrophe used to end the string inside the delete button's inline
+        // script: the script failed, and the technician was deleted without the question. The
+        // question is now an attribute, which Razor writes encoded and site.js reads as text.
+        [Fact]
+        public async Task TheDeleteButtonCarriesItsQuestionAsTextWhateverTheName()
+        {
+            HttpClient browser = await this.SignedInBrowserAsync();
+
+            HttpResponseMessage added = await FormsWebTests.PostFormAsync(browser, RosterPage + "/Create", new Dictionary<string, string>
+            {
+                ["FirstName"] = "Test",
+                ["LastName"] = "O'Brien",
+                ["PhoneNumber"] = "07700 900124",
+                ["IsActive"] = "true",
+            });
+
+            var roster = await added.Content.ReadAsStringAsync();
+            Assert.Equal(RosterPage, added.RequestMessage.RequestUri.AbsolutePath);
+            Assert.Contains("data-confirm=\"Delete Test O&#x27;Brien? They have no bookings, so nothing else is affected.\"", roster);
+            Assert.DoesNotContain("onsubmit", roster);
+        }
+
+        // The question is asked by one listener in site.js, which the admin layout loads. The
+        // listener sits above the DOMContentLoaded handler, not inside it: that handler stops
+        // early on every page without the home page's booking form, admin pages included.
+        [Fact]
+        public async Task TheSiteScriptAsksTheQuestionOnAdminPages()
+        {
+            HttpClient browser = await this.SignedInBrowserAsync();
+
+            var roster = await (await browser.GetAsync(RosterPage)).Content.ReadAsStringAsync();
+            var script = await browser.GetStringAsync("/js/site.js");
+
+            Assert.Contains("<script src=\"/js/site.js?v=", roster);
+            var listener = script.IndexOf("confirm(form.dataset.confirm)", StringComparison.Ordinal);
+            Assert.InRange(listener, 0, script.IndexOf("document.addEventListener(\"DOMContentLoaded\"", StringComparison.Ordinal));
+        }
+
         // A browser of its own, signed in as the admin this host seeds.
         private async Task<HttpClient> SignedInBrowserAsync()
         {

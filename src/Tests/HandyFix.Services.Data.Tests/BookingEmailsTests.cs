@@ -41,9 +41,9 @@
             using var world = new BookingWorld();
             List<SentEmail> sent = world.CaptureEmails();
 
-            Booking booking = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
+            BookingCreateResult result = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
 
-            Assert.NotNull(booking);
+            Assert.Equal(BookingCreateOutcome.Created, result.Outcome);
             Assert.Single(world.DbContext.Bookings);
             Assert.True(world.DbContext.AvailabilitySlots.Single().IsBooked);
             Assert.Empty(sent);
@@ -429,7 +429,7 @@
 
             var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
 
-            Assert.True(cancelled);
+            Assert.Equal(JobCancelOutcome.Cancelled, cancelled);
             Assert.Equal("Cancelled", world.StatusOf(booking));
             Assert.False(world.DbContext.AvailabilitySlots.Single().IsBooked);
         }
@@ -448,7 +448,7 @@
 
             var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off.");
 
-            Assert.False(cancelled);
+            Assert.Equal(JobCancelOutcome.NotAllowed, cancelled);
             Assert.Equal(status, world.StatusOf(booking));
             Assert.True(world.DbContext.AvailabilitySlots.Single().IsBooked);
         }

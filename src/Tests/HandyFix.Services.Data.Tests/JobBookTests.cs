@@ -139,8 +139,9 @@
         {
             using var world = new BookingWorld();
 
-            Booking booking = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
+            BookingCreateResult result = await world.Bookings.CreateBookingAsync(world.BookingFor("12 Main Rd, Sutton"), new List<string>());
 
+            Booking booking = world.DbContext.Bookings.Single(x => x.Id == result.BookingId);
             Assert.Equal(BookingSource.Website, booking.Source);
             Assert.Equal(world.SlotStart, booking.ScheduledStart);
             Assert.Equal(world.SlotStart.AddHours(1), booking.ScheduledEnd);
@@ -193,7 +194,7 @@
 
             var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "  The customer rang: the tap was fixed by a neighbour.  ");
 
-            Assert.True(cancelled);
+            Assert.Equal(JobCancelOutcome.Cancelled, cancelled);
             Booking after = world.DbContext.Bookings.Single();
             Assert.Equal("Cancelled", world.StatusOf(booking));
             Assert.Equal("The customer rang: the tap was fixed by a neighbour.", after.CancelReason);
@@ -231,7 +232,7 @@
 
             var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, reason);
 
-            Assert.False(cancelled);
+            Assert.Equal(JobCancelOutcome.NotAllowed, cancelled);
             Assert.Equal("Approved", world.StatusOf(booking));
             Assert.True(world.Slot(world.SlotId).IsBooked);
         }

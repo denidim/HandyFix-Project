@@ -1,4 +1,21 @@
 // Handy Fix Booking Widget Client Logic
+
+// "Are you sure?" before a form that deletes or undoes something: the form carries its question
+// in data-confirm, and Cancel stops it being sent. The question used to sit in an inline onsubmit
+// script, where a name with an apostrophe (O'Brien) ended the script's string: the script failed
+// and the form was sent without asking. An attribute is read here as plain text, whatever it
+// holds. It listens on the document in the capture phase, so it asks before anything else hears
+// the submit, as the inline script did, and a "no" reaches the one-click lock below already
+// cancelled. It sits outside the DOMContentLoaded handler, which stops early on every page
+// without the home page's booking form.
+document.addEventListener('submit', function (event) {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-confirm')) return;
+    if (!confirm(form.dataset.confirm)) {
+        event.preventDefault();
+    }
+}, true);
+
 document.addEventListener("DOMContentLoaded", function () {
     // Mobile Nav Toggle (Public)
     const mobileBtn = document.getElementById('mobile-menu-btn');

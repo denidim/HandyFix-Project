@@ -65,9 +65,13 @@
                 return Enumerable.Empty<T>();
             }
 
+            // Two areas the same drive away go in the order the area lists use, then by name, so
+            // an area page shows the same neighbours on every visit.
             return await this.areasRepository.All()
                 .Where(x => x.Id != excludeAreaId)
                 .OrderBy(x => Math.Abs(x.DriveTimeMinutes - currentDriveTime.Value))
+                .ThenBy(x => x.DisplayOrder)
+                .ThenBy(x => x.Name)
                 .Take(take)
                 .To<T>()
                 .ToListAsync();

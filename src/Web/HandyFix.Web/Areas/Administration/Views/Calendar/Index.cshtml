@@ -175,7 +175,7 @@
                         <div class="d-flex align-items-center gap-2">
                             @if (slot.IsBooked)
                             {
-                                <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post" class="m-0" onsubmit="return confirm('Put this hour back on sale? The job that holds it keeps its day and time, and another customer could then book the same hour.');">
+                                <form asp-area="Administration" asp-controller="Calendar" asp-action="ReleaseSlot" method="post" class="m-0" data-confirm="Put this hour back on sale? The job that holds it keeps its day and time, and another customer could then book the same hour.">
                                     <input type="hidden" name="id" value="@slot.Id" />
                                     <input type="hidden" name="returnDate" value="@targetDate.ToString("yyyy-MM-dd")" />
                                     <button type="submit" class="btn btn-sm font-button-text slot-action-btn">Release</button>

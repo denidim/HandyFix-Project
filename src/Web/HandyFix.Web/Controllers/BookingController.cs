@@ -6,7 +6,6 @@
     using System.Threading.Tasks;
 
     using HandyFix.Common;
-    using HandyFix.Data.Models;
     using HandyFix.Services;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
@@ -22,7 +21,6 @@
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
-    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 
     [AllowAnonymous]
@@ -195,28 +193,37 @@
                 imageUrls = Array.Empty<string>();
             }
 
+            BookingCreateResult result;
             try
             {
-                Booking booking = await this.bookingsService.CreateBookingAsync(model, imageUrls);
-
-                // Redirect to Stripe checkout
-                return this.RedirectToAction("Pay", "Payment", new { bookingId = booking.Id });
+                result = await this.bookingsService.CreateBookingAsync(model, imageUrls);
             }
-            catch (Exception ex) when (ex is SlotUnavailableException || ex is DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
+                // Nothing the customer can put right, and nothing of it is theirs to read: a
+                // status missing from the database, or the database out of reach. Its own text
+                // used to be shown to the customer, and nothing was logged.
+                this.logger.LogError(ex, "A booking could not be saved");
+                return await this.RedisplayBookingForm(model, "An error occurred while saving your booking. Please try again.");
+            }
+
+            switch (result.Outcome)
+            {
+                case BookingCreateOutcome.Created:
+                    // Redirect to Stripe checkout
+                    return this.RedirectToAction("Pay", "Payment", new { bookingId = result.BookingId });
+
                 // Someone else claimed this slot between the customer picking it and
                 // submitting the form. Clear it so they have to pick a fresh one, but
                 // keep every other field they already filled in.
-                model.SlotId = Guid.Empty;
-                return await this.RedisplayBookingForm(model, "This slot was just taken by someone else, please pick another.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                return await this.RedisplayBookingForm(model, ex.Message);
-            }
-            catch (Exception)
-            {
-                return await this.RedisplayBookingForm(model, "An error occurred while saving your booking. Please try again.");
+                case BookingCreateOutcome.SlotTaken:
+                    model.SlotId = Guid.Empty;
+                    return await this.RedisplayBookingForm(model, "This slot was just taken by someone else, please pick another.");
+
+                // The slot is not in the calendar at all. Cleared too, for the same reason.
+                default:
+                    model.SlotId = Guid.Empty;
+                    return await this.RedisplayBookingForm(model, "The selected time slot does not exist. Please choose a different time.");
             }
         }
 

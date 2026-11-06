@@ -280,11 +280,25 @@
                 return this.RedirectToAction(nameof(this.Details), new { id });
             }
 
-            var cancelled = await this.bookingsService.CancelBookingAsync(id, reason);
+            JobCancelOutcome outcome = await this.bookingsService.CancelBookingAsync(id, reason);
 
-            this.TempData[cancelled ? SuccessMessageKey : ErrorMessageKey] = cancelled
-                ? "The job is cancelled. It keeps its date and the reason, and an hour it held in the calendar can be booked again. The customer has not been emailed: please tell them yourself. A deposit that goes back is refunded by hand in Stripe, then ticked here as refunded."
-                : "Nothing was changed. This job is already done, cancelled or abandoned.";
+            switch (outcome)
+            {
+                case JobCancelOutcome.Cancelled:
+                    this.TempData[SuccessMessageKey] = "The job is cancelled. It keeps its date and the reason, and an hour it held in the calendar can be booked again. The customer has not been emailed: please tell them yourself. A deposit that goes back is refunded by hand in Stripe, then ticked here as refunded.";
+                    break;
+
+                // The customer paid in the moment the job was being cancelled. The booking is
+                // confirmed and they have the "booking confirmed" email, so it is left on for the
+                // admin to decide.
+                case JobCancelOutcome.PaidJustNow:
+                    this.TempData[ErrorMessageKey] = "Nothing was changed: the customer paid the deposit just now, so the booking is confirmed and they have been emailed. Cancel it again if it still has to be cancelled.";
+                    break;
+
+                default:
+                    this.TempData[ErrorMessageKey] = "Nothing was changed. This job is already done, cancelled or abandoned.";
+                    break;
+            }
 
             return this.RedirectToAction(nameof(this.Details), new { id });
         }

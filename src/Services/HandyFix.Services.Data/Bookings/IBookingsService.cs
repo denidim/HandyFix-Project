@@ -5,12 +5,16 @@
     using System.Threading.Tasks;
 
     using HandyFix.Common;
-    using HandyFix.Data.Models;
     using HandyFix.Web.ViewModels.Booking;
 
     public interface IBookingsService
     {
-        Task<Booking> CreateBookingAsync(
+        /// <summary>
+        /// Makes a website booking, waiting for its deposit, with the photos already stored, and
+        /// takes its slot. The result says whether it was made or why not (the slot is not in
+        /// the calendar, or was taken first); when it was not, nothing is saved.
+        /// </summary>
+        Task<BookingCreateResult> CreateBookingAsync(
             BookingInputModel model,
             IReadOnlyList<string> imageUrls);
 
@@ -46,11 +50,12 @@
         Task<TechnicianAssignmentResult> AssignTechnicianAsync(Guid bookingId, Guid? technicianId);
 
         /// <summary>
-        /// Cancels a job, keeps the reason and the day it was for, and frees its slot. False,
-        /// with nothing changed, when the job is missing, no reason is given or
-        /// <see cref="BookingRules.CanCancel"/> says no.
+        /// Cancels a job, keeps the reason and the day it was for, and frees its slot. Nothing
+        /// is changed when the job is missing, no reason is given or
+        /// <see cref="BookingRules.CanCancel"/> says no (NotAllowed), or when a website booking
+        /// turns out to have been paid for in the same moment (PaidJustNow).
         /// </summary>
-        Task<bool> CancelBookingAsync(Guid bookingId, string reason);
+        Task<JobCancelOutcome> CancelBookingAsync(Guid bookingId, string reason);
 
         /// <summary>
         /// Moves a job to another day or hour. A website booking gives its hour in the calendar
