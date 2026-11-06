@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="232 146 560 560">
-  <!-- Browser-tab icon: the logo's full emblem (shield, drop, wrench, roof) without the text. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="200 114 624 624">
+  <!-- Browser-tab icon: the logo's full emblem (shield, drop, wrench, roof) on a white ground. -->
   <defs>
     <linearGradient id="teal" gradientUnits="userSpaceOnUse" x1="0" y1="157" x2="0" y2="390">
       <stop offset="0" stop-color="#14697e"/>
@@ -25,6 +25,7 @@
       <path d="M-54.8 -36.8 A66 66 0 0 0 -25 61.1 L-25 296 A25 25 0 0 0 25 296 L25 61.1 A66 66 0 0 0 -9.0 -65.4 L12.3 -31.3 L9.1 -8.1 L-11.2 4.7 L-33.5 -2.7 Z" transform="translate(334 396) rotate(-45) scale(1.05)" fill="#000" stroke="#000" stroke-width="31"/>
     </mask>
   </defs>
+  <rect x="200" y="114" width="624" height="624" rx="96" fill="#fff"/>
   <g mask="url(#shield-cut)" fill="none" stroke="#13284b" stroke-width="12" stroke-linejoin="miter">
     <path d="M308 247 L512 189 L716 247 L716 500 C716 592 626 652 512 694 C398 652 308 592 308 500 Z"/>
     <path d="M345 283 L512 236 L679 283 L679 498 C679 570 604 622 512 656 C420 622 345 570 345 498 Z"/>
