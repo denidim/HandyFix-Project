@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Services
+﻿namespace HandyFix.Services.Data.Services
 {
     using System;
     using System.Collections.Generic;
@@ -23,8 +23,6 @@ namespace HandyFix.Services.Data.Services
         Task<bool> NameIsTakenAsync(string name, Guid? exceptId = null);
 
         Task DeleteAsync(Guid id);
-
-        Task AddOrUpdateServiceImageAsync(Guid serviceId, string imageUrl);
 
         Task SetServiceImageAsync(Guid serviceId, IFormFile imageFile);
     }

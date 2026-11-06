@@ -1,4 +1,4 @@
-namespace HandyFix.Data.Seeding
+﻿namespace HandyFix.Data.Seeding
 {
     using System;
     using System.Collections.Generic;

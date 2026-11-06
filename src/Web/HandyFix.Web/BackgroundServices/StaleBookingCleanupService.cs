@@ -1,4 +1,4 @@
-namespace HandyFix.Web.BackgroundServices
+﻿namespace HandyFix.Web.BackgroundServices
 {
     using System;
     using System.Threading;

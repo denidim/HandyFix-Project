@@ -1,4 +1,4 @@
-namespace HandyFix.Web.Areas.Administration.Controllers
+﻿namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
     using System.Collections.Generic;

@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Reviews
+﻿namespace HandyFix.Services.Data.Reviews
 {
     using System;
     using System.Collections.Generic;
@@ -81,13 +81,6 @@ namespace HandyFix.Services.Data.Reviews
             };
 
             return await query.To<T>().ToListAsync();
-        }
-
-        public async Task<int> GetPendingCountAsync()
-        {
-            // AllWithDeleted() to match the Dashboard's existing count exactly - not changing
-            // that behavior here, just relocating it out of the controller.
-            return await this.reviewRepository.AllWithDeleted().CountAsync(x => !x.IsApproved);
         }
 
         public ReviewSummaryStats GetSummaryStats(IEnumerable<ReviewViewModel> reviews)

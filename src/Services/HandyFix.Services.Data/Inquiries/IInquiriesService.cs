@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Inquiries
+﻿namespace HandyFix.Services.Data.Inquiries
 {
     using System;
     using System.Collections.Generic;

@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.ServiceAreas
+﻿namespace HandyFix.Services.Data.ServiceAreas
 {
     using System;
     using System.Collections.Generic;

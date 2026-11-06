@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Tests
+﻿namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -54,7 +54,7 @@ namespace HandyFix.Services.Data.Tests
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
-            
+
             using var dbContext = new ApplicationDbContext(options);
             using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
             using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
@@ -79,14 +79,14 @@ namespace HandyFix.Services.Data.Tests
             var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
             dbContext.ServiceCategories.Add(category);
 
-            var serviceEntity = new Service 
-            { 
-                Id = Guid.NewGuid(), 
-                Name = "Leak Fix", 
-                Description = "Repair leak", 
-                Slug = "leak-fix", 
+            var serviceEntity = new Service
+            {
+                Id = Guid.NewGuid(),
+                Name = "Leak Fix",
+                Description = "Repair leak",
+                Slug = "leak-fix",
                 BasePrice = 80.00m,
-                CategoryId = category.Id
+                CategoryId = category.Id,
             };
             dbContext.Services.Add(serviceEntity);
 
@@ -107,7 +107,8 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
+                new ConfigurationBuilder().Build(),
+                NullLogger<BookingsService>.Instance);
 
             var model = new BookingInputModel
             {
@@ -237,7 +238,8 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
+                new ConfigurationBuilder().Build(),
+                NullLogger<BookingsService>.Instance);
 
             var model = new BookingInputModel
             {
@@ -271,202 +273,6 @@ namespace HandyFix.Services.Data.Tests
                     null,
                     It.IsAny<string>()),
                 Times.Never);
-        }
-
-        [Fact]
-        public async Task RescheduleBookingAsyncShouldReleaseOldSlotAndClaimNewOne()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
-                .Options;
-
-            using var dbContext = new ApplicationDbContext(options);
-            using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
-            using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
-            using var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
-            using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
-            using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
-            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
-            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
-
-            var availabilityService = new AvailabilityService(slotRepo);
-            var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
-            var dbQueryRunner = new DbQueryRunner(dbContext);
-
-            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            dbContext.BookingStatuses.Add(pendingStatus);
-
-            var technician = new Technician { FirstName = "Alex", LastName = "Smith", PhoneNumber = "07000000000" };
-            dbContext.Technicians.Add(technician);
-
-            var booking = new Booking
-            {
-                CustomerFirstName = "John",
-                CustomerLastName = "Doe",
-                Email = "john@example.com",
-                PhoneNumber = "07123456789",
-                Address = "12 Main Rd, Sutton",
-                ProblemDescription = "Leaking kitchen sink pipe",
-                StatusId = pendingStatus.Id,
-                TechnicianId = technician.Id,
-            };
-            dbContext.Bookings.Add(booking);
-
-            var oldSlot = new AvailabilitySlot
-            {
-                StartTime = DateTime.Today.AddHours(9),
-                EndTime = DateTime.Today.AddHours(10),
-                IsBooked = true,
-                BookingId = booking.Id,
-            };
-            var newSlot = new AvailabilitySlot
-            {
-                StartTime = DateTime.Today.AddDays(1).AddHours(11),
-                EndTime = DateTime.Today.AddDays(1).AddHours(12),
-                IsBooked = false,
-            };
-            dbContext.AvailabilitySlots.Add(oldSlot);
-            dbContext.AvailabilitySlots.Add(newSlot);
-            await dbContext.SaveChangesAsync();
-
-            var bookingsService = new BookingsService(
-                bookingRepo,
-                serviceRepo,
-                slotRepo,
-                bookingStatusRepo,
-                bookingImageRepo,
-                technicianRepo,
-                new EfDeletableEntityRepository<BookingService>(dbContext),
-                availabilityService,
-                paymentsService,
-                dbQueryRunner,
-                emailSenderMock.Object,
-                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
-
-            await bookingsService.RescheduleBookingAsync(booking.Id, newSlot.Id);
-
-            var oldSlotInDb = dbContext.AvailabilitySlots.First(x => x.Id == oldSlot.Id);
-            var newSlotInDb = dbContext.AvailabilitySlots.First(x => x.Id == newSlot.Id);
-            var bookingInDb = dbContext.Bookings.First(x => x.Id == booking.Id);
-
-            Assert.False(oldSlotInDb.IsBooked);
-            Assert.Null(oldSlotInDb.BookingId);
-            Assert.True(newSlotInDb.IsBooked);
-            Assert.Equal(booking.Id, newSlotInDb.BookingId);
-
-            // Moving a job to a different hour must not disturb who was assigned to it. This
-            // used to be copied off the destination slot, which silently wiped the admin's
-            // assignment once slots stopped carrying a technician at all.
-            Assert.Equal(technician.Id, bookingInDb.TechnicianId);
-        }
-
-        [Fact]
-        public async Task RescheduleBookingAsyncShouldRollBackAndKeepOldSlotWhenNewSlotAlreadyBooked()
-        {
-            // As with the create-booking rollback test, this depends on a real,
-            // honored transaction, which EF Core's InMemory provider does not
-            // support, so this test uses an in-memory SQLite database instead.
-            using var connection = new SqliteConnection("DataSource=:memory:");
-            connection.Open();
-
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseSqlite(connection)
-                .Options;
-
-            using var dbContext = new ApplicationDbContext(options);
-            await dbContext.Database.EnsureCreatedAsync();
-            using var bookingRepo = new EfDeletableEntityRepository<Booking>(dbContext);
-            using var bookingStatusRepo = new EfDeletableEntityRepository<BookingStatus>(dbContext);
-            using var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
-            using var serviceRepo = new EfDeletableEntityRepository<Service>(dbContext);
-            using var bookingImageRepo = new EfDeletableEntityRepository<BookingImage>(dbContext);
-            using var technicianRepo = new EfDeletableEntityRepository<Technician>(dbContext);
-            using var paymentRepo = new EfDeletableEntityRepository<Payment>(dbContext);
-            using var paymentStatusRepo = new EfDeletableEntityRepository<PaymentStatus>(dbContext);
-
-            var availabilityService = new AvailabilityService(slotRepo);
-            var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
-            var dbQueryRunner = new DbQueryRunner(dbContext);
-
-            var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = "Pending" };
-            dbContext.BookingStatuses.Add(pendingStatus);
-
-            var booking = new Booking
-            {
-                CustomerFirstName = "John",
-                CustomerLastName = "Doe",
-                Email = "john@example.com",
-                PhoneNumber = "07123456789",
-                Address = "12 Main Rd, Sutton",
-                ProblemDescription = "Leaking kitchen sink pipe",
-                StatusId = pendingStatus.Id,
-            };
-            dbContext.Bookings.Add(booking);
-
-            var otherBooking = new Booking
-            {
-                CustomerFirstName = "Existing",
-                CustomerLastName = "Customer",
-                Email = "existing@example.com",
-                PhoneNumber = "07123456781",
-                Address = "1 Other Rd, Sutton",
-                ProblemDescription = "An unrelated, already-confirmed job",
-                StatusId = pendingStatus.Id,
-            };
-            dbContext.Bookings.Add(otherBooking);
-
-            var oldSlot = new AvailabilitySlot
-            {
-                StartTime = DateTime.Today.AddHours(9),
-                EndTime = DateTime.Today.AddHours(10),
-                IsBooked = true,
-                BookingId = booking.Id,
-            };
-            var newSlot = new AvailabilitySlot
-            {
-                StartTime = DateTime.Today.AddDays(1).AddHours(11),
-                EndTime = DateTime.Today.AddDays(1).AddHours(12),
-                IsBooked = true,
-                BookingId = otherBooking.Id,
-            };
-            dbContext.AvailabilitySlots.Add(oldSlot);
-            dbContext.AvailabilitySlots.Add(newSlot);
-            await dbContext.SaveChangesAsync();
-
-            var bookingsService = new BookingsService(
-                bookingRepo,
-                serviceRepo,
-                slotRepo,
-                bookingStatusRepo,
-                bookingImageRepo,
-                technicianRepo,
-                new EfDeletableEntityRepository<BookingService>(dbContext),
-                availabilityService,
-                paymentsService,
-                dbQueryRunner,
-                emailSenderMock.Object,
-                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
-
-            await Assert.ThrowsAsync<SlotUnavailableException>(
-                () => bookingsService.RescheduleBookingAsync(booking.Id, newSlot.Id));
-
-            // Read back through a fresh DbContext on the same connection: the acting
-            // dbContext's change tracker still holds the in-memory values it set on
-            // oldSlot before the rollback, which a tracked query would just return
-            // as-is instead of reflecting what was actually rolled back in the database.
-            using var verifyContext = new ApplicationDbContext(options);
-            var oldSlotInDb = await verifyContext.AvailabilitySlots.AsNoTracking().FirstAsync(x => x.Id == oldSlot.Id);
-            var newSlotInDb = await verifyContext.AvailabilitySlots.AsNoTracking().FirstAsync(x => x.Id == newSlot.Id);
-
-            // The old slot must remain exactly as it was: the failed reschedule
-            // must not have left the booking stranded with no appointment at all.
-            Assert.True(oldSlotInDb.IsBooked);
-            Assert.Equal(booking.Id, oldSlotInDb.BookingId);
-            Assert.Equal(otherBooking.Id, newSlotInDb.BookingId);
         }
 
         [Fact]
@@ -530,7 +336,8 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
+                new ConfigurationBuilder().Build(),
+                NullLogger<BookingsService>.Instance);
 
             // Simulate a concurrent process (e.g. the stale-booking cleanup sweep)
             // having already updated this slot's row - and thereby bumped its
@@ -648,7 +455,8 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
+                new ConfigurationBuilder().Build(),
+                NullLogger<BookingsService>.Instance);
 
             var releasedCount = await bookingsService.ReleaseAbandonedBookingsAsync(TimeSpan.FromMinutes(15));
 
@@ -741,6 +549,90 @@ namespace HandyFix.Services.Data.Tests
             Assert.Single(joined, "BookingImages");
         }
 
+        [Fact]
+        public void GetSummaryStatsShouldDescribeTheGivenListRegardlessOfWhereItCameFrom()
+        {
+            // A pure computation over whatever list it's handed - no repository access - so it
+            // needs none of BookingsService's other dependencies wired up.
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+
+            var bookings = new List<BookingDetailsViewModel>
+            {
+                new BookingDetailsViewModel { StatusName = "Pending", ScheduledTime = DateTime.Today, TotalAmount = 100m },
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 250m },
+                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true, ScheduledTime = AnotherDayThisMonth(), TotalAmount = 75m },
+            };
+
+            BookingSummaryStats stats = service.GetSummaryStats(bookings);
+
+            // The first one is still waiting for its deposit. It is not a job until the deposit is
+            // in, so it is in none of the three figures. While it read "Booked" it was counted
+            // as a job today and £100 of the month's work (PROJECT_STATE.md Section 3ch).
+            Assert.Equal(1, stats.TodaysAppointmentsCount);
+            Assert.Equal(1, stats.AwaitingTechnicianCount);
+            Assert.Equal(325m, stats.MonthlyRevenue);
+        }
+
+        // The card that used to read "Pending Approval" counted bookings waiting for a step that
+        // no longer exists. It now counts the admin's to-do after a deposit comes in: a booking
+        // that is paid, still open, and has nobody on it (PROJECT_STATE.md Section 3ce).
+        [Fact]
+        public void GetSummaryStatsShouldCountOnlyPaidOpenBookingsWithNoTechnicianAsWaitingForOne()
+        {
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+
+            var bookings = new List<BookingDetailsViewModel>
+            {
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true },
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, TechnicianId = Guid.NewGuid() },
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = false },
+                new BookingDetailsViewModel { StatusName = "Pending", IsDepositPaid = false },
+                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true },
+                new BookingDetailsViewModel { StatusName = "Cancelled", IsDepositPaid = true },
+                new BookingDetailsViewModel { StatusName = "Abandoned", IsDepositPaid = false },
+            };
+
+            BookingSummaryStats stats = service.GetSummaryStats(bookings);
+
+            Assert.Equal(1, stats.AwaitingTechnicianCount);
+        }
+
+        [Fact]
+        public void GetSummaryStatsShouldReturnZeroRevenueForAnEmptyList()
+        {
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+
+            BookingSummaryStats stats = service.GetSummaryStats(new List<BookingDetailsViewModel>());
+
+            Assert.Equal(0, stats.TodaysAppointmentsCount);
+            Assert.Equal(0, stats.AwaitingTechnicianCount);
+            Assert.Equal(0m, stats.MonthlyRevenue);
+        }
+
+        // A cancelled or abandoned job keeps its date now (PROJECT_STATE.md Section 3ce). While
+        // it lost its date with its slot it fell out of both figures by accident; it has to be
+        // left out by name.
+        [Fact]
+        public void GetSummaryStatsShouldLeaveOutJobsThatWereCancelledOrAbandoned()
+        {
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+
+            var bookings = new List<BookingDetailsViewModel>
+            {
+                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 90m },
+                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 90m, FinalPrice = 135m },
+                new BookingDetailsViewModel { StatusName = "Cancelled", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 500m },
+                new BookingDetailsViewModel { StatusName = "Abandoned", ScheduledTime = DateTime.Today, TotalAmount = 700m },
+            };
+
+            BookingSummaryStats stats = service.GetSummaryStats(bookings);
+
+            Assert.Equal(2, stats.TodaysAppointmentsCount);
+
+            // The estimate for the job still to do, the final price for the one that is done.
+            Assert.Equal(225m, stats.MonthlyRevenue);
+        }
+
         private static BookingsService CreateBookingsServiceWithThreeBookings(out Booking older, out Booking newer, out Booking cancelled)
         {
             // None of these three bookings have any Payments (same as a real booking that hasn't
@@ -830,91 +722,8 @@ namespace HandyFix.Services.Data.Tests
                 paymentsService,
                 dbQueryRunner,
                 emailSenderMock.Object,
-                new ConfigurationBuilder().Build(), NullLogger<BookingsService>.Instance);
-        }
-
-        [Fact]
-        public void GetSummaryStatsShouldDescribeTheGivenListRegardlessOfWhereItCameFrom()
-        {
-            // A pure computation over whatever list it's handed - no repository access - so it
-            // needs none of BookingsService's other dependencies wired up.
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
-
-            var bookings = new List<BookingDetailsViewModel>
-            {
-                new BookingDetailsViewModel { StatusName = "Pending", ScheduledTime = DateTime.Today, TotalAmount = 100m },
-                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 250m },
-                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true, ScheduledTime = AnotherDayThisMonth(), TotalAmount = 75m },
-            };
-
-            BookingSummaryStats stats = service.GetSummaryStats(bookings);
-
-            // The first one is still waiting for its deposit. It is not a job until the deposit is
-            // in, so it is in none of the three figures. While it read "Booked" it was counted
-            // as a job today and £100 of the month's work (PROJECT_STATE.md Section 3ch).
-            Assert.Equal(1, stats.TodaysAppointmentsCount);
-            Assert.Equal(1, stats.AwaitingTechnicianCount);
-            Assert.Equal(325m, stats.MonthlyRevenue);
-        }
-
-        // The card that used to read "Pending Approval" counted bookings waiting for a step that
-        // no longer exists. It now counts the admin's to-do after a deposit comes in: a booking
-        // that is paid, still open, and has nobody on it (PROJECT_STATE.md Section 3ce).
-        [Fact]
-        public void GetSummaryStatsShouldCountOnlyPaidOpenBookingsWithNoTechnicianAsWaitingForOne()
-        {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
-
-            var bookings = new List<BookingDetailsViewModel>
-            {
-                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true },
-                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, TechnicianId = Guid.NewGuid() },
-                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = false },
-                new BookingDetailsViewModel { StatusName = "Pending", IsDepositPaid = false },
-                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true },
-                new BookingDetailsViewModel { StatusName = "Cancelled", IsDepositPaid = true },
-                new BookingDetailsViewModel { StatusName = "Abandoned", IsDepositPaid = false },
-            };
-
-            BookingSummaryStats stats = service.GetSummaryStats(bookings);
-
-            Assert.Equal(1, stats.AwaitingTechnicianCount);
-        }
-
-        [Fact]
-        public void GetSummaryStatsShouldReturnZeroRevenueForAnEmptyList()
-        {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
-
-            BookingSummaryStats stats = service.GetSummaryStats(new List<BookingDetailsViewModel>());
-
-            Assert.Equal(0, stats.TodaysAppointmentsCount);
-            Assert.Equal(0, stats.AwaitingTechnicianCount);
-            Assert.Equal(0m, stats.MonthlyRevenue);
-        }
-
-        // A cancelled or abandoned job keeps its date now (PROJECT_STATE.md Section 3ce). While
-        // it lost its date with its slot it fell out of both figures by accident; it has to be
-        // left out by name.
-        [Fact]
-        public void GetSummaryStatsShouldLeaveOutJobsThatWereCancelledOrAbandoned()
-        {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
-
-            var bookings = new List<BookingDetailsViewModel>
-            {
-                new BookingDetailsViewModel { StatusName = "Approved", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 90m },
-                new BookingDetailsViewModel { StatusName = "Completed", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 90m, FinalPrice = 135m },
-                new BookingDetailsViewModel { StatusName = "Cancelled", IsDepositPaid = true, ScheduledTime = DateTime.Today, TotalAmount = 500m },
-                new BookingDetailsViewModel { StatusName = "Abandoned", ScheduledTime = DateTime.Today, TotalAmount = 700m },
-            };
-
-            BookingSummaryStats stats = service.GetSummaryStats(bookings);
-
-            Assert.Equal(2, stats.TodaysAppointmentsCount);
-
-            // The estimate for the job still to do, the final price for the one that is done.
-            Assert.Equal(225m, stats.MonthlyRevenue);
+                new ConfigurationBuilder().Build(),
+                NullLogger<BookingsService>.Instance);
         }
 
         /// <summary>

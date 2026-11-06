@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Tests
+﻿namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.Linq;
@@ -20,7 +20,7 @@ namespace HandyFix.Services.Data.Tests
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-            
+
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
 
@@ -66,14 +66,14 @@ namespace HandyFix.Services.Data.Tests
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-            
+
             using var dbContext = new ApplicationDbContext(options);
             using var slotRepository = new EfDeletableEntityRepository<AvailabilitySlot>(dbContext);
 
             // Add slots on different dates
             var date1 = DateTime.Today.AddDays(1);
             var date2 = DateTime.Today.AddDays(2);
-            
+
             dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = date1.AddHours(9), EndTime = date1.AddHours(10), IsBooked = false });
             dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = date1.AddHours(10), EndTime = date1.AddHours(11), IsBooked = false });
             dbContext.AvailabilitySlots.Add(new AvailabilitySlot { StartTime = date2.AddHours(9), EndTime = date2.AddHours(10), IsBooked = false });

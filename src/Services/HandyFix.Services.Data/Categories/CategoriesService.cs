@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Categories
+﻿namespace HandyFix.Services.Data.Categories
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -6,7 +6,6 @@ namespace HandyFix.Services.Data.Categories
 
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
-    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Mapping;
 
     using Microsoft.EntityFrameworkCore;
@@ -34,19 +33,6 @@ namespace HandyFix.Services.Data.Categories
                 .Where(x => x.Slug == slug.ToLower())
                 .To<T>()
                 .FirstOrDefaultAsync();
-        }
-
-        public async Task CreateAsync(string name, string description)
-        {
-            var category = new ServiceCategory
-            {
-                Name = name,
-                Description = description,
-                Slug = SlugGenerator.Slugify(name),
-            };
-
-            await this.categoriesRepository.AddAsync(category);
-            await this.categoriesRepository.SaveChangesAsync();
         }
     }
 }

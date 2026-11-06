@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Reviews
+﻿namespace HandyFix.Services.Data.Reviews
 {
     using System;
     using System.Collections.Generic;
@@ -18,8 +18,6 @@ namespace HandyFix.Services.Data.Reviews
             ReviewSortField sortField = ReviewSortField.CreatedOn,
             bool descending = true,
             string statusFilter = null);
-
-        Task<int> GetPendingCountAsync();
 
         ReviewSummaryStats GetSummaryStats(IEnumerable<ReviewViewModel> reviews);
     }

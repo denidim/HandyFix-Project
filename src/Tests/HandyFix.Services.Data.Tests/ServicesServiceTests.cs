@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Tests
+﻿namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.IO;
@@ -31,10 +31,10 @@ namespace HandyFix.Services.Data.Tests
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-            
+
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<Service>(dbContext);
-            
+
             // Seed a category
             var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
             dbContext.ServiceCategories.Add(category);
@@ -58,21 +58,21 @@ namespace HandyFix.Services.Data.Tests
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-            
+
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<Service>(dbContext);
 
             var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
             dbContext.ServiceCategories.Add(category);
 
-            var serviceEntity = new Service 
-            { 
-                Id = Guid.NewGuid(), 
-                Name = "Handyman fixing squeaks", 
+            var serviceEntity = new Service
+            {
+                Id = Guid.NewGuid(),
+                Name = "Handyman fixing squeaks",
                 Description = "some description",
                 Slug = "handyman-fixing-squeaks",
                 BasePrice = 50,
-                CategoryId = category.Id
+                CategoryId = category.Id,
             };
             dbContext.Services.Add(serviceEntity);
             await dbContext.SaveChangesAsync();

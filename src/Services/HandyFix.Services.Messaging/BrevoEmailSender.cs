@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Messaging
+﻿namespace HandyFix.Services.Messaging
 {
     using System;
     using System.Collections.Generic;

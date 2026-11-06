@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Administration.Dashboard
+﻿namespace HandyFix.Web.ViewModels.Administration.Dashboard
 {
     using System.Collections.Generic;
 

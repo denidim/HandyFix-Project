@@ -102,6 +102,13 @@ architectural decision is made. Not at sprint boundaries — every iteration.
 - When your change resolves or contradicts something already written there, **update that text
   too.** Never leave a stale warning or a closed task described as open.
 - Finished sections get a `### Verified` subsection listing the build and test results.
+- **A large piece of work keeps its working plan in a file of its own.** Work that runs over many
+  commits or sessions (a sprint of refactors, a migration) gets `docs/private/<NAME>_PLAN.md`:
+  every step with its files, its checks and its commit title, and a "Where we are" block updated
+  after each commit, so a new session or another agent carries on from there. `PROJECT_STATE.md`
+  lists the work in Section 4 in a few lines and gets a Section 3 entry as each part lands. The
+  plan stays private because it names weaknesses before they are fixed, and because its ticks
+  change at every commit.
 
 *Why:* this file is the project's memory across sessions and across agents. A stale line in it
 costs more than a stale comment in code, because the next agent will act on it.

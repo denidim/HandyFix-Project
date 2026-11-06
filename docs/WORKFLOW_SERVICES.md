@@ -18,9 +18,8 @@ Changing a category's name, description, or adding a fourth category means **edi
 and restarting the app**, not a form submission. (Services are different: their seeder fills an
 empty table once and then leaves them to the admin panel, see Step 2.)
 
-`ICategoriesService.CreateAsync(name, description)` exists in the service layer but has **no caller
-anywhere in the app** — it's reachable from a test, not from any admin action. Don't assume it's
-wired to a UI because the method exists.
+`ICategoriesService` only reads categories; there is no code path that creates one besides the
+seeder.
 
 **Code:** `Areas/Administration/Controllers/ServicesController.cs` (category dropdown only),
 `src/Data/HandyFix.Data/Seeding/ServiceCategoriesSeeder.cs`, `ICategoriesService`.

@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Administration.Technicians
+﻿namespace HandyFix.Web.ViewModels.Administration.Technicians
 {
     using System;
 

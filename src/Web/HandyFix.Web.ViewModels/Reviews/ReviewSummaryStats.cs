@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Reviews
+﻿namespace HandyFix.Web.ViewModels.Reviews
 {
     public class ReviewSummaryStats
     {

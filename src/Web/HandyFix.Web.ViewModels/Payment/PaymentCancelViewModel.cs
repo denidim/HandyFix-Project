@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Payment
+﻿namespace HandyFix.Web.ViewModels.Payment
 {
     using System;
 

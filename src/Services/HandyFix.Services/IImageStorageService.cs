@@ -1,4 +1,4 @@
-namespace HandyFix.Services
+﻿namespace HandyFix.Services
 {
     using System.IO;
     using System.Threading.Tasks;

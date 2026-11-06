@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Home
+﻿namespace HandyFix.Web.ViewModels.Home
 {
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;

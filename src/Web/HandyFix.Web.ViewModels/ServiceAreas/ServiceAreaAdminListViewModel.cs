@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.ServiceAreas
+﻿namespace HandyFix.Web.ViewModels.ServiceAreas
 {
     using System;
     using System.Linq;

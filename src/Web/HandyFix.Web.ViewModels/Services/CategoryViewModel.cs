@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Services
+﻿namespace HandyFix.Web.ViewModels.Services
 {
     using System;
     using System.Collections.Generic;

@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Tests
+﻿namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.Linq;
@@ -21,7 +21,7 @@ namespace HandyFix.Services.Data.Tests
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
-            
+
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<Review>(dbContext);
 

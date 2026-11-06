@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Tests
+﻿namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -56,7 +56,7 @@ namespace HandyFix.Services.Data.Tests
                 PhoneNumber = "07123",
                 Address = "12 Main Rd",
                 ProblemDescription = "Leak",
-                StatusId = pendingBookingStatus.Id
+                StatusId = pendingBookingStatus.Id,
             };
             dbContext.Bookings.Add(booking);
 
@@ -68,7 +68,7 @@ namespace HandyFix.Services.Data.Tests
                 Amount = 50.00m,
                 Provider = "Stripe",
                 CheckoutSessionId = checkoutSessionId,
-                StatusId = pendingPaymentStatus.Id
+                StatusId = pendingPaymentStatus.Id,
             };
             dbContext.Payments.Add(payment);
             await dbContext.SaveChangesAsync();

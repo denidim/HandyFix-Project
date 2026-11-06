@@ -1,9 +1,10 @@
-namespace HandyFix.Web.Controllers
+﻿namespace HandyFix.Web.Controllers
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+
     using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services;
@@ -219,6 +220,35 @@ namespace HandyFix.Web.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("Booking/Confirmed/{id}")]
+        public async Task<IActionResult> Confirmed(Guid id)
+        {
+            try
+            {
+                BookingDetailsViewModel booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(id);
+                if (booking == null || !booking.CameFromWebsite)
+                {
+                    return this.NotFound();
+                }
+
+                if (!booking.IsConfirmed)
+                {
+                    // This page used to say "Booking Confirmed" and "Deposit Paid" for any
+                    // booking's id, paid or not. One that is not paid goes to the page that
+                    // says where it stands and, while its time is held, lets it be paid
+                    // (PROJECT_STATE.md Section 3cg).
+                    return this.RedirectToAction("Cancel", "Payment", new { bookingId = id });
+                }
+
+                return this.View(booking);
+            }
+            catch (Exception ex)
+            {
+                return this.SomethingWentWrong(ex);
+            }
+        }
+
         // The site's own "something went wrong" page, with the status that says so. These spots
         // used to show a leftover developer page and write nothing to the log, so a booking page
         // that failed left no trace of why (PROJECT_STATE Section 3cb).
@@ -259,35 +289,6 @@ namespace HandyFix.Web.Controllers
             model.SelectedCategorySlug = model.Services.FirstOrDefault(s => s.Id == model.ServiceId)?.CategorySlug;
 
             return this.View(model);
-        }
-
-        [HttpGet]
-        [Route("Booking/Confirmed/{id}")]
-        public async Task<IActionResult> Confirmed(Guid id)
-        {
-            try
-            {
-                BookingDetailsViewModel booking = await this.bookingsService.GetByIdAsync<BookingDetailsViewModel>(id);
-                if (booking == null || !booking.CameFromWebsite)
-                {
-                    return this.NotFound();
-                }
-
-                if (!booking.IsConfirmed)
-                {
-                    // This page used to say "Booking Confirmed" and "Deposit Paid" for any
-                    // booking's id, paid or not. One that is not paid goes to the page that
-                    // says where it stands and, while its time is held, lets it be paid
-                    // (PROJECT_STATE.md Section 3cg).
-                    return this.RedirectToAction("Cancel", "Payment", new { bookingId = id });
-                }
-
-                return this.View(booking);
-            }
-            catch (Exception ex)
-            {
-                return this.SomethingWentWrong(ex);
-            }
         }
     }
 }

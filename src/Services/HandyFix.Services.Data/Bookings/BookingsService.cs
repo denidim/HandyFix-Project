@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Bookings
+﻿namespace HandyFix.Services.Data.Bookings
 {
     using System;
     using System.Collections.Generic;
@@ -16,8 +16,6 @@ namespace HandyFix.Services.Data.Bookings
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Validation;
-
-    using Mapster;
 
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -100,8 +98,7 @@ namespace HandyFix.Services.Data.Bookings
 
         public async Task<Booking> CreateBookingAsync(
             BookingInputModel model,
-            IReadOnlyList<string> imageUrls,
-            string userId = null)
+            IReadOnlyList<string> imageUrls)
         {
             BookingStatus pendingStatus = await this.statusRepository.All().FirstOrDefaultAsync(x => x.Name == "Pending");
             if (pendingStatus == null)
@@ -136,7 +133,6 @@ namespace HandyFix.Services.Data.Bookings
                 Address = address,
                 ProblemDescription = model.ProblemDescription,
                 StatusId = pendingStatus.Id,
-                UserId = userId,
                 TotalAmount = totalAmount,
                 DepositAmount = depositAmount,
                 Source = BookingSource.Website,
@@ -308,15 +304,6 @@ namespace HandyFix.Services.Data.Bookings
             };
 
             return await query.To<T>().ToListAsync();
-        }
-
-        public async Task<IEnumerable<T>> GetUserBookingsAsync<T>(string userId)
-        {
-            return await this.bookingRepository.All()
-                .Where(x => x.UserId == userId)
-                .OrderByDescending(x => x.CreatedOn)
-                .To<T>()
-                .ToListAsync();
         }
 
         public async Task<bool> CompleteBookingAsync(Guid bookingId, decimal finalPrice)
@@ -546,55 +533,6 @@ namespace HandyFix.Services.Data.Bookings
             await this.bookingRepository.SaveChangesAsync();
 
             return true;
-        }
-
-        public async Task RescheduleBookingAsync(Guid bookingId, Guid newSlotId)
-        {
-            Booking booking = await this.bookingRepository.All().FirstOrDefaultAsync(x => x.Id == bookingId);
-            if (booking == null)
-            {
-                throw new InvalidOperationException("The booking does not exist.");
-            }
-
-            AvailabilitySlot newSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == newSlotId);
-            if (newSlot == null)
-            {
-                throw new InvalidOperationException("The selected time slot does not exist. Please choose a different time.");
-            }
-
-            AvailabilitySlot oldSlot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.BookingId == bookingId);
-
-            // Release the old slot and claim the new one atomically: if the new slot was
-            // taken, blocked, or lost a concurrency race, roll back so the booking stays
-            // exactly where it was instead of ending up with no appointment time at all.
-            await using (IDbContextTransaction transaction = await this.dbQueryRunner.BeginTransactionAsync())
-            {
-                if (oldSlot != null)
-                {
-                    var oldSlotReleased = await this.availabilityService.ReleaseSlotAsync(oldSlot.Id);
-                    if (!oldSlotReleased)
-                    {
-                        await transaction.RollbackAsync();
-                        throw new SlotUnavailableException("Unable to reschedule this booking right now. Please try again.");
-                    }
-                }
-
-                var newSlotBooked = await this.availabilityService.BookSlotAsync(newSlotId, bookingId);
-                if (!newSlotBooked)
-                {
-                    await transaction.RollbackAsync();
-                    throw new SlotUnavailableException("The selected time slot is no longer available. Please choose a different time.");
-                }
-
-                // The booking's own technician is deliberately left untouched. Slots carry no
-                // technician (see AvailabilitySlot) - moving a job to a different hour doesn't
-                // change who was assigned to it, so an admin's assignment survives a reschedule.
-                booking.ScheduledStart = newSlot.StartTime;
-                booking.ScheduledEnd = newSlot.EndTime;
-                await this.bookingRepository.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-            }
         }
 
         public async Task<JobMoveResult> MoveBookingAsync(Guid bookingId, DateTime newStart)
@@ -991,18 +929,6 @@ namespace HandyFix.Services.Data.Bookings
             }
 
             return staleBookings.Count;
-        }
-
-        public async Task AddBookingImageAsync(Guid bookingId, string imageUrl)
-        {
-            var image = new BookingImage
-            {
-                BookingId = bookingId,
-                ImageUrl = imageUrl,
-            };
-
-            await this.imageRepository.AddAsync(image);
-            await this.imageRepository.SaveChangesAsync();
         }
 
         public async Task<int> GetTotalCountAsync()

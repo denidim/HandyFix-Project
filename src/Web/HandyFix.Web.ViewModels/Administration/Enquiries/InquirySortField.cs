@@ -1,4 +1,4 @@
-namespace HandyFix.Web.ViewModels.Administration.Enquiries
+﻿namespace HandyFix.Web.ViewModels.Administration.Enquiries
 {
     public enum InquirySortField
     {

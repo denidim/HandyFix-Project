@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Availability
+﻿namespace HandyFix.Services.Data.Availability
 {
     using System;
     using System.Collections.Generic;
@@ -9,8 +9,6 @@ namespace HandyFix.Services.Data.Availability
     public interface IAvailabilityService
     {
         Task<IEnumerable<DateTime>> GetAvailableDatesAsync(int daysAhead = 30);
-
-        Task<IEnumerable<T>> GetAvailableSlotsForDateAsync<T>(DateTime date);
 
         Task<IEnumerable<T>> GetAllSlotsForDateAsync<T>(DateTime date);
 

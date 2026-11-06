@@ -26,7 +26,6 @@
     <ProjectReference Include="..\..\Services\HandyFix.Services.Mapping\HandyFix.Services.Mapping.csproj" />
     <ProjectReference Include="..\..\Services\HandyFix.Services.Messaging\HandyFix.Services.Messaging.csproj" />
     <ProjectReference Include="..\..\Services\HandyFix.Services\HandyFix.Services.csproj" />
-    <ProjectReference Include="..\HandyFix.Web.Infrastructure\HandyFix.Web.Infrastructure.csproj" />
     <ProjectReference Include="..\HandyFix.Web.ViewModels\HandyFix.Web.ViewModels.csproj" />
   </ItemGroup>
 </Project>

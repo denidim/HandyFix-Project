@@ -18,7 +18,6 @@ COPY src/Services/HandyFix.Services/HandyFix.Services.csproj src/Services/HandyF
 COPY src/Services/HandyFix.Services.Data/HandyFix.Services.Data.csproj src/Services/HandyFix.Services.Data/
 COPY src/Services/HandyFix.Services.Mapping/HandyFix.Services.Mapping.csproj src/Services/HandyFix.Services.Mapping/
 COPY src/Services/HandyFix.Services.Messaging/HandyFix.Services.Messaging.csproj src/Services/HandyFix.Services.Messaging/
-COPY src/Web/HandyFix.Web.Infrastructure/HandyFix.Web.Infrastructure.csproj src/Web/HandyFix.Web.Infrastructure/
 COPY src/Web/HandyFix.Web.ViewModels/HandyFix.Web.ViewModels.csproj src/Web/HandyFix.Web.ViewModels/
 COPY src/Web/HandyFix.Web/HandyFix.Web.csproj src/Web/HandyFix.Web/
 
