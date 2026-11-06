@@ -2,15 +2,6 @@
 @model HandyFix.Web.ViewModels.Services.PricingCardViewModel
 @inject IImageStorageService ImageStorage
 
-@functions {
-    string FormatDuration(int minutes)
-    {
-        return minutes >= 60
-            ? $"{(minutes / 60.0).ToString("0.#")} Hours"
-            : $"{minutes} Mins";
-    }
-}
-
 <article class="pricing-card @Model.DivisionClass">
     @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
     {
@@ -53,7 +44,7 @@
         }
         <span class="pricing-card-duration">
             <span class="material-symbols-outlined">timer</span>
-            @(Model.IsQuoteBased ? "Day Rate / Survey" : this.FormatDuration(Model.EstimatedDurationMinutes))
+            @(Model.IsQuoteBased ? "Day Rate / Survey" : Durations.HoursOrMinutes(Model.EstimatedDurationMinutes))
         </span>
     </div>
     @if (!string.IsNullOrWhiteSpace(Model.CtaText) && !string.IsNullOrWhiteSpace(Model.CtaUrl))

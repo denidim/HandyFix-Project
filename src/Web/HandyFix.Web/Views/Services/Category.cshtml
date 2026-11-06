@@ -87,11 +87,7 @@
             <h2 class="visually-hidden">@Model.Name services</h2>
             @foreach (var svc in Model.Services)
             {
-                var duration = isBuilding 
-                    ? "Day Rate / Survey" 
-                    : (svc.EstimatedDurationMinutes >= 60 
-                        ? $"{(svc.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
-                        : $"{svc.EstimatedDurationMinutes} Mins");
+                var duration = isBuilding ? "Day Rate / Survey" : Durations.HoursOrMinutes(svc.EstimatedDurationMinutes);
 
                 // The card shows its picture 88px wide on a phone and 256px on a computer, from a
                 // picture 1024 wide. With a small copy beside it the browser picks by the screen;

@@ -10,11 +10,7 @@
 
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == CategorySlugs.SmallBuildingWorks;
-    var durationHours = isBuilding
-        ? "Day Rate / Survey"
-        : (Model.EstimatedDurationMinutes >= 60 
-            ? $"{(Model.EstimatedDurationMinutes / 60.0).ToString("0.#")} Hours" 
-            : $"{Model.EstimatedDurationMinutes} Mins");
+    var durationHours = isBuilding ? "Day Rate / Survey" : Durations.HoursOrMinutes(Model.EstimatedDurationMinutes);
 
     // Dynamic Image path
     var serviceImage = Model.ImageUrl;
@@ -44,17 +40,6 @@
     var expertBio = "I've been in the construction industry since 2004, and I believe the secret to stress-free renovations is simple: turn up on time, manage the trades properly, and do the job right the first time. I personally survey every project and work alongside our teams on-site until the final checklist is complete.";
     var expertClosingLine = "You'll always have a direct line to me, and my personal guarantee that the work is finished to perfection.";
     var expertAvatar = "/images/expert-zap.webp";
-
-    string GetCategoryIcon(string name)
-    {
-        return name switch
-        {
-            "Plumbing" => "water_drop",
-            "Handyman" => "handyman",
-            "Small Building & Refurbishments" => "foundation",
-            _ => "home_repair_service",
-        };
-    }
 }
 
 <div class="page-container services-page">
@@ -314,7 +299,7 @@
                     <partial name="_PricingCard" model="@(new PricingCardViewModel
                                                          {
                                                              Name = related.Name,
-                                                             IconName = GetCategoryIcon(related.CategoryName),
+                                                             IconName = CategoryIcons.ForSlug(related.CategorySlug),
                                                              ImageUrl = related.ImageUrl,
                                                              Description = related.Description,
                                                              BasePrice = related.BasePrice,

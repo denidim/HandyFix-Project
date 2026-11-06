@@ -9,13 +9,6 @@
     var approvalRate = Model.ApprovalRate;
 }
 
-@functions {
-    bool NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField field)
-    {
-        return this.Model.SortField == field ? !this.Model.Descending : false;
-    }
-}
-
 <!-- Top Header Context -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <div class="d-flex align-items-center gap-3">
@@ -71,7 +64,7 @@
                 <tr class="admin-table-head">
                     <th class="px-4 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Reviews" asp-action="Index"
-                           asp-route-sortField="CustomerName" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.CustomerName)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="CustomerName" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.CustomerName)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.CustomerName ? "active" : "")">
                             Customer
                             @if (Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.CustomerName)
@@ -82,7 +75,7 @@
                     </th>
                     <th class="px-4 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Reviews" asp-action="Index"
-                           asp-route-sortField="Rating" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.Rating)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="Rating" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.Rating)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.Rating ? "active" : "")">
                             Rating
                             @if (Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.Rating)
@@ -94,7 +87,7 @@
                     <th class="px-4 py-3 font-label-sm uppercase w-50">Comment</th>
                     <th class="px-4 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Reviews" asp-action="Index"
-                           asp-route-sortField="CreatedOn" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="CreatedOn" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Reviews.ReviewSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.CreatedOn ? "active" : "")">
                             Date
                             @if (Model.SortField == HandyFix.Web.ViewModels.Reviews.ReviewSortField.CreatedOn)

@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    public class BookingListViewModel
+    public class BookingListViewModel : ISortableList<BookingSortField>
     {
         public IEnumerable<BookingDetailsViewModel> Bookings { get; set; }
 

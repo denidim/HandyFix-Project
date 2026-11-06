@@ -6,13 +6,6 @@
     var bookings = Model.Bookings;
 }
 
-@functions {
-    bool NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField field)
-    {
-        return this.Model.SortField == field ? !this.Model.Descending : false;
-    }
-}
-
 <!-- Sticky Header -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
     <div>
@@ -92,7 +85,7 @@
                 <tr class="admin-table-head">
                     <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="CreatedOn" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="CreatedOn" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn ? "active" : "")">
                             Ref, Came In
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CreatedOn)
@@ -103,7 +96,7 @@
                     </th>
                     <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="CustomerName" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="CustomerName" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName ? "active" : "")">
                             Customer
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.CustomerName)
@@ -114,7 +107,7 @@
                     </th>
                     <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="AppointmentTime" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="AppointmentTime" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime ? "active" : "")">
                             Day and Time
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.AppointmentTime)
@@ -127,7 +120,7 @@
                     <th class="px-3 py-3 font-label-sm uppercase">Price</th>
                     <th class="px-3 py-3 font-label-sm uppercase">
                         <a asp-area="Administration" asp-controller="Bookings" asp-action="Index"
-                           asp-route-sortField="Status" asp-route-descending="@this.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.Status)" asp-route-status="@Model.StatusFilter"
+                           asp-route-sortField="Status" asp-route-descending="@Model.NextDescending(HandyFix.Web.ViewModels.Booking.BookingSortField.Status)" asp-route-status="@Model.StatusFilter"
                            class="admin-sort-link @(Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.Status ? "active" : "")">
                             The Job
                             @if (Model.SortField == HandyFix.Web.ViewModels.Booking.BookingSortField.Status)
