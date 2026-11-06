@@ -68,7 +68,7 @@
             var extension = Path.GetExtension(fileName).ToLowerInvariant();
             if (!this.allowedExtensions.Contains(extension) || !this.allowedContentTypes.Contains(contentType.ToLowerInvariant()))
             {
-                throw new InvalidOperationException("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed.");
+                throw new ImageUploadValidationException("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed.");
             }
 
             byte[] picture;
@@ -172,7 +172,7 @@
                 {
                     if (originalBitmap == null)
                     {
-                        throw new InvalidOperationException("Failed to decode uploaded image.");
+                        throw new ImageUploadValidationException("Failed to decode uploaded image.");
                     }
 
                     SKBitmap targetBitmap = originalBitmap;

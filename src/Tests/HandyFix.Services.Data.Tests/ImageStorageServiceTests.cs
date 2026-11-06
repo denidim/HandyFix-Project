@@ -91,6 +91,33 @@
             Assert.Empty(this.bucket.Deleted);
         }
 
+        // A file the site does not take is the admin's to put right. It is refused with its own
+        // exception type and words written for the admin, which the form shows as they are;
+        // anything else that fails here is told in the form's own words.
+        [Fact]
+        public async Task AFileThatIsNotAJpegPngOrWebpIsRefusedInWordsForTheAdmin()
+        {
+            using var stream = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+
+            ImageUploadValidationException refusal = await Assert.ThrowsAsync<ImageUploadValidationException>(
+                () => this.storage.SaveServiceImageAsync(stream, "notes.pdf", "application/pdf", "tap-repairs"));
+
+            Assert.Equal("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed.", refusal.Message);
+            Assert.Empty(this.bucket.Objects);
+        }
+
+        [Fact]
+        public async Task AFileThatIsNotReallyAPictureIsRefusedInWordsForTheAdmin()
+        {
+            using var stream = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+
+            ImageUploadValidationException refusal = await Assert.ThrowsAsync<ImageUploadValidationException>(
+                () => this.storage.SaveServiceImageAsync(stream, "photo.png", "image/png", "tap-repairs"));
+
+            Assert.Equal("Failed to decode uploaded image.", refusal.Message);
+            Assert.Empty(this.bucket.Objects);
+        }
+
         // An upload whose copy cannot go up has failed for the admin, so the picture is taken down
         // again rather than left in the bucket with nothing pointing at it.
         [Fact]

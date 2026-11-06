@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.ViewModels.Administration.Services;
@@ -12,20 +13,28 @@
 
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.Rendering;
+    using Microsoft.Extensions.Logging;
 
     public class ServicesController : AdministrationController
     {
         private const string NameTakenMessage = "Another service already has this name, or one that was deleted did. Please choose a different name.";
 
+        // Create and Edit both save the service before its picture, so a picture that fails leaves
+        // the rest of the admin's changes in place.
+        private const string PictureNotSavedMessage = "The picture could not be saved. The service itself is saved: try the picture again.";
+
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
+        private readonly ILogger<ServicesController> logger;
 
         public ServicesController(
             IServicesService servicesService,
-            ICategoriesService categoriesService)
+            ICategoriesService categoriesService,
+            ILogger<ServicesController> logger)
         {
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
+            this.logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -68,7 +77,7 @@
             }
             catch (Exception ex)
             {
-                this.ModelState.AddModelError("ImageFile", ex.Message);
+                this.ModelState.AddModelError("ImageFile", this.PictureError(ex, serviceId));
                 IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
                 model.Categories = new SelectList(categories, "Id", "Name");
                 return this.View(model);
@@ -140,7 +149,7 @@
             }
             catch (Exception ex)
             {
-                this.ModelState.AddModelError("ImageFile", ex.Message);
+                this.ModelState.AddModelError("ImageFile", this.PictureError(ex, model.Id.Value));
                 IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
                 model.Categories = new SelectList(categories, "Id", "Name", model.CategoryId);
                 return this.View(model);
@@ -176,6 +185,21 @@
         private IActionResult RedirectToList()
         {
             return this.RedirectToAction(nameof(this.Index), "Services", new { area = "Administration" });
+        }
+
+        // What goes under the picture box when the picture cannot be saved. A file that is not a
+        // picture the site takes is the admin's to put right, and its message is written for them.
+        // Anything else (the bucket out of reach, the picture library failing) used to show its own
+        // text there; it is logged and said in our words.
+        private string PictureError(Exception ex, Guid serviceId)
+        {
+            if (ex is ImageUploadValidationException)
+            {
+                return ex.Message;
+            }
+
+            this.logger.LogError(ex, "The picture of service {ServiceId} could not be saved", serviceId);
+            return PictureNotSavedMessage;
         }
     }
 }

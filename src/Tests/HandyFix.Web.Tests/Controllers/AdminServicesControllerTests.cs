@@ -2,9 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using HandyFix.Data.Models;
+    using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Areas.Administration.Controllers;
@@ -14,6 +16,7 @@
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.ViewFeatures;
+    using Microsoft.Extensions.Logging;
 
     using Moq;
 
@@ -184,6 +187,64 @@
             servicesService.Verify(x => x.DeleteAsync(id), Times.Once);
         }
 
+        // The picture's error goes under the picture box. A file the site does not take is the
+        // admin's to put right, and the words written for it reach them as they are.
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task APictureTheSiteDoesNotTakeShowsTheMessageWrittenForIt(bool editing)
+        {
+            var controller = BuildController(out var servicesService, out _, out var logger);
+            servicesService
+                .Setup(x => x.SetServiceImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()))
+                .ThrowsAsync(new ImageUploadValidationException("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed."));
+
+            var result = await SaveAsync(controller, editing);
+
+            Assert.IsType<ViewResult>(result);
+            Assert.Equal("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed.", PictureErrorShown(controller));
+            logger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Never);
+        }
+
+        // Any other failure used to put its own text under the picture box: the bucket's, the
+        // picture library's. It is logged, and the admin is told in our words that the rest of the
+        // service was kept, which is true because the service is saved before its picture.
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task APictureThatFailsForAnyOtherReasonIsLoggedAndToldInOurOwnWords(bool editing)
+        {
+            var controller = BuildController(out var servicesService, out _, out var logger);
+            var failure = new InvalidOperationException("Cloudflare R2 is not fully configured. Missing one or more required settings in CloudflareR2 section.");
+            servicesService
+                .Setup(x => x.SetServiceImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()))
+                .ThrowsAsync(failure);
+
+            var result = await SaveAsync(controller, editing);
+
+            Assert.IsType<ViewResult>(result);
+            Assert.Equal("The picture could not be saved. The service itself is saved: try the picture again.", PictureErrorShown(controller));
+            logger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    failure,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            List<string> calls = servicesService.Invocations.Select(x => x.Method.Name).ToList();
+            int saved = calls.IndexOf(editing ? nameof(IServicesService.UpdateAsync) : nameof(IServicesService.CreateAsync));
+            Assert.InRange(saved, 0, calls.IndexOf(nameof(IServicesService.SetServiceImageAsync)) - 1);
+        }
+
         [Fact]
         public void ANewServiceFormShouldStartOnTheSharedDefaultOrder()
         {
@@ -212,15 +273,35 @@
             CategoryId = Guid.NewGuid(),
         };
 
-        private static ServicesController BuildController(out Mock<IServicesService> servicesService, out Mock<ICategoriesService> categoriesService)
+        // The same service through Create, or through Edit as one that already exists.
+        private static Task<IActionResult> SaveAsync(ServicesController controller, bool editing)
+        {
+            var model = ValidService();
+            if (!editing)
+            {
+                return controller.Create(model);
+            }
+
+            model.Id = Guid.NewGuid();
+            return controller.Edit(model);
+        }
+
+        private static string PictureErrorShown(ServicesController controller) =>
+            Assert.Single(controller.ModelState[nameof(ServiceAdminInputModel.ImageFile)].Errors).ErrorMessage;
+
+        private static ServicesController BuildController(out Mock<IServicesService> servicesService, out Mock<ICategoriesService> categoriesService) =>
+            BuildController(out servicesService, out categoriesService, out _);
+
+        private static ServicesController BuildController(out Mock<IServicesService> servicesService, out Mock<ICategoriesService> categoriesService, out Mock<ILogger<ServicesController>> logger)
         {
             servicesService = new Mock<IServicesService>();
             categoriesService = new Mock<ICategoriesService>();
             categoriesService
                 .Setup(x => x.GetAllAsync<CategoryViewModel>())
                 .ReturnsAsync(new List<CategoryViewModel>());
+            logger = new Mock<ILogger<ServicesController>>();
 
-            return new ServicesController(servicesService.Object, categoriesService.Object)
+            return new ServicesController(servicesService.Object, categoriesService.Object, logger.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
                 TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>()),
