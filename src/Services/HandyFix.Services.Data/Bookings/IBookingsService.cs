@@ -50,11 +50,12 @@
         Task<TechnicianAssignmentResult> AssignTechnicianAsync(Guid bookingId, Guid? technicianId);
 
         /// <summary>
-        /// Cancels a job, keeps the reason and the day it was for, and frees its slot. False,
-        /// with nothing changed, when the job is missing, no reason is given or
-        /// <see cref="BookingRules.CanCancel"/> says no.
+        /// Cancels a job, keeps the reason and the day it was for, and frees its slot. Nothing
+        /// is changed when the job is missing, no reason is given or
+        /// <see cref="BookingRules.CanCancel"/> says no (NotAllowed), or when a website booking
+        /// turns out to have been paid for in the same moment (PaidJustNow).
         /// </summary>
-        Task<bool> CancelBookingAsync(Guid bookingId, string reason);
+        Task<JobCancelOutcome> CancelBookingAsync(Guid bookingId, string reason);
 
         /// <summary>
         /// Moves a job to another day or hour. A website booking gives its hour in the calendar

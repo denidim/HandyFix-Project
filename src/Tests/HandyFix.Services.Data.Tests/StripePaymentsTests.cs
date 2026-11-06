@@ -10,6 +10,7 @@
     using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Payments;
+    using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
     using Microsoft.Extensions.Configuration;
@@ -328,11 +329,53 @@
             Booking booking = world.DbContext.Bookings.Single();
             world.Stripe.Setup(x => x.ExpireCheckoutAsync(sessionId)).ReturnsAsync(new Session { Id = sessionId, Status = "expired", PaymentStatus = "unpaid" });
 
-            Assert.True(await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off"));
+            Assert.Equal(JobCancelOutcome.Cancelled, await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off"));
 
             world.Stripe.Verify(x => x.ExpireCheckoutAsync(sessionId), Times.Once);
             Assert.Equal("Cancelled", world.StatusOf(booking));
             Assert.Equal(new[] { "Cancelled" }, world.PaymentStatusesOf(booking));
+        }
+
+        // The customer paid in the moment the admin cancelled. Closing the page found it paid,
+        // which confirmed the booking and emailed the customer and the company, and the cancel
+        // then went on and cancelled it, with the admin told the customer was not emailed.
+        // Nothing is cancelled now: the booking stays confirmed, with its hour.
+        [Fact]
+        public async Task CancellingABookingWhoseStripePageTurnsOutToBePaidCancelsNothing()
+        {
+            using var world = new BookingWorld(Key);
+            List<SentEmail> sent = world.CaptureEmails();
+            var sessionId = await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
+            Booking booking = world.DbContext.Bookings.Single();
+            world.Stripe.Setup(x => x.ExpireCheckoutAsync(sessionId)).ReturnsAsync(Paid(sessionId, "pi_same_moment"));
+
+            JobCancelOutcome outcome = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off");
+
+            Assert.Equal(JobCancelOutcome.PaidJustNow, outcome);
+            Assert.Equal("Approved", world.StatusOf(booking));
+            Assert.Equal(new[] { "DepositPaid" }, world.PaymentStatusesOf(booking));
+            Assert.Null(world.DbContext.Bookings.Single().CancelReason);
+            Assert.True(world.Slot(world.SlotId).IsBooked);
+            Assert.Equal(booking.Id, world.Slot(world.SlotId).BookingId);
+            Assert.Equal(new[] { "Deposit of £50.00 paid on the website." }, world.HistoryOf(booking));
+            Assert.Equal(2, sent.Count);
+        }
+
+        // Stripe out of reach is not a payment: the job is cancelled all the same, as before.
+        // Money that still comes for it is written on the job and the company is told.
+        [Fact]
+        public async Task CancellingABookingWhileStripeCannotBeReachedStillCancelsIt()
+        {
+            using var world = new BookingWorld(Key);
+            var sessionId = await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
+            Booking booking = world.DbContext.Bookings.Single();
+            world.Stripe.Setup(x => x.ExpireCheckoutAsync(sessionId)).ThrowsAsync(new TimeoutException("Stripe did not answer"));
+
+            JobCancelOutcome outcome = await world.Bookings.CancelBookingAsync(booking.Id, "The customer rang to call it off");
+
+            Assert.Equal(JobCancelOutcome.Cancelled, outcome);
+            Assert.Equal("Cancelled", world.StatusOf(booking));
+            Assert.False(world.Slot(world.SlotId).IsBooked);
         }
 
         // Money that arrives for a booking the site has dropped used to switch it back on,

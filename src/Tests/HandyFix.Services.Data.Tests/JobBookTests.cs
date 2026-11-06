@@ -194,7 +194,7 @@
 
             var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, "  The customer rang: the tap was fixed by a neighbour.  ");
 
-            Assert.True(cancelled);
+            Assert.Equal(JobCancelOutcome.Cancelled, cancelled);
             Booking after = world.DbContext.Bookings.Single();
             Assert.Equal("Cancelled", world.StatusOf(booking));
             Assert.Equal("The customer rang: the tap was fixed by a neighbour.", after.CancelReason);
@@ -232,7 +232,7 @@
 
             var cancelled = await world.Bookings.CancelBookingAsync(booking.Id, reason);
 
-            Assert.False(cancelled);
+            Assert.Equal(JobCancelOutcome.NotAllowed, cancelled);
             Assert.Equal("Approved", world.StatusOf(booking));
             Assert.True(world.Slot(world.SlotId).IsBooked);
         }

@@ -454,7 +454,7 @@
             };
         }
 
-        public async Task<bool> CancelBookingAsync(Guid bookingId, string reason)
+        public async Task<JobCancelOutcome> CancelBookingAsync(Guid bookingId, string reason)
         {
             Booking booking = await this.bookingRepository.All()
                 .Include(x => x.Status)
@@ -470,7 +470,7 @@
                 || reason.Length == 0
                 || !BookingRules.CanCancel(booking.Status?.Name))
             {
-                return false;
+                return JobCancelOutcome.NotAllowed;
             }
 
             if (booking.Status?.Name == BookingStatusNames.Pending)
@@ -480,7 +480,15 @@
                 // that has just been cancelled. If the page cannot be reached the job is
                 // cancelled all the same; money that still comes for it is written on the job
                 // and the company is told (PaymentsService.ProcessPaymentSuccessAsync).
-                await this.paymentsService.CloseCheckoutsAsync(bookingId);
+                //
+                // A page found paid means the customer paid in this same moment: the deposit is
+                // written down, the booking confirmed and both emails sent. Nothing is cancelled
+                // then. It used to be cancelled straight after, with the admin told the
+                // customer had not been emailed; now the admin is told and decides.
+                if (await this.paymentsService.CloseCheckoutsAsync(bookingId) == CheckoutClosure.Paid)
+                {
+                    return JobCancelOutcome.PaidJustNow;
+                }
             }
 
             // The reason is kept on the job, with the day and hour it was for: its slot goes back
@@ -536,7 +544,7 @@
             booking.History.Add(JobHistory.Line($"Cancelled. Reason: {booking.CancelReason}"));
             await this.bookingRepository.SaveChangesAsync();
 
-            return true;
+            return JobCancelOutcome.Cancelled;
         }
 
         public async Task<JobMoveResult> MoveBookingAsync(Guid bookingId, DateTime newStart)
