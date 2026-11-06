@@ -477,7 +477,7 @@
                             <span class="job-ledger-action">
                                 @if (!payment.IsWebsiteDeposit)
                                 {
-                                    <form asp-area="Administration" asp-controller="Bookings" asp-action="RemovePayment" method="post" class="m-0" onsubmit="return confirm('Take this payment of @pounds(payment.Amount) off the job?');">
+                                    <form asp-area="Administration" asp-controller="Bookings" asp-action="RemovePayment" method="post" class="m-0" data-confirm="Take this payment of @pounds(payment.Amount) off the job?">
                                         <input type="hidden" name="id" value="@Model.Id" />
                                         <input type="hidden" name="paymentId" value="@payment.Id" />
                                         <button type="submit" class="btn btn-sm font-button-text slot-action-btn">Take off</button>

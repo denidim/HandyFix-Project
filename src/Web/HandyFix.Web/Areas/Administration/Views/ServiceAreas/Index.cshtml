@@ -120,7 +120,7 @@
                                     <a asp-area="Administration" asp-controller="ServiceAreas" asp-action="Edit" asp-route-id="@area.Id" class="p-2 text-on-surface-variant rounded-lg d-flex align-items-center justify-content-center dim-36 admin-btn-outline" title="Edit">
                                         <span class="material-symbols-outlined fs-20">edit</span>
                                     </a>
-                                    <form asp-area="Administration" asp-controller="ServiceAreas" asp-action="Delete" asp-route-id="@area.Id" method="post" class="d-inline-block" onsubmit="return confirm('Permanently delete @area.Name? This also deletes its FAQs and cannot be undone.');">
+                                    <form asp-area="Administration" asp-controller="ServiceAreas" asp-action="Delete" asp-route-id="@area.Id" method="post" class="d-inline-block" data-confirm="Permanently delete @area.Name? This also deletes its FAQs and cannot be undone.">
                                         <button type="submit" class="p-2 text-danger rounded-lg d-flex align-items-center justify-content-center dim-36 tint-error-soft border-error-soft" title="Delete">
                                             <span class="material-symbols-outlined fs-20">delete</span>
                                         </button>
