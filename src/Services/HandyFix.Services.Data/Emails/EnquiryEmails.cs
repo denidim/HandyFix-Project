@@ -10,24 +10,24 @@
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Home;
 
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     // Every word of the emails about an enquiry or a job application (PROJECT_STATE.md Section
     // 3di). InquiriesService decides when they are sent: after the enquiry is saved, never before.
     public class EnquiryEmails : IEnquiryEmails
     {
         private readonly IEmailSender emailSender;
-        private readonly IConfiguration configuration;
+        private readonly EmailOptions settings;
         private readonly ILogger<EnquiryEmails> logger;
 
         public EnquiryEmails(
             IEmailSender emailSender,
-            IConfiguration configuration,
+            IOptions<EmailOptions> settings,
             ILogger<EnquiryEmails> logger)
         {
             this.emailSender = emailSender;
-            this.configuration = configuration;
+            this.settings = settings.Value;
             this.logger = logger;
         }
 
@@ -69,14 +69,14 @@
                 + EmailLayout.Quote("Message Content:", EmailText.EncodeLines(inquiry.Message))
                 + photos
                 + EmailLayout.Advice($"&#128161; <strong>Quick Reply:</strong> Simply press <strong>Reply</strong> in your email app to reply directly to {name}.")
-                + EmailLayout.Button("&#9881;&#65039; View Enquiries in Admin Panel", $"{EmailSettings.SiteUrl(this.configuration)}/Administration/Enquiries"));
+                + EmailLayout.Button("&#9881;&#65039; View Enquiries in Admin Panel", $"{this.settings.SiteUrl}/Administration/Enquiries"));
 
             return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 $"{what} notice to the company",
-                EmailSettings.SystemFromAddress(this.configuration),
-                EmailSettings.WebsiteFromName,
-                EmailSettings.AdminNotificationAddress(this.configuration),
+                this.settings.SystemFromAddress,
+                EmailOptions.WebsiteFromName,
+                this.settings.AdminNotificationAddress,
                 $"New {what} - {inquiry.Name}",
                 body,
                 replyTo: inquiry.Email);
@@ -108,8 +108,8 @@
             return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 $"{what} acknowledgement to the sender",
-                EmailSettings.BookingsFromAddress(this.configuration),
-                EmailSettings.CustomerFromName,
+                this.settings.BookingsFromAddress,
+                EmailOptions.CustomerFromName,
                 inquiry.Email,
                 $"We have received your {what}",
                 body);

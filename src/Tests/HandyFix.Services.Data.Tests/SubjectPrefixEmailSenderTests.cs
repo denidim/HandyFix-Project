@@ -53,20 +53,22 @@
         [InlineData("   ")]
         public void WithNoMarkSetThereIsNoneToAdd(string configured)
         {
-            Assert.Null(EmailSettings.SubjectPrefix(ConfigurationWith(configured)));
+            Assert.Null(SettingsWith(configured).SubjectPrefix);
         }
 
         [Fact]
         public void TheMarkIsReadFromItsSettingWithoutTheSpacesAroundIt()
         {
-            Assert.Equal("[STAGING]", EmailSettings.SubjectPrefix(ConfigurationWith(" [STAGING] ")));
+            Assert.Equal("[STAGING]", SettingsWith(" [STAGING] ").SubjectPrefix);
         }
 
-        private static IConfiguration ConfigurationWith(string subjectPrefix)
+        private static EmailOptions SettingsWith(string subjectPrefix)
         {
-            return new ConfigurationBuilder()
+            var settings = new EmailOptions();
+            settings.ReadFrom(new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string> { ["Email:SubjectPrefix"] = subjectPrefix })
-                .Build();
+                .Build());
+            return settings;
         }
     }
 }

@@ -3,23 +3,20 @@
     using System;
     using System.Threading.Tasks;
 
-    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Options;
 
     using Stripe;
     using Stripe.Checkout;
 
     public class StripeGateway : IStripeGateway
     {
-        private readonly IConfiguration configuration;
         private readonly Lazy<SessionService> sessions;
 
-        public StripeGateway(IConfiguration configuration)
+        public StripeGateway(IOptions<StripeOptions> settings)
         {
-            this.configuration = configuration;
-
             // Made at the first call, not at start-up: in Development the site runs without a
             // key, on the pretend payment, and a client cannot be made without one.
-            this.sessions = new Lazy<SessionService>(() => new SessionService(new StripeClient(this.configuration["Stripe:SecretKey"])));
+            this.sessions = new Lazy<SessionService>(() => new SessionService(new StripeClient(settings.Value.SecretKey)));
         }
 
         public Task<Session> CreateCheckoutAsync(SessionCreateOptions options)

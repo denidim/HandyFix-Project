@@ -13,10 +13,11 @@
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Payment;
 
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
 
     using Moq;
 
@@ -75,7 +76,7 @@
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_9999");
 
             // Verify payment update
@@ -165,7 +166,7 @@
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new[] { new System.Collections.Generic.KeyValuePair<string, string>("Admin:NotificationEmail", "owner@handyfix.co.uk") })
                 .Build();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object, configuration), configuration, Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object, configuration), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
 
             await service.ProcessPaymentSuccessAsync(checkoutSessionId, "txn_stripe_email_test");
 
@@ -240,7 +241,7 @@
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
 
             // Stripe retries webhooks; the success handler and the Success redirect can
             // also both fire for the same session. Neither should be able to corrupt state
@@ -325,7 +326,7 @@
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
 
             // Customer clicks "Pay" twice (e.g. hits back and retries) before completing
             // either Stripe checkout.
@@ -371,7 +372,7 @@
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             await service.CancelPaymentAsync(checkoutSessionId);
 
             var updatedPayment = dbContext.Payments.First(x => x.Id == payment.Id);
@@ -411,7 +412,7 @@
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             await service.CancelPaymentAsync(checkoutSessionId);
 
             var updatedPayment = dbContext.Payments.First(x => x.Id == payment.Id);
@@ -448,7 +449,7 @@
             await dbContext.SaveChangesAsync();
 
             var emailSenderMock = new Mock<IEmailSender>();
-            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var service = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
 
             // Only the stale bookings' pending payments should be cancelled; the paid
             // one must be left alone even though it's in the id list, and the pending

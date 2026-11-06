@@ -9,8 +9,8 @@
     using HandyFix.Data.Models;
     using HandyFix.Services.Messaging;
 
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     // Every word of the emails about a booking and its deposit. The services decide when each is
     // sent, and what goes on the job's history when one is not (PROJECT_STATE.md Section 3di).
@@ -21,16 +21,16 @@
         private const string ReplyTip = "<em>Tip: Pressing &quot;Reply&quot; in your email inbox replies directly to the customer.</em>";
 
         private readonly IEmailSender emailSender;
-        private readonly IConfiguration configuration;
+        private readonly EmailOptions settings;
         private readonly ILogger<BookingEmails> logger;
 
         public BookingEmails(
             IEmailSender emailSender,
-            IConfiguration configuration,
+            IOptions<EmailOptions> settings,
             ILogger<BookingEmails> logger)
         {
             this.emailSender = emailSender;
-            this.configuration = configuration;
+            this.settings = settings.Value;
             this.logger = logger;
         }
 
@@ -67,8 +67,8 @@
             return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 "technician picked, to the customer",
-                EmailSettings.BookingsFromAddress(this.configuration),
-                EmailSettings.CustomerFromName,
+                this.settings.BookingsFromAddress,
+                EmailOptions.CustomerFromName,
                 booking.Email,
                 subject,
                 body);
@@ -100,13 +100,13 @@
                     EmailLayout.MoneyRow("Deposit Paid", $"{deposit} (Paid)"))
                 + EmailLayout.Text("<strong>What happens next?</strong><br />We will send you a follow-up email with your assigned technician's name and direct contact number as soon as one is allocated. If you need to send photos of the job or additional directions, feel free to message us on WhatsApp below.")
                 + EmailLayout.WhatsAppButton("Message Us on WhatsApp")
-                + CancellationNote(deposit, EmailSettings.SiteUrl(this.configuration)));
+                + CancellationNote(deposit, this.settings.SiteUrl));
 
             return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 "deposit paid, to the customer",
-                EmailSettings.BookingsFromAddress(this.configuration),
-                EmailSettings.CustomerFromName,
+                this.settings.BookingsFromAddress,
+                EmailOptions.CustomerFromName,
                 booking.Email,
                 subject,
                 body);
@@ -136,9 +136,9 @@
             return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 "deposit paid, notice to the company",
-                EmailSettings.SystemFromAddress(this.configuration),
-                EmailSettings.WebsiteFromName,
-                EmailSettings.AdminNotificationAddress(this.configuration),
+                this.settings.SystemFromAddress,
+                EmailOptions.WebsiteFromName,
+                this.settings.AdminNotificationAddress,
                 subject,
                 body,
                 replyTo: booking.Email);
@@ -171,9 +171,9 @@
             return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 "deposit paid for a booking not held, notice to the company",
-                EmailSettings.SystemFromAddress(this.configuration),
-                EmailSettings.WebsiteFromName,
-                EmailSettings.AdminNotificationAddress(this.configuration),
+                this.settings.SystemFromAddress,
+                EmailOptions.WebsiteFromName,
+                this.settings.AdminNotificationAddress,
                 subject,
                 body,
                 replyTo: booking.Email);
@@ -232,7 +232,7 @@
         // notices open staging, the live site's open the live site.
         private string JobPage(Booking booking)
         {
-            return $"{EmailSettings.SiteUrl(this.configuration)}/Administration/Bookings/Details/{booking.Id}";
+            return $"{this.settings.SiteUrl}/Administration/Bookings/Details/{booking.Id}";
         }
     }
 }

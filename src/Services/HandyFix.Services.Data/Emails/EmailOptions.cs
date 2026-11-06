@@ -8,7 +8,9 @@
     // default and a configuration key to override it. Brevo, like any real email provider,
     // refuses a sender it has not verified. Staging keeps the defaults, so the real sender is
     // tried there before the live site depends on it; only its notices go somewhere else.
-    public static class EmailSettings
+    // The site fills one from its configuration with ReadFrom (Program.cs); a test can make one
+    // with the values it needs.
+    public class EmailOptions
     {
         // The name on emails to a customer, and on notices to the company about a customer.
         public const string CustomerFromName = "Plumbing Handyman Surrey";
@@ -20,38 +22,35 @@
         private const string DefaultAdminNotificationAddress = "info@plumbing-handyman-surrey.co.uk";
 
         // The sender of every email to a customer. Replies to it reach the company's inbox.
-        public static string BookingsFromAddress(IConfiguration configuration)
-        {
-            return Read(configuration, "Email:BookingsFromAddress", DefaultFromAddress);
-        }
+        public string BookingsFromAddress { get; set; } = DefaultFromAddress;
 
         // The sender of the site's own notices: a booking was received, the company was told.
-        public static string SystemFromAddress(IConfiguration configuration)
-        {
-            return Read(configuration, "Email:SystemFromAddress", DefaultFromAddress);
-        }
+        public string SystemFromAddress { get; set; } = DefaultFromAddress;
 
         // The one inbox every notice to the company goes to: paid deposits, enquiries, job
         // applications (decided 2026-09-21, PROJECT_STATE Section 3bb).
-        public static string AdminNotificationAddress(IConfiguration configuration)
-        {
-            return Read(configuration, "Admin:NotificationEmail", DefaultAdminNotificationAddress);
-        }
+        public string AdminNotificationAddress { get; set; } = DefaultAdminNotificationAddress;
 
         // A mark put in front of every subject: "[STAGING]" on staging, nothing on the live site.
         // Null when there is none to add.
-        public static string SubjectPrefix(IConfiguration configuration)
-        {
-            return Read(configuration, "Email:SubjectPrefix", null);
-        }
+        public string SubjectPrefix { get; set; }
 
         // The address of the site this copy of the code runs as, with no slash at the end. For a
         // link in an email that has to open this site and not another: the admin panel behind a
         // notice to the company. Staging names itself in its compose file; told nothing, it is
         // the live site's address.
-        public static string SiteUrl(IConfiguration configuration)
+        public string SiteUrl { get; set; } = GlobalConstants.SiteUrl;
+
+        // Each value from its own key. The keys sit in three sections, so they are named one by
+        // one rather than bound as a section. A key that is missing, empty or only spaces keeps
+        // the default: a compose file passes an empty string for a value its .env leaves out.
+        public void ReadFrom(IConfiguration configuration)
         {
-            return Read(configuration, "Site:PublicUrl", GlobalConstants.SiteUrl).TrimEnd('/');
+            this.BookingsFromAddress = Read(configuration, "Email:BookingsFromAddress", DefaultFromAddress);
+            this.SystemFromAddress = Read(configuration, "Email:SystemFromAddress", DefaultFromAddress);
+            this.AdminNotificationAddress = Read(configuration, "Admin:NotificationEmail", DefaultAdminNotificationAddress);
+            this.SubjectPrefix = Read(configuration, "Email:SubjectPrefix", null);
+            this.SiteUrl = Read(configuration, "Site:PublicUrl", GlobalConstants.SiteUrl).TrimEnd('/');
         }
 
         private static string Read(IConfiguration configuration, string key, string fallback)

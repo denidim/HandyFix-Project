@@ -17,12 +17,12 @@
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
 
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.Data.Sqlite;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
-    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
 
     using Moq;
 
@@ -69,7 +69,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             // Seed required statuses
@@ -185,7 +185,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
@@ -305,7 +305,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             dbContext.BookingStatuses.Add(new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending });
@@ -397,7 +397,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
@@ -476,7 +476,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
@@ -755,7 +755,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), Options.Create(new StripeOptions()), Mock.Of<IHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
