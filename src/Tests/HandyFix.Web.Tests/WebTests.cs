@@ -603,6 +603,16 @@
             Assert.DoesNotContain("\"sameAs\"", content);
         }
 
+        // The list of services had no description, so search engines made one up from whatever
+        // text came first (PROJECT_STATE.md Section 3dj).
+        [Fact]
+        public async Task TheServicesPageHasADescription()
+        {
+            var page = await this.server.CreateClient().GetStringAsync("/Services");
+
+            Assert.Contains("<meta name=\"description\" content=\"Plumbing, handyman and small building services across Surrey and South London.", page);
+        }
+
         [Theory]
         [MemberData(nameof(PublicPages))]
         public async Task APublicPageKeepsItsScriptsInFiles(string url)

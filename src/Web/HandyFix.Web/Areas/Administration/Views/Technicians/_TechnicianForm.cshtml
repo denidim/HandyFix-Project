@@ -1,6 +1,6 @@
 @model HandyFix.Web.ViewModels.Administration.Technicians.TechnicianAdminInputModel
 @{
-    var isCreate = this.ViewData["IsCreate"] as bool? ?? false;
+    var isCreate = Model.IsNew;
     var action = isCreate ? "Create" : "Edit";
     var submitLabel = isCreate ? "Add Technician" : "Update Technician";
 }

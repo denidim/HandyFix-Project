@@ -44,7 +44,13 @@
         public async Task<IActionResult> Index()
         {
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
-            this.ViewData["Canonical"] = this.Url.Action("Index", "Services", null, this.Request.Scheme);
+
+            // The title is the view's own. This page had no description until PROJECT_STATE.md
+            // Section 3dj, so search engines made one up from whatever text came first.
+            this.SetPageMeta(
+                null,
+                "Plumbing, handyman and small building services across Surrey and South London. See what we do and our hourly rates, and book online.",
+                this.Url.Action("Index", "Services", null, this.Request.Scheme));
             return this.View(categories);
         }
 
@@ -69,9 +75,10 @@
                 LocalAreas = localAreas.Take(12),
             };
 
-            this.ViewData["Title"] = "Pricing";
-            this.ViewData["MetaDescription"] = "Transparent, up-front hourly pricing for plumbing and handyman services across Surrey and South London, including Chessington, Cobham, and Epsom. No hidden fees.";
-            this.ViewData["Canonical"] = this.Url.Action("Pricing", "Services", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "Pricing",
+                "Transparent, up-front hourly pricing for plumbing and handyman services across Surrey and South London, including Chessington, Cobham, and Epsom. No hidden fees.",
+                this.Url.Action("Pricing", "Services", null, this.Request.Scheme));
 
             return this.View(model);
         }
@@ -92,12 +99,13 @@
             IEnumerable<ServiceAreaViewModel> localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
             category.LocalAreas = localAreas;
 
-            this.ViewData["Title"] = $"{category.Name} Services";
-            this.ViewData["MetaDescription"] = $"Professional {category.Name.ToLower()} services operating across Surrey and South London, including Chessington, Cobham, Esher, and Kingston. Book your service online.";
-
-            // From the slug in the database, not the one in the address: routes match whatever the
-            // letter case, and /services/PLUMBING has to name /Services/plumbing as the page.
-            this.ViewData["Canonical"] = this.Url.RouteUrl("ServiceCategory", new { categorySlug = category.Slug }, this.Request.Scheme);
+            // The address is from the slug in the database, not the one in the address: routes
+            // match whatever the letter case, and /services/PLUMBING has to name
+            // /Services/plumbing as the page.
+            this.SetPageMeta(
+                $"{category.Name} Services",
+                $"Professional {category.Name.ToLower()} services operating across Surrey and South London, including Chessington, Cobham, Esher, and Kingston. Book your service online.",
+                this.Url.RouteUrl("ServiceCategory", new { categorySlug = category.Slug }, this.Request.Scheme));
 
             return this.View(category);
         }
@@ -121,11 +129,13 @@
 
             var isBuildingService = service.CategorySlug == CategorySlugs.SmallBuildingWorks;
 
-            this.ViewData["Title"] = service.Name;
-            this.ViewData["MetaDescription"] = isBuildingService
+            var description = isBuildingService
                 ? $"Need {service.Name.ToLower()} in Surrey or South London? Free on-site survey and a fixed quote before any work begins. Request your quote today."
                 : $"Need {service.Name.ToLower()} in Surrey or South London? Certified plumbers and handymen, transparent pricing starting from £{service.BasePrice}. Book a slot now.";
-            this.ViewData["Canonical"] = this.Url.RouteUrl("ServiceDetails", new { categorySlug = service.CategorySlug, serviceSlug = service.Slug }, this.Request.Scheme);
+            this.SetPageMeta(
+                service.Name,
+                description,
+                this.Url.RouteUrl("ServiceDetails", new { categorySlug = service.CategorySlug, serviceSlug = service.Slug }, this.Request.Scheme));
 
             return this.View(service);
         }

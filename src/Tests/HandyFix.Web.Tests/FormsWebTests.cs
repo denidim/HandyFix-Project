@@ -80,6 +80,22 @@
             Assert.Matches("id=\"postcode-not-served\"[^>]*\\shidden", content);
         }
 
+        // A form sent with nothing in it comes back with its messages, and the page still has its
+        // description and its one address, as when it was first opened. Both were lost there
+        // until PROJECT_STATE.md Section 3dj.
+        [Theory]
+        [InlineData("/Contact")]
+        [InlineData("/Booking")]
+        public async Task AFormShownAgainKeepsThePagesDescriptionAndAddress(string url)
+        {
+            var response = await PostFormAsync(this.server.CreateClient(), url, new Dictionary<string, string>());
+            var content = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("field-validation-error", content);
+            Assert.Matches("<meta name=\"description\" content=\"[^\"]+\" />", content);
+            Assert.Contains("<link rel=\"canonical\" href=\"http://localhost" + url + "\" />", content);
+        }
+
         // The wizard's script is a file of its own (PROJECT_STATE.md Section 3dj). What it needs
         // from the server is on the form: the deposit the summary shows, and the description's
         // minimum, the same number the server checks.

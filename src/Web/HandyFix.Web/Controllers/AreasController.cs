@@ -40,9 +40,10 @@
         {
             IEnumerable<ServiceAreaViewModel> areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
 
-            this.ViewData["Title"] = "Areas We Cover in Surrey & South London";
-            this.ViewData["MetaDescription"] = "See every town and village Plumbing Handyman Surrey covers across South London and Surrey, from Chessington and Kingston out to Guildford and Cobham. Find your area and book online.";
-            this.ViewData["Canonical"] = this.Url.RouteUrl("Areas", null, this.Request.Scheme);
+            this.SetPageMeta(
+                "Areas We Cover in Surrey & South London",
+                "See every town and village Plumbing Handyman Surrey covers across South London and Surrey, from Chessington and Kingston out to Guildford and Cobham. Find your area and book online.",
+                this.Url.RouteUrl("Areas", null, this.Request.Scheme));
 
             return this.View(areas);
         }
@@ -79,9 +80,10 @@
                 ShowOnSiteReviews = showOnSiteReviews,
             };
 
-            this.ViewData["Title"] = $"Handyman & Plumbing in {area.Name}";
-            this.ViewData["MetaDescription"] = $"Local handyman and plumbing services in {area.Name}. Transparent hourly pricing, no call-out fee, usually available within days. Book online today.";
-            this.ViewData["Canonical"] = this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme);
+            this.SetPageMeta(
+                $"Handyman & Plumbing in {area.Name}",
+                $"Local handyman and plumbing services in {area.Name}. Transparent hourly pricing, no call-out fee, usually available within days. Book online today.",
+                this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme));
             this.ViewData["OgImage"] = $"{this.Request.Scheme}://{this.Request.Host}/images/areas/{area.Slug}-hero.webp";
 
             return this.View(model);

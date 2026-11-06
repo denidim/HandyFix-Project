@@ -12,6 +12,10 @@
     {
         public Guid? Id { get; set; }
 
+        // An area not saved yet has no id: the form then creates one rather than updating one.
+        // The Create and Edit pages used to tell their shared form in ViewData.
+        public bool IsNew => this.Id == null;
+
         [Required(ErrorMessage = "Area name is required.")]
         [MinLength(2, ErrorMessage = "Name must be at least 2 characters.")]
         [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]

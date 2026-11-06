@@ -2,7 +2,7 @@
 @using HandyFix.Web.Services.Forms
 @{
     this.ViewData["Title"] = "Get a Custom Quote";
-    var contactCategories = this.ViewData["ContactCategories"] as IEnumerable<string> ?? Enumerable.Empty<string>();
+    var contactCategories = Model.Categories;
 }
 
 <div class="page-container services-page">

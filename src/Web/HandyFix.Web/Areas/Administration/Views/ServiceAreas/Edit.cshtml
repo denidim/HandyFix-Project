@@ -2,7 +2,6 @@
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
 @{
     this.ViewData["Title"] = $"Edit Service Area: {Model.Name}";
-    this.ViewData["IsCreate"] = false;
 
     // Surface whether step 2 of the workflow has actually been done, rather than leaving the
     // admin to guess.

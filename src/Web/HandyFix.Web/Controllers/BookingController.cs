@@ -95,12 +95,7 @@
                     ServedPostcodeDistricts = await this.serviceAreasService.GetServedPostcodeDistrictsAsync(),
                 };
 
-                this.ViewData["MetaDescription"] = "Book a plumbing or handyman appointment online across Surrey and South London. Pick a service, choose an available slot, and secure it with a deposit.";
-
-                // Without the link's category, date and service: every one of those links shows
-                // the same page, and this is the address the sitemap gives for it.
-                this.ViewData["Canonical"] = this.Url.Action("Index", "Booking", null, this.Request.Scheme);
-
+                this.SetBookingPageMeta();
                 return this.View(model);
             }
             catch (Exception ex)
@@ -266,12 +261,27 @@
             return page;
         }
 
+        // The title is the view's own. The address is without the link's category, date and
+        // service: every one of those links shows the same page, and this is the address the
+        // sitemap gives for it.
+        private void SetBookingPageMeta()
+        {
+            this.SetPageMeta(
+                null,
+                "Book a plumbing or handyman appointment online across Surrey and South London. Pick a service, choose an available slot, and secure it with a deposit.",
+                this.Url.Action("Index", "Booking", null, this.Request.Scheme));
+        }
+
         private async Task<IActionResult> RedisplayBookingForm(BookingInputModel model, string errorMessage = null)
         {
             if (errorMessage != null)
             {
                 this.ModelState.AddModelError(string.Empty, errorMessage);
             }
+
+            // The form shown again keeps the page's description and address, which it used to
+            // lose (PROJECT_STATE.md Section 3dj).
+            this.SetBookingPageMeta();
 
             model.Services = await this.servicesService.GetAllAsync<ServiceViewModel>();
             model.ServedPostcodeDistricts = await this.serviceAreasService.GetServedPostcodeDistrictsAsync();
