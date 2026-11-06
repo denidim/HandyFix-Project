@@ -69,7 +69,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             // Seed required statuses
@@ -107,9 +107,7 @@
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object,
-                new ConfigurationBuilder().Build(),
-                NullLogger<BookingsService>.Instance);
+                TestEmails.Booking(emailSenderMock.Object));
 
             var model = new BookingInputModel
             {
@@ -190,7 +188,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
@@ -244,9 +242,7 @@
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object,
-                new ConfigurationBuilder().Build(),
-                NullLogger<BookingsService>.Instance);
+                TestEmails.Booking(emailSenderMock.Object));
 
             var model = new BookingInputModel
             {
@@ -315,7 +311,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             dbContext.BookingStatuses.Add(new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending });
@@ -349,9 +345,7 @@
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object,
-                new ConfigurationBuilder().Build(),
-                NullLogger<BookingsService>.Instance);
+                TestEmails.Booking(emailSenderMock.Object));
 
             var model = new BookingInputModel
             {
@@ -412,7 +406,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
@@ -452,9 +446,7 @@
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object,
-                new ConfigurationBuilder().Build(),
-                NullLogger<BookingsService>.Instance);
+                TestEmails.Booking(emailSenderMock.Object));
 
             // Simulate a concurrent process (e.g. the stale-booking cleanup sweep)
             // having already updated this slot's row - and thereby bumped its
@@ -494,7 +486,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
@@ -571,9 +563,7 @@
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object,
-                new ConfigurationBuilder().Build(),
-                NullLogger<BookingsService>.Instance);
+                TestEmails.Booking(emailSenderMock.Object));
 
             var releasedCount = await bookingsService.ReleaseAbandonedBookingsAsync(TimeSpan.FromMinutes(15));
 
@@ -671,7 +661,7 @@
         {
             // A pure computation over whatever list it's handed - no repository access - so it
             // needs none of BookingsService's other dependencies wired up.
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -696,7 +686,7 @@
         [Fact]
         public void GetSummaryStatsShouldCountOnlyPaidOpenBookingsWithNoTechnicianAsWaitingForOne()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -717,7 +707,7 @@
         [Fact]
         public void GetSummaryStatsShouldReturnZeroRevenueForAnEmptyList()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
 
             BookingSummaryStats stats = service.GetSummaryStats(new List<BookingDetailsViewModel>());
 
@@ -732,7 +722,7 @@
         [Fact]
         public void GetSummaryStatsShouldLeaveOutJobsThatWereCancelledOrAbandoned()
         {
-            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null, null, NullLogger<BookingsService>.Instance);
+            var service = new BookingsService(null, null, null, null, null, null, null, null, null, null, null);
 
             var bookings = new List<BookingDetailsViewModel>
             {
@@ -778,7 +768,7 @@
 
             var availabilityService = new AvailabilityService(slotRepo);
             var emailSenderMock = new Mock<IEmailSender>();
-            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, emailSenderMock.Object, new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
+            var paymentsService = new PaymentsService(paymentRepo, paymentStatusRepo, bookingRepo, bookingStatusRepo, TestEmails.Booking(emailSenderMock.Object), new ConfigurationBuilder().Build(), Mock.Of<IWebHostEnvironment>(), NullLogger<PaymentsService>.Instance, Mock.Of<IStripeGateway>());
             var dbQueryRunner = new DbQueryRunner(dbContext);
 
             var pendingStatus = new BookingStatus { Id = Guid.NewGuid(), Name = BookingStatusNames.Pending };
@@ -838,9 +828,7 @@
                 availabilityService,
                 paymentsService,
                 dbQueryRunner,
-                emailSenderMock.Object,
-                new ConfigurationBuilder().Build(),
-                NullLogger<BookingsService>.Instance);
+                TestEmails.Booking(emailSenderMock.Object));
         }
 
         /// <summary>

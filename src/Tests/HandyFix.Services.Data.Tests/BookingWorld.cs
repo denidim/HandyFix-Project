@@ -80,13 +80,14 @@
             var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(this.DbContext);
 
             this.Availability = new AvailabilityService(slotRepo);
+            var bookingEmails = TestEmails.Booking(this.EmailSender.Object, configuration);
 
             this.Payments = new PaymentsService(
                 new EfDeletableEntityRepository<Payment>(this.DbContext),
                 new EfDeletableEntityRepository<PaymentStatus>(this.DbContext),
                 bookingRepo,
                 bookingStatusRepo,
-                this.EmailSender.Object,
+                bookingEmails,
                 configuration,
                 environment.Object,
                 NullLogger<PaymentsService>.Instance,
@@ -103,9 +104,7 @@
                 this.Availability,
                 this.Payments,
                 new DbQueryRunner(this.DbContext),
-                this.EmailSender.Object,
-                configuration,
-                NullLogger<BookingsService>.Instance);
+                bookingEmails);
         }
 
         public ApplicationDbContext DbContext { get; }

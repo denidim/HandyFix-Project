@@ -9,8 +9,8 @@
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Common;
+    using HandyFix.Services.Data.Emails;
     using HandyFix.Services.Mapping;
-    using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Payment;
 
     using Microsoft.AspNetCore.Hosting;
@@ -27,9 +27,6 @@
         private const string StripeProvider = "Stripe";
         private const string MockProvider = "Stripe-Mock";
 
-        // On both notices to the company: their Reply-To is the customer's address.
-        private const string ReplyTip = "<em>Tip: Pressing &quot;Reply&quot; in your email inbox replies directly to the customer.</em>";
-
         // Stripe keeps a payment page open for a day unless told otherwise, and will not take
         // less than thirty minutes. The site closes the page itself when it drops the booking
         // (CloseCheckoutsAsync); this is what is left if that call never gets through.
@@ -39,7 +36,7 @@
         private readonly IDeletableEntityRepository<PaymentStatus> paymentStatusRepository;
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
         private readonly IDeletableEntityRepository<BookingStatus> bookingStatusRepository;
-        private readonly IEmailSender emailSender;
+        private readonly IBookingEmails bookingEmails;
         private readonly IConfiguration configuration;
         private readonly IWebHostEnvironment environment;
         private readonly ILogger<PaymentsService> logger;
@@ -50,7 +47,7 @@
             IDeletableEntityRepository<PaymentStatus> paymentStatusRepository,
             IDeletableEntityRepository<Booking> bookingRepository,
             IDeletableEntityRepository<BookingStatus> bookingStatusRepository,
-            IEmailSender emailSender,
+            IBookingEmails bookingEmails,
             IConfiguration configuration,
             IWebHostEnvironment environment,
             ILogger<PaymentsService> logger,
@@ -60,7 +57,7 @@
             this.paymentStatusRepository = paymentStatusRepository;
             this.bookingRepository = bookingRepository;
             this.bookingStatusRepository = bookingStatusRepository;
-            this.emailSender = emailSender;
+            this.bookingEmails = bookingEmails;
             this.configuration = configuration;
             this.environment = environment;
             this.logger = logger;
@@ -554,31 +551,6 @@
             }
         }
 
-        // The customer's phone number and email address, each as a link the company can press.
-        private static string ContactLinks(Booking booking)
-        {
-            return EmailLayout.Link("tel:" + EmailText.PhoneLink(booking.PhoneNumber), EmailText.Encode(booking.PhoneNumber))
-                + " &bull; "
-                + EmailLayout.Link("mailto:" + EmailText.Encode(booking.Email), EmailText.Encode(booking.Email));
-        }
-
-        // Section 4 of the Terms & Conditions page (Views/Home/Terms.cshtml), word for word, so the
-        // customer has the cancellation rules in writing the moment the deposit is taken. The page
-        // and this note say the same thing: change them together.
-        private static string CancellationNote(string deposit, string siteUrl)
-        {
-            const string Free = "<span style=\"color: #16a34a; font-weight: 700;\">&#10003;</span>";
-            const string Forfeited = "<span style=\"color: #dc2626; font-weight: 700;\">&#10007;</span>";
-
-            var rules = "To cancel or reschedule, call or email us."
-                + $"<div style=\"margin-top: 10px;\">{Free} <strong>More than 24 hours before:</strong> cancelling or rescheduling is free. Your deposit is refunded in full to your card, or moved to the new appointment.</div>"
-                + $"<div style=\"margin-top: 8px;\">{Forfeited} <strong>Within 24 hours of the appointment:</strong> the {deposit} deposit is forfeited.</div>"
-                + $"<div style=\"margin-top: 8px;\">{Free} <strong>If we have to cancel:</strong> we'll offer you a new time or refund your deposit in full.</div>"
-                + $"<div style=\"margin-top: 10px;\">Full terms: {EmailLayout.Link(siteUrl + "/TermsAndConditions", "Terms &amp; Conditions")}</div>";
-
-            return EmailLayout.Note("Cancellations &amp; Rescheduling", rules);
-        }
-
         private static bool IsPaid(Session session)
         {
             return session != null && session.PaymentStatus == "paid";
@@ -600,92 +572,14 @@
                 && (this.environment.IsDevelopment() || this.configuration.GetValue<bool>("Stripe:AllowSandboxOutsideDevelopment"));
         }
 
-        // The job's own page in the admin panel of the site that sent the notice: staging's
-        // notices open staging, the live site's open the live site.
-        private string JobPage(Booking booking)
-        {
-            return $"{EmailSettings.SiteUrl(this.configuration)}/Administration/Bookings/Details/{booking.Id}";
-        }
-
+        // The words of both emails are in BookingEmails; what is written on the job when one of
+        // them is not sent is decided here. The deposit is paid and the booking approved by now,
+        // so neither send throws: a failed one is logged, and the other email still goes
+        // (PROJECT_STATE Section 3cb).
         private async Task SendBookingConfirmationEmailsAsync(Booking booking, Payment payment)
         {
-            var serviceNames = booking.BookingServices != null
-                ? string.Join(", ", booking.BookingServices.Select(x => x.Service?.Name).Where(name => !string.IsNullOrWhiteSpace(name)))
-                : string.Empty;
-            var scheduledTime = booking.AvailabilitySlot != null
-                ? booking.AvailabilitySlot.StartTime.ToString("dd MMM yyyy 'at' HH:mm")
-                : "To be confirmed";
-
-            // The deposit is paid and the booking approved by now, so neither send is allowed to
-            // throw: a failure here used to end the customer's return from Stripe on an error page,
-            // straight after paying. It is logged, and the other email still goes
-            // (PROJECT_STATE Section 3cb). What the customer typed is encoded before it goes into
-            // either email's HTML.
-            var customerName = EmailText.Encode($"{booking.CustomerFirstName} {booking.CustomerLastName}");
-            var address = EmailText.Encode(booking.Address);
-            serviceNames = EmailText.Encode(serviceNames);
-
-            // No technician line here on purpose. A technician is picked by an admin after the
-            // deposit clears, so this email would always read "Not yet assigned" - which looks
-            // unfinished to the customer. The technician's name and number go out in an email of
-            // their own, when one is picked (BookingsService.AssignTechnicianAsync).
-            //
-            // This is the first email a customer gets: nothing is sent before the deposit is paid
-            // (BookingsService.CreateBookingAsync).
-            var reference = BookingReference.Short(booking.Id);
-            var deposit = $"&pound;{payment.Amount:F2}";
-            var clientSubject = "Your Plumbing Handyman Surrey Booking is Confirmed!";
-            var clientBody = EmailLayout.ForCustomer(
-                EmailLayout.Badge(EmailColour.Green, "&#10003; Deposit Received &amp; Booking Confirmed")
-                + EmailLayout.Heading($"Hi {EmailText.Encode(booking.CustomerFirstName)},")
-                + EmailLayout.Lead($"Great news! Your deposit of <strong>{deposit}</strong> has been received via Stripe and your booking is now locked in our schedule.")
-                + EmailLayout.Details(
-                    EmailLayout.ReferenceRow(reference),
-                    EmailLayout.Row("Service(s)", serviceNames),
-                    EmailLayout.TimeRow("Scheduled Time", scheduledTime),
-                    EmailLayout.PlainRow("Address", address),
-                    EmailLayout.Divider(),
-                    EmailLayout.MoneyRow("Deposit Paid", $"{deposit} (Paid)"))
-                + EmailLayout.Text("<strong>What happens next?</strong><br />We will send you a follow-up email with your assigned technician's name and direct contact number as soon as one is allocated. If you need to send photos of the job or additional directions, feel free to message us on WhatsApp below.")
-                + EmailLayout.WhatsAppButton("Message Us on WhatsApp")
-                + CancellationNote(deposit, EmailSettings.SiteUrl(this.configuration)));
-
-            var customerTold = await this.emailSender.TrySendEmailAsync(
-                this.logger,
-                "deposit paid, to the customer",
-                EmailSettings.BookingsFromAddress(this.configuration),
-                EmailSettings.CustomerFromName,
-                booking.Email,
-                clientSubject,
-                clientBody);
-
-            var adminSubject = $"New Confirmed Booking - {booking.CustomerFirstName} {booking.CustomerLastName}";
-            var adminBody = EmailLayout.ForCompany(
-                EmailLayout.Badge(EmailColour.Green, "&#128276; New Customer Booking")
-                + EmailLayout.Heading("A booking deposit has just been paid.")
-                + EmailLayout.Lead("A customer has completed payment for their booking deposit via Stripe. The slot is confirmed in the schedule.")
-                + EmailLayout.Details(
-                    EmailLayout.ReferenceRow(reference),
-                    EmailLayout.Row("Customer", customerName),
-                    EmailLayout.PlainRow("Customer Contact", ContactLinks(booking)),
-                    EmailLayout.Row("Service(s)", serviceNames),
-                    EmailLayout.TimeRow("Scheduled Time", scheduledTime),
-                    EmailLayout.PlainRow("Service Address", address),
-                    EmailLayout.Divider(),
-                    EmailLayout.MoneyRow("Deposit Paid", $"{deposit} (Stripe)"))
-                + EmailLayout.Advice($"<strong>Next Step:</strong> Open the booking in the admin panel and assign a technician. The customer will be sent an automated notification with the technician's name as soon as you save.<br /><br />{ReplyTip}")
-                + EmailLayout.Button("&#9881;&#65039; Open Booking in Admin Panel", this.JobPage(booking)));
-
-            // Reply-To is the customer, so pressing Reply on this notice answers them.
-            var companyTold = await this.emailSender.TrySendEmailAsync(
-                this.logger,
-                "deposit paid, notice to the company",
-                EmailSettings.SystemFromAddress(this.configuration),
-                EmailSettings.WebsiteFromName,
-                EmailSettings.AdminNotificationAddress(this.configuration),
-                adminSubject,
-                adminBody,
-                replyTo: booking.Email);
+            var customerTold = await this.bookingEmails.DepositPaidToCustomerAsync(booking, payment);
+            var companyTold = await this.bookingEmails.DepositPaidToCompanyAsync(booking, payment);
 
             // A failed send used to be a line in the server's log and nothing else: nobody knew
             // to tell the customer another way, or that a deposit had come in. It is now on the
@@ -712,35 +606,7 @@
         // not: someone has to ring them, and either find a new time or send the money back.
         private async Task SendUnexpectedDepositNoticeAsync(Booking booking, Payment payment)
         {
-            var customerName = EmailText.Encode($"{booking.CustomerFirstName} {booking.CustomerLastName}");
-            var scheduledTime = booking.ScheduledStart.HasValue
-                ? booking.ScheduledStart.Value.ToString("dd MMM yyyy 'at' HH:mm")
-                : "not recorded";
-
-            var subject = $"Action needed: deposit paid for a booking that is not held - {booking.CustomerFirstName} {booking.CustomerLastName}";
-            var body = EmailLayout.ForCompany(
-                EmailLayout.Badge(EmailColour.Amber, "&#9888;&#65039; Action Needed")
-                + EmailLayout.Heading("A deposit was paid for a booking that was not waiting for one.")
-                + EmailLayout.Lead("The booking had been dropped or cancelled, or was already paid, when this money arrived. The site has written the payment on the job and changed nothing else. The customer has not been sent a confirmation.")
-                + EmailLayout.Details(
-                    EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
-                    EmailLayout.Row("Customer", customerName),
-                    EmailLayout.PlainRow("Customer Contact", ContactLinks(booking)),
-                    EmailLayout.TimeRow("It was booked for", scheduledTime),
-                    EmailLayout.Divider(),
-                    EmailLayout.MoneyRow("Deposit Paid", $"&pound;{payment.Amount:F2}"))
-                + EmailLayout.Advice($"<strong>Next Step:</strong> Call the customer. The site has told them you will be in touch to confirm their visit. Either write the job in again for a time that is free, or send the deposit back in Stripe.<br /><br />{ReplyTip}")
-                + EmailLayout.Button("&#9881;&#65039; Open Booking in Admin Panel", this.JobPage(booking)));
-
-            var companyTold = await this.emailSender.TrySendEmailAsync(
-                this.logger,
-                "deposit paid for a booking not held, notice to the company",
-                EmailSettings.SystemFromAddress(this.configuration),
-                EmailSettings.WebsiteFromName,
-                EmailSettings.AdminNotificationAddress(this.configuration),
-                subject,
-                body,
-                replyTo: booking.Email);
+            var companyTold = await this.bookingEmails.DepositForBookingNotHeldAsync(booking, payment);
 
             if (!companyTold)
             {

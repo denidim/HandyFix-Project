@@ -7,7 +7,7 @@
 
     using HandyFix.Common;
     using HandyFix.Data.Models;
-    using HandyFix.Services.Data.Common;
+    using HandyFix.Services.Data.Emails;
     using HandyFix.Services.Messaging;
 
     using Microsoft.AspNetCore.Identity;

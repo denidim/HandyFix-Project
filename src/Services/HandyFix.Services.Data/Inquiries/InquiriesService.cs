@@ -9,7 +9,7 @@
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
     using HandyFix.Services;
-    using HandyFix.Services.Data.Common;
+    using HandyFix.Services.Data.Emails;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Administration.Enquiries;

@@ -11,17 +11,15 @@
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Common;
+    using HandyFix.Services.Data.Emails;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Mapping;
-    using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Validation;
 
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.ChangeTracking;
     using Microsoft.EntityFrameworkCore.Storage;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Logging;
 
     public class BookingsService : IBookingsService
     {
@@ -42,9 +40,7 @@
         private readonly IAvailabilityService availabilityService;
         private readonly IPaymentsService paymentsService;
         private readonly IDbQueryRunner dbQueryRunner;
-        private readonly IEmailSender emailSender;
-        private readonly IConfiguration configuration;
-        private readonly ILogger<BookingsService> logger;
+        private readonly IBookingEmails bookingEmails;
 
         public BookingsService(
             IDeletableEntityRepository<Booking> bookingRepository,
@@ -57,9 +53,7 @@
             IAvailabilityService availabilityService,
             IPaymentsService paymentsService,
             IDbQueryRunner dbQueryRunner,
-            IEmailSender emailSender,
-            IConfiguration configuration,
-            ILogger<BookingsService> logger)
+            IBookingEmails bookingEmails)
         {
             this.bookingRepository = bookingRepository;
             this.serviceRepository = serviceRepository;
@@ -71,9 +65,7 @@
             this.availabilityService = availabilityService;
             this.paymentsService = paymentsService;
             this.dbQueryRunner = dbQueryRunner;
-            this.emailSender = emailSender;
-            this.configuration = configuration;
-            this.logger = logger;
+            this.bookingEmails = bookingEmails;
         }
 
         // The form takes the postcode in a box of its own so it can be checked. A booking has one
@@ -1036,22 +1028,11 @@
                 .Where(x => x.ScheduledStart >= from && x.ScheduledStart < to);
         }
 
-        // The one customer email that names the technician, sent when an admin picks one. It used
-        // to hang off the "Approve" button, which a paid booking never showed, so no customer was
-        // ever sent it (PROJECT_STATE.md Section 3ce). The assignment is saved by now: a send that
-        // fails is logged and reported back, so the admin's page can say the customer still has
-        // to be told.
+        // The email's words are in BookingEmails.TechnicianPickedAsync. The assignment is saved by
+        // now: a send that fails is logged and reported back, so the admin's page can say the
+        // customer still has to be told.
         private async Task<bool> SendTechnicianEmailAsync(Booking booking, Technician technician)
         {
-            var technicianName = EmailText.Encode(NameFormat.Full(technician.FirstName, technician.LastName));
-            DateTime? start = booking.ScheduledStart ?? booking.AvailabilitySlot?.StartTime;
-            var visit = start.HasValue
-                ? $" on <strong>{start.Value:dd MMM yyyy 'at' HH:mm}</strong>"
-                : string.Empty;
-            var contact = !string.IsNullOrWhiteSpace(technician.PhoneNumber)
-                ? "Direct Contact: " + EmailLayout.Link("tel:" + EmailText.PhoneLink(technician.PhoneNumber), EmailText.Encode(technician.PhoneNumber))
-                : null;
-
             // Asked for here, by the one caller that prints them: loaded with the booking above,
             // beside its payments, they would make that one query fetch two lists at once.
             List<string> serviceNames = await this.bookingRepository.All()
@@ -1060,28 +1041,7 @@
                 .Select(x => x.Service.Name)
                 .ToListAsync();
 
-            var subject = "Your technician for your Plumbing Handyman Surrey booking";
-            var body = EmailLayout.ForCustomer(
-                EmailLayout.Badge(EmailColour.Blue, "&#128295; Technician Allocated")
-                + EmailLayout.Heading($"Hi {EmailText.Encode(booking.CustomerFirstName)},")
-                + EmailLayout.Lead($"Your technician for your visit{visit} is <strong>{technicianName}</strong>.")
-                + EmailLayout.Spotlight("Assigned Specialist", technicianName, contact)
-                + EmailLayout.Text($"<strong>{technicianName} will call you before the visit</strong> to ask for further job-specific information if needed.")
-                + EmailLayout.Details(
-                    EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
-                    EmailLayout.Row("Service(s)", EmailText.Encode(string.Join(", ", serviceNames))),
-                    EmailLayout.PlainRow("Address", EmailText.Encode(booking.Address)))
-                + EmailLayout.Text($"{technicianName} will arrive equipped with all required professional tools. If you have parking restrictions, gate codes, or need to send photos of the work area, please reply to this email or send them on WhatsApp.")
-                + EmailLayout.WhatsAppButton("Message Us on WhatsApp"));
-
-            return await this.emailSender.TrySendEmailAsync(
-                this.logger,
-                "technician picked, to the customer",
-                EmailSettings.BookingsFromAddress(this.configuration),
-                EmailSettings.CustomerFromName,
-                booking.Email,
-                subject,
-                body);
+            return await this.bookingEmails.TechnicianPickedAsync(booking, technician, serviceNames);
         }
     }
 }

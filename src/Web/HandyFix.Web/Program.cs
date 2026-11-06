@@ -15,7 +15,7 @@
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Categories;
-    using HandyFix.Services.Data.Common;
+    using HandyFix.Services.Data.Emails;
     using HandyFix.Services.Data.EmailsNotSent;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Payments;
@@ -212,6 +212,7 @@
             services.AddTransient<IBookingsService, BookingsService>();
             services.AddTransient<ITechniciansService, TechniciansService>();
             services.AddTransient<IPaymentsService, PaymentsService>();
+            services.AddTransient<IBookingEmails, BookingEmails>();
             services.AddTransient<IEmailsNotSentService, EmailsNotSentService>();
             services.AddSingleton<IStripeGateway, StripeGateway>();
             services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();

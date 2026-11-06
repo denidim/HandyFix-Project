@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Common
+﻿namespace HandyFix.Services.Data.Emails
 {
     // The colour of the badge at the top of an email (EmailLayout.Badge): green for good news,
     // blue for something to know, amber for something the company has to act on, red for the
