@@ -29,7 +29,7 @@
     public class BookingController : BaseController
     {
         // Quote-only: the wizard has no tab for it and leaves its services out of the list.
-        private const string QuoteOnlyCategorySlug = "small-building-works";
+        private const string QuoteOnlyCategorySlug = CategorySlugs.SmallBuildingWorks;
 
         private readonly IServicesService servicesService;
         private readonly IAvailabilityService availabilityService;

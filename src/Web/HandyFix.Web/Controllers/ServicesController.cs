@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
@@ -118,7 +119,7 @@
                 .Take(3)
                 .ToList();
 
-            var isBuildingService = service.CategorySlug == "small-building-works";
+            var isBuildingService = service.CategorySlug == CategorySlugs.SmallBuildingWorks;
 
             this.ViewData["Title"] = service.Name;
             this.ViewData["MetaDescription"] = isBuildingService

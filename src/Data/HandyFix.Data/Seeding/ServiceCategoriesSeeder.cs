@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data.Models;
 
     internal class ServiceCategoriesSeeder : ISeeder
@@ -12,9 +13,9 @@
         {
             var categories = new[]
             {
-                new { Slug = "plumbing", Name = "Plumbing", Description = "Professional plumbing and heating services for London homes." },
-                new { Slug = "handyman", Name = "Handyman", Description = "Reliable home maintenance, mounting, and repair tasks." },
-                new { Slug = "small-building-works", Name = "Small Building & Refurbishments", Description = "Planned home alterations, kitchen & bathroom refurbishments, partition walls, and specialist small building works." },
+                new { Slug = CategorySlugs.Plumbing, Name = "Plumbing", Description = "Professional plumbing and heating services for London homes." },
+                new { Slug = CategorySlugs.Handyman, Name = "Handyman", Description = "Reliable home maintenance, mounting, and repair tasks." },
+                new { Slug = CategorySlugs.SmallBuildingWorks, Name = "Small Building & Refurbishments", Description = "Planned home alterations, kitchen & bathroom refurbishments, partition walls, and specialist small building works." },
             };
 
             foreach (var item in categories)

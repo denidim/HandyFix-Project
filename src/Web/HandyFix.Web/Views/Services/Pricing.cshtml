@@ -48,7 +48,7 @@
         <div class="pricing-cards-grid">
             @foreach (var category in Model.Categories)
             {
-                var isBuilding = category.Slug == "small-building-works" || category.Name.Contains("Building");
+                var isBuilding = category.Slug == CategorySlugs.SmallBuildingWorks;
 
                 <div class="rate-card">
                     <div class="rate-card-icon-wrapper">
@@ -155,8 +155,8 @@
                                                          Description = svc.Description,
                                                          BasePrice = svc.BasePrice,
                                                          EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
-                                                         IsQuoteBased = svc.CategorySlug == "small-building-works",
-                                                         DivisionClass = svc.CategorySlug == "small-building-works" ? "pricing-card-building" : (svc.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
+                                                         IsQuoteBased = svc.CategorySlug == CategorySlugs.SmallBuildingWorks,
+                                                         DivisionClass = svc.CategorySlug == CategorySlugs.SmallBuildingWorks ? "pricing-card-building" : (svc.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
                                                          CtaText = "Book Now",
                                                          CtaUrl = this.Url.Action("Index", "Booking", new { selectedServiceId = svc.Id, categorySlug = svc.CategorySlug }),
                                                      })" />

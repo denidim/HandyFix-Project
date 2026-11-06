@@ -1,4 +1,5 @@
 @model IEnumerable<HandyFix.Web.ViewModels.Services.ServiceViewModel>
+@using HandyFix.Common
 @{
     this.ViewData["Title"] = "Manage Services";
 
@@ -84,9 +85,9 @@
                 {
                     @foreach (var svc in Model)
                     {
-                        var categorySlug = svc.CategorySlug ?? "plumbing";
-                        var icon = categorySlug == "plumbing" ? "plumbing" : "home_repair_service";
-                        var categoryBadgeClass = categorySlug == "plumbing" ? "tint-secondary" : "tint-success";
+                        var categorySlug = svc.CategorySlug ?? CategorySlugs.Plumbing;
+                        var icon = categorySlug == CategorySlugs.Plumbing ? "plumbing" : "home_repair_service";
+                        var categoryBadgeClass = categorySlug == CategorySlugs.Plumbing ? "tint-secondary" : "tint-success";
 
                         <tr class="align-middle admin-table-row">
                             <td class="px-4 py-3">
