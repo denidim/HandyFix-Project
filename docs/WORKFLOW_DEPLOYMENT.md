@@ -317,7 +317,7 @@ what the browser used. That's not cosmetic — anything built on those two prope
 - **Absolute URLs built from `Request.Scheme`** — e.g. `PaymentController`'s Stripe Checkout
   success/cancel URLs — would be generated as `http://` instead of `https://`.
 
-`ForwardedHeadersOptions.KnownNetworks`/`KnownProxies` are cleared rather than pinned to a fixed
+`ForwardedHeadersOptions.KnownIPNetworks`/`KnownProxies` are cleared rather than pinned to a fixed
 address, because Docker Compose assigns Caddy's internal IP dynamically — there's nothing fixed to
 allow-list. That's safe specifically because `web` publishes no ports of its own (see the compose
 file above): Caddy is the only thing on the internal network that can reach it at all, so nothing

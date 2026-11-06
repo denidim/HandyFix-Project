@@ -120,7 +120,7 @@
             // real scheme: Secure-flagged cookies, and absolute URLs built from Request.Scheme
             // (e.g. the Stripe Checkout success/cancel URLs in PaymentController).
             //
-            // KnownNetworks/KnownProxies are cleared rather than pinned to Caddy's address
+            // KnownIPNetworks/KnownProxies are cleared rather than pinned to Caddy's address
             // because Docker Compose assigns that address dynamically - there's no fixed IP to
             // allow-list. This is safe here specifically because the web container publishes no
             // ports of its own (see deploy/docker-compose.staging.yml): Caddy is the only thing
@@ -132,7 +132,7 @@
                     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor
                         | ForwardedHeaders.XForwardedProto
                         | ForwardedHeaders.XForwardedHost;
-                    options.KnownNetworks.Clear();
+                    options.KnownIPNetworks.Clear();
                     options.KnownProxies.Clear();
                 });
 
