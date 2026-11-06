@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
@@ -98,7 +99,7 @@
                 .Setup(x => x.GetAllAsync<ServiceAreaViewModel>(It.IsAny<bool>()))
                 .ReturnsAsync(new List<ServiceAreaViewModel>());
 
-            return new ServicesController(categoriesService.Object, servicesService.Object, serviceAreasService.Object)
+            return new ServicesController(categoriesService.Object, servicesService.Object, serviceAreasService.Object, new Mock<IImageStorageService>().Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
 

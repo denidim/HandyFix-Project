@@ -1,6 +1,5 @@
 @using HandyFix.Services
 @model HandyFix.Web.ViewModels.Services.PricingCardViewModel
-@inject IImageStorageService ImageStorage
 
 <article class="pricing-card @Model.DivisionClass">
     @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
@@ -8,8 +7,9 @@
         // The card draws its picture the screen's width less 48px on a phone and at most 422px
         // on a computer, from a picture 1024 wide. With a middle copy beside it the browser takes
         // the copy whenever that has every pixel the screen can show; a sharper screen still gets
-        // the picture itself (PROJECT_STATE Section 3cz).
-        var mediumCopy = ImageStorage.GetMediumCopyPublicUrl(Model.ImageUrl);
+        // the picture itself (PROJECT_STATE Section 3cz). The page that draws the card looks the
+        // copy up before it is drawn.
+        var mediumCopy = Model.MediumCopyUrl;
 
         @* Links to the same place as the card's button; with no button, href="@null" drops the
            attribute and the <a> is a plain, non-interactive box. *@

@@ -4,14 +4,17 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Services;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Presentation;
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
 
@@ -22,17 +25,23 @@
         private readonly IServicesService servicesService;
         private readonly IReviewsService reviewsService;
         private readonly IConfiguration configuration;
+        private readonly IImageStorageService imageStorage;
+        private readonly IWebHostEnvironment environment;
 
         public AreasController(
             IServiceAreasService areasService,
             IServicesService servicesService,
             IReviewsService reviewsService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IImageStorageService imageStorage,
+            IWebHostEnvironment environment)
         {
             this.areasService = areasService;
             this.servicesService = servicesService;
             this.reviewsService = reviewsService;
             this.configuration = configuration;
+            this.imageStorage = imageStorage;
+            this.environment = environment;
         }
 
         [Route("Areas", Name = "Areas")]
@@ -75,9 +84,10 @@
             var model = new ServiceAreaDetailsPageViewModel
             {
                 Area = area,
-                RelatedServices = relatedServices,
+                RelatedServices = relatedServices.WithMediumCopies(this.imageStorage),
                 Reviews = reviews,
                 ShowOnSiteReviews = showOnSiteReviews,
+                PhonePicture = PictureLookups.PhonePictureOf(this.environment, area.Slug),
             };
 
             this.SetPageMeta(

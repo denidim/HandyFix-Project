@@ -535,6 +535,7 @@
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
                 (imageService ?? ImageServiceReturning()).Object,
+                new Mock<IImageStorageService>().Object,
                 (formGuard ?? new Mock<IFormGuard>()).Object,
                 new ConfigurationBuilder().Build(),
                 NullLogger<HomeController>.Instance);

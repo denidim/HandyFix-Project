@@ -33,11 +33,20 @@
         private const string EnquiryReceivedMessage = "Thank you! Your enquiry has been received. Our team will contact you shortly.";
         private const string ApplicationReceivedMessage = "Thanks for applying! We've received your details and will be in touch soon.";
 
+        // The pictures of the home page's three division cards.
+        private static readonly string[] DivisionPictures =
+        {
+            "/images/services/plumbing-category-hero.webp",
+            "/images/services/handyman-category-hero.webp",
+            "/images/services/small-building-category-hero.webp",
+        };
+
         private readonly IReviewsService reviewsService;
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
         private readonly IImageService imageService;
+        private readonly IImageStorageService imageStorage;
         private readonly IFormGuard formGuard;
         private readonly IConfiguration configuration;
         private readonly ILogger<HomeController> logger;
@@ -48,6 +57,7 @@
             IServicesService servicesService,
             ICategoriesService categoriesService,
             IImageService imageService,
+            IImageStorageService imageStorage,
             IFormGuard formGuard,
             IConfiguration configuration,
             ILogger<HomeController> logger)
@@ -57,6 +67,7 @@
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
             this.imageService = imageService;
+            this.imageStorage = imageStorage;
             this.formGuard = formGuard;
             this.configuration = configuration;
             this.logger = logger;
@@ -83,6 +94,14 @@
                 ShowOnSiteReviews = showOnSiteReviews,
                 PopularServices = PickPopularServices(services),
             };
+
+            // Each card picture's middle copy, looked up once here; the page used to look each one
+            // up twice while it was drawn (PROJECT_STATE.md Section 3dj).
+            model.MediumCopies = DivisionPictures
+                .Concat(model.PopularServices.Select(s => s.ImageUrl))
+                .Where(picture => picture != null)
+                .Distinct()
+                .ToDictionary(picture => picture, picture => this.imageStorage.GetMediumCopyPublicUrl(picture));
 
             this.SetPageMeta(
                 "Plumbers & Handymen in Surrey & South London",

@@ -8,6 +8,8 @@
     using HandyFix.Services.Mapping;
     using HandyFix.Web.ViewModels.Validation;
 
+    using Microsoft.AspNetCore.Mvc.ModelBinding;
+
     public class ServiceAreaAdminInputModel : IMapFrom<ServiceArea>
     {
         public Guid? Id { get; set; }
@@ -15,6 +17,11 @@
         // An area not saved yet has no id: the form then creates one rather than updating one.
         // The Create and Edit pages used to tell their shared form in ViewData.
         public bool IsNew => this.Id == null;
+
+        // Set by the server, never read from the form: whether the area's picture is in place,
+        // which its Edit page says. The page used to look on disk for it while it was drawn.
+        [BindNever]
+        public bool HasHeroImage { get; set; }
 
         [Required(ErrorMessage = "Area name is required.")]
         [MinLength(2, ErrorMessage = "Name must be at least 2 characters.")]

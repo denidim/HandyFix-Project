@@ -1,7 +1,6 @@
 @model HandyFix.Web.ViewModels.Services.CategoryViewModel
 @using System.Globalization
 @using HandyFix.Services
-@inject IImageStorageService ImageStorage
 @* Anything written inside a script block below goes through Json.Serialize. Razor's own HTML
    encoding is wrong there: a script block is never HTML-decoded (PROJECT_STATE Section 3bv). *@
 @{
@@ -92,7 +91,7 @@
                 // The card shows its picture 88px wide on a phone and 256px on a computer, from a
                 // picture 1024 wide. With a small copy beside it the browser picks by the screen;
                 // a picture without one is sent whole, as before (PROJECT_STATE Section 3cn).
-                var smallCopy = ImageStorage.GetSmallCopyPublicUrl(svc.ImageUrl);
+                var smallCopy = svc.SmallCopyUrl;
 
                 <article class="service-horizontal-card group @cardDivisionClass">
                     <a class="service-card-thumbnail-wrapper card-image-link" asp-controller="Services" asp-action="Details" asp-route-categorySlug="@Model.Slug" asp-route-serviceSlug="@svc.Slug" tabindex="-1" aria-hidden="true">

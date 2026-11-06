@@ -36,9 +36,24 @@
 
         public bool IsPopular { get; set; }
 
+        /// <summary>
+        /// Set by the controller of a page that shows the picture small, not mapped: the address of
+        /// its small copy, or null when it has none. Looked up before the page is drawn
+        /// (PROJECT_STATE.md Section 3dj).
+        /// </summary>
+        public string SmallCopyUrl { get; set; }
+
+        /// <summary>
+        /// Set by the controller of a page that shows the picture on a card, not mapped: the
+        /// address of its middle copy, or null when it has none.
+        /// </summary>
+        public string MediumCopyUrl { get; set; }
+
         public void CreateMappings(TypeAdapterConfig config)
         {
             config.NewConfig<Service, ServiceViewModel>()
+                .Ignore(dest => dest.SmallCopyUrl)
+                .Ignore(dest => dest.MediumCopyUrl)
                 .Map(dest => dest.ImageUrl, src =>
                     src.Images != null && src.Images.Any(i => !string.IsNullOrWhiteSpace(i.ImageUrl))
                         ? src.Images.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.ImageUrl)).ImageUrl

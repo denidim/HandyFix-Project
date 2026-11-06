@@ -1,12 +1,14 @@
 ﻿namespace HandyFix.Web.Tests.Controllers
 {
     using System.Collections.Generic;
+    using System.IO;
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Web.Areas.Administration.Controllers;
     using HandyFix.Web.ViewModels.ServiceAreas;
 
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -114,7 +116,7 @@
                 .Setup(x => x.PruneAndValidateFaqs(It.IsAny<ServiceAreaAdminInputModel>()))
                 .Returns(new List<ServiceAreaFaqValidationError>());
 
-            return new ServiceAreasController(serviceAreasService.Object)
+            return new ServiceAreasController(serviceAreasService.Object, Mock.Of<IWebHostEnvironment>(e => e.WebRootPath == Path.GetTempPath()))
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
                 TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>()),

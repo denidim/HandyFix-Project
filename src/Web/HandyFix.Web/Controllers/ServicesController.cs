@@ -6,9 +6,11 @@
     using System.Threading.Tasks;
 
     using HandyFix.Common;
+    using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Presentation;
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
@@ -32,12 +34,14 @@
         private readonly ICategoriesService categoriesService;
         private readonly IServicesService servicesService;
         private readonly IServiceAreasService serviceAreasService;
+        private readonly IImageStorageService imageStorage;
 
-        public ServicesController(ICategoriesService categoriesService, IServicesService servicesService, IServiceAreasService serviceAreasService)
+        public ServicesController(ICategoriesService categoriesService, IServicesService servicesService, IServiceAreasService serviceAreasService, IImageStorageService imageStorage)
         {
             this.categoriesService = categoriesService;
             this.servicesService = servicesService;
             this.serviceAreasService = serviceAreasService;
+            this.imageStorage = imageStorage;
         }
 
         [Route("Services", Name = "ServicesList")]
@@ -71,7 +75,7 @@
             var model = new PricingViewModel
             {
                 Categories = categories,
-                TypicalJobs = typicalJobs,
+                TypicalJobs = typicalJobs.WithMediumCopies(this.imageStorage),
                 LocalAreas = localAreas.Take(12),
             };
 
@@ -93,7 +97,7 @@
             }
 
             IEnumerable<ServiceViewModel> services = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(category.Name);
-            category.Services = services.ToList();
+            category.Services = services.WithSmallCopies(this.imageStorage);
 
             // All areas: the coverage diagram plots every one; the view caps the badge links at 12.
             IEnumerable<ServiceAreaViewModel> localAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
@@ -125,7 +129,7 @@
             service.RelatedServices = categoryServices
                 .Where(s => !s.Slug.Equals(service.Slug, StringComparison.OrdinalIgnoreCase))
                 .Take(3)
-                .ToList();
+                .WithMediumCopies(this.imageStorage);
 
             var isBuildingService = service.CategorySlug == CategorySlugs.SmallBuildingWorks;
 

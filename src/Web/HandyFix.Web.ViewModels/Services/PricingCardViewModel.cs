@@ -8,6 +8,10 @@
 
         public string ImageUrl { get; set; }
 
+        // The picture's middle copy, or null when it has none: the card's page looks it up before
+        // the page is drawn and passes it on.
+        public string MediumCopyUrl { get; set; }
+
         public string Description { get; set; }
 
         public decimal BasePrice { get; set; }
