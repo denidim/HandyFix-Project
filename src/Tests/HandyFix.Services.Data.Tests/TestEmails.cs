@@ -17,5 +17,13 @@
                 configuration ?? new ConfigurationBuilder().Build(),
                 NullLogger<BookingEmails>.Instance);
         }
+
+        public static EnquiryEmails Enquiry(IEmailSender emailSender, IConfiguration configuration = null)
+        {
+            return new EnquiryEmails(
+                emailSender,
+                configuration ?? new ConfigurationBuilder().Build(),
+                NullLogger<EnquiryEmails>.Instance);
+        }
     }
 }

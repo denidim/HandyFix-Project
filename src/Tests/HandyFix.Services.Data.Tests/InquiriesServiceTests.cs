@@ -18,7 +18,6 @@
     using Microsoft.Data.Sqlite;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -545,9 +544,7 @@
                 new EfDeletableEntityRepository<Inquiry>(dbContext),
                 new EfDeletableEntityRepository<InquiryImage>(dbContext),
                 (imageService ?? new Mock<IImageService>()).Object,
-                (emailSender ?? new Mock<IEmailSender>()).Object,
-                configuration ?? new ConfigurationBuilder().Build(),
-                NullLogger<InquiriesService>.Instance);
+                TestEmails.Enquiry((emailSender ?? new Mock<IEmailSender>()).Object, configuration));
         }
 
         // Every email the service sent, in order, as (to, subject, body, replyTo, from, fromName).

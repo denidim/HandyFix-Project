@@ -213,6 +213,8 @@
             services.AddTransient<ITechniciansService, TechniciansService>();
             services.AddTransient<IPaymentsService, PaymentsService>();
             services.AddTransient<IBookingEmails, BookingEmails>();
+            services.AddTransient<IEnquiryEmails, EnquiryEmails>();
+            services.AddTransient<IAccountEmails, AccountEmails>();
             services.AddTransient<IEmailsNotSentService, EmailsNotSentService>();
             services.AddSingleton<IStripeGateway, StripeGateway>();
             services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();
