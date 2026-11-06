@@ -1,18 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
-using HandyFix.Data.Models;
-
-namespace HandyFix.Web.Areas.Identity.Pages.Account
+﻿namespace HandyFix.Web.Areas.Identity.Pages.Account
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    using HandyFix.Data.Models;
+
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Identity;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Mvc.RazorPages;
+    using Microsoft.Extensions.Logging;
+
     [AllowAnonymous]
     public class RegisterModel : PageModel
     {
@@ -21,24 +23,77 @@ namespace HandyFix.Web.Areas.Identity.Pages.Account
         // Register page, which would otherwise take its place. Set to true to reopen sign-up.
         private static readonly bool RegistrationOpen = false;
 
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<RegisterModel> _logger;
+        private readonly SignInManager<ApplicationUser> signInManager;
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly ILogger<RegisterModel> logger;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _logger = logger;
+            this.userManager = userManager;
+            this.signInManager = signInManager;
+            this.logger = logger;
         }
 
         [BindProperty]
         public InputModel Input { get; set; }
 
         public string ReturnUrl { get; set; }
+
+        public IActionResult OnGet(string returnUrl = null)
+        {
+            if (!RegistrationOpen)
+            {
+                return this.NotFound();
+            }
+
+            this.ReturnUrl = returnUrl;
+            return this.Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+        {
+            if (!RegistrationOpen)
+            {
+                return this.NotFound();
+            }
+
+            returnUrl ??= this.Url.Content("~/");
+            if (this.ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = this.Input.Email,
+                    Email = this.Input.Email,
+                    FirstName = this.Input.FirstName,
+                    LastName = this.Input.LastName,
+                    PhoneNumber = this.Input.PhoneNumber,
+                    IsGuest = false,
+                };
+
+                IdentityResult result = await this.userManager.CreateAsync(user, this.Input.Password);
+                if (result.Succeeded)
+                {
+                    this.logger.LogInformation("User created a new account with password.");
+
+                    // Default role assignment if needed (e.g. standard User role)
+                    // For HandyFix we can check if "User" role exists or just assign standard role if configured
+                    // await _userManager.AddToRoleAsync(user, "User");
+                    await this.signInManager.SignInAsync(user, isPersistent: false);
+                    return this.LocalRedirect(returnUrl);
+                }
+
+                foreach (IdentityError error in result.Errors)
+                {
+                    this.ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            // If we got this far, something failed, redisplay form
+            return this.Page();
+        }
 
         public class InputModel
         {
@@ -71,59 +126,6 @@ namespace HandyFix.Web.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
-        }
-
-        public IActionResult OnGet(string returnUrl = null)
-        {
-            if (!RegistrationOpen)
-            {
-                return this.NotFound();
-            }
-
-            ReturnUrl = returnUrl;
-            return this.Page();
-        }
-
-        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
-        {
-            if (!RegistrationOpen)
-            {
-                return this.NotFound();
-            }
-
-            returnUrl ??= Url.Content("~/");
-            if (ModelState.IsValid)
-            {
-                var user = new ApplicationUser 
-                { 
-                    UserName = Input.Email, 
-                    Email = Input.Email,
-                    FirstName = Input.FirstName,
-                    LastName = Input.LastName,
-                    PhoneNumber = Input.PhoneNumber,
-                    IsGuest = false
-                };
-
-                IdentityResult result = await _userManager.CreateAsync(user, Input.Password);
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("User created a new account with password.");
-
-                    // Default role assignment if needed (e.g. standard User role)
-                    // For HandyFix we can check if "User" role exists or just assign standard role if configured
-                    // await _userManager.AddToRoleAsync(user, "User");
-
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return LocalRedirect(returnUrl);
-                }
-                foreach (IdentityError error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-            }
-
-            // If we got this far, something failed, redisplay form
-            return Page();
         }
     }
 }
