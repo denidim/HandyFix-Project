@@ -36,21 +36,6 @@
             return dates;
         }
 
-        public async Task<IEnumerable<T>> GetAvailableSlotsForDateAsync<T>(DateTime date)
-        {
-            DateTime targetDate = date.Date;
-            DateTime nextDay = targetDate.AddDays(1);
-            DateTime now = DateTime.Now;
-
-            // Query using an index-friendly range comparison instead of .Date.
-            // StartTime > now hides past hours when targetDate is today.
-            return await this.slotRepository.All()
-                .Where(x => x.StartTime >= targetDate && x.StartTime < nextDay && x.StartTime > now && !x.IsBooked && !x.IsBlocked)
-                .OrderBy(x => x.StartTime)
-                .To<T>()
-                .ToListAsync();
-        }
-
         public async Task<IEnumerable<T>> GetAllSlotsForDateAsync<T>(DateTime date)
         {
             DateTime targetDate = date.Date;

@@ -577,23 +577,6 @@
             await this.paymentRepository.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<T>> GetPaymentsForBookingAsync<T>(Guid bookingId)
-        {
-            return await this.paymentRepository.All()
-                .Where(x => x.BookingId == bookingId)
-                .OrderByDescending(x => x.CreatedOn)
-                .To<T>()
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<T>> GetAllPaymentsAsync<T>()
-        {
-            return await this.paymentRepository.All()
-                .OrderByDescending(x => x.CreatedOn)
-                .To<T>()
-                .ToListAsync();
-        }
-
         public async Task<decimal> GetTotalRevenueAsync()
         {
             return await this.paymentRepository.All()

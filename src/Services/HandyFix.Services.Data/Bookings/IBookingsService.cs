@@ -12,8 +12,7 @@
     {
         Task<Booking> CreateBookingAsync(
             BookingInputModel model,
-            IReadOnlyList<string> imageUrls,
-            string userId = null);
+            IReadOnlyList<string> imageUrls);
 
         /// <summary>
         /// A job the admin writes in by hand: booked from the start, with no deposit, no slot
@@ -27,8 +26,6 @@
             BookingSortField sortField = BookingSortField.CreatedOn,
             bool descending = true,
             string statusFilter = null);
-
-        Task<IEnumerable<T>> GetUserBookingsAsync<T>(string userId);
 
         /// <summary>
         /// Marks a job done and writes its final price on it. False, with nothing changed, when
@@ -96,10 +93,6 @@
         /// for, or null when there is none.
         /// </summary>
         Task<DateTime?> GetPreviousDayWithJobsAsync(DateTime day);
-
-        Task RescheduleBookingAsync(Guid bookingId, Guid newSlotId);
-
-        Task AddBookingImageAsync(Guid bookingId, string imageUrl);
 
         Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan);
 

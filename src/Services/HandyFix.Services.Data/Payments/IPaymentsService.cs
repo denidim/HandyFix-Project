@@ -8,8 +8,6 @@
 
     public interface IPaymentsService
     {
-        Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId);
-
         /// <summary>
         /// Asks Stripe whether a payment page was paid and, when it was, writes the deposit on
         /// its booking and sends the emails; once, however often it is called. Answers with the
@@ -26,13 +24,7 @@
         /// </summary>
         Task<CheckoutClosure> CloseCheckoutsAsync(Guid bookingId);
 
-        Task CancelPaymentAsync(string checkoutSessionId);
-
         Task CancelPendingPaymentsForBookingsAsync(IEnumerable<Guid> bookingIds);
-
-        Task<IEnumerable<T>> GetPaymentsForBookingAsync<T>(Guid bookingId);
-
-        Task<IEnumerable<T>> GetAllPaymentsAsync<T>();
 
         Task<decimal> GetTotalRevenueAsync();
 

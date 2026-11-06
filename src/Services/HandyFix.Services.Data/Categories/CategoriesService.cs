@@ -6,7 +6,6 @@
 
     using HandyFix.Data.Common.Repositories;
     using HandyFix.Data.Models;
-    using HandyFix.Services.Data.Common;
     using HandyFix.Services.Mapping;
 
     using Microsoft.EntityFrameworkCore;
@@ -34,19 +33,6 @@
                 .Where(x => x.Slug == slug.ToLower())
                 .To<T>()
                 .FirstOrDefaultAsync();
-        }
-
-        public async Task CreateAsync(string name, string description)
-        {
-            var category = new ServiceCategory
-            {
-                Name = name,
-                Description = description,
-                Slug = SlugGenerator.Slugify(name),
-            };
-
-            await this.categoriesRepository.AddAsync(category);
-            await this.categoriesRepository.SaveChangesAsync();
         }
     }
 }

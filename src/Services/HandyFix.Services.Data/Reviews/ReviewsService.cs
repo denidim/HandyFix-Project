@@ -83,13 +83,6 @@
             return await query.To<T>().ToListAsync();
         }
 
-        public async Task<int> GetPendingCountAsync()
-        {
-            // AllWithDeleted() to match the Dashboard's existing count exactly - not changing
-            // that behavior here, just relocating it out of the controller.
-            return await this.reviewRepository.AllWithDeleted().CountAsync(x => !x.IsApproved);
-        }
-
         public ReviewSummaryStats GetSummaryStats(IEnumerable<ReviewViewModel> reviews)
         {
             // Deliberately takes the list rather than fetching it - see the equivalent note on

@@ -10,8 +10,6 @@
     {
         Task<IEnumerable<DateTime>> GetAvailableDatesAsync(int daysAhead = 30);
 
-        Task<IEnumerable<T>> GetAvailableSlotsForDateAsync<T>(DateTime date);
-
         Task<IEnumerable<T>> GetAllSlotsForDateAsync<T>(DateTime date);
 
         Task<IEnumerable<AvailabilitySlot>> GetAllSlotsForDayAsync(DateTime date);

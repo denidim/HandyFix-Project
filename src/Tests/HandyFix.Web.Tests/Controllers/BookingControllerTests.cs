@@ -48,7 +48,7 @@
                 out _);
 
             bookingsService
-                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()))
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
                 .ThrowsAsync(slotRaceException);
 
             var model = ValidModel();
@@ -105,7 +105,7 @@
         {
             var controller = BuildController(out _, out var availabilityService, out var bookingsService, out _);
             bookingsService
-                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()))
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
                 .ThrowsAsync(new SlotUnavailableException("Slot already booked."));
 
             var result = await controller.Index(ValidModel());
@@ -146,7 +146,7 @@
 
             var booking = new Booking();
             bookingsService
-                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()))
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
                 .ReturnsAsync(booking);
 
             var result = await controller.Index(ValidModel());
@@ -171,7 +171,7 @@
 
             Assert.IsType<ViewResult>(result);
             bookingsService.Verify(
-                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()),
                 Times.Never);
 
             // No point paying Cloudflare to store photos for a booking that was never valid.
@@ -207,7 +207,7 @@
             Assert.Equal("Ada", returnedModel.CustomerFirstName);
 
             bookingsService.Verify(
-                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()),
                 Times.Never);
             imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
         }
@@ -245,7 +245,7 @@
             Assert.DoesNotContain("automat", error, StringComparison.OrdinalIgnoreCase);
 
             bookingsService.Verify(
-                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()),
                 Times.Never);
             imageService.Verify(x => x.UploadImagesAsync(It.IsAny<IEnumerable<IFormFile>>(), It.IsAny<string>()), Times.Never);
         }
@@ -268,7 +268,7 @@
             Assert.Contains("could not confirm that you are a person", error);
             Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, error);
             bookingsService.Verify(
-                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()),
                 Times.Never);
         }
 
@@ -287,7 +287,7 @@
             Assert.IsType<ViewResult>(result);
             Assert.Equal("A maximum of 5 images can be uploaded at once.", SingleModelError(controller));
             bookingsService.Verify(
-                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()),
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()),
                 Times.Never);
         }
 
@@ -303,7 +303,7 @@
                 .ThrowsAsync(new InvalidOperationException("Cloudflare R2 is not fully configured. Missing one or more required settings in CloudflareR2 section."));
             var booking = new Booking();
             bookingsService
-                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.Is<IReadOnlyList<string>>(urls => urls.Count == 0), It.IsAny<string>()))
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.Is<IReadOnlyList<string>>(urls => urls.Count == 0)))
                 .ReturnsAsync(booking);
 
             var result = await controller.Index(ValidModel());
@@ -320,7 +320,7 @@
             var controller = BuildController(out _, out _, out var bookingsService, out _);
 
             bookingsService
-                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()))
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
                 .ThrowsAsync(new InvalidOperationException("That service is no longer offered."));
 
             var model = ValidModel();
@@ -343,7 +343,7 @@
 
             // A database or storage failure must not leak its internals to the customer.
             bookingsService
-                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<string>()))
+                .Setup(x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()))
                 .ThrowsAsync(new TimeoutException("SqlException: connection forcibly closed by host 10.0.0.4"));
 
             var result = await controller.Index(ValidModel());

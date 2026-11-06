@@ -24,8 +24,6 @@
 
         Task DeleteAsync(Guid id);
 
-        Task AddOrUpdateServiceImageAsync(Guid serviceId, string imageUrl);
-
         Task SetServiceImageAsync(Guid serviceId, IFormFile imageFile);
     }
 }

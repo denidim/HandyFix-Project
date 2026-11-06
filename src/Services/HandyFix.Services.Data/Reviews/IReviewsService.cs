@@ -19,8 +19,6 @@
             bool descending = true,
             string statusFilter = null);
 
-        Task<int> GetPendingCountAsync();
-
         ReviewSummaryStats GetSummaryStats(IEnumerable<ReviewViewModel> reviews);
     }
 }
