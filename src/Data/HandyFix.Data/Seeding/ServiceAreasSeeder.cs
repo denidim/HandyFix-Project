@@ -26,6 +26,28 @@
         private const string HomeTurf = "Home Turf";
         private const string SurreyBorders = "Surrey Borders";
 
+        // Each area's place on the coverage diagram: direction from Chessington, which side the
+        // name goes on, and a shorter name where the full one does not fit. Databases that
+        // already had the areas got the same values from the AddDiagramPlaceToServiceArea
+        // migration. Chessington is the centre and needs none.
+        private static readonly Dictionary<string, (double Bearing, DiagramLabelSide Side, string Label)> DiagramPlaces = new()
+        {
+            ["kingston-upon-thames"] = (10, DiagramLabelSide.Right, "Kingston"),
+            ["wimbledon"] = (42, DiagramLabelSide.Right, null),
+            ["worcester-park-ewell"] = (61, DiagramLabelSide.Right, "Worcester Park"),
+            ["sutton"] = (88, DiagramLabelSide.Right, null),
+            ["banstead"] = (122, DiagramLabelSide.Right, null),
+            ["epsom"] = (138, DiagramLabelSide.Left, null),
+            ["reigate"] = (154, DiagramLabelSide.Right, null),
+            ["dorking"] = (189, DiagramLabelSide.Below, null),
+            ["leatherhead"] = (196, DiagramLabelSide.Left, null),
+            ["guildford"] = (234, DiagramLabelSide.Left, null),
+            ["cobham"] = (247, DiagramLabelSide.Left, null),
+            ["esher"] = (284, DiagramLabelSide.Left, null),
+            ["walton-on-thames-weybridge"] = (290, DiagramLabelSide.Left, "Walton & Weybridge"),
+            ["surbiton"] = (345, DiagramLabelSide.Above, null),
+        };
+
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
             var areas = new[]
@@ -313,6 +335,13 @@
                     // got the same lists from the AddPostcodeDistrictsToServiceArea migration.
                     PostcodeDistricts = item.Districts,
                 };
+
+                if (DiagramPlaces.TryGetValue(item.Slug, out var place))
+                {
+                    area.DiagramBearing = place.Bearing;
+                    area.DiagramLabelSide = place.Side;
+                    area.DiagramLabel = place.Label;
+                }
 
                 var displayOrder = 1;
                 foreach ((string question, string answer) in item.Faqs)

@@ -61,6 +61,25 @@
             Assert.Equal("SW19, SW20, SM4", this.dbContext.ServiceAreas.Single(a => a.Slug == "wimbledon").PostcodeDistricts);
         }
 
+        // The diagram places moved out of _AreaCoverageMap.cshtml into the areas themselves
+        // (PROJECT_STATE Section 3dm): every town but the centre gets one, with its old name and side.
+        [Fact]
+        public async Task SeedAsyncShouldGiveEveryTownItsPlaceOnTheDiagram()
+        {
+            await this.SeedAsync();
+
+            Assert.DoesNotContain(this.dbContext.ServiceAreas, a => a.Slug != "chessington" && a.DiagramBearing == null);
+            Assert.Null(this.dbContext.ServiceAreas.Single(a => a.Slug == "chessington").DiagramBearing);
+
+            var kingston = this.dbContext.ServiceAreas.Single(a => a.Slug == "kingston-upon-thames");
+            Assert.Equal(10, kingston.DiagramBearing);
+            Assert.Equal("Kingston", kingston.DiagramLabel);
+
+            var dorking = this.dbContext.ServiceAreas.Single(a => a.Slug == "dorking");
+            Assert.Equal(DiagramLabelSide.Below, dorking.DiagramLabelSide);
+            Assert.Null(dorking.DiagramLabel);
+        }
+
         // The admin panel deletes an area for good. The seeder looked each area up by slug and
         // added the ones it did not find, so the area was back at the next start.
         [Fact]

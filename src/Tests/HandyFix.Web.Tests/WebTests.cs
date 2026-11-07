@@ -419,6 +419,19 @@
         }
 
         [Fact]
+        public async Task CoverageDiagramDrawsEveryTownFromItsStoredPlace()
+        {
+            // The places came out of the view and into the database (PROJECT_STATE Section 3dm);
+            // a fresh database must still draw all 14 towns, with their short names.
+            var client = this.server.CreateClient();
+            var responseContent = await client.GetStringAsync("/Areas");
+
+            Assert.Equal(14, Regex.Matches(responseContent, "class=\"coverage-label\"").Count);
+            Assert.Contains(">Kingston</text>", responseContent);
+            Assert.Contains(">Walton &amp; Weybridge</text>", responseContent);
+        }
+
+        [Fact]
         public async Task RegistrationIsClosedButLoginStaysOpen()
         {
             // Public sign-up is closed (roadmap L3 item 7): the page 404s and the login page no

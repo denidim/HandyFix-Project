@@ -754,6 +754,16 @@ namespace HandyFix.Data.Migrations
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("datetime2");
 
+                    b.Property<double?>("DiagramBearing")
+                        .HasColumnType("float");
+
+                    b.Property<string>("DiagramLabel")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int?>("DiagramLabelSide")
+                        .HasColumnType("int");
+
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
