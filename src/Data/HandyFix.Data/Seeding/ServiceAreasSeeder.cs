@@ -19,7 +19,7 @@
     /// IsDeleted filter, so a soft-deleted area would keep its slug taken while hidden from every
     /// query, and the admin could never use that slug again.
     /// </para>
-    /// <para>See docs/WORKFLOW_SERVICE_AREAS.md for the full three-step add/update workflow.</para>
+    /// <para>See docs/WORKFLOW_SERVICE_AREAS.md for adding and updating an area.</para>
     /// </summary>
     internal class ServiceAreasSeeder : ISeeder
     {
