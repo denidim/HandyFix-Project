@@ -83,10 +83,12 @@
                 this.connection.Open();
                 services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(this.connection));
 
-                // No test asks postcodes.io: a test must not depend on the internet. An area saved
-                // in a test is simply left off the diagram.
+                // No test asks postcodes.io or the route service: a test must not depend on the
+                // internet. An area saved in a test is simply left off the diagram.
                 services.RemoveAll<IPostcodeLocator>();
                 services.AddSingleton(Mock.Of<IPostcodeLocator>());
+                services.RemoveAll<IDriveTimeCalculator>();
+                services.AddSingleton(Mock.Of<IDriveTimeCalculator>());
             });
         }
 
