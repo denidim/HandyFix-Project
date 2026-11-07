@@ -6,7 +6,7 @@ email says, and why, stays with its feature: `WORKFLOW_BOOKINGS.md` for the four
 
 **Code:** `src/Services/HandyFix.Services.Messaging/` (the senders),
 `src/Services/HandyFix.Services.Data/Emails/`: `BookingEmails`, `EnquiryEmails` and
-`AccountEmails` (what each email says), `EmailSettings.cs` (the addresses and their settings),
+`AccountEmails` (what each email says), `EmailOptions.cs` (the addresses and their settings),
 `EmailSenderExtensions.cs` (`TrySendEmailAsync`), `EmailLayout.cs` (how every email looks).
 
 ---
@@ -114,7 +114,7 @@ change what one email says, change its email class. To change when it goes, chan
   move the file**: every email already sent points at that address.
 - **A button in a notice opens the admin panel of the site that sent it**: the job's own page for
   a deposit, the Enquiries list for an enquiry. The address comes from `Site:PublicUrl`
-  (`EmailSettings.SiteUrl`). Staging's compose file sets it from `STAGING_HOSTNAME`; with
+  (`EmailOptions.SiteUrl`). Staging's compose file sets it from `STAGING_HOSTNAME`; with
   nothing set it is the live site's address.
 - **A job application is acknowledged without the "Is your request urgent?" box.** That box is
   about leaks and emergency repairs.
@@ -131,7 +131,7 @@ change what one email says, change its email class. To change when it goes, chan
 | `Admin:NotificationEmail` | `ADMIN_NOTIFICATION_EMAIL` | unset | the developer address | empty |
 | `Site:PublicUrl` | none: staging's compose file builds it from `STAGING_HOSTNAME` | unset | staging's own address | unset |
 
-Empty or unset means the default in `EmailSettings`: `bookings@` as the sender, `info@` for
+Empty or unset means the default in `EmailOptions`: `bookings@` as the sender, `info@` for
 notices, no mark on the subject, and the live site's address behind a notice's button.
 
 - **Staging sends from the real address on purpose.** Brevo refuses a sender it has not verified,
