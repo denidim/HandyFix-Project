@@ -15,8 +15,6 @@
 
         public string Name { get; set; }
 
-        public string Region { get; set; }
-
         public int DriveTimeMinutes { get; set; }
 
         public string IntroCopy { get; set; }

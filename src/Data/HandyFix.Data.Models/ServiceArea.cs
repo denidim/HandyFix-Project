@@ -26,10 +26,8 @@
         [MaxLength(100, ErrorMessage = "The {0} field cannot exceed 100 characters.")]
         public string Name { get; set; } = null!;
 
-        [Required(ErrorMessage = "The {0} field is required.")]
-        [MaxLength(100, ErrorMessage = "The {0} field cannot exceed 100 characters.")]
-        public string Region { get; set; } = null!;
-
+        // Minutes by car from the Chessington base: 0 is the base itself. Worked out when the
+        // area is created (PROJECT_STATE.md Section 3dn); the admin no longer types it.
         [Range(0, 180, ErrorMessage = "The {0} must be between 0 and 180 minutes.")]
         public int DriveTimeMinutes { get; set; }
 
@@ -44,8 +42,6 @@
         public string LocalNeighbourhoodsCopy { get; set; } = null!;
 
         public bool IsFeatured { get; set; }
-
-        public int DisplayOrder { get; set; }
 
         // The postcode districts this area covers, as "KT5, KT6, KT7". The booking form takes a
         // booking only for a postcode in a district some area lists. Optional: an area with none

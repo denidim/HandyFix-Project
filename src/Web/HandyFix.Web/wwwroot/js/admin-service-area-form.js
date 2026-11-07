@@ -1,4 +1,4 @@
-// Drives the dynamic FAQ builder and the create-only slug suggestion on the admin
+// Drives the dynamic FAQ builder and the picture text's copy button on the admin
 // Service Area form (Areas/Administration/Views/ServiceAreas/_ServiceAreaForm.cshtml).
 (function () {
     'use strict';
@@ -79,36 +79,9 @@
             });
         }
 
-        // Slug suggestion runs on create only, and stops the moment the admin edits the
-        // slug themselves. It never fires on edit: the slug is already live in URLs, the
-        // filename of a picture that came with the site and the coverage-diagram key, so
-        // silently rewriting it because someone corrected a typo in the name would break
-        // all three at once.
-        var nameInput = document.getElementById('area-name');
-        var slugInput = document.getElementById('area-slug');
-
-        if (root.getAttribute('data-autofill-slug') === 'true' && nameInput && slugInput) {
-            var slugTouched = slugInput.value.trim().length > 0;
-
-            slugInput.addEventListener('input', function () {
-                slugTouched = true;
-            });
-
-            nameInput.addEventListener('input', function () {
-                if (slugTouched) {
-                    return;
-                }
-
-                slugInput.value = nameInput.value
-                    .toLowerCase()
-                    .replace(/&/g, ' and ')
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-+|-+$/g, '');
-            });
-        }
-
         // The text for the Gemini app names the town as the name box has it, and "Copy" puts it
         // on the clipboard (PROJECT_STATE.md Section 3dl).
+        var nameInput = document.getElementById('area-name');
         var prompt = document.getElementById('area-style-prompt');
         var copyButton = document.getElementById('copy-style-prompt');
 

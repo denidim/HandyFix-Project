@@ -60,27 +60,46 @@
             serviceAreasService.Verify(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>()), Times.Once);
         }
 
+        // A name taken or a town not found comes back from the service: it goes under its field,
+        // the form shows again, and no picture is tried for an area that was not saved
+        // (PROJECT_STATE.md Section 3dn).
         [Fact]
-        public async Task CreateShouldRejectADuplicateSlugIncludingDeletedAreas()
+        public async Task CreateShouldShowTheServicesReasonUnderItsFieldAndSaveNoPicture()
         {
-            // SlugExistsAsync checks soft-deleted rows too: the unique index on Slug is not
-            // filtered on IsDeleted, so a colliding slug would fail at SaveChanges - and on
-            // the next boot the seeder would hit the same violation and fail app startup.
             var controller = BuildController(out var serviceAreasService);
-
             serviceAreasService
-                .Setup(x => x.SlugExistsAsync("chessington", null))
-                .ReturnsAsync(true);
+                .Setup(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>()))
+                .ReturnsAsync(ServiceAreaSaveResult.Failed("Name", "We could not find a town called Molsey. Check the spelling."));
 
+            var result = await controller.Create(ValidArea());
+
+            var returned = Assert.IsType<ServiceAreaAdminInputModel>(Assert.IsType<ViewResult>(result).Model);
+            var error = Assert.Single(controller.ModelState["Name"].Errors);
+            Assert.Equal("We could not find a town called Molsey. Check the spelling.", error.ErrorMessage);
+            Assert.Single(returned.Faqs);
+            serviceAreasService.Verify(x => x.SetHeroImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()), Times.Never);
+        }
+
+        // The same on the Edit page, and the form shows again with the saved page address.
+        [Fact]
+        public async Task EditShouldShowTheServicesReasonUnderItsFieldWithTheSavedAddress()
+        {
+            var controller = BuildController(out var serviceAreasService);
             var model = ValidArea();
-            model.Slug = "chessington";
+            model.Id = Guid.NewGuid();
+            serviceAreasService
+                .Setup(x => x.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value))
+                .ReturnsAsync(new ServiceAreaAdminInputModel { Slug = "chessington", DriveTimeMinutes = 0 });
+            serviceAreasService
+                .Setup(x => x.UpdateAsync(model.Id.Value, It.IsAny<ServiceAreaAdminInputModel>()))
+                .ReturnsAsync(ServiceAreaSaveResult.Failed("Name", "We could not find a town called Chesington. Check the spelling."));
 
-            var result = await controller.Create(model);
+            var result = await controller.Edit(model);
 
-            Assert.False(controller.ModelState.IsValid);
-            Assert.True(controller.ModelState.ContainsKey(nameof(model.Slug)));
-            Assert.IsType<ViewResult>(result);
-            serviceAreasService.Verify(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>()), Times.Never);
+            var returned = Assert.IsType<ServiceAreaAdminInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("chessington", returned.Slug);
+            Assert.Single(controller.ModelState["Name"].Errors);
+            serviceAreasService.Verify(x => x.SetHeroImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()), Times.Never);
         }
 
         [Fact]
@@ -91,9 +110,8 @@
             var controller = BuildController(out _);
 
             var model = ValidArea();
-            model.Slug = "NOT A VALID SLUG";
             model.Faqs = new List<ServiceAreaFaqInputModel>();
-            controller.ModelState.AddModelError(nameof(model.Slug), "Invalid slug.");
+            controller.ModelState.AddModelError(nameof(model.Name), "Area name is required.");
 
             var result = await controller.Create(model);
 
@@ -109,7 +127,7 @@
         {
             var controller = BuildController(out var serviceAreasService);
             var areaId = Guid.NewGuid();
-            serviceAreasService.Setup(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>())).ReturnsAsync(areaId);
+            serviceAreasService.Setup(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>())).ReturnsAsync(ServiceAreaSaveResult.Saved(areaId));
             serviceAreasService
                 .Setup(x => x.SetHeroImageAsync(areaId, It.IsAny<IFormFile>()))
                 .ThrowsAsync(new ImageUploadValidationException("Failed to decode uploaded image."));
@@ -148,9 +166,6 @@
         private static ServiceAreaAdminInputModel ValidArea() => new ServiceAreaAdminInputModel
         {
             Name = "Chessington",
-            Slug = "chessington",
-            Region = "Surrey",
-            DriveTimeMinutes = 0,
             Faqs = new List<ServiceAreaFaqInputModel>(),
         };
 
@@ -163,6 +178,14 @@
             serviceAreasService
                 .Setup(x => x.PruneAndValidateFaqs(It.IsAny<ServiceAreaAdminInputModel>()))
                 .Returns(new List<ServiceAreaFaqValidationError>());
+
+            // Saving works unless a test says otherwise.
+            serviceAreasService
+                .Setup(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>()))
+                .ReturnsAsync(ServiceAreaSaveResult.Saved(Guid.NewGuid()));
+            serviceAreasService
+                .Setup(x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<ServiceAreaAdminInputModel>()))
+                .ReturnsAsync((Guid id, ServiceAreaAdminInputModel _) => ServiceAreaSaveResult.Saved(id));
 
             return new ServiceAreasController(
                 serviceAreasService.Object,

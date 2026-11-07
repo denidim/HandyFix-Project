@@ -764,9 +764,6 @@ namespace HandyFix.Data.Migrations
                     b.Property<int?>("DiagramLabelSide")
                         .HasColumnType("int");
 
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
                     b.Property<int>("DriveTimeMinutes")
                         .HasColumnType("int");
 
@@ -801,11 +798,6 @@ namespace HandyFix.Data.Migrations
                     b.Property<string>("PostcodeDistricts")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Region")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
