@@ -72,7 +72,7 @@
 .coverage-dot {
   fill: var(--surface-container-lowest);
   stroke: var(--secondary);
-  stroke-width: 2.5;
+  stroke-width: 2;
   transition: fill 0.2s ease, stroke-width 0.2s ease;
 }
 
@@ -89,7 +89,7 @@
 
 .coverage-label {
   fill: var(--on-surface-variant);
-  font-size: 15px;
+  font-size: 10px;
   font-weight: 500;
   transition: fill 0.2s ease;
 }
@@ -97,7 +97,7 @@
 .coverage-node:hover .coverage-dot,
 .coverage-node:focus-visible .coverage-dot {
   fill: var(--secondary);
-  stroke-width: 5;
+  stroke-width: 4;
 }
 
 .coverage-node:hover .coverage-label,
@@ -120,13 +120,13 @@
 
 .coverage-label-hub {
   fill: var(--primary);
-  font-size: 17px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .coverage-hub-sub {
   fill: var(--outline);
-  font-size: 14px;
+  font-size: 9px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;

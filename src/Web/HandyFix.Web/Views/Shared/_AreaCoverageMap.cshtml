@@ -90,9 +90,9 @@
 
         @* Legend, tucked into the empty north-west corner outside the outer ring. *@
         <g class="coverage-legend">
-            <circle class="coverage-dot coverage-dot-solid" cx="40" cy="64" r="7" />
+            <circle class="coverage-dot coverage-dot-solid" cx="40" cy="64" r="6" />
             <text class="coverage-legend-text" x="56" y="69">Featured area</text>
-            <circle class="coverage-dot" cx="40" cy="94" r="7" />
+            <circle class="coverage-dot" cx="40" cy="94" r="6" />
             <text class="coverage-legend-text" x="56" y="99">Also covered</text>
         </g>
 
@@ -109,7 +109,7 @@
                href="@Url.RouteUrl("AreaDetails", new { areaSlug = p.Area.Slug })"
                aria-label="@p.Area.Name, about @p.Area.DriveTimeMinutes minutes from our Chessington base">
                 <circle class="coverage-hit" cx="@p.X.ToString("F1")" cy="@p.Y.ToString("F1")" r="26" />
-                <circle class="coverage-dot" cx="@p.X.ToString("F1")" cy="@p.Y.ToString("F1")" r="7" />
+                <circle class="coverage-dot" cx="@p.X.ToString("F1")" cy="@p.Y.ToString("F1")" r="6" />
                 <text class="coverage-label"
                       x="@((p.X + p.Geo.Dx).ToString("F1"))"
                       y="@((p.Y + p.Geo.Dy).ToString("F1"))"
@@ -123,10 +123,10 @@
             <a class="coverage-node coverage-node-hub"
                href="@Url.RouteUrl("AreaDetails", new { areaSlug = hub.Slug })"
                aria-label="@hub.Name, our base">
-                <circle class="coverage-hub-halo" cx="@Cx" cy="@Cy" r="19" />
-                <circle class="coverage-hub" cx="@Cx" cy="@Cy" r="11" />
-                <text class="coverage-label coverage-label-hub" x="@Cx" y="@(Cy + 40)" text-anchor="middle">@hub.Name</text>
-                <text class="coverage-hub-sub" x="@Cx" y="@(Cy + 58)" text-anchor="middle">Our base</text>
+                <circle class="coverage-hub-halo" cx="@Cx" cy="@Cy" r="16" />
+                <circle class="coverage-hub" cx="@Cx" cy="@Cy" r="9" />
+                <text class="coverage-label coverage-label-hub" x="@Cx" y="@(Cy + 31)" text-anchor="middle">@hub.Name</text>
+                <text class="coverage-hub-sub" x="@Cx" y="@(Cy + 43)" text-anchor="middle">Our base</text>
             </a>
         }
     </svg>
