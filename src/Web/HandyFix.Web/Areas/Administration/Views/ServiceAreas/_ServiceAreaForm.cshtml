@@ -3,10 +3,25 @@
     var isCreate = Model.IsNew;
     var action = isCreate ? "Create" : "Edit";
     var submitLabel = isCreate ? "Create Service Area" : "Update Service Area";
+
+    // What the area's page shows now, said in words (PROJECT_STATE.md Section 3dl).
+    var pictureNow = !string.IsNullOrEmpty(Model.HeroImageUrl)
+        ? "the picture uploaded here."
+        : Model.CurrentPictureUrl != null
+            ? "the picture that came with the site."
+            : "no picture of its own yet, so the page shows the general one.";
+
+    // For the owner to paste into the Gemini app: the watercolour style of the site's pictures
+    // (tools/image-gen/generate-batch.mjs), shortened, with the town's name.
+    var town = string.IsNullOrWhiteSpace(Model.Name) ? "[town name]" : Model.Name.Trim();
+    var stylePrompt = $"A bright, vibrant, contemporary watercolour illustration of {town}, Surrey: a sunny scene of its best-known street or landmark. "
+        + "Rich fresh colours, bright natural sunlight with clean shadows, visible paper texture, clean washes. Optimistic and welcoming, never dark or faded. "
+        + "A very wide landscape picture, about 16 by 7, filling the whole frame with no border. "
+        + "No people's faces close up, no text, no logos, no signs, no number plates, no watermark.";
 }
 
 <div class="rounded-xl shadow-sm p-5 p-md-5 admin-card" id="service-area-form-root" data-autofill-slug="@(isCreate ? "true" : "false")">
-    <form asp-area="Administration" asp-controller="ServiceAreas" asp-action="@action" method="post" class="d-flex flex-column gap-5">
+    <form asp-area="Administration" asp-controller="ServiceAreas" asp-action="@action" method="post" enctype="multipart/form-data" class="d-flex flex-column gap-5">
         <input type="hidden" asp-for="Id" />
 
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -21,10 +36,10 @@
                 <label asp-for="Slug" class="form-label font-label-sm text-on-surface-variant mb-2">URL Slug</label>
                 <input asp-for="Slug" id="area-slug" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
                 <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">
-                    Used for <code>/Areas/{slug}</code>, the hero image filename, and the coverage-diagram key.
+                    Used for <code>/Areas/{slug}</code> and the coverage-diagram key.
                     @if (!isCreate)
                     {
-                        <strong>Changing this breaks the existing image and map entry until both are renamed.</strong>
+                        <strong>Changing this breaks the map entry until it is renamed, and loses a picture that came with the site (an uploaded one stays).</strong>
                     }
                 </span>
                 <span asp-validation-for="Slug" class="text-danger small"></span>
@@ -65,6 +80,37 @@
                 The first half of the postcodes this area covers, with commas between them. The booking page only takes a booking for a postcode in a district listed on some area; anyone else is asked to send an enquiry or call. Leave empty if this area adds none.
             </span>
             <span asp-validation-for="PostcodeDistricts" class="text-danger small"></span>
+        </div>
+
+        <!-- Area picture -->
+        <div class="form-group">
+            <label asp-for="HeroImageFile" class="form-label font-label-sm text-on-surface-variant mb-2">Area Picture</label>
+            <div class="d-flex flex-column flex-md-row gap-4 align-items-md-start">
+                @if (Model.CurrentPictureUrl != null)
+                {
+                    <div class="flex-shrink-0 area-picture-thumb">
+                        <img src="@Model.CurrentPictureUrl" asp-append-version="true" class="w-100 h-100" alt="The area's picture now" onerror="this.parentElement.hidden=true" />
+                    </div>
+                }
+                <div class="flex-grow-1 w-100">
+                    @if (!isCreate)
+                    {
+                        <span class="font-label-sm text-on-surface d-block mb-2 fs-13"><strong>Now showing:</strong> @pictureNow</span>
+                    }
+                    <input asp-for="HeroImageFile" type="file" accept="image/jpeg,image/png,image/webp" class="form-control admin-form-control file-input-pad" />
+                    <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">
+                        @(isCreate ? "Optional." : "Upload a picture to replace it.") JPEG, PNG or WEBP, up to 20MB. The site cuts the middle to a wide strip (1600 &times; 700), so keep the town in the centre.
+                    </span>
+                    <span asp-validation-for="HeroImageFile" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="p-3 rounded-lg mt-3 faq-row">
+                <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+                    <label for="area-style-prompt" class="font-label-sm text-on-surface-variant mb-0">To make a picture in the Gemini app, copy this and paste it there:</label>
+                    <button type="button" id="copy-style-prompt" class="btn btn-outline admin-btn-compact admin-btn-outline flex-shrink-0">Copy</button>
+                </div>
+                <textarea id="area-style-prompt" data-town="@town" readonly class="form-control admin-form-control form-pad-standard resize-none area-style-prompt" rows="5">@stylePrompt</textarea>
+            </div>
         </div>
 
         <div class="form-group">

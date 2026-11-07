@@ -926,6 +926,25 @@
   object-fit: cover;
 }
 
+/* An area's picture is a wide strip, 1600 x 700. */
+.area-picture-thumb {
+  width: 240px;
+  max-width: 100%;
+  aspect-ratio: 16 / 7;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  background-color: var(--surface-container-low);
+}
+
+.area-picture-thumb img {
+  object-fit: cover;
+}
+
+.admin-form-control.area-style-prompt {
+  font-size: 13px;
+}
+
 .admin-main-content {
   flex-grow: 1;
   padding: var(--spacing-8);

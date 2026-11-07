@@ -6,17 +6,21 @@
     using System.Threading.Tasks;
 
     using HandyFix.Services.Data.ServiceAreas;
+    using HandyFix.Web.Presentation;
     using HandyFix.Web.ViewModels.ServiceAreas;
 
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
 
     public class AreaCardViewComponent : ViewComponent
     {
         private readonly IServiceAreasService areasService;
+        private readonly IWebHostEnvironment environment;
 
-        public AreaCardViewComponent(IServiceAreasService areasService)
+        public AreaCardViewComponent(IServiceAreasService areasService, IWebHostEnvironment environment)
         {
             this.areasService = areasService;
+            this.environment = environment;
         }
 
         public async Task<IViewComponentResult> InvokeAsync(
@@ -27,7 +31,7 @@
             if (excludeAreaId.HasValue)
             {
                 IEnumerable<ServiceAreaViewModel> nearest = await this.areasService.GetNearestAsync<ServiceAreaViewModel>(excludeAreaId.Value, take);
-                return this.View(nearest.ToList());
+                return this.View(nearest.WithPictures(this.environment));
             }
 
             IEnumerable<ServiceAreaViewModel> areas = await this.areasService.GetAllAsync<ServiceAreaViewModel>();
@@ -35,7 +39,7 @@
             var filtered = areas
                 .Where(a => !featuredOnly || a.IsFeatured)
                 .Take(take)
-                .ToList();
+                .WithPictures(this.environment);
 
             return this.View(filtered);
         }

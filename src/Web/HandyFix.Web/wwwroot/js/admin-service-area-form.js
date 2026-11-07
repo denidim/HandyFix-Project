@@ -81,8 +81,9 @@
 
         // Slug suggestion runs on create only, and stops the moment the admin edits the
         // slug themselves. It never fires on edit: the slug is already live in URLs, the
-        // hero image filename and the coverage-diagram key, so silently rewriting it
-        // because someone corrected a typo in the name would break all three at once.
+        // filename of a picture that came with the site and the coverage-diagram key, so
+        // silently rewriting it because someone corrected a typo in the name would break
+        // all three at once.
         var nameInput = document.getElementById('area-name');
         var slugInput = document.getElementById('area-slug');
 
@@ -103,6 +104,39 @@
                     .replace(/&/g, ' and ')
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/^-+|-+$/g, '');
+            });
+        }
+
+        // The text for the Gemini app names the town as the name box has it, and "Copy" puts it
+        // on the clipboard (PROJECT_STATE.md Section 3dl).
+        var prompt = document.getElementById('area-style-prompt');
+        var copyButton = document.getElementById('copy-style-prompt');
+
+        if (prompt && nameInput) {
+            var town = prompt.getAttribute('data-town');
+            nameInput.addEventListener('input', function () {
+                var newTown = nameInput.value.trim() || '[town name]';
+                prompt.value = prompt.value.replace(town + ', Surrey', newTown + ', Surrey');
+                town = newTown;
+            });
+        }
+
+        if (prompt && copyButton) {
+            copyButton.addEventListener('click', function () {
+                function copied() {
+                    copyButton.textContent = 'Copied';
+                    setTimeout(function () { copyButton.textContent = 'Copy'; }, 2000);
+                }
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(prompt.value).then(copied);
+                } else {
+                    // Without a secure page (a local run over http) the clipboard API is not
+                    // there; selecting the text and copying still works.
+                    prompt.select();
+                    document.execCommand('copy');
+                    copied();
+                }
             });
         }
     });

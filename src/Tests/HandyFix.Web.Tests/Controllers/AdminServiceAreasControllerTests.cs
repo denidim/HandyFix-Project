@@ -1,9 +1,11 @@
 ﻿namespace HandyFix.Web.Tests.Controllers
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Threading.Tasks;
 
+    using HandyFix.Services;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Web.Areas.Administration.Controllers;
     using HandyFix.Web.ViewModels.ServiceAreas;
@@ -12,6 +14,8 @@
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.ViewFeatures;
+    using Microsoft.Extensions.FileProviders;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Moq;
 
@@ -97,6 +101,50 @@
             Assert.Single(returned.Faqs);
         }
 
+        // The area is saved before its picture. A picture the site will not take used to have no
+        // box to go in; now the admin lands on the new area's Edit page with the reason, as for a
+        // service (PROJECT_STATE.md Section 3dl).
+        [Fact]
+        public async Task CreateWhosePictureIsRefusedOpensTheNewAreasEditPageWithTheReason()
+        {
+            var controller = BuildController(out var serviceAreasService);
+            var areaId = Guid.NewGuid();
+            serviceAreasService.Setup(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>())).ReturnsAsync(areaId);
+            serviceAreasService
+                .Setup(x => x.SetHeroImageAsync(areaId, It.IsAny<IFormFile>()))
+                .ThrowsAsync(new ImageUploadValidationException("Failed to decode uploaded image."));
+
+            var result = await controller.Create(ValidArea());
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal(nameof(ServiceAreasController.Edit), redirect.ActionName);
+            Assert.Equal(areaId, redirect.RouteValues["id"]);
+            Assert.Equal("The area is saved, but not its picture. Failed to decode uploaded image.", controller.TempData["AreaPictureError"]);
+        }
+
+        // A bucket out of reach is logged and said in our words under the picture box; the form
+        // comes back with the picture the area still has.
+        [Fact]
+        public async Task EditWhosePictureCannotBeSavedShowsTheFormAgainInOurWords()
+        {
+            var controller = BuildController(out var serviceAreasService);
+            var model = ValidArea();
+            model.Id = Guid.NewGuid();
+            serviceAreasService
+                .Setup(x => x.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value))
+                .ReturnsAsync(new ServiceAreaAdminInputModel { Slug = "chessington", HeroImageUrl = "https://photos.example/areas/old.webp" });
+            serviceAreasService
+                .Setup(x => x.SetHeroImageAsync(model.Id.Value, It.IsAny<IFormFile>()))
+                .ThrowsAsync(new InvalidOperationException("The bucket could not be reached."));
+
+            var result = await controller.Edit(model);
+
+            var returned = Assert.IsType<ServiceAreaAdminInputModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("https://photos.example/areas/old.webp", returned.CurrentPictureUrl);
+            var error = Assert.Single(controller.ModelState[nameof(model.HeroImageFile)].Errors);
+            Assert.Equal("The picture could not be saved. The area itself is saved: try the picture again.", error.ErrorMessage);
+        }
+
         private static ServiceAreaAdminInputModel ValidArea() => new ServiceAreaAdminInputModel
         {
             Name = "Chessington",
@@ -116,7 +164,10 @@
                 .Setup(x => x.PruneAndValidateFaqs(It.IsAny<ServiceAreaAdminInputModel>()))
                 .Returns(new List<ServiceAreaFaqValidationError>());
 
-            return new ServiceAreasController(serviceAreasService.Object, Mock.Of<IWebHostEnvironment>(e => e.WebRootPath == Path.GetTempPath()))
+            return new ServiceAreasController(
+                serviceAreasService.Object,
+                Mock.Of<IWebHostEnvironment>(e => e.WebRootPath == Path.GetTempPath() && e.WebRootFileProvider == new NullFileProvider()),
+                NullLogger<ServiceAreasController>.Instance)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
                 TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>()),

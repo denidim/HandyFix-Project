@@ -5,10 +5,11 @@
 
     var area = Model.Area;
 
-    // A phone draws the main picture to fill a box 400px tall, so only a strip from its middle
-    // shows; it is sent that strip, cut out by tools/image-gen/make-phone-copies.mjs (PROJECT_STATE
-    // Section 3cz). An area added in the admin panel has no strip, and gets the picture itself.
-    // The controller looks for the strip before the page is drawn.
+    // The picture is the admin's upload, else the one that came with the site, else the general
+    // one. A phone draws it to fill a box 400px tall, so only a strip from its middle shows, and it
+    // is sent that strip (PROJECT_STATE Sections 3cz and 3dl). The controller looks both up before
+    // the page is drawn.
+    var picture = Model.Picture ?? "/images/hero.webp";
     var phonePicture = Model.PhonePicture;
     var driveTimeText = area.DriveTimeMinutes == 0 ? "Home Base" : $"~{area.DriveTimeMinutes} min from Chessington";
 
@@ -26,7 +27,7 @@
             {
                 <source media="(max-width: 575.98px)" srcset="@phonePicture" width="928" height="700">
             }
-            <img src="~/images/areas/@(area.Slug)-hero.webp"
+            <img src="@picture"
                  alt="Handyman and plumbing services in @area.Name"
                  class="area-hero-image"
                  asp-append-version="true"

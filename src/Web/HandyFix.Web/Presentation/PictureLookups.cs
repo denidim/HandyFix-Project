@@ -1,11 +1,11 @@
 ﻿namespace HandyFix.Web.Presentation
 {
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
 
     using HandyFix.Services;
+    using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Hosting;
@@ -43,27 +43,48 @@
         }
 
         /// <summary>
-        /// The strip of an area's picture a phone is sent, or null when there is none. A phone
-        /// draws the picture to fill a box 400px tall, so only a strip from its middle shows; the
-        /// strip is cut out by tools/image-gen/make-phone-copies.mjs (PROJECT_STATE Section 3cz).
-        /// An area added in the admin panel has none and is sent the picture itself.
+        /// The picture an area shows: the one the admin uploaded, else the one that came with the
+        /// site for its slug; null when it has neither, and the page shows the general picture
+        /// (PROJECT_STATE.md Section 3dl). Every page that shows an area's picture asks here.
         /// </summary>
-        public static string PhonePictureOf(IWebHostEnvironment environment, string areaSlug)
+        public static string AreaPictureOf(IWebHostEnvironment environment, string areaSlug, string uploadedUrl)
         {
-            var picture = $"/images/areas/{areaSlug}-hero-phone.webp";
-            return Regex.IsMatch(areaSlug ?? string.Empty, "^[a-z0-9-]+$") && environment.WebRootFileProvider.GetFileInfo(picture).Exists
-                ? picture
-                : null;
+            return !string.IsNullOrWhiteSpace(uploadedUrl)
+                ? uploadedUrl
+                : BuiltInAreaFile(environment, areaSlug, "-hero.webp");
         }
 
         /// <summary>
-        /// Whether an area's picture is in place: step 2 of adding an area, which its Edit page
-        /// says has been done or not.
+        /// The strip of that picture a phone is sent, or null when there is none. A phone draws
+        /// the picture to fill a box 400px tall, so only a strip from its middle shows: an upload
+        /// has its strip beside it in the bucket, and the pictures that came with the site have
+        /// theirs from tools/image-gen/make-phone-copies.mjs (PROJECT_STATE Section 3cz).
         /// </summary>
-        public static bool HasHeroImage(IWebHostEnvironment environment, string areaSlug)
+        public static string AreaPhonePictureOf(IWebHostEnvironment environment, IImageStorageService storage, string areaSlug, string uploadedUrl)
         {
-            return !string.IsNullOrWhiteSpace(areaSlug)
-                && File.Exists(Path.Combine(environment.WebRootPath, "images", "areas", $"{areaSlug}-hero.webp"));
+            return !string.IsNullOrWhiteSpace(uploadedUrl)
+                ? storage.GetAreaPhoneCopyPublicUrl(uploadedUrl)
+                : BuiltInAreaFile(environment, areaSlug, "-hero-phone.webp");
+        }
+
+        // For the area cards: each card's picture.
+        public static List<ServiceAreaViewModel> WithPictures(this IEnumerable<ServiceAreaViewModel> areas, IWebHostEnvironment environment)
+        {
+            var list = areas.ToList();
+            foreach (ServiceAreaViewModel area in list)
+            {
+                area.PictureUrl = AreaPictureOf(environment, area.Slug, area.HeroImageUrl);
+            }
+
+            return list;
+        }
+
+        private static string BuiltInAreaFile(IWebHostEnvironment environment, string areaSlug, string suffix)
+        {
+            var file = $"/images/areas/{areaSlug}{suffix}";
+            return Regex.IsMatch(areaSlug ?? string.Empty, "^[a-z0-9-]+$") && environment.WebRootFileProvider.GetFileInfo(file).Exists
+                ? file
+                : null;
         }
     }
 }

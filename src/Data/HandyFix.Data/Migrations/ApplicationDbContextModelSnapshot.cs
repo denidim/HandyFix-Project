@@ -17,7 +17,7 @@ namespace HandyFix.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -759,6 +759,10 @@ namespace HandyFix.Data.Migrations
 
                     b.Property<int>("DriveTimeMinutes")
                         .HasColumnType("int");
+
+                    b.Property<string>("HeroImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("IntroCopy")
                         .IsRequired()

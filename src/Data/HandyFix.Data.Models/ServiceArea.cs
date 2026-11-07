@@ -53,6 +53,12 @@
         [MaxLength(200, ErrorMessage = "The {0} field cannot exceed 200 characters.")]
         public string PostcodeDistricts { get; set; }
 
+        // The area's picture when the admin has uploaded one: its address in the photo bucket,
+        // with its phone copy beside it. Empty for an area that uses the picture that came with
+        // the site, or has none (PROJECT_STATE.md Section 3dl).
+        [MaxLength(500, ErrorMessage = "The {0} field cannot exceed 500 characters.")]
+        public string HeroImageUrl { get; set; }
+
         public virtual ICollection<ServiceAreaFaq> Faqs { get; set; }
     }
 }

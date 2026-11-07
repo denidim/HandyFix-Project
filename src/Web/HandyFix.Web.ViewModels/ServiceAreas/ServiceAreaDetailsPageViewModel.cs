@@ -16,8 +16,14 @@
         public bool ShowOnSiteReviews { get; set; }
 
         /// <summary>
-        /// The strip of the area's picture a phone is sent, or null when the area has none (one
-        /// added in the admin panel). Looked up before the page is drawn.
+        /// The area's picture: the one the admin uploaded, else the one that came with the site;
+        /// null when it has neither, and the page shows the general picture. Looked up before the
+        /// page is drawn.
+        /// </summary>
+        public string Picture { get; set; }
+
+        /// <summary>
+        /// The strip of that picture a phone is sent, or null when there is none.
         /// </summary>
         public string PhonePicture { get; set; }
     }

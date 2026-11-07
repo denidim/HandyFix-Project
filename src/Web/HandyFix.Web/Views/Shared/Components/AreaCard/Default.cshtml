@@ -7,9 +7,10 @@
         {
             <a asp-route="AreaDetails" asp-route-areaSlug="@area.Slug" class="area-card">
                 <div class="area-card-media">
-                    @* Per-area art resolves by the Section 3h slug convention; until it exists, onerror
-                       falls back to the generic Areas image, so real assets need no code change. *@
-                    <img class="area-card-image" src="/images/areas/@(area.Slug)-hero.webp" alt="@area.Name" width="1600" height="700" loading="lazy" onerror="this.onerror=null;this.src='/images/areas-hero.webp';">
+                    @* The area's picture, looked up before the card is drawn (PictureLookups): the
+                       admin's upload, else the one that came with the site, else the general Areas
+                       picture, which is also the answer should a picture fail to load. *@
+                    <img class="area-card-image" src="@(area.PictureUrl ?? "/images/areas-hero.webp")" alt="@area.Name" width="1600" height="700" loading="lazy" onerror="this.onerror=null;this.src='/images/areas-hero.webp';">
                     @if (area.IsFeatured)
                     {
                         <span class="area-card-badge">Featured</span>

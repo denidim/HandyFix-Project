@@ -6,6 +6,8 @@
 
     using HandyFix.Web.ViewModels.ServiceAreas;
 
+    using Microsoft.AspNetCore.Http;
+
     public interface IServiceAreasService
     {
         Task<IEnumerable<T>> GetAllAsync<T>(bool featuredFirst = true);
@@ -21,6 +23,13 @@
         Task UpdateAsync(Guid id, ServiceAreaAdminInputModel model);
 
         /// <summary>
+        /// The picture the admin uploads for an area, new or existing. The new picture goes up,
+        /// the area points at it, and only then does the previous upload leave the bucket, so a
+        /// failure at any step leaves the area with a picture. No file does nothing.
+        /// </summary>
+        Task SetHeroImageAsync(Guid areaId, IFormFile imageFile);
+
+        /// <summary>
         /// Every postcode district some area lists, each once, in order.
         /// </summary>
         Task<IReadOnlyList<string>> GetServedPostcodeDistrictsAsync();
@@ -33,7 +42,8 @@
         Task<bool> IsPostcodeServedAsync(string postcode);
 
         /// <summary>
-        /// Permanently removes the area and its FAQs. Hard delete on purpose: the unique index on
+        /// Permanently removes the area and its FAQs, and its uploaded picture from the bucket
+        /// afterwards. Hard delete on purpose: the unique index on
         /// ServiceArea.Slug is not filtered on IsDeleted, so a soft-deleted row keeps occupying its
         /// slug and blocks both the seeder and the admin form from ever reusing it.
         /// </summary>
