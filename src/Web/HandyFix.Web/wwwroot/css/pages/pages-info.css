@@ -141,65 +141,6 @@
   margin-bottom: 0;
 }
 
-.coverage-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-6);
-  margin-bottom: var(--spacing-12);
-}
-
-@media (min-width: 768px) {
-  .coverage-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.coverage-card {
-  background-color: var(--surface-container-lowest);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-6);
-}
-
-.coverage-card .card-header-row {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  margin-bottom: var(--spacing-4);
-  padding-bottom: var(--spacing-3);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.coverage-card .card-header-row h3 {
-  font-size: var(--fs-headline-sm);
-  color: var(--primary);
-  margin: 0;
-}
-
-.coverage-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  padding: 0;
-  list-style: none;
-  font-size: 14px;
-  color: var(--on-surface-variant);
-}
-
-.coverage-list li {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-}
-
-.coverage-list li .bullet {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  background-color: var(--border-subtle);
-  display: inline-block;
-}
-
 /* Glass Morphisms */
 .glass-morphism {
   background: rgba(255, 255, 255, 0.65);

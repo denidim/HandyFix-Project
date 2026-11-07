@@ -82,6 +82,24 @@
             <span asp-validation-for="PostcodeDistricts" class="text-danger small"></span>
         </div>
 
+        @* Only once the area exists: the Edit page shows the diagram it is about. *@
+        @if (!isCreate)
+        {
+            <div class="form-group">
+                <label asp-for="DiagramLabelSide" class="form-label font-label-sm text-on-surface-variant mb-2">Label on the Diagram</label>
+                <select asp-for="DiagramLabelSide" class="form-select py-3 admin-form-control form-pad-standard diagram-side-select">
+                    <option value="">Automatic</option>
+                    <option value="Right">Right of the dot</option>
+                    <option value="Left">Left of the dot</option>
+                    <option value="Above">Above the dot</option>
+                    <option value="Below">Below the dot</option>
+                </select>
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">
+                    Where the town's name sits beside its dot on the coverage diagram below. Change it only if the name runs into another one.
+                </span>
+            </div>
+        }
+
         <!-- Area picture -->
         <div class="form-group">
             <label asp-for="HeroImageFile" class="form-label font-label-sm text-on-surface-variant mb-2">Area Picture</label>

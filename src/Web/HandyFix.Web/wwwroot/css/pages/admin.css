@@ -941,6 +941,11 @@
   object-fit: cover;
 }
 
+/* The area's "Label on the Diagram" choice: five short words, no need for the full width. */
+.diagram-side-select {
+  max-width: 320px;
+}
+
 .admin-form-control.area-style-prompt {
   font-size: 13px;
 }

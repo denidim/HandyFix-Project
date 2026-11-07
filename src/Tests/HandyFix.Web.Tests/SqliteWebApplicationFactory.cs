@@ -5,6 +5,7 @@
     using System.Linq;
 
     using HandyFix.Data;
+    using HandyFix.Services;
     using HandyFix.Web.Services.Forms;
 
     using Microsoft.AspNetCore.Hosting;
@@ -13,7 +14,10 @@
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
+
+    using Moq;
 
     /// <summary>
     /// Boots the real application against a private Sqlite in-memory database instead of whatever
@@ -78,6 +82,11 @@
 
                 this.connection.Open();
                 services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(this.connection));
+
+                // No test asks postcodes.io: a test must not depend on the internet. An area saved
+                // in a test is simply left off the diagram.
+                services.RemoveAll<IPostcodeLocator>();
+                services.AddSingleton(Mock.Of<IPostcodeLocator>());
             });
         }
 

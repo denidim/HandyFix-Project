@@ -59,6 +59,20 @@
         [MaxLength(500, ErrorMessage = "The {0} field cannot exceed 500 characters.")]
         public string HeroImageUrl { get; set; }
 
+        // Where the area sits on the coverage diagram: its compass direction from the
+        // Chessington base in degrees, 0 = north, 90 = east. Empty means the area is left off
+        // the diagram (PROJECT_STATE.md Section 3dm).
+        [Range(0, 360, ErrorMessage = "The {0} must be between 0 and 360 degrees.")]
+        public double? DiagramBearing { get; set; }
+
+        // Which side of its dot the name goes on. Empty means chosen from the direction.
+        public DiagramLabelSide? DiagramLabelSide { get; set; }
+
+        // A shorter name for the diagram, where the full one would not fit ("Kingston" for
+        // "Kingston upon Thames"). Empty means the full name.
+        [MaxLength(40, ErrorMessage = "The {0} field cannot exceed 40 characters.")]
+        public string DiagramLabel { get; set; }
+
         public virtual ICollection<ServiceAreaFaq> Faqs { get; set; }
     }
 }

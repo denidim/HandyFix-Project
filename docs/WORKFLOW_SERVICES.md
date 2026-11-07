@@ -189,8 +189,7 @@ single source of truth for what a category's slug actually is.
 
 `ServiceAreasService` still deliberately does **not** use `SlugGenerator` — its slug is an explicit,
 admin-typed field rather than derived from the name at all (see `WORKFLOW_SERVICE_AREAS.md`), which
-was always the safer design for a value that also has to match a hero-image filename and a
-coverage-diagram key.
+was always the safer design for a value that also has to match a hero-image filename.
 
 ---
 

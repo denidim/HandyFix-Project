@@ -1,12 +1,12 @@
 # 🗺️ Service Area Addition & Update Workflow
 
-Adding a service area to HandyFix takes **two steps**. The first, the record with its picture, is
-done in the admin panel; the second, the coverage diagram, is a code change in the repo. An area
-created without step 2 still works — it is simply not plotted on the diagram.
+Adding a service area to HandyFix is **one step in the admin panel**: the record, its picture and
+its place on the coverage diagram are all done there, with no code change (since `PROJECT_STATE.md`
+Section 3dm; until then the diagram was a second step, a code change in the repo).
 
 ---
 
-## Step 1 — Database record (Admin panel)
+## The admin panel
 
 Create or edit the area at **`/Administration/ServiceAreas`**.
 
@@ -65,7 +65,7 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 | --- | --- |
 | `/Areas` grid | `AreaCardViewComponent` |
 | `/Areas/{slug}` detail page | `AreasController.Details` |
-| Coverage diagram | `_AreaCoverageMap.cshtml` — **only if step 2 is done** |
+| Coverage diagram | `_AreaCoverageMap.cshtml`, from the area's place (below) |
 | Footer "Service Areas" column | `FooterServiceAreasViewComponent` |
 | Pricing & Category local-area badges | `ServicesController` |
 | `LocalBusiness` / `FAQPage` / `BreadcrumbList` JSON-LD | `Areas/Details.cshtml` |
@@ -76,13 +76,12 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 
 - **The slug is not auto-generated on save.** It is an explicit, editable field. On *create* the
   form suggests one from the name via JS, but stops the moment you type in the slug box. On *edit*
-  it is never touched automatically. This is deliberate: the slug is load-bearing in three
-  independent places (the public URL, the file name of a picture that came with the site, the
-  coverage-diagram key), so regenerating it because someone fixed a typo in the name would break
-  all three at once.
-- **Changing a slug** means updating the geometry key in `_AreaCoverageMap.cshtml` too. An
-  uploaded picture keeps its address; a picture that came with the site is named after the old
-  slug, so such an area needs a picture uploaded. The admin form says both when you do this.
+  it is never touched automatically. This is deliberate: the slug is load-bearing in two
+  independent places (the public URL and the file name of a picture that came with the site), so
+  regenerating it because someone fixed a typo in the name would break both at once.
+- **Changing a slug:** an uploaded picture keeps its address; a picture that came with the site is
+  named after the old slug, so such an area needs a picture uploaded. The admin form says so when
+  you do this. The diagram does not depend on the slug.
 - **Deletion is a hard delete.** `ServiceAreasService.DeleteAsync` removes the row and its FAQs
   permanently instead of soft-deleting. This is not an oversight — see the warning below.
 - **FAQs are replaced wholesale on save**, not diffed. They carry no external references, so
@@ -111,59 +110,41 @@ added back any seeded area it could not find, at every start.)
 
 ---
 
-## Step 2 — Coverage diagram entry (code change)
+## The coverage diagram places the town by itself
 
-> ⚠️ There is **no** `wwwroot/images/coverage-map.svg`. The coverage map is not a static asset and
-> has no per-area `<path>` or `data-slug` elements. It is generated in Razor.
+> There is **no** `wwwroot/images/coverage-map.svg`. The diagram is drawn in Razor, in
+> `src/Web/HandyFix.Web/Views/Shared/_AreaCoverageMap.cshtml`, from three fields on each area:
+> `DiagramBearing`, `DiagramLabelSide` and `DiagramLabel`.
 
-Open **`src/Web/HandyFix.Web/Views/Shared/_AreaCoverageMap.cshtml`** and add an entry to the
-`geometry` dictionary, keyed by slug:
-
-```csharp
-["kingston-upon-thames"] = (10, "start", 13, 5, "Kingston"),
-//                          │     │      │   │   └─ short display label (long names overflow)
-//                          │     │      └───┴───── label offset from the dot, in viewBox units
-//                          │     └──────────────── text-anchor: "start" | "middle" | "end"
-//                          └────────────────────── compass bearing from Chessington, degrees
-```
-
-How a point is placed:
-
-- **Angle** comes from the bearing you supply — the true compass direction from the Chessington
-  base.
-- **Radius** is *not* in the table. It is computed from the area's `DriveTimeMinutes`, so editing
-  the drive time in the admin panel moves the point automatically.
-
-### Then check it visually
-
-Label collision is the real difficulty here — several towns sit only a few degrees apart (Kingston
-and Surbiton are 5° apart; Dorking and Leatherhead 7°). Adjust the **anchor and offsets**, not the
-bearing, so the geography stays honest.
-
-To check without guessing, run the app and screenshot the page:
-
-```bash
-dotnet run --project src/Web/HandyFix.Web
-"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" \
-  --headless=new --disable-gpu --virtual-time-budget=5000 \
-  --screenshot=map.png --window-size=1440,1400 http://localhost:5000/Areas
-```
-
-> Don't screenshot at `--window-size=390` to check mobile: Chromium on Windows clamps window width
-> to roughly 500px, so narrow captures clip content on every page whether it's broken or not. Use
-> ≥700px, or real device emulation.
-
-**Omitting an area from the dictionary is safe.** It is skipped on the diagram but still appears in
-the mobile pill list, the areas grid, and everywhere else. Nothing breaks — the town just isn't
-plotted.
+- **Direction** comes from the area's first postcode district. On save, `ServiceAreasService` asks
+  postcodes.io (`PostcodesIoLocator`: free, no key or account) where that district is and keeps
+  the compass direction from the Chessington base (KT9) in whole degrees. It asks only for a new
+  area, when the districts change, or when the area has no place yet, so saving again tries again
+  and a place set by hand is kept.
+- **Distance** comes from `DriveTimeMinutes`, so editing the drive time moves the point. A town
+  further than 27 minutes is drawn just outside the outer ring rather than off the picture.
+- **Side of the name**: "Automatic" puts it right of the dot in the east half and left in the west
+  half. The area's Edit page draws the diagram, says where the area is on it, and has a **Label on
+  the Diagram** choice (right, left, above, below) for a name that runs into another one. Saving
+  goes back to the list, so open the area again to see the result.
+- **Shorter name**: `DiagramLabel` is shown instead of the full name when set. Only three seeded
+  areas use it (Kingston, Worcester Park, Walton & Weybridge); the admin form has no box for it.
+- **No district, or none found** (no answer within 5 seconds, or a district postcodes.io does not
+  know): the area is still saved and the admin is told in one sentence that it is not on the
+  diagram; its Edit page says the same. Check the districts and save again. Until then the town is
+  simply not plotted; it still appears in the phone list, the areas grid and everywhere else.
+- **The 14 seeded places** were hand-set in the view until Section 3dm and were moved into the
+  database unchanged by the `AddDiagramPlaceToServiceArea` migration (a new database gets them
+  from `ServiceAreasSeeder`). They are within a few degrees of what postcodes.io gives.
+- **No test asks postcodes.io**: `SqliteWebApplicationFactory` puts a stand-in in its place, so an
+  area saved in a test is left off the diagram.
 
 ---
 
 ## Quick checklist
 
 - [ ] Area created at `/Administration/ServiceAreas` with real, specific copy and at least one FAQ
+- [ ] Its postcode districts filled in, first the one at its centre
 - [ ] Its picture uploaded in the Area Picture box
-- [ ] Geometry entry added to `_AreaCoverageMap.cshtml`
-- [ ] `/Areas` rendered and visually checked for label collisions
+- [ ] Its Edit page says it is on the diagram, and its name runs into no other (else pick a side)
 - [ ] `/Areas/{slug}` loads with its picture and FAQs
-- [ ] `dotnet build` clean and the test suite passing

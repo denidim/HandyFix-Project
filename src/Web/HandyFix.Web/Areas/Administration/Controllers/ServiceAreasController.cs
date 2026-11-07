@@ -80,7 +80,8 @@
                 return this.RedirectToAction(nameof(this.Edit), new { id = areaId });
             }
 
-            this.TempData["SuccessMessage"] = $"Service area \"{model.Name}\" was created. Remember to add its coverage-map entry - see docs/WORKFLOW_SERVICE_AREAS.md.";
+            this.TempData["SuccessMessage"] = $"Service area \"{model.Name}\" was created."
+                + await this.NotOnDiagramNoteAsync(areaId);
             return this.RedirectToAction(nameof(this.Index));
         }
 
@@ -98,6 +99,7 @@
             model.Faqs = model.Faqs?.OrderBy(f => f.DisplayOrder).ToList() ?? new List<ServiceAreaFaqInputModel>();
             this.EnsureAtLeastOneFaqRow(model);
             this.SetCurrentPicture(model);
+            model.DiagramAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
 
             if (this.TempData[PictureErrorKey] is string pictureError)
             {
@@ -153,10 +155,11 @@
             // is named after the old slug, so the area needs a picture uploaded.
             var slugChanged = existing.Slug != model.Slug.Trim().ToLowerInvariant();
             var pictureLost = slugChanged && existing.HeroImageUrl == null && (model.HeroImageFile == null || model.HeroImageFile.Length == 0);
-            this.TempData["SuccessMessage"] = !slugChanged
+            var message = !slugChanged
                 ? $"Service area \"{model.Name}\" was updated."
-                : $"Service area \"{model.Name}\" was updated. The slug changed from \"{existing.Slug}\" to \"{model.Slug}\" - the coverage-map entry needs renaming to match."
-                    + (pictureLost ? " Upload a picture for it too: the one that came with the site is named after the old slug." : string.Empty);
+                : $"Service area \"{model.Name}\" was updated. The slug changed from \"{existing.Slug}\" to \"{model.Slug}\"."
+                    + (pictureLost ? " Upload a picture for it: the one that came with the site is named after the old slug." : string.Empty);
+            this.TempData["SuccessMessage"] = message + await this.NotOnDiagramNoteAsync(model.Id.Value);
 
             return this.RedirectToAction(nameof(this.Index));
         }
@@ -196,13 +199,24 @@
             model.CurrentPictureUrl = PictureLookups.AreaPictureOf(this.environment, model.Slug, model.HeroImageUrl);
         }
 
-        // The form posts no picture address, so the saved one is read again before the form is
-        // shown again.
+        // The form posts no picture address or diagram place, so the saved ones are read again
+        // before the form is shown again.
         private async Task ShowAgainAsync(ServiceAreaAdminInputModel model)
         {
             ServiceAreaAdminInputModel saved = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value);
             model.HeroImageUrl = saved?.HeroImageUrl;
+            model.DiagramBearing = saved?.DiagramBearing;
             this.SetCurrentPicture(model);
+            model.DiagramAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
+        }
+
+        // Saving places the area on the coverage diagram from its first postcode district; when
+        // that did not work, the admin is told in one sentence (PROJECT_STATE Section 3dm).
+        private async Task<string> NotOnDiagramNoteAsync(Guid areaId)
+        {
+            return await this.serviceAreasService.IsOnDiagramAsync(areaId)
+                ? string.Empty
+                : " It is not on the coverage diagram yet: we could not find where its first postcode district is. Check the districts and save again.";
         }
 
         // What goes under the picture box when the picture cannot be saved: the admin's own words

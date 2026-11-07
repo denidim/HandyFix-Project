@@ -21,6 +21,12 @@
 
         public string HeroImageUrl { get; set; }
 
+        public double? DiagramBearing { get; set; }
+
+        public DiagramLabelSide? DiagramLabelSide { get; set; }
+
+        public string DiagramLabel { get; set; }
+
         // Set before a card is drawn: the picture it shows, or null for the general one
         // (PictureLookups.AreaPictureOf).
         public string PictureUrl { get; set; }

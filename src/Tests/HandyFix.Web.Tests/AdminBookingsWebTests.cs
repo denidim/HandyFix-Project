@@ -121,6 +121,25 @@
             }
         }
 
+        // An area's Edit page shows the coverage diagram, where the area is on it in words, and
+        // the side its name is on, so the owner can move a name that runs into another
+        // (PROJECT_STATE.md Section 3dm). Guildford came with its name on the left.
+        [Fact]
+        public async Task AnAreasEditPageShowsTheDiagramAndTheSideOfItsName()
+        {
+            using var site = new Site();
+            HttpClient admin = await site.SignedInAdminAsync();
+
+            var response = await admin.GetAsync("/Administration/ServiceAreas/Edit/" + site.AreaId("guildford"));
+            Assert.True(response.IsSuccessStatusCode, "the Edit page answered " + response.StatusCode);
+            var page = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("class=\"coverage-map-svg\"", page);
+            Assert.Contains("Guildford is on the diagram, south-west of Chessington.", WebUtility.HtmlDecode(page));
+            Assert.Matches("<option (selected=\"selected\" value=\"Left\"|value=\"Left\" selected=\"selected\")>", page);
+            WebTests.AssertNoInlineCode(page);
+        }
+
         // The email naming the technician used to hang off the "Approve" button, which a paid
         // booking never showed, so it could not be sent. It goes out when the admin picks one,
         // and the page says it went.
@@ -1156,6 +1175,11 @@
             public Booking Booking()
             {
                 return this.Read(dbContext => dbContext.Bookings.Include(x => x.Status).Single());
+            }
+
+            public Guid AreaId(string slug)
+            {
+                return this.Read(dbContext => dbContext.ServiceAreas.Single(x => x.Slug == slug).Id);
             }
 
             public Guid LaunchTechnicianId()

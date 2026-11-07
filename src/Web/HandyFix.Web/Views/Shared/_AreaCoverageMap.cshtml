@@ -1,47 +1,48 @@
+@using HandyFix.Data.Models
 @model IEnumerable<HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaViewModel>
 @{
     // Schematic coverage diagram, not a geographic map.
     //
     // Each town sits at its true compass bearing from the Chessington base, at a
     // radius proportional to its real DriveTimeMinutes - so both axes carry real
-    // meaning and nothing here is invented. Label anchors and offsets are hand-set
-    // per town to keep the 14 labels from colliding; an area with no entry below is
-    // simply left off the diagram (it still appears in the mobile list and the cards
-    // further down the page), so adding a new ServiceArea never breaks this view.
+    // meaning and nothing here is invented. The bearing, the side the name goes on
+    // and a shorter name are stored on each area (PROJECT_STATE.md Section 3dm). An
+    // area with no bearing is left off the diagram (it still appears in the mobile
+    // list and the cards further down the page), so adding an area never breaks it.
     const int Cx = 450;
     const int Cy = 355;
     const double MinuteRadius = 11.0;
 
-    var geometry = new Dictionary<string, (double Bearing, string Anchor, int Dx, int Dy, string Label)>
-    {
-        ["kingston-upon-thames"] = (10, "start", 13, 5, "Kingston"),
-        ["wimbledon"] = (42, "start", 13, 5, "Wimbledon"),
-        ["worcester-park-ewell"] = (61, "start", 13, 5, "Worcester Park"),
-        ["sutton"] = (88, "start", 13, 5, "Sutton"),
-        ["banstead"] = (122, "start", 13, 5, "Banstead"),
-        ["epsom"] = (138, "end", -13, 5, "Epsom"),
-        ["reigate"] = (154, "start", 13, 5, "Reigate"),
-        ["dorking"] = (189, "middle", 0, 26, "Dorking"),
-        ["leatherhead"] = (196, "end", -13, 5, "Leatherhead"),
-        ["guildford"] = (234, "end", -13, 5, "Guildford"),
-        ["cobham"] = (247, "end", -13, 5, "Cobham"),
-        ["esher"] = (284, "end", -13, 5, "Esher"),
-        ["walton-on-thames-weybridge"] = (290, "end", -13, 5, "Walton & Weybridge"),
-        ["surbiton"] = (345, "middle", 0, -16, "Surbiton"),
-    };
+    // A town further than this is drawn just outside the outer ring, not past the
+    // edge of the picture: the right-hand side has only 330px from the centre.
+    const int MaxPlottedMinutes = 27;
 
     var hub = Model.FirstOrDefault(a => a.Slug == "chessington");
     var plotted = Model
-        .Where(a => geometry.ContainsKey(a.Slug))
+        .Where(a => a.DiagramBearing.HasValue && a.Slug != "chessington")
         .Select(a =>
         {
-            var g = geometry[a.Slug];
-            var radians = g.Bearing * Math.PI / 180.0;
-            var radius = a.DriveTimeMinutes * MinuteRadius;
+            var bearing = a.DiagramBearing.Value;
+            var radians = bearing * Math.PI / 180.0;
+            var radius = Math.Min(a.DriveTimeMinutes, MaxPlottedMinutes) * MinuteRadius;
+
+            // No side chosen: east half to the right, west half to the left.
+            var side = a.DiagramLabelSide ?? (bearing < 180 ? DiagramLabelSide.Right : DiagramLabelSide.Left);
+            var (anchor, dx, dy) = side switch
+            {
+                DiagramLabelSide.Left => ("end", -13, 5),
+                DiagramLabelSide.Above => ("middle", 0, -16),
+                DiagramLabelSide.Below => ("middle", 0, 26),
+                _ => ("start", 13, 5),
+            };
+
             return new
             {
                 Area = a,
-                Geo = g,
+                Label = string.IsNullOrWhiteSpace(a.DiagramLabel) ? a.Name : a.DiagramLabel,
+                Anchor = anchor,
+                Dx = dx,
+                Dy = dy,
                 X = Cx + (radius * Math.Sin(radians)),
                 Y = Cy - (radius * Math.Cos(radians)),
             };
@@ -111,9 +112,9 @@
                 <circle class="coverage-hit" cx="@p.X.ToString("F1")" cy="@p.Y.ToString("F1")" r="26" />
                 <circle class="coverage-dot" cx="@p.X.ToString("F1")" cy="@p.Y.ToString("F1")" r="6" />
                 <text class="coverage-label"
-                      x="@((p.X + p.Geo.Dx).ToString("F1"))"
-                      y="@((p.Y + p.Geo.Dy).ToString("F1"))"
-                      text-anchor="@p.Geo.Anchor">@p.Geo.Label</text>
+                      x="@((p.X + p.Dx).ToString("F1"))"
+                      y="@((p.Y + p.Dy).ToString("F1"))"
+                      text-anchor="@p.Anchor">@p.Label</text>
             </a>
         }
 

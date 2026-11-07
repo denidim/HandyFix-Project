@@ -147,8 +147,11 @@
 }
 
 /* Phone layout: grouped pills instead of the diagram. */
+/* 32px: the 24px this had plus the 8px gap an old, unused .coverage-list rule in
+   pages-info.css added, removed because it also showed this list beside the diagram
+   on wide screens (PROJECT_STATE.md Section 3dm). */
 .coverage-list-band + .coverage-list-band {
-  margin-top: var(--spacing-6);
+  margin-top: var(--spacing-8);
 }
 
 .coverage-list-heading {

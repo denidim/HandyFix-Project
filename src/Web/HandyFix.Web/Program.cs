@@ -258,6 +258,11 @@
             // a visitor waits on it.
             services.AddHttpClient<ITurnstileVerifier, TurnstileVerifier>(client => client.Timeout = TimeSpan.FromSeconds(5));
 
+            // Where a postcode district is, asked when an admin saves an area, to place it on the
+            // coverage diagram (PROJECT_STATE Section 3dm). Five seconds, then the area is saved
+            // without a place and the admin is told.
+            services.AddHttpClient<IPostcodeLocator, PostcodesIoLocator>(client => client.Timeout = TimeSpan.FromSeconds(5));
+
             // Background workers
             services.AddHostedService<StaleBookingCleanupService>();
         }
