@@ -12,6 +12,7 @@
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Services.Forms;
+    using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Reviews;
@@ -20,8 +21,8 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     [AllowAnonymous]
     public class HomeController : BaseController
@@ -48,7 +49,7 @@
         private readonly IImageService imageService;
         private readonly IImageStorageService imageStorage;
         private readonly IFormGuard formGuard;
-        private readonly IConfiguration configuration;
+        private readonly BusinessOptions business;
         private readonly ILogger<HomeController> logger;
 
         public HomeController(
@@ -59,7 +60,7 @@
             IImageService imageService,
             IImageStorageService imageStorage,
             IFormGuard formGuard,
-            IConfiguration configuration,
+            IOptions<BusinessOptions> business,
             ILogger<HomeController> logger)
         {
             this.reviewsService = reviewsService;
@@ -69,7 +70,7 @@
             this.imageService = imageService;
             this.imageStorage = imageStorage;
             this.formGuard = formGuard;
-            this.configuration = configuration;
+            this.business = business.Value;
             this.logger = logger;
         }
 
@@ -81,7 +82,7 @@
 
             // Approved Reviews for slider — hidden on-site until the Google Business Profile
             // import ships, see Business:ShowOnSiteReviews.
-            var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
+            var showOnSiteReviews = this.business.ShowOnSiteReviews;
             IEnumerable<ReviewViewModel> sliderReviews = showOnSiteReviews
                 ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6)
                 : Enumerable.Empty<ReviewViewModel>();
@@ -272,7 +273,7 @@
         [Route("Reviews")]
         public async Task<IActionResult> Reviews()
         {
-            var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
+            var showOnSiteReviews = this.business.ShowOnSiteReviews;
             IEnumerable<ReviewViewModel> approvedReviews = showOnSiteReviews
                 ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(50)
                 : Enumerable.Empty<ReviewViewModel>();
@@ -280,8 +281,8 @@
             var model = new ReviewsListViewModel
             {
                 Reviews = approvedReviews,
-                GoogleReviewsUrl = this.configuration["Business:GoogleReviewsUrl"],
-                GoogleLeaveReviewUrl = this.configuration["Business:GoogleLeaveReviewUrl"],
+                GoogleReviewsUrl = this.business.GoogleReviewsUrl,
+                GoogleLeaveReviewUrl = this.business.GoogleLeaveReviewUrl,
                 ShowOnSiteReviews = showOnSiteReviews,
             };
 

@@ -29,6 +29,7 @@
     using HandyFix.Web.Services;
     using HandyFix.Web.Services.Accounts;
     using HandyFix.Web.Services.Forms;
+    using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels;
 
     using Microsoft.AspNetCore.Builder;
@@ -45,6 +46,7 @@
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     using WebOptimizer;
 
@@ -156,6 +158,15 @@
 
             services.AddSingleton(configuration);
 
+            // The settings the business code reads, each group in a class of its own, so a class
+            // names the settings it needs and a test hands them over directly. Each is read the
+            // first time it is asked for, not on these lines, so it counts whichever source it
+            // comes from and however late that source is added (the tests add theirs after this
+            // runs). None is checked at start-up: a missing one fails where it is used, as before.
+            services.AddOptions<BusinessOptions>().BindConfiguration(BusinessOptions.Section);
+            services.AddOptions<EmailOptions>().Configure<IConfiguration>((options, settings) => options.ReadFrom(settings));
+            services.AddOptions<StripeOptions>().BindConfiguration(StripeOptions.Section);
+
             // WebOptimizer: the public stylesheets combined into one minified file, in the order
             // SiteStylesheets lists them (PROJECT_STATE Section 3bs). Its tag helper stamps the
             // layout's link with a hash of the combined content, so a change in any source file
@@ -191,7 +202,7 @@
                 {
                     // Staging sends from the live site's address, so it marks its subjects.
                     IEmailSender brevo = new BrevoEmailSender(apiKey);
-                    var subjectPrefix = EmailSettings.SubjectPrefix(configuration);
+                    var subjectPrefix = sp.GetRequiredService<IOptions<EmailOptions>>().Value.SubjectPrefix;
                     return subjectPrefix == null ? brevo : new SubjectPrefixEmailSender(brevo, subjectPrefix);
                 }
 

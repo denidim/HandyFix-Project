@@ -5,24 +5,24 @@
     using HandyFix.Common;
     using HandyFix.Services.Messaging;
 
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     // Every word of the emails about the admin's own login (PROJECT_STATE.md Section 3di).
     // AdminAccountService decides who may be sent one.
     public class AccountEmails : IAccountEmails
     {
         private readonly IEmailSender emailSender;
-        private readonly IConfiguration configuration;
+        private readonly EmailOptions settings;
         private readonly ILogger<AccountEmails> logger;
 
         public AccountEmails(
             IEmailSender emailSender,
-            IConfiguration configuration,
+            IOptions<EmailOptions> settings,
             ILogger<AccountEmails> logger)
         {
             this.emailSender = emailSender;
-            this.configuration = configuration;
+            this.settings = settings.Value;
             this.logger = logger;
         }
 
@@ -40,8 +40,8 @@
             return await this.emailSender.TrySendEmailAsync(
                 this.logger,
                 "password reset link, to the admin",
-                EmailSettings.SystemFromAddress(this.configuration),
-                EmailSettings.WebsiteFromName,
+                this.settings.SystemFromAddress,
+                EmailOptions.WebsiteFromName,
                 to,
                 $"Reset your {GlobalConstants.SystemName} admin password",
                 body);

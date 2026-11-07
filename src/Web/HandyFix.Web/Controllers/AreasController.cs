@@ -9,6 +9,7 @@
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Presentation;
+    using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
@@ -16,7 +17,7 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Options;
 
     [AllowAnonymous]
     public class AreasController : BaseController
@@ -24,7 +25,7 @@
         private readonly IServiceAreasService areasService;
         private readonly IServicesService servicesService;
         private readonly IReviewsService reviewsService;
-        private readonly IConfiguration configuration;
+        private readonly BusinessOptions business;
         private readonly IImageStorageService imageStorage;
         private readonly IWebHostEnvironment environment;
 
@@ -32,14 +33,14 @@
             IServiceAreasService areasService,
             IServicesService servicesService,
             IReviewsService reviewsService,
-            IConfiguration configuration,
+            IOptions<BusinessOptions> business,
             IImageStorageService imageStorage,
             IWebHostEnvironment environment)
         {
             this.areasService = areasService;
             this.servicesService = servicesService;
             this.reviewsService = reviewsService;
-            this.configuration = configuration;
+            this.business = business.Value;
             this.imageStorage = imageStorage;
             this.environment = environment;
         }
@@ -76,7 +77,7 @@
 
             // Hidden on-site until the Google Business Profile import ships, see
             // Business:ShowOnSiteReviews.
-            var showOnSiteReviews = this.configuration.GetValue<bool>("Business:ShowOnSiteReviews");
+            var showOnSiteReviews = this.business.ShowOnSiteReviews;
             IEnumerable<ReviewViewModel> reviews = showOnSiteReviews
                 ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(3)
                 : Enumerable.Empty<ReviewViewModel>();

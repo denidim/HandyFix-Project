@@ -13,11 +13,10 @@
     using HandyFix.Services.Mapping;
     using HandyFix.Web.ViewModels.Payment;
 
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     using Stripe;
     using Stripe.Checkout;
@@ -37,8 +36,8 @@
         private readonly IDeletableEntityRepository<Booking> bookingRepository;
         private readonly IDeletableEntityRepository<BookingStatus> bookingStatusRepository;
         private readonly IBookingEmails bookingEmails;
-        private readonly IConfiguration configuration;
-        private readonly IWebHostEnvironment environment;
+        private readonly StripeOptions stripeSettings;
+        private readonly IHostEnvironment environment;
         private readonly ILogger<PaymentsService> logger;
         private readonly IStripeGateway stripeGateway;
 
@@ -48,8 +47,8 @@
             IDeletableEntityRepository<Booking> bookingRepository,
             IDeletableEntityRepository<BookingStatus> bookingStatusRepository,
             IBookingEmails bookingEmails,
-            IConfiguration configuration,
-            IWebHostEnvironment environment,
+            IOptions<StripeOptions> stripeSettings,
+            IHostEnvironment environment,
             ILogger<PaymentsService> logger,
             IStripeGateway stripeGateway)
         {
@@ -58,7 +57,7 @@
             this.bookingRepository = bookingRepository;
             this.bookingStatusRepository = bookingStatusRepository;
             this.bookingEmails = bookingEmails;
-            this.configuration = configuration;
+            this.stripeSettings = stripeSettings.Value;
             this.environment = environment;
             this.logger = logger;
             this.stripeGateway = stripeGateway;
@@ -456,7 +455,7 @@
             }
 
             var depositAmount = booking.DepositAmount.Value;
-            var keyMissing = string.IsNullOrWhiteSpace(this.configuration["Stripe:SecretKey"]);
+            var keyMissing = string.IsNullOrWhiteSpace(this.stripeSettings.SecretKey);
 
             if (keyMissing && !this.MockPaymentsAllowed())
             {
@@ -486,7 +485,7 @@
 
             var options = new SessionCreateOptions
             {
-                PaymentMethodTypes = new List<string> { "card" },
+                AllowedPaymentMethodTypes = new List<string> { "card" },
                 LineItems = new List<SessionLineItemOptions>
                 {
                     new SessionLineItemOptions
@@ -526,7 +525,7 @@
 
         public async Task HandleWebhookEventAsync(string json, string signature)
         {
-            Event stripeEvent = this.stripeGateway.ReadEvent(json, signature, this.configuration["Stripe:WebhookSecret"]);
+            Event stripeEvent = this.stripeGateway.ReadEvent(json, signature, this.stripeSettings.WebhookSecret);
 
             var sessionId = (stripeEvent.Data?.Object as Session)?.Id;
 
@@ -568,8 +567,8 @@
         // have. A real key switches it off everywhere.
         private bool MockPaymentsAllowed()
         {
-            return string.IsNullOrWhiteSpace(this.configuration["Stripe:SecretKey"])
-                && (this.environment.IsDevelopment() || this.configuration.GetValue<bool>("Stripe:AllowSandboxOutsideDevelopment"));
+            return string.IsNullOrWhiteSpace(this.stripeSettings.SecretKey)
+                && (this.environment.IsDevelopment() || this.stripeSettings.AllowSandboxOutsideDevelopment);
         }
 
         // The words of both emails are in BookingEmails; what is written on the job when one of

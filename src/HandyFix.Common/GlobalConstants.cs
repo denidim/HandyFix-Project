@@ -6,7 +6,7 @@
 
         // The live site's address, with no slash at the end. For what has to name the live site
         // whichever copy of the code is running: the logo an email shows, the link behind it.
-        // A link that has to open the copy that is running asks EmailSettings.SiteUrl.
+        // A link that has to open the copy that is running asks EmailOptions.SiteUrl.
         public const string SiteUrl = "https://plumbing-handyman-surrey.co.uk";
 
         // The business's public contact details, kept once here so every page shows the same ones

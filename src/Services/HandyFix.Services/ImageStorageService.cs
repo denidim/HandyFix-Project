@@ -45,6 +45,13 @@
         // slug's letters, digits and dashes.
         private static readonly Regex UploadedName = new Regex("/" + UploadFolder + "/[0-9a-f]{32}_[a-z0-9-]+\\.webp$", RegexOptions.CultureInvariant);
 
+        // How a picture is made smaller. SkiaSharp 4 dropped the "high quality" setting used until
+        // then. When shrinking, SkiaSharp 2 quietly drew a high-quality picture from its mipmaps
+        // (copies of the picture at half, a quarter, ...) with a linear filter, and that is what
+        // this asks for. The cubic filter the setting's name suggests left the small copies grainy
+        // and a third bigger; this one makes them as before (PROJECT_STATE.md Section 3dk).
+        private static readonly SKSamplingOptions ResizeQuality = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Nearest);
+
         private readonly ICloudflareR2Service r2Service;
         private readonly string builtInDirectory;
         private readonly ILogger<ImageStorageService> logger;
@@ -182,14 +189,14 @@
                     {
                         var targetWidth = 1920;
                         var targetHeight = (int)Math.Round((double)originalBitmap.Height * targetWidth / originalBitmap.Width);
-                        targetBitmap = originalBitmap.Resize(new SKImageInfo(targetWidth, targetHeight), SKFilterQuality.High);
+                        targetBitmap = originalBitmap.Resize(new SKImageInfo(targetWidth, targetHeight), ResizeQuality);
                         isResized = true;
                     }
 
                     try
                     {
                         var smallHeight = (int)Math.Round((double)targetBitmap.Height * SmallCopyWidth / targetBitmap.Width);
-                        using (var small = targetBitmap.Resize(new SKImageInfo(SmallCopyWidth, smallHeight), SKFilterQuality.High))
+                        using (var small = targetBitmap.Resize(new SKImageInfo(SmallCopyWidth, smallHeight), ResizeQuality))
                         {
                             return (ToWebp(targetBitmap), ToWebp(small));
                         }

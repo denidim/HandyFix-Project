@@ -6,49 +6,49 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- ASP.NET Core packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.3" />
-    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.5" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.6" />
+    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
     <!-- Entity Framework Core packages -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.13" />
     <!-- Extensions packages -->
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
     <!-- Code generation and tooling -->
     <PackageVersion Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
-    <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="3.0.71" />
+    <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="3.0.114" />
     <!-- Testing packages -->
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
+    <PackageVersion Include="Moq" Version="4.21.0" />
     <!-- Third-party packages -->
     <PackageVersion Include="LigerShark.WebOptimizer.Core" Version="3.0.477" />
-    <PackageVersion Include="Mapster" Version="7.4.0" />
-    <PackageVersion Include="Stripe.net" Version="52.4.2" />
-    <PackageVersion Include="SkiaSharp" Version="2.88.9" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="2.88.9" />
+    <PackageVersion Include="Mapster" Version="10.0.13" />
+    <PackageVersion Include="Stripe.net" Version="53.0.0" />
+    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="4.153.1" />
     <!-- The servers and the pipeline run Linux; without this an uploaded picture cannot be read
          there (PROJECT_STATE.md Section 3cn). NoDependencies: it needs no fontconfig in the image. -->
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.1" />
     <!-- Code analyzers -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <!-- Overrides to patch the NuGet.Packaging vulnerability -->
-    <PackageVersion Include="NuGet.Packaging" Version="7.6.0" />
-    <PackageVersion Include="NuGet.Protocol" Version="7.6.0" />
+    <PackageVersion Include="NuGet.Packaging" Version="7.9.0" />
+    <PackageVersion Include="NuGet.Protocol" Version="7.9.0" />
     <!-- Overrides to patch the SQLitePCLRaw vulnerability (CVE-2025-6965) -->
-    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.14" />
     <!-- Override to patch the Newtonsoft.Json vulnerability pulled in transitively by Stripe.net (GHSA-5crp-9r3c-p9vr) -->
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <!-- Override to patch two denial-of-service flaws in the version the SQL Server driver brings
          (9.0.4; GHSA-846f-f764-76mx and GHSA-2fmv-rv2c-59x7). Taken before it was 14 days old,
          by the developer's decision (PROJECT_STATE.md Section 3cp). -->

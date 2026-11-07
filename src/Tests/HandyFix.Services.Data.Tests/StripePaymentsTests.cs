@@ -13,7 +13,7 @@
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
-    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Options;
 
     using Moq;
 
@@ -475,7 +475,7 @@
         {
             const string secret = "whsec_test_secret";
             const string json = "{\"id\":\"evt_test_1\",\"object\":\"event\",\"api_version\":\"2099-01-01.zinnia\",\"type\":\"checkout.session.completed\",\"data\":{\"object\":{\"id\":\"cs_test_abc\",\"object\":\"checkout.session\",\"payment_status\":\"paid\"}}}";
-            var gateway = new StripeGateway(new ConfigurationBuilder().Build());
+            var gateway = new StripeGateway(Options.Create(new StripeOptions()));
 
             Event read = gateway.ReadEvent(json, SignatureFor(json, secret), secret);
 
@@ -487,7 +487,7 @@
         public void AMessageNotSignedByStripeIsRefused()
         {
             const string json = "{\"id\":\"evt_forged\",\"object\":\"event\",\"type\":\"checkout.session.completed\",\"data\":{\"object\":{\"id\":\"cs_test_abc\",\"object\":\"checkout.session\"}}}";
-            var gateway = new StripeGateway(new ConfigurationBuilder().Build());
+            var gateway = new StripeGateway(Options.Create(new StripeOptions()));
 
             Assert.Throws<StripeException>(() => gateway.ReadEvent(json, SignatureFor(json, "whsec_somebody_elses"), "whsec_test_secret"));
             Assert.ThrowsAny<Exception>(() => gateway.ReadEvent(json, string.Empty, "whsec_test_secret"));

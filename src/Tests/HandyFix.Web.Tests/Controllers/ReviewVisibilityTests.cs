@@ -11,14 +11,15 @@
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
     using HandyFix.Web.Services.Forms;
+    using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
 
     using Moq;
 
@@ -144,22 +145,12 @@
                 .Setup(x => x.GetAllAsync<CategoryViewModel>())
                 .ReturnsAsync(new List<CategoryViewModel>());
 
-            var settings = new Dictionary<string, string>
+            var business = new BusinessOptions
             {
-                ["Business:ShowOnSiteReviews"] = showOnSiteReviews.ToString().ToLowerInvariant(),
+                ShowOnSiteReviews = showOnSiteReviews,
+                GoogleReviewsUrl = googleReviewsUrl,
+                GoogleLeaveReviewUrl = googleLeaveReviewUrl,
             };
-
-            if (googleReviewsUrl != null)
-            {
-                settings["Business:GoogleReviewsUrl"] = googleReviewsUrl;
-            }
-
-            if (googleLeaveReviewUrl != null)
-            {
-                settings["Business:GoogleLeaveReviewUrl"] = googleLeaveReviewUrl;
-            }
-
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
 
             return new HomeController(
                 reviewsService.Object,
@@ -169,7 +160,7 @@
                 new Mock<IImageService>().Object,
                 new Mock<IImageStorageService>().Object,
                 new Mock<IFormGuard>().Object,
-                configuration,
+                Options.Create(business),
                 NullLogger<HomeController>.Instance)
             {
                 // Both pages name their own address for search engines, which needs a request and

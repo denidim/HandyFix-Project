@@ -15,11 +15,11 @@
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
 
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
-    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
 
     using Moq;
 
@@ -64,15 +64,14 @@
             this.DbContext.AvailabilitySlots.Add(this.slot);
             this.DbContext.SaveChanges();
 
-            var settings = new Dictionary<string, string>();
+            var stripeSettings = new StripeOptions();
             if (stripeSecretKey != null)
             {
-                settings["Stripe:SecretKey"] = stripeSecretKey;
-                settings["Stripe:WebhookSecret"] = "whsec_test";
+                stripeSettings.SecretKey = stripeSecretKey;
+                stripeSettings.WebhookSecret = "whsec_test";
             }
 
-            IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
-            var environment = new Mock<IWebHostEnvironment>();
+            var environment = new Mock<IHostEnvironment>();
             environment.SetupGet(x => x.EnvironmentName).Returns(environmentName);
 
             var bookingRepo = new EfDeletableEntityRepository<Booking>(this.DbContext);
@@ -80,7 +79,7 @@
             var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(this.DbContext);
 
             this.Availability = new AvailabilityService(slotRepo);
-            var bookingEmails = TestEmails.Booking(this.EmailSender.Object, configuration);
+            var bookingEmails = TestEmails.Booking(this.EmailSender.Object);
 
             this.Payments = new PaymentsService(
                 new EfDeletableEntityRepository<Payment>(this.DbContext),
@@ -88,7 +87,7 @@
                 bookingRepo,
                 bookingStatusRepo,
                 bookingEmails,
-                configuration,
+                Options.Create(stripeSettings),
                 environment.Object,
                 NullLogger<PaymentsService>.Instance,
                 this.Stripe.Object);

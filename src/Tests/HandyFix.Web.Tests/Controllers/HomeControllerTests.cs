@@ -12,14 +12,15 @@
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
     using HandyFix.Web.Services.Forms;
+    using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.ViewFeatures;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
 
     using Moq;
 
@@ -537,7 +538,7 @@
                 (imageService ?? ImageServiceReturning()).Object,
                 new Mock<IImageStorageService>().Object,
                 (formGuard ?? new Mock<IFormGuard>()).Object,
-                new ConfigurationBuilder().Build(),
+                Options.Create(new BusinessOptions()),
                 NullLogger<HomeController>.Instance);
 
             var httpContext = new DefaultHttpContext();

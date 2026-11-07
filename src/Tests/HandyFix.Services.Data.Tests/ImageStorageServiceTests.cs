@@ -50,6 +50,37 @@
             Assert.Empty(Directory.GetFiles(this.builtInFolder));
         }
 
+        // A small copy is drawn from the picture's mipmaps, as SkiaSharp 2 drew it, so thin detail
+        // becomes a light shade. The cubic filter SkiaSharp 4 offers in place of the old "high
+        // quality" setting looks at too few pixels when a picture shrinks ten times: these lines
+        // vanished, and a photo's small copy came out grainy (PROJECT_STATE.md Section 3dk).
+        [Fact]
+        public async Task ASmallCopyKeepsThinLinesAsALightShade()
+        {
+            using var bitmap = new SKBitmap(3200, 2400);
+            using (var canvas = new SKCanvas(bitmap))
+            using (var black = new SKPaint { Color = SKColors.Black, IsAntialias = false })
+            {
+                canvas.Clear(SKColors.White);
+                for (var x = 0; x < bitmap.Width; x += 10)
+                {
+                    canvas.DrawRect(x, 0, 1, bitmap.Height, black);
+                }
+            }
+
+            using var image = SKImage.FromBitmap(bitmap);
+            using SKData png = image.Encode(SKEncodedImageFormat.Png, 100);
+            using var stream = new MemoryStream(png.ToArray());
+            var url = await this.storage.SaveServiceImageAsync(stream, "lines.png", "image/png", "lines");
+
+            var key = url.Substring(FakeBucket.PublicUrl.Length + 1).Replace(".webp", "-320.webp");
+            using var copy = SKBitmap.Decode(this.bucket.Objects[key]);
+            var brightness = copy.Pixels.Average(p => (p.Red + p.Green + p.Blue) / 3.0);
+
+            // One pixel in ten is black: about 230 when the lines are kept, 255 when they are lost.
+            Assert.InRange(brightness, 215, 245);
+        }
+
         // A browser that kept the last picture can never show it for the new one.
         [Fact]
         public async Task EachUploadHasANewName()
