@@ -32,6 +32,18 @@
             ? "Non-invasive thermal imaging and pressure testing to find and fix hidden leaks instantly."
             : "TV wall mounting, mirror hanging, door trimming, and general odd jobs handled by experts.");
 
+    // Gas work has two boxes of its own: taps and leak detection are not what a boiler visit
+    // is. The second box shows the Gas Safe logo where the others show an icon.
+    var isGasSafe = Model.IsGasSafeWork;
+    if (isGasSafe)
+    {
+        feat1Icon = "request_quote";
+        feat1Title = "Survey & Planning";
+        feat1Desc = "We check your heating needs, pipework and flue, and help you choose the right boiler before any work starts.";
+        feat2Title = "Gas Safe Registered";
+        feat2Desc = "Every installation and service is carried out by a Gas Safe registered engineer, with gas safety checks and certificates.";
+    }
+
     // Local Expert: the business's real co-founder on every service page. Only the role
     // adapts per category - the bio is his own supplied wording, not written per trade.
     var expertName = "Zapryan";
@@ -61,8 +73,15 @@
                     <span class="material-symbols-outlined">verified</span> Professional Service
                 </span>
                 @* Plumbing only: emergencies (leaks, bursts) are a plumbing thing - handyman and
-                   building jobs are planned work, so "24/7" would promise the wrong thing. *@
-                @if (isPlumbing)
+                   building jobs are planned work, so "24/7" would promise the wrong thing. Gas
+                   work is planned too, and shows its Gas Safe registration in that place. *@
+                @if (isGasSafe)
+                {
+                    <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                        <img class="gas-safe-logo-pill" src="@GasSafeLogo.Url" asp-append-version="true" alt=""> Gas Safe Registered
+                    </span>
+                }
+                else if (isPlumbing)
                 {
                     <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
                         <span class="material-symbols-outlined">schedule</span> 24/7 Available
@@ -107,7 +126,10 @@
             <!-- Detailed Description -->
             <section class="details-prose">
                 <h2 class="details-section-title">Service Overview</h2>
-                <p>@Model.Description</p>
+                @foreach (var paragraph in Paragraphs.Of(Model.Description))
+                {
+                    <p>@paragraph</p>
+                }
                 <p>At <strong>Plumbing Handyman Surrey</strong>, our mobile crews are specialized in @Model.Name operations. We come equipped with professional-grade tools, quality replacement components, and follow strict building codes to ensure a lasting repair or installation. All our work is fully insured for your peace of mind.</p>
 
                 <div class="details-features-grid">
@@ -121,9 +143,18 @@
                         </div>
                     </div>
                     <div class="details-feature-item">
-                        <div class="feature-item-icon-box">
-                            <span class="material-symbols-outlined">@feat2Icon</span>
-                        </div>
+                        @if (isGasSafe)
+                        {
+                            <div class="feature-item-icon-box feature-item-logo-box">
+                                <img class="gas-safe-logo-feature" src="@GasSafeLogo.Url" asp-append-version="true" alt="" loading="lazy">
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="feature-item-icon-box">
+                                <span class="material-symbols-outlined">@feat2Icon</span>
+                            </div>
+                        }
                         <div>
                             <h3 class="feature-item-title">@feat2Title</h3>
                             <p class="feature-item-desc">@feat2Desc</p>

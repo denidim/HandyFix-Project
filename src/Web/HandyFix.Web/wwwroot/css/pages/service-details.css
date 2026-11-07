@@ -204,6 +204,29 @@
   flex-shrink: 0;
 }
 
+/* The Gas Safe logo on a gas service's page (PROJECT_STATE Section 3do): in the box where the
+   other services show an icon, and in the badge at the top. Only the height is set: the logo
+   must never be stretched (Gas Safe's rule), so a wider file makes a wider box. */
+.feature-item-logo-box {
+  width: auto;
+  min-width: 48px;
+  background-color: transparent;
+}
+
+.gas-safe-logo-feature {
+  height: 48px;
+  width: auto;
+}
+
+/* The badge is not a flex box (its "flex" class does nothing here), so the logo is made an
+   inline picture, or the site's block images would put it on a line of its own. */
+.gas-safe-logo-pill {
+  display: inline-block;
+  vertical-align: middle;
+  height: 28px;
+  width: auto;
+}
+
 .feature-item-icon-box .material-symbols-outlined {
   font-size: 24px;
 }
