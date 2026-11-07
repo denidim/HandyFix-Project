@@ -37,6 +37,8 @@
 
         public bool IsPopular { get; set; }
 
+        public bool IsGasSafeWork { get; set; }
+
         public IEnumerable<ServiceViewModel> RelatedServices { get; set; }
 
         public void CreateMappings(TypeAdapterConfig config)

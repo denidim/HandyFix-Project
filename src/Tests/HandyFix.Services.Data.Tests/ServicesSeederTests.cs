@@ -42,12 +42,19 @@
         {
             await this.SeedAsync();
 
-            Assert.Equal(37, this.dbContext.Services.Count());
+            Assert.Equal(38, this.dbContext.Services.Count());
             Assert.Equal(
                 new[] { "general-handyman-call-out", "general-plumbing-maintenance" },
                 this.dbContext.Services.Where(s => s.DisplayOrder == 0).Select(s => s.Slug).OrderBy(s => s));
             Assert.Equal(4, this.dbContext.Services.Count(s => s.IsPopular));
-            Assert.Equal(37, this.dbContext.ServiceImages.Count());
+            Assert.Equal(38, this.dbContext.ServiceImages.Count());
+
+            // Only the boiler service carries the Gas Safe logo, and it is a plumbing one.
+            Service boiler = this.dbContext.Services.Include(s => s.Category).Single(s => s.IsGasSafeWork);
+            Assert.Equal("boiler-installation-servicing", boiler.Slug);
+            Assert.Equal("plumbing", boiler.Category.Slug);
+            Assert.Equal(90.00m, boiler.BasePrice);
+            Assert.Equal(60, boiler.EstimatedDurationMinutes);
         }
 
         // An admin deleting a seeded service used to stop the site from starting. The delete is a
@@ -65,8 +72,8 @@
 
             await this.SeedAsync();
 
-            Assert.Equal(36, this.dbContext.Services.Count());
-            Assert.Equal(37, this.dbContext.Services.IgnoreQueryFilters().Count());
+            Assert.Equal(37, this.dbContext.Services.Count());
+            Assert.Equal(38, this.dbContext.Services.IgnoreQueryFilters().Count());
         }
 
         // Renaming a service changes its slug too (ServicesService.UpdateAsync), so the seeder
@@ -83,7 +90,7 @@
 
             await this.SeedAsync();
 
-            Assert.Equal(37, this.dbContext.Services.Count());
+            Assert.Equal(38, this.dbContext.Services.Count());
             Assert.DoesNotContain(this.dbContext.Services, s => s.Name == "Tap Repairs");
         }
 
@@ -131,7 +138,7 @@
 
             await this.SeedAsync();
 
-            Assert.Equal(38, this.dbContext.Services.Count());
+            Assert.Equal(39, this.dbContext.Services.Count());
             Assert.Equal(
                 "/images/services/fence-repairs-hero.webp",
                 this.dbContext.ServiceImages.Single(i => i.ServiceId == added.Id).ImageUrl);
