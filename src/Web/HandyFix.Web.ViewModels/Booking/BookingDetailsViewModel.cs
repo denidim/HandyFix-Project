@@ -67,6 +67,15 @@
 
         public string AdminNotes { get; set; }
 
+        /// <summary>
+        /// The job's invoice number, once its invoice is made.
+        /// </summary>
+        public int? InvoiceNumber { get; set; }
+
+        public DateTime? InvoicedOn { get; set; }
+
+        public string InvoiceWorkDone { get; set; }
+
         public bool IsDepositPaid { get; set; }
 
         public bool IsDepositRefunded { get; set; }
@@ -157,6 +166,15 @@
         public bool CanMarkDepositRefunded => BookingRules.CanMarkDepositRefunded(this.StatusName, this.IsDepositPaid || this.IsDepositRefunded);
 
         public bool CanEditDetails => BookingRules.CanEditDetails(this.StatusName);
+
+        public bool CanInvoice => BookingRules.CanInvoice(this.StatusName);
+
+        /// <summary>
+        /// "Invoice PHS-0001, made 7 Nov 2026", or that none is made yet.
+        /// </summary>
+        public string InvoiceLine => this.InvoiceNumber.HasValue && this.InvoicedOn.HasValue
+            ? $"Invoice {InvoiceTerms.Number(this.InvoiceNumber.Value)}, made {UkTime.FromUtc(this.InvoicedOn.Value).ToString("d MMM yyyy", CultureInfo.InvariantCulture)}."
+            : "No invoice made yet. The first download or email gives it its number.";
 
         // The two the customer's own pages ask: may the deposit still be paid, and is there a
         // confirmed booking to show.

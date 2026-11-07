@@ -7,11 +7,13 @@
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Inquiries;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Data.Services;
     using HandyFix.Services.Data.Technicians;
     using HandyFix.Web.Areas.Administration.Controllers;
     using HandyFix.Web.ViewModels.Administration.Enquiries;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
     using HandyFix.Web.ViewModels.Administration.Technicians;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
@@ -34,6 +36,59 @@
         /// </summary>
         private static DateTime AnotherDayThisMonth =>
             DateTime.Today.Day == 1 ? DateTime.Today.AddDays(1) : DateTime.Today.AddDays(-1);
+
+        // "Download PDF" comes back to the job's page, which fetches the file: answered with the
+        // file itself, the form was left dead and "Email to Customer" did nothing after it
+        // (found in the browser check of PROJECT_STATE.md Section 3dp).
+        [Fact]
+        public async Task InvoiceDownloadSavesTheInvoiceAndComesBackToFetchThePdf()
+        {
+            var invoices = new Mock<IInvoicesService>();
+            var bookingId = Guid.NewGuid();
+            var invoice = new InvoiceViewModel { BookingId = bookingId, Number = 12, Total = 90m };
+            invoices.Setup(x => x.MakeAsync(bookingId, "Fixed the tap")).ReturnsAsync(invoice);
+            var controller = BuildController(out _, out _, out _, out _, out _, invoices);
+
+            var result = await controller.Invoice(bookingId, "Fixed the tap", "download");
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirect.ActionName);
+            Assert.Equal("Invoice PHS-0012 is saved and its PDF is downloading.", controller.TempData["SuccessMessage"]);
+            Assert.Equal(true, controller.TempData["InvoiceDownload"]);
+            invoices.Verify(x => x.EmailAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task InvoiceOnAJobThatIsNotDoneSaysSoAndGivesNoFile()
+        {
+            var controller = BuildController(out _, out _, out _, out _, out _, new Mock<IInvoicesService>());
+
+            var result = await controller.Invoice(Guid.NewGuid(), null, "download");
+
+            Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Nothing was changed. An invoice can be made once the job is marked as done.", controller.TempData["ErrorMessage"]);
+            Assert.Null(controller.TempData["InvoiceDownload"]);
+        }
+
+        [Theory]
+        [InlineData(InvoiceEmailOutcome.Sent, "SuccessMessage", "Invoice PHS-0003 is emailed to the customer, with the PDF attached. It asks for £40.00 by")]
+        [InlineData(InvoiceEmailOutcome.NoEmailAddress, "ErrorMessage", "Invoice PHS-0003 is made, but this job has no email address.")]
+        [InlineData(InvoiceEmailOutcome.NotSent, "ErrorMessage", "Invoice PHS-0003 is made, but the email could not be sent.")]
+        public async Task InvoiceEmailSaysHowItWent(InvoiceEmailOutcome outcome, string key, string message)
+        {
+            var invoices = new Mock<IInvoicesService>();
+            var bookingId = Guid.NewGuid();
+            invoices
+                .Setup(x => x.EmailAsync(bookingId, null))
+                .ReturnsAsync(new InvoiceEmailResult { Outcome = outcome, Invoice = new InvoiceViewModel { Number = 3, InvoicedOn = new DateTime(2026, 11, 7), Total = 40m } });
+            var controller = BuildController(out _, out _, out _, out _, out _, invoices);
+
+            var result = await controller.Invoice(bookingId, null, "email");
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirect.ActionName);
+            Assert.StartsWith(message, (string)controller.TempData[key]);
+        }
 
         [Fact]
         public async Task AssignTechnicianShouldPassNullThroughWhenTheBlankOptionIsPosted()
@@ -858,7 +913,8 @@
             out Mock<IJobsService> jobsService,
             out Mock<ITechniciansService> techniciansService,
             out Mock<IPaymentsService> paymentsService,
-            out Mock<IInquiriesService> inquiriesService)
+            out Mock<IInquiriesService> inquiriesService,
+            Mock<IInvoicesService> invoicesService = null)
         {
             bookingsService = new Mock<IBookingsService>();
             jobsService = new Mock<IJobsService>();
@@ -891,7 +947,8 @@
                 techniciansService.Object,
                 paymentsService.Object,
                 servicesService.Object,
-                inquiriesService.Object)
+                inquiriesService.Object,
+                (invoicesService ?? new Mock<IInvoicesService>()).Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
                 TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>()),

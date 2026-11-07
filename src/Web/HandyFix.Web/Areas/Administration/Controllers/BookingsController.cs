@@ -9,10 +9,12 @@
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Bookings;
     using HandyFix.Services.Data.Inquiries;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Data.Services;
     using HandyFix.Services.Data.Technicians;
     using HandyFix.Web.ViewModels.Administration.Enquiries;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
     using HandyFix.Web.ViewModels.Administration.Technicians;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Services;
@@ -29,12 +31,21 @@
 
         private const string DetailsCannotBeEditedMessage = "Nothing was changed. A job's details can be put right while it is booked or done, not once it is cancelled or abandoned.";
 
+        private const string InvoiceNotAllowedMessage = "Nothing was changed. An invoice can be made once the job is marked as done.";
+
+        // The value of the invoice form's "Email to Customer" button; the other one downloads.
+        private const string InvoiceEmailButton = "email";
+
+        // Set once, after "Download PDF": the job's page then fetches the PDF as it opens.
+        private const string InvoiceDownloadKey = "InvoiceDownload";
+
         private readonly IBookingsService bookingsService;
         private readonly IJobsService jobsService;
         private readonly ITechniciansService techniciansService;
         private readonly IPaymentsService paymentsService;
         private readonly IServicesService servicesService;
         private readonly IInquiriesService inquiriesService;
+        private readonly IInvoicesService invoicesService;
 
         public BookingsController(
             IBookingsService bookingsService,
@@ -42,7 +53,8 @@
             ITechniciansService techniciansService,
             IPaymentsService paymentsService,
             IServicesService servicesService,
-            IInquiriesService inquiriesService)
+            IInquiriesService inquiriesService,
+            IInvoicesService invoicesService)
         {
             this.bookingsService = bookingsService;
             this.jobsService = jobsService;
@@ -50,6 +62,7 @@
             this.paymentsService = paymentsService;
             this.servicesService = servicesService;
             this.inquiriesService = inquiriesService;
+            this.invoicesService = invoicesService;
         }
 
         public async Task<IActionResult> Index(BookingSortField sortField = BookingSortField.CreatedOn, bool descending = true, string status = null)
@@ -423,6 +436,58 @@
                 : refunded
                     ? "The deposit is marked as refunded. It no longer counts as money in. The refund itself is made by hand in Stripe."
                     : "The deposit is marked as not refunded.";
+
+            return this.RedirectToAction(nameof(this.Details), new { id });
+        }
+
+        // The invoice box on a done job's page: one form with two buttons. Both keep the "work
+        // done" text and give the job its invoice number the first time. "Email to Customer"
+        // sends it and says how that went. "Download PDF" comes back to the page, which then
+        // fetches the PDF from the Invoices page's address: answered with the file itself, the
+        // form was left dead in the browser, and "Email to Customer" did nothing after it.
+        [HttpPost]
+        public async Task<IActionResult> Invoice(Guid id, string workDone, string send)
+        {
+            if (send != InvoiceEmailButton)
+            {
+                InvoiceViewModel made = await this.invoicesService.MakeAsync(id, workDone);
+                if (made == null)
+                {
+                    this.TempData[ErrorMessageKey] = InvoiceNotAllowedMessage;
+                }
+                else
+                {
+                    this.TempData[SuccessMessageKey] = $"Invoice {made.NumberText} is saved and its PDF is downloading.";
+                    this.TempData[InvoiceDownloadKey] = true;
+                }
+
+                return this.RedirectToAction(nameof(this.Details), new { id });
+            }
+
+            InvoiceEmailResult result = await this.invoicesService.EmailAsync(id, workDone);
+            InvoiceViewModel invoice = result.Invoice;
+
+            switch (result.Outcome)
+            {
+                case InvoiceEmailOutcome.Sent:
+                    this.TempData[SuccessMessageKey] = $"Invoice {invoice.NumberText} is emailed to the customer, with the PDF attached. "
+                        + (invoice.IsPaid
+                            ? "It says it is paid in full."
+                            : $"It asks for {Pounds(invoice.Balance)} by {invoice.DueOn.ToString("d MMMM", CultureInfo.InvariantCulture)}. Once they pay, write the payment on the job and email the invoice again: it will say paid in full.");
+                    break;
+
+                case InvoiceEmailOutcome.NoEmailAddress:
+                    this.TempData[ErrorMessageKey] = $"Invoice {invoice.NumberText} is made, but this job has no email address. Download the PDF and send it to the customer yourself, or add their email in the job's details and press the button again.";
+                    break;
+
+                case InvoiceEmailOutcome.NotSent:
+                    this.TempData[ErrorMessageKey] = $"Invoice {invoice.NumberText} is made, but the email could not be sent. Please try again in a few minutes, or download the PDF and send it yourself.";
+                    break;
+
+                default:
+                    this.TempData[ErrorMessageKey] = InvoiceNotAllowedMessage;
+                    break;
+            }
 
             return this.RedirectToAction(nameof(this.Details), new { id });
         }

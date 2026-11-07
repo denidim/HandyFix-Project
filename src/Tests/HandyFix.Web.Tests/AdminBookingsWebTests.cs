@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
@@ -350,6 +351,53 @@
             Assert.Matches("<textarea name=\"notes\"[^>]*>\\s*Stopcock is under the kitchen sink.</textarea>", page);
             var confirmation = await (await site.Browser().GetAsync("/Booking/Confirmed/" + booking.Id)).Content.ReadAsStringAsync();
             Assert.DoesNotContain("Stopcock", confirmation);
+        }
+
+        // A done job's invoice: emailed to the customer with its PDF, downloaded from the job's
+        // page, and listed for the month with its PDF, the CSV and the month's PDF.
+        [Fact]
+        public async Task ADoneJobsInvoiceIsEmailedWithItsPdfAndListedForTheMonth()
+        {
+            using var site = new Site();
+            Booking booking = await site.BookAndPayAsync(site.AFreeSlot());
+            HttpClient admin = await site.SignedInAdminAsync();
+            var jobPage = JobPage(booking.Id);
+            var id = new Dictionary<string, string> { ["id"] = booking.Id.ToString() };
+
+            // No invoice before the work is done: it has no final price yet.
+            Assert.DoesNotContain("id=\"job-invoice\"", await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
+            await PostFromAsync(admin, jobPage, JobsPage + "/Complete", With(id, "finalPrice", "135.00"));
+
+            var invoiceForm = With(id, "workDone", "Replaced the kitchen tap.");
+            HttpResponseMessage sent = await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(invoiceForm, "send", "email"));
+            var page = WebUtility.HtmlDecode(await sent.Content.ReadAsStringAsync());
+            Assert.Contains("Invoice PHS-0001 is emailed to the customer, with the PDF attached. It asks for £85.00 by", page);
+            Assert.Contains("Invoice PHS-0001, made", page);
+            Assert.Matches("<textarea name=\"workDone\"[^>]*>\\s*Replaced the kitchen tap.</textarea>", page);
+
+            RecordingEmailSender.Email email = site.Emails.Sent.Last();
+            Assert.Equal(booking.Email, email.To);
+            Assert.Contains("PHS-0001", email.Subject);
+            Assert.StartsWith("%PDF", Encoding.ASCII.GetString(Assert.Single(email.Attachments).Content, 0, 4));
+
+            // "Download PDF" comes back to the page with the link that fetches the file, once.
+            HttpResponseMessage download = await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(invoiceForm, "send", "download"));
+            page = WebUtility.HtmlDecode(await download.Content.ReadAsStringAsync());
+            Assert.Contains("Invoice PHS-0001 is saved and its PDF is downloading.", page);
+            Assert.Matches("<a(?=[^>]*data-auto-download)(?=[^>]*href=\"/Administration/Invoices/Pdf/" + booking.Id + "\")", page);
+            Assert.DoesNotContain("data-auto-download", await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
+
+            var list = WebUtility.HtmlDecode(await (await admin.GetAsync("/Administration/Invoices")).Content.ReadAsStringAsync());
+            Assert.Contains("PHS-0001", list);
+            Assert.Contains("Due ", list);
+
+            HttpResponseMessage pdf = await admin.GetAsync("/Administration/Invoices/Pdf/" + booking.Id);
+            Assert.Equal("application/pdf", pdf.Content.Headers.ContentType.MediaType);
+            var csv = await (await admin.GetAsync("/Administration/Invoices/Csv")).Content.ReadAsStringAsync();
+            Assert.Contains("PHS-0001", csv);
+            Assert.Contains("135.00,50.00,0.00,0.00,0.00,50.00,85.00", csv);
+            HttpResponseMessage month = await admin.GetAsync("/Administration/Invoices/ListPdf");
+            Assert.Equal("application/pdf", month.Content.Headers.ContentType.MediaType);
         }
 
         // "Cancel Booking" used to be offered on a completed booking. Pressed there, it would

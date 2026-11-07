@@ -517,6 +517,55 @@
             }
         </section>
 
+        @if (Model.CanInvoice)
+        {
+            <!-- The invoice: the final price, the payments above and what is left, as a PDF -->
+            <section class="admin-card p-4 p-md-5 shadow-sm mb-4" id="job-invoice">
+                <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
+                    <span class="material-symbols-outlined text-secondary">receipt_long</span>
+                    <span>Invoice</span>
+                </h2>
+                <p class="font-body-md text-primary font-bold mb-3">@Model.InvoiceLine</p>
+                <form asp-area="Administration" asp-controller="Bookings" asp-action="Invoice" method="post" class="m-0">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="form-group mb-3">
+                        <label for="invoice-work-done" class="form-label font-label-sm text-on-surface-variant mb-2">Work done (printed on the invoice)</label>
+                        <textarea name="workDone" id="invoice-work-done" rows="3" maxlength="2000" class="form-control admin-form-control" placeholder="For example: Replaced the kitchen tap and both isolation valves. 2 hours, parts £15.">@Model.InvoiceWorkDone</textarea>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" name="send" value="download" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
+                            <span class="material-symbols-outlined fs-20">download</span>
+                            <span>Download PDF</span>
+                        </button>
+                        @if (!string.IsNullOrWhiteSpace(Model.Email))
+                        {
+                            <button type="submit" name="send" value="email" class="btn btn-primary font-button-text d-flex align-items-center gap-2 rounded-lg admin-btn-compact">
+                                <span class="material-symbols-outlined fs-20">forward_to_inbox</span>
+                                <span>Email to Customer</span>
+                            </button>
+                        }
+                    </div>
+                    <p class="text-on-surface-variant mb-0 mt-3 fs-13 lh-snug">
+                        @if (string.IsNullOrWhiteSpace(Model.Email))
+                        {
+                            <span>This job has no email address: download the PDF and send it to the customer yourself.</span>
+                        }
+                        The invoice shows the final price, every payment above, and what is left to pay within @InvoiceTerms.DaysToPay days. After a later payment, send it again: it will say paid in full.
+                    </p>
+                </form>
+                @if (this.TempData["InvoiceDownload"] != null)
+                {
+                    @* "Download PDF" saved the invoice and came back here: this link fetches the PDF
+                       as the page opens (site.js). The form itself does not answer with the file,
+                       because a form that ends in a download leaves the browser thinking it is
+                       still being sent, and its other button then does nothing. *@
+                    <p class="font-body-md mb-0 mt-3">
+                        <a asp-area="Administration" asp-controller="Invoices" asp-action="Pdf" asp-route-id="@Model.Id" class="text-secondary font-bold" data-auto-download>If the PDF did not download, press here.</a>
+                    </p>
+                }
+            </section>
+        }
+
         <!-- Notes: only the admin sees them -->
         <section class="admin-card p-4 p-md-5 shadow-sm mb-4" id="job-notes">
             <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
