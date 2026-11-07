@@ -337,6 +337,30 @@
   }
 }
 
+/* The Gas Safe logo on a gas service's card (PROJECT_STATE Section 3do). It sits in the meta
+   line, at its right end: on a phone the buttons fill the row under it. From 768px the card
+   is a row with the buttons on the left, so the logo goes to the card's free bottom-right
+   corner. Only its height is set: the logo must never be stretched (Gas Safe's rule). */
+.service-card-gas-safe {
+  height: 36px;
+  width: auto;
+  margin-left: auto;
+  flex: none;
+}
+
+@media (min-width: 768px) {
+  .service-horizontal-card-gas-safe {
+    position: relative;
+  }
+
+  .service-card-gas-safe {
+    position: absolute;
+    right: var(--spacing-6);
+    bottom: var(--spacing-6);
+    height: 52px;
+  }
+}
+
 /* Local SEO Section */
 .seo-local-section {
   border-top: 1px solid var(--outline-variant);

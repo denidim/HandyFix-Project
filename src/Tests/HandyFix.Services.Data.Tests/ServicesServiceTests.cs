@@ -380,6 +380,31 @@
             Assert.True(updated.IsPopular);
         }
 
+        // The Gas Safe mark is not on the admin form, so an edit there, a rename included, must
+        // leave it as it was (PROJECT_STATE.md Section 3do).
+        [Fact]
+        public async Task UpdateAsyncShouldKeepTheGasSafeMarkThroughARename()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
+
+            var plumbing = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "plumbing and heating", Slug = "plumbing" };
+            dbContext.ServiceCategories.Add(plumbing);
+            var boiler = new Service { Id = Guid.NewGuid(), Name = "Boiler Installation & Servicing", Description = "boilers", Slug = "boiler-installation-servicing", BasePrice = 90, EstimatedDurationMinutes = 60, IsActive = true, CategoryId = plumbing.Id, IsGasSafeWork = true };
+            dbContext.Services.Add(boiler);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            await service.UpdateAsync(boiler.Id, "Boiler Fitting & Servicing", "boilers", 95m, 60, true, plumbing.Id, Service.DefaultDisplayOrder, false);
+
+            var updated = dbContext.Services.First(x => x.Id == boiler.Id);
+            Assert.Equal("boiler-fitting-servicing", updated.Slug);
+            Assert.True(updated.IsGasSafeWork);
+        }
+
         [Fact]
         public async Task UpdateAsyncShouldDoNothingWhenServiceDoesNotExist()
         {

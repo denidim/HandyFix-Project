@@ -11,6 +11,13 @@
 
     internal class ServicesSeeder : ISeeder
     {
+        private const string BoilerDescription =
+            "We fit new boilers and service existing ones. All boiler work is carried out by a Gas Safe registered engineer, as UK law requires for any work on gas appliances.\n\n" +
+            "A new boiler starts with a survey. We look at how much heating and hot water your home needs, check the existing pipework and flue, and help you choose the right type of boiler: combi, system or conventional.\n\n" +
+            "On installation day we turn off the water, drain the system and remove the old boiler, along with any tanks or cylinders you no longer need. The new boiler is mounted level and secure, and the flue is fitted and sealed through the wall. We flush the system to clear out sludge, fit a magnetic filter, and connect the flow, return, gas and condensate pipes. Finally we test everything, carry out the gas safety checks, set up your controls, including smart thermostats, and hand over your compliance and warranty certificates.\n\n" +
+            "A like-for-like swap usually takes a day. Changing a regular boiler to a combi, or moving the boiler to a new place, takes 1.5 to 4 days. You get a clear quote with the price and timings before any work starts.\n\n" +
+            "A yearly service keeps your boiler safe and running efficiently, and most manufacturers need it to keep the warranty valid. We check that the boiler burns gas safely, test the flue and pressure, clean the key parts and give you a record of the service.";
+
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
             ServiceCategory plumbingCategory = dbContext.ServiceCategories.FirstOrDefault(x => x.Slug == CategorySlugs.Plumbing || x.Name == "Plumbing");
@@ -39,6 +46,10 @@
                 new { Slug = "washing-machine-dishwasher-install", Name = "Washing Machine & Dishwasher Install", Description = "Connecting new washing machines or dishwashers to the water supply and waste, including hose and valve checks.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
                 new { Slug = "radiator-trv-replacement", Name = "Radiator & TRV Replacement", Description = "Replacing an old radiator or upgrading manual valves to thermostatic radiator valves (TRVs) for better heating control.", Price = 90.00m, Duration = 90, CategoryId = plumbingCategory.Id },
                 new { Slug = "outside-garden-tap-installation", Name = "Outside Garden Tap Installation", Description = "Fitting an external garden tap with a double-check valve, connected to the internal water supply.", Price = 90.00m, Duration = 90, CategoryId = plumbingCategory.Id },
+
+                // The same text as the migration that added it to the databases that already had
+                // services (AddBoilerInstallationServicing). A blank line starts a new paragraph.
+                new { Slug = "boiler-installation-servicing", Name = "Boiler Installation & Servicing", Description = BoilerDescription, Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
 
                 // Handyman Services
                 new { Slug = "general-handyman-call-out", Name = "General Handyman Call-Out", Description = "Not sure which service you need? Book a handyman for an hour and tell us about the job. Good for small mixed jobs and anything not on the list.", Price = 60.00m, Duration = 60, CategoryId = handymanCategory.Id },
@@ -82,6 +93,7 @@
             {
                 var firstInTheirCategory = new[] { "general-plumbing-maintenance", "general-handyman-call-out" };
                 var popular = new[] { "full-bathroom-refurbishment", "kitchen-fitting-alterations", "emergency-plumbing", "furniture-assembly" };
+                var gasSafeWork = new[] { "boiler-installation-servicing" };
 
                 foreach (var item in services)
                 {
@@ -96,6 +108,7 @@
                         IsActive = true,
                         DisplayOrder = firstInTheirCategory.Contains(item.Slug) ? 0 : Service.DefaultDisplayOrder,
                         IsPopular = popular.Contains(item.Slug),
+                        IsGasSafeWork = gasSafeWork.Contains(item.Slug),
                     });
                 }
 

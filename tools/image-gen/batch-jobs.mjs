@@ -97,6 +97,14 @@ export const jobs = [
   service("general-plumbing-maintenance",
     "A friendly plumber in his 60s with a white beard checking the valves beneath a plain white wall-" +
     "mounted boiler with no logo and no display, inside a bright kitchen cupboard, morning sunlight."),
+  // Added for the boiler service (PROJECT_STATE Section 3do). Not the older man in a cupboard of
+  // general-plumbing-maintenance: a new boiler being fitted, by a different engineer.
+  service("boiler-installation-servicing",
+    "A heating engineer in her 30s with dark hair tied back, tightening a pipe fitting beneath a " +
+    "brand-new plain white wall-mounted combi boiler with no logo and no display, in a bright modern " +
+    "utility room. Neat new copper pipes run from the boiler down the wall, a small round filter sits " +
+    "on the pipework, a white flue pipe goes straight into the wall above the boiler, an open toolbox " +
+    "on the floor, a window with a sunny garden view, spring sunshine."),
   service("washing-machine-dishwasher-install",
     "A stocky plumber in his 30s with a dark buzz cut and a neat beard sliding a new plain white washing machine with no logo into place under a " +
     "worktop, its hoses running behind it to a valve on the wall, bright utility room with a garden view, spring sunshine."),

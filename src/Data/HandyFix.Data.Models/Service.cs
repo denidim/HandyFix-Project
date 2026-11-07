@@ -51,6 +51,13 @@
         // Shown in the home page's Popular Services.
         public bool IsPopular { get; set; }
 
+        // Work on gas appliances, which UK law allows only a Gas Safe registered engineer to do.
+        // The service page and its card show the Gas Safe logo. It is set by the migration that
+        // added the boiler service, not in the admin form: the logo is the business's promise,
+        // and an admin edit keeps it, since the edit writes only the fields the form has. Not
+        // tied to the slug, which a rename in the admin changes.
+        public bool IsGasSafeWork { get; set; }
+
         [Required(ErrorMessage = "The {0} field is required.")]
         public Guid CategoryId { get; set; }
 

@@ -93,7 +93,7 @@
                 // a picture without one is sent whole, as before (PROJECT_STATE Section 3cn).
                 var smallCopy = svc.SmallCopyUrl;
 
-                <article class="service-horizontal-card group @cardDivisionClass">
+                <article class="service-horizontal-card group @cardDivisionClass @(svc.IsGasSafeWork ? "service-horizontal-card-gas-safe" : null)">
                     <a class="service-card-thumbnail-wrapper card-image-link" asp-controller="Services" asp-action="Details" asp-route-categorySlug="@Model.Slug" asp-route-serviceSlug="@svc.Slug" tabindex="-1" aria-hidden="true">
                         <img class="service-card-thumbnail" alt="@svc.Name" src="@svc.ImageUrl" asp-append-version="true" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src='/images/hero.webp';"
                              srcset="@(smallCopy == null ? null : $"{smallCopy} {ImageStorageService.SmallCopyWidth}w, {svc.ImageUrl} 1024w")"
@@ -130,6 +130,10 @@
                                 <span class="material-symbols-outlined service-metadata-icon">construction</span>
                                 <span>Tools Included</span>
                             </div>
+                            @if (svc.IsGasSafeWork)
+                            {
+                                <img class="service-card-gas-safe" src="@GasSafeLogo.Url" asp-append-version="true" alt="Gas Safe registered engineer" loading="lazy">
+                            }
                         </div>
 
                         <div class="service-card-actions">

@@ -714,6 +714,9 @@ namespace HandyFix.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsGasSafeWork")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsPopular")
                         .HasColumnType("bit");
 

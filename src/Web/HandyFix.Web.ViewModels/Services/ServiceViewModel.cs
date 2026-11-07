@@ -36,6 +36,8 @@
 
         public bool IsPopular { get; set; }
 
+        public bool IsGasSafeWork { get; set; }
+
         /// <summary>
         /// Set by the controller of a page that shows the picture small, not mapped: the address of
         /// its small copy, or null when it has none. Looked up before the page is drawn
