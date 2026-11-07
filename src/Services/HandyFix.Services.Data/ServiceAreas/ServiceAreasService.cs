@@ -133,6 +133,7 @@
             string districts = NormalizeDistricts(model.PostcodeDistricts);
             bool districtsChanged = districts != area.PostcodeDistricts;
             area.PostcodeDistricts = districts;
+            area.DiagramLabelSide = model.DiagramLabelSide;
 
             // Only when the districts change, or the area is not on the diagram yet (so saving
             // again tries again): a place set by hand stays as it is.

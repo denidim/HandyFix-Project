@@ -398,6 +398,15 @@
             await service.UpdateAsync(area.Id, input);
 
             Assert.Equal(188, dbContext.ServiceAreas.Single(x => x.Id == area.Id).DiagramBearing);
+
+            // The side picked on the Edit page is kept; "Automatic" is none.
+            input.DiagramLabelSide = DiagramLabelSide.Below;
+            await service.UpdateAsync(area.Id, input);
+            Assert.Equal(DiagramLabelSide.Below, dbContext.ServiceAreas.Single(x => x.Id == area.Id).DiagramLabelSide);
+
+            input.DiagramLabelSide = null;
+            await service.UpdateAsync(area.Id, input);
+            Assert.Null(dbContext.ServiceAreas.Single(x => x.Id == area.Id).DiagramLabelSide);
         }
 
         [Fact]

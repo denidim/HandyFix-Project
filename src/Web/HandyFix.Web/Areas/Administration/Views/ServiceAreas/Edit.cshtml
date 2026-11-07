@@ -1,6 +1,14 @@
 @model HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaAdminInputModel
 @{
     this.ViewData["Title"] = $"Edit Service Area: {Model.Name}";
+
+    // The area's place on the coverage diagram, said in words (PROJECT_STATE.md Section 3dm).
+    string[] compassPoints = { "north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west" };
+    var diagramStatus = Model.Slug == "chessington"
+        ? $"{Model.Name} is our base, the centre of the diagram."
+        : Model.DiagramBearing is double bearing
+            ? $"{Model.Name} is on the diagram, {compassPoints[(int)Math.Round(bearing / 45.0) % 8]} of Chessington. Changing its postcode districts places it again, from the first one."
+            : $"{Model.Name} is not on the diagram yet: we could not find where its first postcode district is. Check the districts above and save again.";
 }
 
 <nav class="breadcrumb-nav mb-4 admin-header-row" aria-label="breadcrumb">
@@ -27,17 +35,20 @@
 
     <div class="row pt-2">
         <div class="col-12 mb-3">
-            <div class="p-4 d-flex align-items-start gap-3 h-100 help-card">
-                <div class="rounded-circle d-flex align-items-center justify-content-center text-primary dim-40 tint-surface-high help-card-icon">
-                    <span class="material-symbols-outlined">map</span>
+            <div class="p-4 h-100 help-card">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-primary dim-40 tint-surface-high help-card-icon">
+                        <span class="material-symbols-outlined">map</span>
+                    </div>
+                    <div>
+                        <h4 class="font-headline-sm text-primary mb-1 fs-15">Coverage Diagram</h4>
+                        <p class="font-label-sm text-on-surface-variant mb-0 fs-13 lh-snug" data-diagram-status>@diagramStatus</p>
+                    </div>
                 </div>
-                <div>
-                    <h4 class="font-headline-sm text-primary mb-1 fs-15">Coverage Diagram</h4>
-                    <p class="font-label-sm text-on-surface-variant mb-0 fs-13 lh-snug">
-                        Positioned by the geometry entry for <code>@Model.Slug</code> in <code>_AreaCoverageMap.cshtml</code>.
-                        Changing the drive time moves the point; changing the slug requires updating that key.
-                    </p>
-                </div>
+                @if (Model.DiagramAreas != null)
+                {
+                    <partial name="_AreaCoverageMap" model="Model.DiagramAreas" />
+                }
             </div>
         </div>
     </div>

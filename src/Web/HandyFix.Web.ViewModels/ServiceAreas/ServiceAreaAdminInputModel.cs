@@ -40,12 +40,11 @@
         public string Name { get; set; }
 
         // Deliberately an explicit, editable field rather than being regenerated from Name on
-        // every save (which is what ServicesService does). The area slug is load-bearing in three
-        // separate places - the public URL /Areas/{slug}, the filename of a picture that came with
-        // the site, wwwroot/images/areas/{slug}-hero.webp, and the geometry key in
-        // _AreaCoverageMap.cshtml - so silently rewriting it because someone fixed a typo in the
-        // name would break all three at once. An uploaded picture keeps its own address. See
-        // docs/WORKFLOW_SERVICE_AREAS.md.
+        // every save (which is what ServicesService does). The area slug is load-bearing in two
+        // separate places - the public URL /Areas/{slug} and the filename of a picture that came
+        // with the site, wwwroot/images/areas/{slug}-hero.webp - so silently rewriting it because
+        // someone fixed a typo in the name would break both at once. An uploaded picture keeps its
+        // own address. See docs/WORKFLOW_SERVICE_AREAS.md.
         [Required(ErrorMessage = "Slug is required.")]
         [MinLength(3, ErrorMessage = "Slug must be at least 3 characters.")]
         [MaxLength(100, ErrorMessage = "Slug cannot exceed 100 characters.")]
@@ -77,6 +76,20 @@
             UkPostcode.DistrictListPattern,
             ErrorMessage = "List the districts with commas between them, for example KT5, KT6, KT7. A district is the first half of a postcode.")]
         public string PostcodeDistricts { get; set; }
+
+        // Which side of its dot the name goes on, on the coverage diagram. Empty is "Automatic":
+        // chosen from the direction (PROJECT_STATE.md Section 3dm). Only the Edit page shows it.
+        [Display(Name = "Label on the diagram")]
+        public DiagramLabelSide? DiagramLabelSide { get; set; }
+
+        // Set by the server: the area's direction on the diagram, set when it is saved from its
+        // first postcode district. Empty when it is not on the diagram.
+        [BindNever]
+        public double? DiagramBearing { get; set; }
+
+        // Set by the server for the Edit page: every area, to draw the diagram.
+        [BindNever]
+        public IEnumerable<ServiceAreaViewModel> DiagramAreas { get; set; }
 
         [Required(ErrorMessage = "Intro copy is required.")]
         [MinLength(20, ErrorMessage = "Intro copy must be at least 20 characters.")]

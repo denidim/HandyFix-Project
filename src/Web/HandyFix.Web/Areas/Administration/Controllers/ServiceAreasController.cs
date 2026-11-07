@@ -99,6 +99,7 @@
             model.Faqs = model.Faqs?.OrderBy(f => f.DisplayOrder).ToList() ?? new List<ServiceAreaFaqInputModel>();
             this.EnsureAtLeastOneFaqRow(model);
             this.SetCurrentPicture(model);
+            model.DiagramAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
 
             if (this.TempData[PictureErrorKey] is string pictureError)
             {
@@ -198,13 +199,15 @@
             model.CurrentPictureUrl = PictureLookups.AreaPictureOf(this.environment, model.Slug, model.HeroImageUrl);
         }
 
-        // The form posts no picture address, so the saved one is read again before the form is
-        // shown again.
+        // The form posts no picture address or diagram place, so the saved ones are read again
+        // before the form is shown again.
         private async Task ShowAgainAsync(ServiceAreaAdminInputModel model)
         {
             ServiceAreaAdminInputModel saved = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value);
             model.HeroImageUrl = saved?.HeroImageUrl;
+            model.DiagramBearing = saved?.DiagramBearing;
             this.SetCurrentPicture(model);
+            model.DiagramAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
         }
 
         // Saving places the area on the coverage diagram from its first postcode district; when
