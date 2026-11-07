@@ -1,0 +1,112 @@
+@model HandyFix.Web.ViewModels.Administration.Invoices.InvoiceListViewModel
+@using System.Globalization
+@{
+    this.ViewData["Title"] = "Invoices";
+    Func<decimal, string> pounds = amount => "£" + amount.ToString("#,0.00", CultureInfo.InvariantCulture);
+}
+
+<!-- The month's invoices: each one's PDF, and the whole list for the accountant -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4 admin-header-row">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <h1 class="admin-page-title">Invoices</h1>
+        <span class="px-3 py-1 text-secondary font-bold font-label-sm rounded-full tint-secondary border-secondary-soft">
+            @Model.Invoices.Count in @Model.MonthName
+        </span>
+    </div>
+    <form asp-area="Administration" asp-controller="Invoices" asp-action="Index" method="get" class="d-flex align-items-center gap-2 m-0" id="invoice-month">
+        <a asp-area="Administration" asp-controller="Invoices" asp-action="Index" asp-route-month="@Model.PreviousMonth" class="btn btn-outline admin-btn-compact admin-btn-outline" title="Previous month" aria-label="Previous month">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </a>
+        <label for="month" class="visually-hidden">Month</label>
+        <input type="month" name="month" id="month" value="@Model.MonthValue" class="form-control py-2 admin-form-control" data-submit-on-change />
+        @if (Model.HasNextMonth)
+        {
+            <a asp-area="Administration" asp-controller="Invoices" asp-action="Index" asp-route-month="@Model.NextMonth" class="btn btn-outline admin-btn-compact admin-btn-outline" title="Next month" aria-label="Next month">
+                <span class="material-symbols-outlined">chevron_right</span>
+            </a>
+        }
+        <noscript><button type="submit" class="btn btn-secondary font-button-text admin-btn-compact">Show</button></noscript>
+    </form>
+</div>
+
+<!-- The month's sums and the two downloads for the accountant -->
+<section class="admin-card p-4 shadow-sm mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" id="invoice-sums">
+    <div class="d-flex flex-wrap gap-4">
+        <div>
+            <label class="detail-label mb-1">Invoiced</label>
+            <p class="font-bold text-primary mb-0 fs-20">@pounds(Model.Total)</p>
+        </div>
+        <div>
+            <label class="detail-label mb-1">Paid</label>
+            <p class="font-bold text-primary mb-0 fs-20">@pounds(Model.Paid)</p>
+        </div>
+        <div>
+            <label class="detail-label mb-1">Still to pay</label>
+            <p class="font-bold text-primary mb-0 fs-20">@pounds(Model.Balance)@(Model.UnpaidCount > 0 ? $" ({Model.UnpaidCount} unpaid)" : string.Empty)</p>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-area="Administration" asp-controller="Invoices" asp-action="Csv" asp-route-month="@Model.MonthValue" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
+            <span class="material-symbols-outlined fs-20">table_view</span>
+            <span>Download CSV</span>
+        </a>
+        <a asp-area="Administration" asp-controller="Invoices" asp-action="ListPdf" asp-route-month="@Model.MonthValue" class="btn btn-primary font-button-text d-flex align-items-center gap-2 rounded-lg admin-btn-compact">
+            <span class="material-symbols-outlined fs-20">picture_as_pdf</span>
+            <span>Download PDF</span>
+        </a>
+    </div>
+</section>
+
+<div class="rounded-xl overflow-hidden shadow-sm admin-card">
+    <div class="table-responsive">
+        <table class="table mb-0 text-left admin-table">
+            <thead>
+                <tr class="admin-table-head">
+                    <th class="px-4 py-3 font-label-sm uppercase">Invoice</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">Customer</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right">Total</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right">Paid</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right">Balance</th>
+                    <th class="px-4 py-3 font-label-sm uppercase">Status</th>
+                    <th class="px-4 py-3 font-label-sm uppercase text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white">
+                @if (Model.Invoices.Any())
+                {
+                    @foreach (var invoice in Model.Invoices)
+                    {
+                        <tr class="align-middle admin-table-row">
+                            <td class="px-4 py-3">
+                                <p class="font-body-md font-bold mb-0 text-primary">@invoice.NumberText</p>
+                                <p class="text-on-surface-variant mb-0 fs-11">@invoice.InvoicedOn.ToString("d MMM yyyy", CultureInfo.InvariantCulture)</p>
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="font-body-md mb-0 text-primary">@invoice.CustomerName</p>
+                                <a asp-area="Administration" asp-controller="Bookings" asp-action="Details" asp-route-id="@invoice.BookingId" class="text-secondary fs-11">Job #@invoice.JobReference</a>
+                            </td>
+                            <td class="px-4 py-3 text-right font-body-md text-primary">@pounds(invoice.Total)</td>
+                            <td class="px-4 py-3 text-right font-body-md text-primary">@pounds(invoice.Paid)</td>
+                            <td class="px-4 py-3 text-right font-body-md font-bold text-primary">@pounds(invoice.Balance)</td>
+                            <td class="px-4 py-3">
+                                <span class="status-badge @Model.BadgeFor(invoice)">@invoice.StatusOn(Model.TodayUk)</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <a asp-area="Administration" asp-controller="Invoices" asp-action="Pdf" asp-route-id="@invoice.BookingId" class="btn btn-sm d-inline-flex align-items-center gap-1 font-label-sm admin-btn-compact tint-secondary-soft btn-no-border">
+                                    <span class="material-symbols-outlined fs-16">download</span>
+                                    <span>PDF</span>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center p-4 text-muted">No invoices were made in @Model.MonthName. An invoice is made on a done job's page.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
