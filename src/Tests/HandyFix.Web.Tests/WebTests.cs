@@ -10,6 +10,7 @@
     using System.Threading.Tasks;
 
     using HandyFix.Common;
+    using HandyFix.Data;
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.HttpsPolicy;
@@ -1050,6 +1051,33 @@
             Assert.Contains("<meta name=\"twitter:card\" content=\"summary_large_image\" />", page);
         }
 
+        // A picture the admin uploads for an area is the one its page shows, on a computer, on a
+        // phone and in a shared link, ahead of the one that came with the site (PROJECT_STATE.md
+        // Section 3dl).
+        [Fact]
+        public async Task AnAreaPageShowsThePictureUploadedForItAheadOfTheOneThatCameWithTheSite()
+        {
+            const string upload = "https://photos.example/areas/0123456789abcdef0123456789abcdef_cobham.webp";
+            await this.SetAreaPictureAsync("cobham", upload);
+            try
+            {
+                var client = this.server.CreateClient();
+                var page = await client.GetStringAsync("/Areas/cobham");
+
+                var picture = Regex.Match(page, "<picture>.*?</picture>", RegexOptions.Singleline).Value;
+                Assert.Contains("<source media=\"(max-width: 575.98px)\" srcset=\"https://photos.example/areas/0123456789abcdef0123456789abcdef_cobham-phone.webp\"", picture);
+                Assert.Contains($"<img src=\"{upload}\"", picture);
+                Assert.Contains($"<meta property=\"og:image\" content=\"{upload}\" />", page);
+
+                var areas = await client.GetStringAsync("/Areas");
+                Assert.Contains($"<img class=\"area-card-image\" src=\"{upload}\"", areas);
+            }
+            finally
+            {
+                await this.SetAreaPictureAsync("cobham", null);
+            }
+        }
+
         [Fact]
         public async Task AnAreaPageKeepsItsOwnTownsSharePicture()
         {
@@ -1185,6 +1213,14 @@
 
                     break;
             }
+        }
+
+        private async Task SetAreaPictureAsync(string slug, string url)
+        {
+            using IServiceScope scope = this.server.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.ServiceAreas.Single(x => x.Slug == slug).HeroImageUrl = url;
+            await db.SaveChangesAsync();
         }
     }
 }

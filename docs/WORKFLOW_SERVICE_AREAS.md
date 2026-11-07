@@ -1,8 +1,8 @@
 # 🗺️ Service Area Addition & Update Workflow
 
-Adding a service area to HandyFix takes **three steps**. Only the first is self-service; the other
-two are file changes in the repo. An area created without steps 2 and 3 still works — it degrades
-gracefully rather than breaking — but it will look unfinished.
+Adding a service area to HandyFix takes **two steps**. The first, the record with its picture, is
+done in the admin panel; the second, the coverage diagram, is a code change in the repo. An area
+created without step 2 still works — it is simply not plotted on the diagram.
 
 ---
 
@@ -12,8 +12,34 @@ Create or edit the area at **`/Administration/ServiceAreas`**.
 
 > The admin area in this project is routed as `Administration`, not `Admin`. `/Admin/...` will 404.
 
-Fields: Name, Slug, Region, Drive Time, Display Order, Postcode Districts, Featured flag, Intro
-Copy, Local Neighbourhoods Copy, and a dynamic list of FAQs.
+Fields: Name, Slug, Region, Drive Time, Display Order, Postcode Districts, Area Picture, Featured
+flag, Intro Copy, Local Neighbourhoods Copy, and a dynamic list of FAQs.
+
+### The area's picture
+
+Upload it in the **Area Picture** box on the Create or Edit form (since `PROJECT_STATE.md` Section
+3dl). JPEG, PNG or WebP, up to 20MB.
+
+- **The server makes it fit.** `ImageStorageService.SaveAreaImageAsync` makes the picture cover
+  1600×700 and keeps its middle, as the page draws it, then cuts the middle 928 pixels as the copy
+  a phone is sent. Both are WebP at quality 80. A smaller picture is drawn larger rather than
+  refused. Keep the town in the centre of what you upload.
+- **It goes to the photo bucket (R2), never into `wwwroot`.** A file written into the running
+  container is lost at the next deploy, which starts a new one from what git holds — the fault the
+  service pictures had until Section 3cq. Each upload gets a new name,
+  `areas/{random}_{slug}.webp`, with `...-phone.webp` beside it, and `ServiceArea.HeroImageUrl`
+  holds its address.
+- **A replaced picture leaves the bucket** after the area points at the new one, and an area's
+  upload leaves it when the area is deleted, so nothing is left with no area pointing at it.
+- **Which picture shows** is decided in one place, `PictureLookups.AreaPictureOf`: the upload,
+  else the picture that came with the site for the slug (the 15 seeded areas have one in
+  `wwwroot/images/areas/{slug}-hero.webp`, with its phone strip), else the general picture. The
+  area page, the area cards and the picture a shared link shows all ask there. The Edit page says
+  which of the three it is.
+- **Making a picture:** below the box is a short text in the site's watercolour style, with the
+  town's name, and a **Copy** button. Paste it into the Gemini app, check the result, and upload
+  it. There is deliberately no "Generate" button on the server: an API key and the code around it
+  would cost more than a job done about once a year.
 
 ### Postcode Districts decide where bookings are taken
 
@@ -39,7 +65,7 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 | --- | --- |
 | `/Areas` grid | `AreaCardViewComponent` |
 | `/Areas/{slug}` detail page | `AreasController.Details` |
-| Coverage diagram | `_AreaCoverageMap.cshtml` — **only if step 3 is done** |
+| Coverage diagram | `_AreaCoverageMap.cshtml` — **only if step 2 is done** |
 | Footer "Service Areas" column | `FooterServiceAreasViewComponent` |
 | Pricing & Category local-area badges | `ServicesController` |
 | `LocalBusiness` / `FAQPage` / `BreadcrumbList` JSON-LD | `Areas/Details.cshtml` |
@@ -51,11 +77,12 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 - **The slug is not auto-generated on save.** It is an explicit, editable field. On *create* the
   form suggests one from the name via JS, but stops the moment you type in the slug box. On *edit*
   it is never touched automatically. This is deliberate: the slug is load-bearing in three
-  independent places (the public URL, the hero image filename, the coverage-diagram key), so
-  regenerating it because someone fixed a typo in the name would break all three at once.
-- **Changing a slug is a three-file operation.** Update the record, rename
-  `wwwroot/images/areas/{old}-hero.webp`, and update the geometry key in `_AreaCoverageMap.cshtml`.
-  The admin form warns you when you do this.
+  independent places (the public URL, the file name of a picture that came with the site, the
+  coverage-diagram key), so regenerating it because someone fixed a typo in the name would break
+  all three at once.
+- **Changing a slug** means updating the geometry key in `_AreaCoverageMap.cshtml` too. An
+  uploaded picture keeps its address; a picture that came with the site is named after the old
+  slug, so such an area needs a picture uploaded. The admin form says both when you do this.
 - **Deletion is a hard delete.** `ServiceAreasService.DeleteAsync` removes the row and its FAQs
   permanently instead of soft-deleting. This is not an oversight — see the warning below.
 - **FAQs are replaced wholesale on save**, not diffed. They carry no external references, so
@@ -84,27 +111,7 @@ added back any seeded area it could not find, at every start.)
 
 ---
 
-## Step 2 — Hero image (manual file drop)
-
-Place a WebP hero at:
-
-```
-src/Web/HandyFix.Web/wwwroot/images/areas/{slug}-hero.webp
-```
-
-- **Dimensions:** 1600×700 (the `<img>` in `Areas/Details.cshtml` declares these).
-- **Format:** WebP, quality 80, to match what `ImageStorageService` produces for service images.
-- **Convert before copying it in.** Nothing in the app converts images on boot any more — the old
-  `ConvertExistingJpgServiceImages` sweep was removed (see `PROJECT_STATE.md` Section 3k). A `.jpg` or
-  `.png` dropped here is simply ignored.
-- **There is no upload UI for area images.** Unlike services, `ServiceArea` has no image column —
-  the path is resolved by convention from the slug at the view layer.
-- **Fallback:** if the file is missing, the `onerror` handler degrades to `/images/hero.webp`. The
-  page works, it just shows the generic hero. The admin edit screen tells you which state you're in.
-
----
-
-## Step 3 — Coverage diagram entry (code change)
+## Step 2 — Coverage diagram entry (code change)
 
 > ⚠️ There is **no** `wwwroot/images/coverage-map.svg`. The coverage map is not a static asset and
 > has no per-area `<path>` or `data-slug` elements. It is generated in Razor.
@@ -155,8 +162,8 @@ plotted.
 ## Quick checklist
 
 - [ ] Area created at `/Administration/ServiceAreas` with real, specific copy and at least one FAQ
-- [ ] `wwwroot/images/areas/{slug}-hero.webp` added at 1600×700, WebP q80
+- [ ] Its picture uploaded in the Area Picture box
 - [ ] Geometry entry added to `_AreaCoverageMap.cshtml`
 - [ ] `/Areas` rendered and visually checked for label collisions
-- [ ] `/Areas/{slug}` loads with the hero image and FAQs
+- [ ] `/Areas/{slug}` loads with its picture and FAQs
 - [ ] `dotnet build` clean and the test suite passing

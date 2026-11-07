@@ -82,20 +82,28 @@
                 ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(3)
                 : Enumerable.Empty<ReviewViewModel>();
 
+            var picture = PictureLookups.AreaPictureOf(this.environment, area.Slug, area.HeroImageUrl);
             var model = new ServiceAreaDetailsPageViewModel
             {
                 Area = area,
                 RelatedServices = relatedServices.WithMediumCopies(this.imageStorage),
                 Reviews = reviews,
                 ShowOnSiteReviews = showOnSiteReviews,
-                PhonePicture = PictureLookups.PhonePictureOf(this.environment, area.Slug),
+                Picture = picture,
+                PhonePicture = PictureLookups.AreaPhonePictureOf(this.environment, this.imageStorage, area.Slug, area.HeroImageUrl),
             };
 
             this.SetPageMeta(
                 $"Handyman & Plumbing in {area.Name}",
                 $"Local handyman and plumbing services in {area.Name}. Transparent hourly pricing, no call-out fee, usually available within days. Book online today.",
                 this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme));
-            this.ViewData["OgImage"] = $"{this.Request.Scheme}://{this.Request.Host}/images/areas/{area.Slug}-hero.webp";
+
+            // An upload's address is already a full one; a picture that came with the site is
+            // named on this site; an area with neither shares the site's own picture.
+            if (picture != null)
+            {
+                this.ViewData["OgImage"] = picture.StartsWith('/') ? $"{this.Request.Scheme}://{this.Request.Host}{picture}" : picture;
+            }
 
             return this.View(model);
         }

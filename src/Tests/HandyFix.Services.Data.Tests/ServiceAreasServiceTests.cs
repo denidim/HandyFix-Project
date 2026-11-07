@@ -1,16 +1,22 @@
 ﻿namespace HandyFix.Services.Data.Tests
 {
     using System;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
     using HandyFix.Data;
     using HandyFix.Data.Models;
     using HandyFix.Data.Repositories;
+    using HandyFix.Services;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Web.ViewModels.ServiceAreas;
 
+    using Microsoft.AspNetCore.Http;
+
     using Microsoft.EntityFrameworkCore;
+
+    using Moq;
 
     using Xunit;
 
@@ -30,7 +36,7 @@
             dbContext.ServiceAreas.AddRange(notFeatured, featured);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var results = (await service.GetAllAsync<ServiceArea>()).ToList();
 
             Assert.Equal(featured.Id, results.First().Id);
@@ -51,7 +57,7 @@
             dbContext.ServiceAreas.AddRange(second, first);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var results = (await service.GetAllAsync<ServiceArea>(featuredFirst: false)).ToList();
 
             Assert.Equal(first.Id, results.First().Id);
@@ -71,7 +77,7 @@
             dbContext.ServiceAreas.Add(area);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var result = await service.GetBySlugAsync<ServiceArea>("cobham");
 
             Assert.NotNull(result);
@@ -94,7 +100,7 @@
             dbContext.ServiceAreas.AddRange(current, closest, further, furthest);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var results = (await service.GetNearestAsync<ServiceArea>(current.Id, take: 2)).ToList();
 
             Assert.Equal(2, results.Count);
@@ -128,7 +134,7 @@
             dbContext.ServiceAreas.AddRange(current, weybridge, esher, addlestone, walton);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var results = await service.GetNearestAsync<ServiceArea>(current.Id, take: 4);
 
             Assert.Equal(new[] { "Esher", "Weybridge", "Walton-on-Thames", "Addlestone" }, results.Select(x => x.Name));
@@ -143,7 +149,7 @@
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<ServiceArea>(dbContext);
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var results = await service.GetNearestAsync<ServiceArea>(Guid.NewGuid());
 
             Assert.Empty(results);
@@ -164,7 +170,7 @@
             dbContext.ServiceAreas.Add(area);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var result = await service.GetBySlugAsync<ServiceAreaDetailsViewModel>("guildford");
 
             Assert.NotNull(result);
@@ -183,7 +189,7 @@
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<ServiceArea>(dbContext);
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var id = await service.CreateAsync(BuildInput("richmond", "Richmond", faqCount: 2));
 
             var created = dbContext.ServiceAreas.Single(x => x.Id == id);
@@ -205,7 +211,7 @@
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<ServiceArea>(dbContext);
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var input = BuildInput("  Richmond-Upon-Thames  ", "Richmond upon Thames", faqCount: 0);
             var id = await service.CreateAsync(input);
 
@@ -221,7 +227,7 @@
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<ServiceArea>(dbContext);
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var id = await service.CreateAsync(BuildInput("richmond", "Richmond", faqCount: 3));
 
             var update = BuildInput("richmond", "Richmond", faqCount: 1);
@@ -244,7 +250,7 @@
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<ServiceArea>(dbContext);
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
             var id = await service.CreateAsync(BuildInput("richmond", "Richmond", faqCount: 2));
 
             await service.DeleteAsync(id);
@@ -272,7 +278,7 @@
             repository.Delete(area);
             await repository.SaveChangesAsync();
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
 
             // The row is invisible to every normal query now, but IX_ServiceAreas_Slug has no
             // IsDeleted filter, so the slug is still reserved at the database level. Reporting it
@@ -293,7 +299,7 @@
             dbContext.ServiceAreas.Add(area);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+            var service = new ServiceAreasService(repository, new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext), new Mock<IImageStorageService>().Object);
 
             Assert.True(await service.SlugExistsAsync("guildford"));
             Assert.False(await service.SlugExistsAsync("guildford", excludeAreaId: area.Id));
@@ -310,7 +316,8 @@
             using var dbContext = new ApplicationDbContext(options);
             var service = new ServiceAreasService(
                 new EfDeletableEntityRepository<ServiceArea>(dbContext),
-                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
+                new Mock<IImageStorageService>().Object);
 
             var input = BuildInput("surbiton", "Surbiton", faqCount: 1);
             input.PostcodeDistricts = "kt5,KT6 ,  kt7";
@@ -331,7 +338,8 @@
             using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5, KT6", "KT1, KT6", null, string.Empty);
             var service = new ServiceAreasService(
                 new EfDeletableEntityRepository<ServiceArea>(dbContext),
-                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
+                new Mock<IImageStorageService>().Object);
 
             Assert.Equal(new[] { "KT1", "KT5", "KT6" }, await service.GetServedPostcodeDistrictsAsync());
         }
@@ -346,7 +354,8 @@
             using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5, KT6", "KT1");
             var service = new ServiceAreasService(
                 new EfDeletableEntityRepository<ServiceArea>(dbContext),
-                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
+                new Mock<IImageStorageService>().Object);
 
             Assert.Equal(expected, await service.IsPostcodeServedAsync(postcode));
         }
@@ -359,7 +368,8 @@
             using ApplicationDbContext dbContext = ContextWithAreasCovering(null, string.Empty);
             var service = new ServiceAreasService(
                 new EfDeletableEntityRepository<ServiceArea>(dbContext),
-                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
+                new Mock<IImageStorageService>().Object);
 
             Assert.True(await service.IsPostcodeServedAsync("M1 1AE"));
         }
@@ -371,13 +381,106 @@
             using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5", "KT9");
             var service = new ServiceAreasService(
                 new EfDeletableEntityRepository<ServiceArea>(dbContext),
-                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext));
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
+                new Mock<IImageStorageService>().Object);
 
             Guid chessington = dbContext.ServiceAreas.Single(x => x.PostcodeDistricts == "KT9").Id;
             await service.DeleteAsync(chessington);
 
             Assert.False(await service.IsPostcodeServedAsync("KT9 2QN"));
             Assert.True(await service.IsPostcodeServedAsync("KT5 8AB"));
+        }
+
+        // An area's picture is changed in this order: the new one goes up, the area points at
+        // it, and only then does the old upload leave the bucket (PROJECT_STATE.md Section 3dl).
+        [Fact]
+        public async Task SetHeroImageAsyncShouldPointTheAreaAtTheNewPictureThenDeleteTheOldOne()
+        {
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5");
+            ServiceArea area = dbContext.ServiceAreas.Single();
+            area.HeroImageUrl = "https://photos.example/areas/old.webp";
+            dbContext.SaveChanges();
+
+            var storage = new Mock<IImageStorageService>();
+            string urlWhenOldDeleted = null;
+            storage
+                .Setup(x => x.SaveAreaImageAsync(It.IsAny<Stream>(), "photo.jpg", "image/jpeg", area.Slug))
+                .ReturnsAsync("https://photos.example/areas/new.webp");
+            storage
+                .Setup(x => x.DeleteAreaImageAsync("https://photos.example/areas/old.webp"))
+                .Callback(() => urlWhenOldDeleted = dbContext.ServiceAreas.Single().HeroImageUrl)
+                .Returns(Task.CompletedTask);
+
+            var service = new ServiceAreasService(
+                new EfDeletableEntityRepository<ServiceArea>(dbContext),
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
+                storage.Object);
+
+            await service.SetHeroImageAsync(area.Id, Upload());
+
+            Assert.Equal("https://photos.example/areas/new.webp", dbContext.ServiceAreas.Single().HeroImageUrl);
+            Assert.Equal("https://photos.example/areas/new.webp", urlWhenOldDeleted);
+        }
+
+        // A picture that cannot be made leaves the area with the one it had.
+        [Fact]
+        public async Task SetHeroImageAsyncShouldKeepTheOldPictureWhenTheNewOneFails()
+        {
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5");
+            ServiceArea area = dbContext.ServiceAreas.Single();
+            area.HeroImageUrl = "https://photos.example/areas/old.webp";
+            dbContext.SaveChanges();
+
+            var storage = new Mock<IImageStorageService>();
+            storage
+                .Setup(x => x.SaveAreaImageAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ThrowsAsync(new ImageUploadValidationException("Failed to decode uploaded image."));
+
+            var service = new ServiceAreasService(
+                new EfDeletableEntityRepository<ServiceArea>(dbContext),
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
+                storage.Object);
+
+            await Assert.ThrowsAsync<ImageUploadValidationException>(() => service.SetHeroImageAsync(area.Id, Upload()));
+
+            Assert.Equal("https://photos.example/areas/old.webp", dbContext.ServiceAreas.Single().HeroImageUrl);
+            storage.Verify(x => x.DeleteAreaImageAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteAsyncShouldTakeTheAreasUploadedPictureOutOfTheBucketAfterTheArea()
+        {
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5");
+            ServiceArea area = dbContext.ServiceAreas.Single();
+            area.HeroImageUrl = "https://photos.example/areas/old.webp";
+            dbContext.SaveChanges();
+
+            var storage = new Mock<IImageStorageService>();
+            var areaGoneFirst = false;
+            storage
+                .Setup(x => x.DeleteAreaImageAsync("https://photos.example/areas/old.webp"))
+                .Callback(() => areaGoneFirst = !dbContext.ServiceAreas.Any())
+                .Returns(Task.CompletedTask);
+
+            var service = new ServiceAreasService(
+                new EfDeletableEntityRepository<ServiceArea>(dbContext),
+                new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
+                storage.Object);
+
+            await service.DeleteAsync(area.Id);
+
+            Assert.True(areaGoneFirst);
+        }
+
+        // A file as the admin's form sends it.
+        private static IFormFile Upload()
+        {
+            var file = new Mock<IFormFile>();
+            file.Setup(x => x.Length).Returns(10);
+            file.Setup(x => x.FileName).Returns("photo.jpg");
+            file.Setup(x => x.ContentType).Returns("image/jpeg");
+            file.Setup(x => x.OpenReadStream()).Returns(new MemoryStream(new byte[10]));
+            return file.Object;
         }
 
         private static ApplicationDbContext ContextWithAreasCovering(params string[] districtLists)
@@ -450,7 +553,7 @@
             [Fact]
             public void ShouldSilentlyDropFullyBlankFaqRows()
             {
-                var service = new ServiceAreasService(null, null);
+                var service = new ServiceAreasService(null, null, null);
 
                 var model = new ServiceAreaAdminInputModel
                 {
@@ -475,7 +578,7 @@
                 // The actual trap this guards. Row 0 is blank and gets pruned; row 1 is
                 // half-filled and invalid. After pruning it renders at index 0, so an error
                 // keyed Faqs[1].Answer would attach to a row the admin cannot see.
-                var service = new ServiceAreasService(null, null);
+                var service = new ServiceAreasService(null, null, null);
 
                 var model = new ServiceAreaAdminInputModel
                 {
@@ -495,7 +598,7 @@
             [Fact]
             public void ShouldRejectAHalfFilledFaqRow()
             {
-                var service = new ServiceAreasService(null, null);
+                var service = new ServiceAreasService(null, null, null);
 
                 var model = new ServiceAreaAdminInputModel
                 {

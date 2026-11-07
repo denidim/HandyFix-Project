@@ -23,6 +23,8 @@
 
         public string LocalNeighbourhoodsCopy { get; set; }
 
+        public string HeroImageUrl { get; set; }
+
         // Mapped from ServiceArea.Faqs by convention; the collection is not
         // guaranteed to arrive in DisplayOrder from the mapper alone (Mapster's
         // ProjectToType does not reliably honour an OrderBy applied inside a

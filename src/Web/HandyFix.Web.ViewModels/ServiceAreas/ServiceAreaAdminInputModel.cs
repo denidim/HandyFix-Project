@@ -6,8 +6,10 @@
 
     using HandyFix.Data.Models;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.Administration.Services;
     using HandyFix.Web.ViewModels.Validation;
 
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc.ModelBinding;
 
     public class ServiceAreaAdminInputModel : IMapFrom<ServiceArea>
@@ -18,10 +20,19 @@
         // The Create and Edit pages used to tell their shared form in ViewData.
         public bool IsNew => this.Id == null;
 
-        // Set by the server, never read from the form: whether the area's picture is in place,
-        // which its Edit page says. The page used to look on disk for it while it was drawn.
+        // The picture the admin uploaded, if any, as the database holds it. Never read from the
+        // form: only HeroImageFile changes the picture.
         [BindNever]
-        public bool HasHeroImage { get; set; }
+        public string HeroImageUrl { get; set; }
+
+        // Set by the server for the Edit page: the picture the area's page shows now (the upload,
+        // else the one that came with the site, else none).
+        [BindNever]
+        public string CurrentPictureUrl { get; set; }
+
+        [Display(Name = "Area picture")]
+        [MaxFileSize(20 * 1024 * 1024)]
+        public IFormFile HeroImageFile { get; set; }
 
         [Required(ErrorMessage = "Area name is required.")]
         [MinLength(2, ErrorMessage = "Name must be at least 2 characters.")]
@@ -30,10 +41,11 @@
 
         // Deliberately an explicit, editable field rather than being regenerated from Name on
         // every save (which is what ServicesService does). The area slug is load-bearing in three
-        // separate places - the public URL /Areas/{slug}, the hero image filename
-        // wwwroot/images/areas/{slug}-hero.webp, and the geometry key in _AreaCoverageMap.cshtml -
-        // so silently rewriting it because someone fixed a typo in the name would break all three
-        // at once. See docs/WORKFLOW_SERVICE_AREAS.md.
+        // separate places - the public URL /Areas/{slug}, the filename of a picture that came with
+        // the site, wwwroot/images/areas/{slug}-hero.webp, and the geometry key in
+        // _AreaCoverageMap.cshtml - so silently rewriting it because someone fixed a typo in the
+        // name would break all three at once. An uploaded picture keeps its own address. See
+        // docs/WORKFLOW_SERVICE_AREAS.md.
         [Required(ErrorMessage = "Slug is required.")]
         [MinLength(3, ErrorMessage = "Slug must be at least 3 characters.")]
         [MaxLength(100, ErrorMessage = "Slug cannot exceed 100 characters.")]

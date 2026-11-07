@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -11,19 +12,23 @@
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Validation;
 
+    using Microsoft.AspNetCore.Http;
     using Microsoft.EntityFrameworkCore;
 
     public class ServiceAreasService : IServiceAreasService
     {
         private readonly IDeletableEntityRepository<ServiceArea> areasRepository;
         private readonly IDeletableEntityRepository<ServiceAreaFaq> faqsRepository;
+        private readonly IImageStorageService imageStorageService;
 
         public ServiceAreasService(
             IDeletableEntityRepository<ServiceArea> areasRepository,
-            IDeletableEntityRepository<ServiceAreaFaq> faqsRepository)
+            IDeletableEntityRepository<ServiceAreaFaq> faqsRepository,
+            IImageStorageService imageStorageService)
         {
             this.areasRepository = areasRepository;
             this.faqsRepository = faqsRepository;
+            this.imageStorageService = imageStorageService;
         }
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(bool featuredFirst = true)
@@ -123,6 +128,40 @@
             await this.ReplaceFaqsAsync(id, model.Faqs);
         }
 
+        public async Task SetHeroImageAsync(Guid areaId, IFormFile imageFile)
+        {
+            if (imageFile == null || imageFile.Length == 0)
+            {
+                return;
+            }
+
+            ServiceArea area = await this.areasRepository.All().FirstOrDefaultAsync(x => x.Id == areaId);
+            if (area == null)
+            {
+                return;
+            }
+
+            string imageUrl;
+            using (Stream stream = imageFile.OpenReadStream())
+            {
+                imageUrl = await this.imageStorageService.SaveAreaImageAsync(stream, imageFile.FileName, imageFile.ContentType, area.Slug);
+            }
+
+            if (string.IsNullOrEmpty(imageUrl))
+            {
+                return;
+            }
+
+            string previous = area.HeroImageUrl;
+            area.HeroImageUrl = imageUrl;
+            await this.areasRepository.SaveChangesAsync();
+
+            if (previous != null && previous != imageUrl)
+            {
+                await this.imageStorageService.DeleteAreaImageAsync(previous);
+            }
+        }
+
         public async Task<IReadOnlyList<string>> GetServedPostcodeDistrictsAsync()
         {
             List<string> lists = await this.areasRepository.All()
@@ -168,8 +207,15 @@
 
             await this.faqsRepository.SaveChangesAsync();
 
+            var picture = area.HeroImageUrl;
             this.areasRepository.HardDelete(area);
             await this.areasRepository.SaveChangesAsync();
+
+            // After the area is gone, so a picture is never missing from an area still shown.
+            if (picture != null)
+            {
+                await this.imageStorageService.DeleteAreaImageAsync(picture);
+            }
         }
 
         public async Task<bool> SlugExistsAsync(string slug, Guid? excludeAreaId = null)
