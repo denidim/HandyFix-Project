@@ -231,9 +231,101 @@
             Assert.Null(this.storage.GetMediumCopyPublicUrl(imageUrl));
         }
 
+        // An area's picture is the strip across the top of its page, 1600 x 700, and a phone is
+        // sent the middle 928 of it; the middle of whatever is uploaded is kept, as the page
+        // draws it (PROJECT_STATE.md Section 3dl). Here only the middle 1600 of a 4000-wide
+        // picture is green, so a picture cut anywhere else shows red at its edges.
+        [Fact]
+        public async Task AnAreaUploadIsTheMiddleOfThePictureAt1600By700WithAPhoneStrip928Wide()
+        {
+            using var bitmap = new SKBitmap(4000, 700);
+            using (var canvas = new SKCanvas(bitmap))
+            using (var green = new SKPaint { Color = SKColors.Lime })
+            {
+                canvas.Clear(SKColors.Red);
+                canvas.DrawRect(1200, 0, 1600, 700, green);
+            }
+
+            var url = await this.UploadAreaAsync(bitmap, "cobham");
+
+            Assert.Matches("^https://photos\\.example/areas/[0-9a-f]{32}_cobham\\.webp$", url);
+            var key = url.Substring(FakeBucket.PublicUrl.Length + 1);
+            var phoneKey = key.Replace(".webp", "-phone.webp");
+            Assert.Equal(new[] { key, phoneKey }, this.bucket.Objects.Keys.OrderBy(x => x.Length));
+            Assert.Equal($"{FakeBucket.PublicUrl}/{phoneKey}", this.storage.GetAreaPhoneCopyPublicUrl(url));
+
+            using var picture = SKBitmap.Decode(this.bucket.Objects[key]);
+            Assert.Equal((1600, 700), (picture.Width, picture.Height));
+            AssertGreen(picture.GetPixel(4, 350));
+            AssertGreen(picture.GetPixel(1595, 350));
+
+            using var phone = SKBitmap.Decode(this.bucket.Objects[phoneKey]);
+            Assert.Equal((928, 700), (phone.Width, phone.Height));
+            Assert.Empty(Directory.GetFiles(this.builtInFolder));
+        }
+
+        // A small or tall picture is drawn larger to fill the strip rather than refused: the
+        // admin can always upload a better one.
+        [Fact]
+        public async Task ASmallTallAreaUploadStillFillsTheStrip()
+        {
+            using var bitmap = new SKBitmap(600, 900);
+            bitmap.Erase(SKColors.Lime);
+
+            var url = await this.UploadAreaAsync(bitmap, "esher");
+
+            using var picture = SKBitmap.Decode(this.bucket.Objects[url.Substring(FakeBucket.PublicUrl.Length + 1)]);
+            Assert.Equal((1600, 700), (picture.Width, picture.Height));
+            AssertGreen(picture.GetPixel(2, 2));
+        }
+
+        [Fact]
+        public async Task DeletingAnAreaUploadDeletesItsPhoneCopy()
+        {
+            using var bitmap = new SKBitmap(1600, 700);
+            bitmap.Erase(SKColors.Lime);
+            var url = await this.UploadAreaAsync(bitmap, "cobham");
+
+            await this.storage.DeleteAreaImageAsync(url);
+
+            Assert.Empty(this.bucket.Objects);
+        }
+
+        // Only an address this service gave an area's upload is ever deleted as one: not a
+        // service's picture, nor one that came with the site.
+        [Theory]
+        [InlineData("/images/areas/cobham-hero.webp")]
+        [InlineData("https://photos.example/services/0123456789abcdef0123456789abcdef_tap.webp")]
+        [InlineData(null)]
+        public async Task AnAddressThatIsNotAnAreaUploadIsNeverDeletedAsOne(string imageUrl)
+        {
+            await this.storage.DeleteAreaImageAsync(imageUrl);
+
+            Assert.Empty(this.bucket.Deleted);
+            Assert.Null(this.storage.GetAreaPhoneCopyPublicUrl(imageUrl));
+        }
+
+        [Fact]
+        public async Task AnAreaFileThatIsNotAJpegPngOrWebpIsRefusedInWordsForTheAdmin()
+        {
+            using var stream = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+
+            ImageUploadValidationException refusal = await Assert.ThrowsAsync<ImageUploadValidationException>(
+                () => this.storage.SaveAreaImageAsync(stream, "notes.pdf", "application/pdf", "cobham"));
+
+            Assert.Equal("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed.", refusal.Message);
+            Assert.Empty(this.bucket.Objects);
+        }
+
         public void Dispose()
         {
             Directory.Delete(this.builtInFolder, recursive: true);
+        }
+
+        // WebP at quality 80 shifts a colour a little; green stays green and red stays red.
+        private static void AssertGreen(SKColor pixel)
+        {
+            Assert.True(pixel.Green > 200 && pixel.Red < 60, $"Expected green, got {pixel}.");
         }
 
         private string PathOf(string fileName) => Path.Combine(this.builtInFolder, fileName);
@@ -248,6 +340,15 @@
             using var stream = new MemoryStream(png.ToArray());
 
             return await this.storage.SaveServiceImageAsync(stream, "photo.png", "image/png", slug);
+        }
+
+        private async Task<string> UploadAreaAsync(SKBitmap bitmap, string slug)
+        {
+            using var image = SKImage.FromBitmap(bitmap);
+            using SKData png = image.Encode(SKEncodedImageFormat.Png, 100);
+            using var stream = new MemoryStream(png.ToArray());
+
+            return await this.storage.SaveAreaImageAsync(stream, "photo.png", "image/png", slug);
         }
 
         // The photo bucket, kept in memory: what was put in it under which key, and what was asked

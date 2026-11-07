@@ -29,5 +29,23 @@
         /// page sends the picture itself.
         /// </summary>
         string GetMediumCopyPublicUrl(string imageUrl);
+
+        /// <summary>
+        /// Makes an uploaded picture an area's: its middle cut to 1600 x 700, with a 928-wide
+        /// phone copy from the middle of that. Both go to the photo bucket under a new name, and
+        /// the picture's address is returned.
+        /// </summary>
+        Task<string> SaveAreaImageAsync(Stream stream, string fileName, string contentType, string slug);
+
+        /// <summary>
+        /// Takes an uploaded area picture and its phone copy out of the bucket. Any other address
+        /// is left alone, and a delete that fails is logged, not thrown.
+        /// </summary>
+        Task DeleteAreaImageAsync(string imageUrl);
+
+        /// <summary>
+        /// The address of an uploaded area picture's phone copy; null for any other address.
+        /// </summary>
+        string GetAreaPhoneCopyPublicUrl(string imageUrl);
     }
 }
