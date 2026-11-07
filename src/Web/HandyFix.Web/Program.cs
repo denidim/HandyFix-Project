@@ -258,10 +258,19 @@
             // a visitor waits on it.
             services.AddHttpClient<ITurnstileVerifier, TurnstileVerifier>(client => client.Timeout = TimeSpan.FromSeconds(5));
 
-            // Where a postcode district is, asked when an admin saves an area, to place it on the
-            // coverage diagram (PROJECT_STATE Section 3dm). Five seconds, then the area is saved
-            // without a place and the admin is told.
+            // Where a postcode district or a town is, asked when an admin saves an area, to place it
+            // on the coverage diagram and to fill its districts from its name (PROJECT_STATE
+            // Sections 3dm and 3dn). Five seconds, then the admin is told.
             services.AddHttpClient<IPostcodeLocator, PostcodesIoLocator>(client => client.Timeout = TimeSpan.FromSeconds(5));
+
+            // The drive time from the base, asked once when an admin creates an area (PROJECT_STATE
+            // Section 3dn). The public OSRM service asks callers to name their app. Five seconds,
+            // then the time is estimated from the distance instead.
+            services.AddHttpClient<IDriveTimeCalculator, OsrmDriveTimeCalculator>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(5);
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("PlumbingHandymanSurrey/1.0");
+            });
 
             // Background workers
             services.AddHostedService<StaleBookingCleanupService>();

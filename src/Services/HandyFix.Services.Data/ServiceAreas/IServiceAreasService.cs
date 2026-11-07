@@ -18,9 +18,19 @@
 
         Task<IEnumerable<T>> GetNearestAsync<T>(Guid excludeAreaId, int take = 4);
 
-        Task<Guid> CreateAsync(ServiceAreaAdminInputModel model);
+        /// <summary>
+        /// Saves a new area: its page address from its name, its postcode districts from its name
+        /// when none are typed, and its place on the diagram and drive time from its first
+        /// district. Nothing is saved when the name is taken or the town or its district cannot
+        /// be found; the result then says why, and under which field.
+        /// </summary>
+        Task<ServiceAreaSaveResult> CreateAsync(ServiceAreaAdminInputModel model);
 
-        Task UpdateAsync(Guid id, ServiceAreaAdminInputModel model);
+        /// <summary>
+        /// Saves the changes to an area. Its page address and drive time never change. Empty
+        /// postcode districts are filled from the name; when no town has it, nothing is saved.
+        /// </summary>
+        Task<ServiceAreaSaveResult> UpdateAsync(Guid id, ServiceAreaAdminInputModel model);
 
         /// <summary>
         /// Whether the area has a place on the coverage diagram. Saving an area places it from its
@@ -54,11 +64,6 @@
         /// slug and blocks both the seeder and the admin form from ever reusing it.
         /// </summary>
         Task DeleteAsync(Guid id);
-
-        /// <summary>
-        /// Checks the slug against soft-deleted rows too, because the unique index covers them.
-        /// </summary>
-        Task<bool> SlugExistsAsync(string slug, Guid? excludeAreaId = null);
 
         /// <summary>
         /// Drops FAQ rows left entirely blank (mutating model.Faqs), then validates whatever

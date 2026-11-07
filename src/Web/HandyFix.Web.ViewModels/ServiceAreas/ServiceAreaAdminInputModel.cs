@@ -39,37 +39,22 @@
         [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
         public string Name { get; set; }
 
-        // Deliberately an explicit, editable field rather than being regenerated from Name on
-        // every save (which is what ServicesService does). The area slug is load-bearing in two
-        // separate places - the public URL /Areas/{slug} and the filename of a picture that came
-        // with the site, wwwroot/images/areas/{slug}-hero.webp - so silently rewriting it because
-        // someone fixed a typo in the name would break both at once. An uploaded picture keeps its
-        // own address. See docs/WORKFLOW_SERVICE_AREAS.md.
-        [Required(ErrorMessage = "Slug is required.")]
-        [MinLength(3, ErrorMessage = "Slug must be at least 3 characters.")]
-        [MaxLength(100, ErrorMessage = "Slug cannot exceed 100 characters.")]
-        [RegularExpression(
-            "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-            ErrorMessage = "Slug may only contain lowercase letters, numbers and single hyphens (e.g. kingston-upon-thames).")]
+        // The last part of the page address, /Areas/{slug}. Made from the name when the area is
+        // created and never changed after, so the address stays the same when a typo in the name
+        // is fixed (PROJECT_STATE.md Section 3dn). Never read from the form.
+        [BindNever]
         public string Slug { get; set; }
 
-        [Required(ErrorMessage = "Region is required.")]
-        [MaxLength(100, ErrorMessage = "Region cannot exceed 100 characters.")]
-        public string Region { get; set; }
-
-        [Display(Name = "Drive time (minutes)")]
-        [Range(0, 180, ErrorMessage = "Drive time must be between 0 and 180 minutes.")]
+        // Worked out when the area is created; the Edit page shows it. Never read from the form.
+        [BindNever]
         public int DriveTimeMinutes { get; set; }
-
-        [Display(Name = "Display order")]
-        [Range(0, 999, ErrorMessage = "Display order must be between 0 and 999.")]
-        public int DisplayOrder { get; set; }
 
         [Display(Name = "Featured area")]
         public bool IsFeatured { get; set; }
 
-        // Optional. The booking form takes a booking only for a postcode in a district some area
-        // lists, so this is what decides where the site accepts bookings.
+        // The booking form takes a booking only for a postcode in a district some area lists, so
+        // this is what decides where the site accepts bookings. Left empty, it is filled from the
+        // town's name when the area is saved.
         [Display(Name = "Postcode districts")]
         [MaxLength(200, ErrorMessage = "Postcode districts cannot exceed 200 characters.")]
         [RegularExpression(
@@ -91,16 +76,16 @@
         [BindNever]
         public IEnumerable<ServiceAreaViewModel> DiagramAreas { get; set; }
 
-        [Required(ErrorMessage = "Intro copy is required.")]
-        [MinLength(20, ErrorMessage = "Intro copy must be at least 20 characters.")]
-        [MaxLength(2000, ErrorMessage = "Intro copy cannot exceed 2000 characters.")]
-        [Display(Name = "Intro copy")]
+        [Required(ErrorMessage = "Write a few lines about the town.")]
+        [MinLength(20, ErrorMessage = "Write at least 20 characters about the town.")]
+        [MaxLength(2000, ErrorMessage = "Keep this under 2000 characters.")]
+        [Display(Name = "About the town")]
         public string IntroCopy { get; set; }
 
-        [Required(ErrorMessage = "Local neighbourhoods copy is required.")]
-        [MinLength(20, ErrorMessage = "Local neighbourhoods copy must be at least 20 characters.")]
-        [MaxLength(2000, ErrorMessage = "Local neighbourhoods copy cannot exceed 2000 characters.")]
-        [Display(Name = "Local neighbourhoods copy")]
+        [Required(ErrorMessage = "Name a few local streets or landmarks.")]
+        [MinLength(20, ErrorMessage = "Write at least 20 characters about the local streets.")]
+        [MaxLength(2000, ErrorMessage = "Keep this under 2000 characters.")]
+        [Display(Name = "Local streets and landmarks")]
         public string LocalNeighbourhoodsCopy { get; set; }
 
         public List<ServiceAreaFaqInputModel> Faqs { get; set; } = new List<ServiceAreaFaqInputModel>();

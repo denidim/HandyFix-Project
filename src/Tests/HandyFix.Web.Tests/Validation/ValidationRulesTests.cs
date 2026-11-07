@@ -347,8 +347,6 @@
             return new ServiceAreaAdminInputModel
             {
                 Name = "Chessington",
-                Slug = "chessington",
-                Region = "Home Turf",
                 IntroCopy = "Chessington is where it all starts for us.",
                 LocalNeighbourhoodsCopy = "From Hook to Malden Rushett and Garrison Lane.",
                 PostcodeDistricts = districts,

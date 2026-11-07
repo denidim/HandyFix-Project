@@ -52,18 +52,23 @@
         {
             this.ApplyFaqValidationErrors(model);
 
-            if (await this.serviceAreasService.SlugExistsAsync(model.Slug))
-            {
-                this.ModelState.AddModelError(nameof(model.Slug), "That slug is already taken. Slugs must be unique, including by areas that were previously deleted.");
-            }
-
             if (!this.ModelState.IsValid)
             {
                 this.EnsureAtLeastOneFaqRow(model);
                 return this.View(model);
             }
 
-            Guid areaId = await this.serviceAreasService.CreateAsync(model);
+            // The service finds the town from its name, so a name taken or not found shows here,
+            // under the field it is about, and nothing is saved.
+            ServiceAreaSaveResult result = await this.serviceAreasService.CreateAsync(model);
+            if (!result.Succeeded)
+            {
+                this.ModelState.AddModelError(result.ErrorKey, result.ErrorMessage);
+                this.EnsureAtLeastOneFaqRow(model);
+                return this.View(model);
+            }
+
+            Guid areaId = result.AreaId.Value;
 
             try
             {
@@ -80,8 +85,7 @@
                 return this.RedirectToAction(nameof(this.Edit), new { id = areaId });
             }
 
-            this.TempData["SuccessMessage"] = $"Service area \"{model.Name}\" was created."
-                + await this.NotOnDiagramNoteAsync(areaId);
+            this.TempData["SuccessMessage"] = $"Service area \"{model.Name.Trim()}\" was created.";
             return this.RedirectToAction(nameof(this.Index));
         }
 
@@ -119,11 +123,6 @@
 
             this.ApplyFaqValidationErrors(model);
 
-            if (await this.serviceAreasService.SlugExistsAsync(model.Slug, model.Id))
-            {
-                this.ModelState.AddModelError(nameof(model.Slug), "That slug is already taken. Slugs must be unique, including by areas that were previously deleted.");
-            }
-
             if (!this.ModelState.IsValid)
             {
                 this.EnsureAtLeastOneFaqRow(model);
@@ -131,13 +130,19 @@
                 return this.View(model);
             }
 
-            ServiceAreaAdminInputModel existing = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value);
-            if (existing == null)
+            if (await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value) == null)
             {
                 return this.NotFound();
             }
 
-            await this.serviceAreasService.UpdateAsync(model.Id.Value, model);
+            ServiceAreaSaveResult result = await this.serviceAreasService.UpdateAsync(model.Id.Value, model);
+            if (!result.Succeeded)
+            {
+                this.ModelState.AddModelError(result.ErrorKey, result.ErrorMessage);
+                this.EnsureAtLeastOneFaqRow(model);
+                await this.ShowAgainAsync(model);
+                return this.View(model);
+            }
 
             try
             {
@@ -151,15 +156,8 @@
                 return this.View(model);
             }
 
-            // An uploaded picture keeps its address whatever the slug; one that came with the site
-            // is named after the old slug, so the area needs a picture uploaded.
-            var slugChanged = existing.Slug != model.Slug.Trim().ToLowerInvariant();
-            var pictureLost = slugChanged && existing.HeroImageUrl == null && (model.HeroImageFile == null || model.HeroImageFile.Length == 0);
-            var message = !slugChanged
-                ? $"Service area \"{model.Name}\" was updated."
-                : $"Service area \"{model.Name}\" was updated. The slug changed from \"{existing.Slug}\" to \"{model.Slug}\"."
-                    + (pictureLost ? " Upload a picture for it: the one that came with the site is named after the old slug." : string.Empty);
-            this.TempData["SuccessMessage"] = message + await this.NotOnDiagramNoteAsync(model.Id.Value);
+            this.TempData["SuccessMessage"] = $"Service area \"{model.Name.Trim()}\" was updated."
+                + await this.NotOnDiagramNoteAsync(model.Id.Value);
 
             return this.RedirectToAction(nameof(this.Index));
         }
@@ -175,7 +173,7 @@
 
             await this.serviceAreasService.DeleteAsync(id);
 
-            this.TempData["SuccessMessage"] = $"Service area \"{area.Name}\" was permanently deleted, freeing the slug \"{area.Slug}\" for reuse.";
+            this.TempData["SuccessMessage"] = $"Service area \"{area.Name}\" was permanently deleted.";
             return this.RedirectToAction(nameof(this.Index));
         }
 
@@ -199,19 +197,22 @@
             model.CurrentPictureUrl = PictureLookups.AreaPictureOf(this.environment, model.Slug, model.HeroImageUrl);
         }
 
-        // The form posts no picture address or diagram place, so the saved ones are read again
-        // before the form is shown again.
+        // The form posts no page address, drive time, picture address or diagram place, so the
+        // saved ones are read again before the form is shown again.
         private async Task ShowAgainAsync(ServiceAreaAdminInputModel model)
         {
             ServiceAreaAdminInputModel saved = await this.serviceAreasService.GetByIdAsync<ServiceAreaAdminInputModel>(model.Id.Value);
+            model.Slug = saved?.Slug;
+            model.DriveTimeMinutes = saved?.DriveTimeMinutes ?? 0;
             model.HeroImageUrl = saved?.HeroImageUrl;
             model.DiagramBearing = saved?.DiagramBearing;
             this.SetCurrentPicture(model);
             model.DiagramAreas = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>();
         }
 
-        // Saving places the area on the coverage diagram from its first postcode district; when
-        // that did not work, the admin is told in one sentence (PROJECT_STATE Section 3dm).
+        // Saving changed districts places the area again from the first one; when that did not
+        // work, the admin is told in one sentence (PROJECT_STATE Section 3dm). A new area is
+        // never saved without its place, so only the Edit page needs this.
         private async Task<string> NotOnDiagramNoteAsync(Guid areaId)
         {
             return await this.serviceAreasService.IsOnDiagramAsync(areaId)

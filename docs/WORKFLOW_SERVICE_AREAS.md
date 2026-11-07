@@ -12,8 +12,26 @@ Create or edit the area at **`/Administration/ServiceAreas`**.
 
 > The admin area in this project is routed as `Administration`, not `Admin`. `/Admin/...` will 404.
 
-Fields: Name, Slug, Region, Drive Time, Display Order, Postcode Districts, Area Picture, Featured
-flag, Intro Copy, Local Neighbourhoods Copy, and a dynamic list of FAQs.
+Fields: Town Name, Postcode Districts, Area Picture, About the Town, Local Streets and Landmarks,
+the Featured flag, and a dynamic list of FAQs. Everything else the site works out by itself (since
+`PROJECT_STATE.md` Section 3dn), so adding a town needs no technical terms:
+
+- **The page address** (`/Areas/{slug}`) is made from the name when the town is added: lower case,
+  `&` as "and", anything else but letters and digits as one hyphen ("Walton-on-Thames & Weybridge"
+  gives `walton-on-thames-and-weybridge`). It never changes after; the Edit page shows it as a link.
+  A name already taken is refused under the name box.
+- **The postcode districts**, when the box is left empty, come from the town's name: postcodes.io's
+  place search (`PostcodesIoLocator.FindTownDistrictAsync`) finds it; a place called exactly that
+  wins, else the nearest to Chessington, so "Molesey" gives `KT8` and "Ashford" the one in Surrey.
+  A name it cannot find saves nothing and says so under the name box. More districts can be typed
+  in at any time.
+- **The drive time** from Chessington is worked out once, when the town is added, by the public
+  OSRM route service (`OsrmDriveTimeCalculator`: free, no key, no traffic), from the middle of its
+  first district. With no answer in 5 seconds it is estimated from the straight-line distance
+  (about 5 minutes plus 1.1 a kilometre). It is never 0, which the pages show as the base itself.
+  The Edit page shows it; the 14 seeded areas keep the times set by hand.
+- **The order** of the areas everywhere is featured first, then nearest, then by name. There is no
+  order to set by hand.
 
 ### The area's picture
 
@@ -45,7 +63,7 @@ Upload it in the **Area Picture** box on the Create or Edit form (since `PROJECT
 
 A district is the first half of a postcode: the `KT9` of `KT9 2QN`. Each area lists the ones it
 covers, with commas between them (`KT5, KT6, KT7`); the list page shows them in its Postcodes
-column. Typing is tidied on save, and the field can be left empty.
+column. Typing is tidied on save, and a box left empty is filled from the town's name (above).
 
 The public booking page takes a booking **only for a postcode whose district some area lists**.
 Anyone else is shown an enquiry link and the phone number instead of the payment step
@@ -74,14 +92,11 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 
 ### Things worth knowing
 
-- **The slug is not auto-generated on save.** It is an explicit, editable field. On *create* the
-  form suggests one from the name via JS, but stops the moment you type in the slug box. On *edit*
-  it is never touched automatically. This is deliberate: the slug is load-bearing in two
+- **The slug is made once and never regenerated.** Renaming a town keeps its page address, unlike
+  a service, whose slug follows its name. This is deliberate: the slug is load-bearing in two
   independent places (the public URL and the file name of a picture that came with the site), so
-  regenerating it because someone fixed a typo in the name would break both at once.
-- **Changing a slug:** an uploaded picture keeps its address; a picture that came with the site is
-  named after the old slug, so such an area needs a picture uploaded. The admin form says so when
-  you do this. The diagram does not depend on the slug.
+  regenerating it because someone fixed a typo in the name would break both at once. Until
+  Section 3dn the slug was a box on the form and could be changed by hand.
 - **Deletion is a hard delete.** `ServiceAreasService.DeleteAsync` removes the row and its FAQs
   permanently instead of soft-deleting. This is not an oversight — see the warning below.
 - **FAQs are replaced wholesale on save**, not diffed. They carry no external references, so
@@ -98,7 +113,8 @@ If areas were soft-deleted, a deleted area's slug could never be used again: add
 that slug would fail at the database, on a row no admin page can show. Recovery would mean
 hand-deleting the row in SQL.
 
-For the same reason, the admin form validates slug uniqueness with `AllWithDeleted()`, not `All()`.
+For the same reason, `ServiceAreasService.CreateAsync` checks that the slug is free with
+`AllWithDeleted()`, not `All()`.
 
 ### The seeder fills an empty table, once
 
@@ -121,7 +137,7 @@ added back any seeded area it could not find, at every start.)
   the compass direction from the Chessington base (KT9) in whole degrees. It asks only for a new
   area, when the districts change, or when the area has no place yet, so saving again tries again
   and a place set by hand is kept.
-- **Distance** comes from `DriveTimeMinutes`, so editing the drive time moves the point. A town
+- **Distance** comes from `DriveTimeMinutes`, worked out when the town is added (above). A town
   further than 27 minutes is drawn just outside the outer ring rather than off the picture.
 - **Side of the name**: "Automatic" puts it right of the dot in the east half and left in the west
   half. The area's Edit page draws the diagram, says where the area is on it, and has a **Label on
@@ -129,22 +145,24 @@ added back any seeded area it could not find, at every start.)
   goes back to the list, so open the area again to see the result.
 - **Shorter name**: `DiagramLabel` is shown instead of the full name when set. Only three seeded
   areas use it (Kingston, Worcester Park, Walton & Weybridge); the admin form has no box for it.
-- **No district, or none found** (no answer within 5 seconds, or a district postcodes.io does not
-  know): the area is still saved and the admin is told in one sentence that it is not on the
-  diagram; its Edit page says the same. Check the districts and save again. Until then the town is
-  simply not plotted; it still appears in the phone list, the areas grid and everywhere else.
+- **A first district that cannot be found** (no answer within 5 seconds, or a district postcodes.io
+  does not know): a **new** town is not saved, and the sentence goes under the districts box, since
+  its drive time needs the place too. When the districts of an **existing** town are changed, it is
+  saved and the admin is told in one sentence that it is not on the diagram; its Edit page says the
+  same. Check the districts and save again. Until then the town is simply not plotted; it still
+  appears in the phone list, the areas grid and everywhere else.
 - **The 14 seeded places** were hand-set in the view until Section 3dm and were moved into the
   database unchanged by the `AddDiagramPlaceToServiceArea` migration (a new database gets them
   from `ServiceAreasSeeder`). They are within a few degrees of what postcodes.io gives.
-- **No test asks postcodes.io**: `SqliteWebApplicationFactory` puts a stand-in in its place, so an
-  area saved in a test is left off the diagram.
+- **No test asks postcodes.io or OSRM**: `SqliteWebApplicationFactory` puts stand-ins in their
+  place, so an area saved in a test is left off the diagram.
 
 ---
 
 ## Quick checklist
 
 - [ ] Area created at `/Administration/ServiceAreas` with real, specific copy and at least one FAQ
-- [ ] Its postcode districts filled in, first the one at its centre
+- [ ] Its postcode districts right: the one found from the name, or typed, first the one at its centre
 - [ ] Its picture uploaded in the Area Picture box
 - [ ] Its Edit page says it is on the diagram, and its name runs into no other (else pick a side)
 - [ ] `/Areas/{slug}` loads with its picture and FAQs

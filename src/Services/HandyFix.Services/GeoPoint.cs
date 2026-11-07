@@ -36,6 +36,23 @@
             return (degrees + 360.0) % 360.0;
         }
 
+        /// <summary>
+        /// The straight-line distance to another place in kilometres (the haversine formula).
+        /// </summary>
+        public double DistanceKmTo(GeoPoint other)
+        {
+            const double EarthRadiusKm = 6371.0;
+
+            double latitudeDifference = ToRadians(other.Latitude - this.Latitude);
+            double longitudeDifference = ToRadians(other.Longitude - this.Longitude);
+
+            double a = (Math.Sin(latitudeDifference / 2) * Math.Sin(latitudeDifference / 2))
+                + (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(other.Latitude))
+                    * Math.Sin(longitudeDifference / 2) * Math.Sin(longitudeDifference / 2));
+
+            return EarthRadiusKm * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        }
+
         private static double ToRadians(double degrees) => degrees * Math.PI / 180.0;
     }
 }

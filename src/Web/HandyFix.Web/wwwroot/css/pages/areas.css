@@ -304,12 +304,6 @@
   margin: 0;
 }
 
-.area-card-region {
-  font-size: var(--fs-label-sm);
-  color: var(--on-surface-variant);
-  margin: 0;
-}
-
 .area-card-meta {
   display: flex;
   align-items: center;

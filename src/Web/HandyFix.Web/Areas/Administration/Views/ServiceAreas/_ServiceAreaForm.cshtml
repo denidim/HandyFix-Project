@@ -2,7 +2,7 @@
 @{
     var isCreate = Model.IsNew;
     var action = isCreate ? "Create" : "Edit";
-    var submitLabel = isCreate ? "Create Service Area" : "Update Service Area";
+    var submitLabel = isCreate ? "Add Town" : "Save Changes";
 
     // What the area's page shows now, said in words (PROJECT_STATE.md Section 3dl).
     var pictureNow = !string.IsNullOrEmpty(Model.HeroImageUrl)
@@ -20,64 +20,44 @@
         + "No people's faces close up, no text, no logos, no signs, no number plates, no watermark.";
 }
 
-<div class="rounded-xl shadow-sm p-5 p-md-5 admin-card" id="service-area-form-root" data-autofill-slug="@(isCreate ? "true" : "false")">
+<div class="rounded-xl shadow-sm p-5 p-md-5 admin-card" id="service-area-form-root">
     <form asp-area="Administration" asp-controller="ServiceAreas" asp-action="@action" method="post" enctype="multipart/form-data" class="d-flex flex-column gap-5">
         <input type="hidden" asp-for="Id" />
 
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-        <div class="row gy-4">
-            <div class="col-md-6 form-group">
-                <label asp-for="Name" class="form-label font-label-sm text-on-surface-variant mb-2">Area Name</label>
-                <input asp-for="Name" id="area-name" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
-                <span asp-validation-for="Name" class="text-danger small"></span>
-            </div>
-            <div class="col-md-6 form-group">
-                <label asp-for="Slug" class="form-label font-label-sm text-on-surface-variant mb-2">URL Slug</label>
-                <input asp-for="Slug" id="area-slug" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" required />
-                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">
-                    Used for <code>/Areas/{slug}</code> and the coverage-diagram key.
-                    @if (!isCreate)
-                    {
-                        <strong>Changing this breaks the map entry until it is renamed, and loses a picture that came with the site (an uploaded one stays).</strong>
-                    }
-                </span>
-                <span asp-validation-for="Slug" class="text-danger small"></span>
-            </div>
+        <div class="form-group">
+            <label asp-for="Name" class="form-label font-label-sm text-on-surface-variant mb-2">Town Name</label>
+            <input asp-for="Name" id="area-name" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" placeholder="Molesey" required />
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">
+                @(isCreate
+                    ? "The town as people call it. The town's page address is made from it and stays the same after, so check the spelling."
+                    : "The town as people call it. Changing it does not change the page address.")
+            </span>
+            <span asp-validation-for="Name" class="text-danger small"></span>
         </div>
 
-        <div class="row gy-4">
-            <div class="col-md-4 form-group">
-                <label asp-for="Region" class="form-label font-label-sm text-on-surface-variant mb-2">Region</label>
-                <input asp-for="Region" class="form-control py-3 admin-form-control form-pad-standard" list="region-suggestions" maxlength="100" required />
-                <datalist id="region-suggestions">
-                    <option value="Home Turf"></option>
-                    <option value="Surrey Borders"></option>
-                </datalist>
-                <span asp-validation-for="Region" class="text-danger small"></span>
-            </div>
-            <div class="col-md-4 form-group">
-                <label asp-for="DriveTimeMinutes" class="form-label font-label-sm text-on-surface-variant mb-2">Drive Time (Minutes)</label>
-                <div class="position-relative">
-                    <input asp-for="DriveTimeMinutes" class="form-control py-3 admin-form-control form-control-duration-affix" type="number" min="0" max="180" step="1" required />
-                    <span class="position-absolute font-label-sm text-on-surface-variant admin-form-affix admin-form-affix-right">min</span>
+        @* Worked out by the site, so only shown, and only once the area exists (PROJECT_STATE.md Section 3dn). *@
+        @if (!isCreate)
+        {
+            <div class="row gy-4">
+                <div class="col-md-6">
+                    <span class="form-label font-label-sm text-on-surface-variant mb-2 d-block">Page Address</span>
+                    <a asp-area="" asp-route="AreaDetails" asp-route-areaSlug="@Model.Slug" target="_blank" rel="noopener" class="font-body-md" data-area-address>/Areas/@Model.Slug</a>
                 </div>
-                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Drives the coverage diagram's ring placement and the "nearby areas" ordering.</span>
-                <span asp-validation-for="DriveTimeMinutes" class="text-danger small"></span>
+                <div class="col-md-6">
+                    <span class="form-label font-label-sm text-on-surface-variant mb-2 d-block">Drive from Chessington</span>
+                    <span class="font-body-md text-on-surface" data-area-drive-time>@(Model.DriveTimeMinutes == 0 ? "Our base" : $"About {Model.DriveTimeMinutes} minutes")</span>
+                    <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Worked out when the town was added.</span>
+                </div>
             </div>
-            <div class="col-md-4 form-group">
-                <label asp-for="DisplayOrder" class="form-label font-label-sm text-on-surface-variant mb-2">Display Order</label>
-                <input asp-for="DisplayOrder" class="form-control py-3 admin-form-control form-pad-standard" type="number" min="0" max="999" step="1" required />
-                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Lower numbers appear first in the areas grid.</span>
-                <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
-            </div>
-        </div>
+        }
 
         <div class="form-group">
             <label asp-for="PostcodeDistricts" class="form-label font-label-sm text-on-surface-variant mb-2">Postcode Districts</label>
-            <input asp-for="PostcodeDistricts" class="form-control py-3 admin-form-control form-pad-standard" maxlength="200" placeholder="KT5, KT6, KT7" />
+            <input asp-for="PostcodeDistricts" class="form-control py-3 admin-form-control form-pad-standard" maxlength="200" placeholder="KT8" />
             <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">
-                The first half of the postcodes this area covers, with commas between them. The booking page only takes a booking for a postcode in a district listed on some area; anyone else is asked to send an enquiry or call. Leave empty if this area adds none.
+                Leave it empty and the site fills it in from the town's name when you save. A district is the first half of a postcode; add more with commas between them, for example KT8, KT7. The booking page takes a booking only for a postcode in a district listed on some town; anyone else is asked to send an enquiry or call.
             </span>
             <span asp-validation-for="PostcodeDistricts" class="text-danger small"></span>
         </div>
@@ -132,22 +112,22 @@
         </div>
 
         <div class="form-group">
-            <label asp-for="IntroCopy" class="form-label font-label-sm text-on-surface-variant mb-2">Intro Copy</label>
+            <label asp-for="IntroCopy" class="form-label font-label-sm text-on-surface-variant mb-2">About the Town</label>
             <textarea asp-for="IntroCopy" class="form-control admin-form-control form-pad-standard resize-none" rows="3" maxlength="2000" required></textarea>
-            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Opening paragraph on the area page. Write something specific and true about working in this town.</span>
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">The first paragraph on the town's page. Write something specific and true about working in this town.</span>
             <span asp-validation-for="IntroCopy" class="text-danger small"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="LocalNeighbourhoodsCopy" class="form-label font-label-sm text-on-surface-variant mb-2">Local Neighbourhoods Copy</label>
+            <label asp-for="LocalNeighbourhoodsCopy" class="form-label font-label-sm text-on-surface-variant mb-2">Local Streets and Landmarks</label>
             <textarea asp-for="LocalNeighbourhoodsCopy" class="form-control admin-form-control form-pad-standard resize-none" rows="3" maxlength="2000" required></textarea>
-            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Name real streets, estates or landmarks. This is what makes the page rank locally.</span>
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Name real streets, estates or landmarks in the town. This helps people nearby find the page on Google.</span>
             <span asp-validation-for="LocalNeighbourhoodsCopy" class="text-danger small"></span>
         </div>
 
         <div class="form-group form-check d-flex align-items-center gap-2 m-0 ps-0">
             <input asp-for="IsFeatured" class="form-check-input checkbox-lg" type="checkbox" />
-            <label asp-for="IsFeatured" class="form-check-label font-label-sm text-on-surface font-bold label-clickable">Featured area (shown in the "Featured Areas" section and highlighted on the coverage diagram)</label>
+            <label asp-for="IsFeatured" class="form-check-label font-label-sm text-on-surface font-bold label-clickable">Featured town (shown in the "Featured Areas" section of the Areas page and highlighted on the coverage diagram)</label>
         </div>
 
         <!-- FAQ builder -->
@@ -155,7 +135,7 @@
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <div>
                     <label class="form-label font-label-sm text-on-surface-variant mb-0">Frequently Asked Questions</label>
-                    <span class="font-label-sm text-on-surface-variant d-block fs-11">Rendered on the area page and emitted as FAQPage JSON-LD. Leave a row blank to discard it.</span>
+                    <span class="font-label-sm text-on-surface-variant d-block fs-11">Shown on the town's page, and Google can show them in its results too. A row left empty is dropped.</span>
                 </div>
                 <button type="button" id="add-faq" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
                     <span class="material-symbols-outlined fs-18">add</span>

@@ -18,11 +18,7 @@
 
         public string Name { get; set; }
 
-        public string Region { get; set; }
-
         public int DriveTimeMinutes { get; set; }
-
-        public int DisplayOrder { get; set; }
 
         public bool IsFeatured { get; set; }
 
