@@ -4,6 +4,7 @@
     using System.Threading.Tasks;
 
     using HandyFix.Data.Models;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
 
     // The emails about a booking and its deposit: what each says, who it is from and who it goes
     // to. When one is sent, and what is written on the job if it fails, is decided by the
@@ -22,5 +23,9 @@
 
         // To the company, when a deposit is paid for a booking that was not waiting for one.
         Task<bool> DepositForBookingNotHeldAsync(Booking booking, Payment payment);
+
+        // To the customer, when an admin sends the job's invoice: the PDF attached, and how to
+        // pay what is left when anything is.
+        Task<bool> InvoiceAsync(string customerFirstName, InvoiceViewModel invoice, byte[] pdf, string paymentDetails);
     }
 }

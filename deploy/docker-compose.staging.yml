@@ -55,6 +55,10 @@ services:
       # from staging would open the live admin panel. STAGING_HOSTNAME is
       # already in .env, for Caddy below.
       Site__PublicUrl: https://${STAGING_HOSTNAME}
+      # How a customer pays what is left on an invoice: the company's bank
+      # details, kept in .env and out of the public code. Empty, the invoice
+      # gives the phone number instead.
+      Invoice__PaymentDetails: ${INVOICE_PAYMENT_DETAILS:-}
       # Cloudflare Turnstile, the "are you a person" check on the public
       # forms. Outside Development the forms fail without both keys, on
       # purpose, so set them in .env before deploying a build that has it.

@@ -10,6 +10,11 @@
 
     using HandyFix.Data.Common.Models;
 
+    using Microsoft.EntityFrameworkCore;
+
+    // Each invoice number is used once. A job with no invoice has none, and SQL Server's unique
+    // index leaves those out by itself.
+    [Index(nameof(InvoiceNumber), IsUnique = true)]
     public class Booking : BaseDeletableModel<Guid>
     {
         public Booking()
@@ -96,6 +101,23 @@
         [Column(TypeName = "decimal(18,2)")]
         [Range(0.01, 100000, ErrorMessage = "The {0} must be between 0.01 and 100000.")]
         public decimal? DepositAmount { get; set; }
+
+        /// <summary>
+        /// The job's invoice number, given the first time its invoice is made and never changed
+        /// after. Empty until then. One job has one invoice.
+        /// </summary>
+        public int? InvoiceNumber { get; set; }
+
+        /// <summary>
+        /// When the invoice was first made: the invoice's date, from which the days to pay count.
+        /// </summary>
+        public DateTime? InvoicedOn { get; set; }
+
+        /// <summary>
+        /// What was done, in the admin's words, printed on the invoice under the services.
+        /// </summary>
+        [MaxLength(2000, ErrorMessage = "The {0} field cannot exceed 2000 characters.")]
+        public string InvoiceWorkDone { get; set; }
 
         public virtual AvailabilitySlot AvailabilitySlot { get; set; }
 

@@ -61,6 +61,13 @@
             return statusName == BookingStatusNames.Completed;
         }
 
+        // An invoice is for work that is done: it carries the final price, which a job only has
+        // once it is marked done.
+        public static bool CanInvoice(string statusName)
+        {
+            return statusName == BookingStatusNames.Completed;
+        }
+
         // The tick that says a deposit went back. Only a cancelled job's deposit is sent back, and
         // there has to have been one.
         public static bool CanMarkDepositRefunded(string statusName, bool depositPaidOrRefunded)
