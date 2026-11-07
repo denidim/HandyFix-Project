@@ -23,6 +23,12 @@
         Task UpdateAsync(Guid id, ServiceAreaAdminInputModel model);
 
         /// <summary>
+        /// Whether the area has a place on the coverage diagram. Saving an area places it from its
+        /// first postcode district; false when it has none, or the place could not be found.
+        /// </summary>
+        Task<bool> IsOnDiagramAsync(Guid id);
+
+        /// <summary>
         /// The picture the admin uploads for an area, new or existing. The new picture goes up,
         /// the area points at it, and only then does the previous upload leave the bucket, so a
         /// failure at any step leaves the area with a picture. No file does nothing.

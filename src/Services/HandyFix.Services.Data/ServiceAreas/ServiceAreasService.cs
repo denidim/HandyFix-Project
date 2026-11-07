@@ -17,18 +17,25 @@
 
     public class ServiceAreasService : IServiceAreasService
     {
+        // The centre of the coverage diagram, the Chessington base: the middle of the KT9 district
+        // as postcodes.io gives it. Fixed here rather than looked up, since the base does not move.
+        private static readonly GeoPoint DiagramCentre = new GeoPoint(51.3638, -0.3033);
+
         private readonly IDeletableEntityRepository<ServiceArea> areasRepository;
         private readonly IDeletableEntityRepository<ServiceAreaFaq> faqsRepository;
         private readonly IImageStorageService imageStorageService;
+        private readonly IPostcodeLocator postcodeLocator;
 
         public ServiceAreasService(
             IDeletableEntityRepository<ServiceArea> areasRepository,
             IDeletableEntityRepository<ServiceAreaFaq> faqsRepository,
-            IImageStorageService imageStorageService)
+            IImageStorageService imageStorageService,
+            IPostcodeLocator postcodeLocator)
         {
             this.areasRepository = areasRepository;
             this.faqsRepository = faqsRepository;
             this.imageStorageService = imageStorageService;
+            this.postcodeLocator = postcodeLocator;
         }
 
         public async Task<IEnumerable<T>> GetAllAsync<T>(bool featuredFirst = true)
@@ -97,6 +104,8 @@
                 PostcodeDistricts = NormalizeDistricts(model.PostcodeDistricts),
             };
 
+            await this.PlaceOnDiagramAsync(area);
+
             await this.areasRepository.AddAsync(area);
             await this.areasRepository.SaveChangesAsync();
 
@@ -121,11 +130,25 @@
             area.IsFeatured = model.IsFeatured;
             area.IntroCopy = model.IntroCopy;
             area.LocalNeighbourhoodsCopy = model.LocalNeighbourhoodsCopy;
-            area.PostcodeDistricts = NormalizeDistricts(model.PostcodeDistricts);
+            string districts = NormalizeDistricts(model.PostcodeDistricts);
+            bool districtsChanged = districts != area.PostcodeDistricts;
+            area.PostcodeDistricts = districts;
+
+            // Only when the districts change, or the area is not on the diagram yet (so saving
+            // again tries again): a place set by hand stays as it is.
+            if (districtsChanged || area.DiagramBearing == null)
+            {
+                await this.PlaceOnDiagramAsync(area);
+            }
 
             await this.areasRepository.SaveChangesAsync();
 
             await this.ReplaceFaqsAsync(id, model.Faqs);
+        }
+
+        public Task<bool> IsOnDiagramAsync(Guid id)
+        {
+            return this.areasRepository.AllAsNoTracking().AnyAsync(x => x.Id == id && x.DiagramBearing != null);
         }
 
         public async Task SetHeroImageAsync(Guid areaId, IFormFile imageFile)
@@ -284,6 +307,20 @@
         {
             IReadOnlyList<string> parsed = UkPostcode.ParseDistricts(districts);
             return parsed.Count == 0 ? null : string.Join(", ", parsed);
+        }
+
+        /// <summary>
+        /// Sets the area's direction on the coverage diagram from where its first postcode
+        /// district is (PROJECT_STATE.md Section 3dm). No district, or none found: the direction
+        /// is cleared and the area is left off the diagram, never a guessed place.
+        /// </summary>
+        private async Task PlaceOnDiagramAsync(ServiceArea area)
+        {
+            string firstDistrict = UkPostcode.ParseDistricts(area.PostcodeDistricts).FirstOrDefault();
+            GeoPoint? place = firstDistrict == null ? null : await this.postcodeLocator.LocateDistrictAsync(firstDistrict);
+
+            // Whole degrees: the diagram cannot show finer, and the admin page reads better.
+            area.DiagramBearing = place == null ? null : Math.Round(DiagramCentre.BearingTo(place.Value)) % 360;
         }
 
         /// <summary>
