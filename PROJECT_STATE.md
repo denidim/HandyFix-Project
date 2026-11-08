@@ -2320,7 +2320,7 @@ The business said, on 2026-10-08, that the website has to be the one place where
 - **A technician is always picked by hand**, and on a website booking only once the deposit is paid.
 - **Cancelling** takes a reason and has a "deposit refunded" tick. The 24-hour rule and the refund itself stay manual.
 - **Finishing**: the admin types the final price, and how the rest was paid (card, cash, bank transfer). Every payment is a line on the job.
-- **Notes** only the admin sees; a job can be **moved**; an enquiry gets **"Make this a job"**; a **history line** per change; **no job is ever thrown away**. Invoices come later, from the job's own data.
+- **Notes** only the admin sees; a job can be **moved**; an enquiry gets **"Make this a job"**; a **history line** per change; **no job is ever thrown away**. Invoices come later, from the job's own data (built in Section 3dp).
 
 ### What was wrong
 
@@ -2395,7 +2395,7 @@ Thirteen faults, all found by reading the code or by driving the site, all fixed
 - **The made-up content on the admin dashboard**: L4 item 17.
 - **Stripe's faults**: L4 item 4. Payments on staging are still the pretend ones.
 - **A sign for the other emails that fail**: L4 item 15. The technician email's failure is shown.
-- **Invoices**: later, from the job's own data, as agreed.
+- **Invoices**: later, from the job's own data, as agreed. Built in Section 3dp.
 - **One line of the calendar page still reads "Availability Calendar"** and the menu "Availability Slot". They name the slots, not the jobs, and were left.
 
 ### Verified
@@ -3574,6 +3574,29 @@ The site promised boiler work with no boiler service to book: the plumbing card 
 - **Locally, against SQL Server**: the migration added the service at start-up. In the browser at 1280px and 390px, the three logos load in proportion (25 by 28, 43 by 48, and 46 by 52 on the card, 32 by 36 on a phone), with no sideways scroll, the card's logo clear of its buttons and meta items, and the picture and its small copy shown. The tap repairs page keeps 24/7 and shows no logo. Found and fixed in this check: the hero badge's `flex` class has no effect in the site's stylesheets, so the logo, a block picture there, sat above its text; it is an inline picture now.
 - **Staging, after the push** (pipeline green): the boiler page answers, so the migration added the service to staging's existing catalogue. At 1280px and 390px it has both logos loaded, the five paragraphs, "1 Hour" and "From £90", no 24/7 and no sideways scroll; the plumbing list has one card with the logo and the new picture's small copy; the tap repairs page keeps 24/7, no logo, and reads "1 Hour". The service is in the booking form's list and in the sitemap. The Pricing page does not show it, as designed: it lists a fixed set of typical jobs, not the whole catalogue.
 
+## 3dp. Invoices: One per Job, Downloaded or Emailed as a PDF, and a Month's List for the Accountant (2026-11-07)
+
+The site took the deposit and kept every later payment on the job (Section 3ce), but gave the customer nothing to file: the owner wrote an invoice by hand, as a PDF, when one was asked for. The developer asked which invoices the business needs. The company is not registered for VAT, so no law asks for an invoice for the deposit and another for the rest: one invoice after the work, with the deposit shown as paid, is enough, and the deposit's email and Stripe's receipt already confirm the deposit. The accountant works from the company's bank account and issues no invoices of her own, so the site makes them, with nothing to clash with.
+
+### What changed
+
+- **One invoice per job, read off the job.** A job keeps three new things: its invoice number, the day the invoice was first made and a "work done" text (migration `AddInvoiceToBooking`). Everything else (the final price, the deposit, each payment written on the job, what is left) is read from the job each time, so a payment written later shows on the next download. Only a done job has an invoice (`BookingRules.CanInvoice`), because only a done job has a final price.
+- **The number** is `PHS-0001`, `PHS-0002` and on, given the first time the invoice is made and never changed after (`InvoiceTerms`). The prefix keeps the site's numbers apart from the owner's handwritten ones. A unique index refuses a number given twice; two invoices made in the same moment would take the next one.
+- **What is left is due within 3 days** of the invoice's date, the developer's choice for a customer who does not pay on the day. Paid in full, the invoice says PAID instead.
+- **The PDF** (`InvoicePdf`, QuestPDF 2026.9.1 under its free Community licence for a business under $1M a year): the emblem, "INVOICE" and the number; the invoice date, job reference, date of work and the day to pay; the customer and the company; the services with the "work done" text; the deposit and each payment taken off; the balance or "Paid in full"; how to pay. Every page names the trading name, ZAP80 LTD, its company number and registered office, as the law asks of a limited company, and says no VAT is charged. The fonts are the site's own Outfit, carried inside the assembly with its licence (`Invoices/Fonts/OFL.txt`): the servers' containers have no fonts at all. The emblem is read from the site's tab icon at build time, so there is one copy of it.
+- **How to pay later** comes from `Invoice:PaymentDetails`, set in the servers' `.env` (`INVOICE_PAYMENT_DETAILS`, passed by both compose files) and never written in this public code. Until it is set the invoice gives the phone number.
+- **The job's page**: a done job has an Invoice box with the "work done" text, "Download PDF" and "Email to Customer". A job with no email address offers only the download, and says so. The email carries the PDF and can be sent again after a later payment, when it reads paid in full. Making the invoice and each send leave a line in the job's history.
+- **"Download PDF" comes back to the page**, which then fetches the PDF from the Invoices page's address (`data-auto-download` in `site.js`). The first version answered the form with the file itself; in the browser check, "Email to Customer" then did nothing, because a form whose answer is a download is left as if it were still being sent. Fetching the file by a plain link leaves the form working.
+- **The Invoices page** (`/Administration/Invoices`, "Invoices" in the menu under Jobs): the invoices made in a month, with what each came to, what was paid and what is left, marked Paid, Due or Overdue, and the month's sums. Each row downloads its PDF. The month downloads as a CSV for Excel and as a PDF table. Both say how each pound came in (deposit, card, cash, bank transfer), because cash never reaches the bank account and Stripe pays the deposits in as one sum. A CSV field that starts with "=" gets an apostrophe in front, so Excel cannot run a name typed on the website as a formula.
+- Four icons added to the icon font (`tools/fonts/icon-names.txt`). The admin sidebar's logo now opens the public home page, the developer's change; their first try named a controller that exists only in the admin area, which left the link empty.
+
+### Verified
+
+- **Build** 0 warnings, 0 errors; **tests** 1148/1148 (431 + 717), from 1125: invoice numbers in order and kept on a second make; the deposit and later payments taken off; a job not done refused; the email with its PDF; a job with no email address; a failed email written on the job; the month's list; the CSV's columns, quoting and formula guard; overdue after the third day; each answer of the job page's invoice form; the Invoices page's month from its address; and one full-stack run from a paid booking to the emailed PDF, the Invoices page, each PDF and the month's CSV. No package has a known vulnerability.
+- **The PDF, drawn as pictures** before any page was built (`docs/private/previews/76-invoice-*`): unpaid, paid in full and a month's list. The list's job column was widened after it.
+- **Locally, against SQL Server, in the browser**: a website booking paid through the pretend payment and marked done at £135; no Invoice box before that. "Download PDF" gave `Invoice PHS-0002.pdf`; "Email to Customer" straight after it answered "It asks for £85.00 by 10 November"; the CSV and the month's PDF downloaded. At 390px neither page scrolls sideways (`76-local-*`).
+- **Staging, after the push** (pipeline green): the Invoices page answers, with its menu link and icon; the month's PDF comes back as a real PDF, drawn on the Linux server with the fonts from the assembly, and the CSV with its header (`76-staging-*`).
+
 ---
 
 ## 4. Current Standing & Remaining Roadmap
@@ -3596,6 +3619,16 @@ The site promised boiler work with no boiler service to book: the plumbing card 
 1. **Done 2026-11-07 (Section 3dl).** **A — The area's picture uploaded on its form**, to the photo bucket, with its phone strip, and a text for the Gemini app beside it. With it, the coverage diagram's names were made much smaller.
 2. **Done 2026-11-07 (Section 3dm).** **B — The coverage diagram fills itself.** The bearing from Chessington worked out on save from the area's first postcode district through postcodes.io (free, no key); the label's side by a simple rule (east half right, west half left), with a "Label: left / right / above / below" choice on the Edit page, which shows the diagram, to fix a collision; the 14 hand-set entries move from `_AreaCoverageMap.cshtml` into the database unchanged. An area with no district, or no answer from postcodes.io, still saves and says plainly that it is not on the diagram. The "two steps" notice is gone: adding a town is one step.
 3. **Done 2026-11-07 (Section 3dn).** **C — A plain form for the owner**, agreed after the developer tried part B as the owner would: the page address from the name, the districts from the name when left empty, the drive time worked out, the order by distance, and Region removed. The developer then added Molesey on staging through the new form.
+
+### Invoices — agreed 2026-11-07
+
+> One invoice per job after the work, made from the job's own data, with the deposit taken off (Section 3dp). In order:
+
+1. **Built 2026-11-07 (Section 3dp), on staging, not yet live.** The invoice PDF and its email, the Invoice box on a done job's page, and the Invoices page with each month's CSV and PDF.
+2. **The developer's test bookings on staging**: a booking paid, marked done, the invoice downloaded and emailed, the rest written on the job and the invoice sent again as paid, the month's CSV and PDF.
+3. **One sentence in the Terms** (Section 3, "Booking Deposit & Payments") on when the rest is paid, in the owner's words.
+4. **The pull request** that takes it live, then the same check on the live site.
+5. **The company's bank details for paying later**, in `INVOICE_PAYMENT_DETAILS` in both servers' `.env`, when the owner gives them. Until then the invoice gives the phone number.
 
 ### Launch Sprints — the working list from 2026-09-21 until launch
 
