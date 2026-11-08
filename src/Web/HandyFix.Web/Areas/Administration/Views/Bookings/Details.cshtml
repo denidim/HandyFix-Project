@@ -287,13 +287,13 @@
                                 <a asp-area="Administration" asp-controller="Technicians" asp-action="Index">Technicians</a>.
                             </span>
                         }
-                        @if (Model.CameFromWebsite)
+                        @if (!string.IsNullOrWhiteSpace(Model.Email))
                         {
                             <span class="text-on-surface-variant mt-2 d-block fs-13 lh-snug">Saving a new technician emails the customer that technician's name and phone number.</span>
                         }
                         else
                         {
-                            <span class="text-on-surface-variant mt-2 d-block fs-13 lh-snug">No email goes out for a job that was written in. Tell the customer yourself who is coming.</span>
+                            <span class="text-on-surface-variant mt-2 d-block fs-13 lh-snug">This job has no email address. Tell the customer yourself who is coming.</span>
                         }
                     </div>
                     <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">

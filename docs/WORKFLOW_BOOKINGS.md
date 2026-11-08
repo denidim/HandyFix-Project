@@ -15,7 +15,7 @@ then goes the same way as any other:
   the customer picks an hour                  phone, WhatsApp, an enquiry, an agency
   and pays a £50 deposit                      a first name and a phone number are enough
   the hour comes off sale by itself           the admin blocks the hour by hand
-  the site emails the customer                the site emails nobody
+  the site emails the customer                emailed once a technician is picked
   the time is promised                        the time is not promised
             │                                             │
             └──────────────────────┬──────────────────────┘
@@ -312,7 +312,11 @@ What makes it different from a website booking, each on purpose:
 - **It takes no slot.** The hour stays on sale until the admin blocks it in the calendar. An hour
   is a start time; how long the job really takes, and so which further hours to block, is the
   admin's call.
-- **The site emails nobody**, now or later. The admin is already speaking to the customer.
+- **Nobody is emailed until a technician is picked.** Writing the job in sends nothing: the day,
+  the hour and what the job is are often still being agreed. From the technician on it goes the
+  way a website booking does: the customer is emailed the technician's name and number, and later
+  the invoice. A job with no email address gets neither, and the admin tells the customer
+  (`PROJECT_STATE.md` Section 3dt).
 - **The time is not promised.** Only a deposit promises the time, and a deposit is only paid on
   the website. A customer who wants a promised time is guided through the booking page.
 - **A service is optional.** Picked, its price becomes the job's estimate; left out, the job has
@@ -337,16 +341,17 @@ A box typed wrongly is put right afterwards with **Edit the Details** on the job
 **Update Assignment**. The job's own details then show the technician and the number to reach
 them on.
 
-**On a website booking, saving a new technician emails the customer**: "Your technician for your
-Plumbing Handyman Surrey booking", with the name, a tappable `tel:` link, the day and time, the
-service and the address. The name is the first name alone when the roster entry has no last name
+**Saving a new technician emails the customer**, on a website booking and on a written-in job
+alike: "Your technician for your Plumbing Handyman Surrey booking", with the name, a tappable
+`tel:` link, the day and time, the service and the address (each of the last two left out when
+the job has none). The name is the first name alone when the roster entry has no last name
 (`WORKFLOW_TECHNICIANS.md`). The page then says what happened, in a line at the top:
 
 | What the admin did | What the page answers | Email to the customer |
 | --- | --- | --- |
 | Picked a technician | *"{name} is now the technician for this job. The customer has been emailed the name and phone number."* | sent |
 | Picked one, and the email failed | *"{name} is now the technician for this job, but the email to the customer could not be sent. Please give them the name and phone number yourself."* | not sent; the technician is saved |
-| Picked one on a written-in job | *"{name} is now the technician for this job. No email goes out for a job that was written in: please tell the customer yourself."* | none, ever |
+| Picked one on a job with no email address (only a written-in job can have none) | *"{name} is now the technician for this job. This job has no email address: please tell the customer yourself who is coming."* | none |
 | Picked a different technician | the first line again, with the new name | sent again, with the new name |
 | Saved the form as it stood | *"Nothing was changed: {name} was already the technician. No email was sent."* | none |
 | Chose **`-- Unassigned --`** | *"This job has no technician now. The customer has not been emailed about it."* | none |
@@ -541,7 +546,7 @@ job made before this has no lines for what happened before.
 | The edit form's service list shows "The service it has now (no longer offered)" | The job was booked with a service that was deleted or switched off since. Leave it picked to keep it; pick another to change it. |
 | A cancelled job reads "No date kept" | It was cancelled or abandoned before jobs kept their own date. Nothing can bring it back. |
 | A job says "Part paid" | Money has come in and more is owed, or the final price has not been typed in yet. "Paid in full" needs a final price. |
-| The customer of a written-in job got no email | None is ever sent for a written-in job, whatever is on it. |
+| The customer of a written-in job got no email | None is sent when the job is written in. The first goes when a technician is picked, and only to a job with an email address: add it with Edit the Details, then set the technician to "Unassigned", save, and pick them again. |
 | A moved website booking's new hour is still on sale | The calendar had no free slot at that time (none exists there, or it was blocked or taken). The page said so when it was moved. Block it by hand if it should be. |
 | The customer says no email named their technician | None is sent until a technician is picked on the booking's page. If one was picked and the page answered "the email to the customer could not be sent", tell the customer yourself and see the next row. |
 | A customer says no email arrived | The job's history says if it could not be sent, and so does the dashboard for a week. The booking itself is unaffected. For why, look in the application log for `Email not sent`; the usual causes are a sender address Brevo has not verified, or a wrong API key. |

@@ -263,7 +263,7 @@
         [Theory]
         [InlineData(TechnicianAssignmentOutcome.AssignedAndCustomerEmailed, "Zapryan", "SuccessMessage", "Zapryan is now the technician for this job. The customer has been emailed")]
         [InlineData(TechnicianAssignmentOutcome.AssignedButEmailNotSent, "Zapryan", "ErrorMessage", "the email to the customer could not be sent. Please give them the name and phone number yourself")]
-        [InlineData(TechnicianAssignmentOutcome.AssignedNoEmailForWrittenInJob, "Zapryan", "SuccessMessage", "Zapryan is now the technician for this job. No email goes out for a job that was written in: please tell the customer yourself")]
+        [InlineData(TechnicianAssignmentOutcome.AssignedNoEmailAddress, "Zapryan", "SuccessMessage", "Zapryan is now the technician for this job. This job has no email address: please tell the customer yourself who is coming")]
         [InlineData(TechnicianAssignmentOutcome.Cleared, null, "SuccessMessage", "This job has no technician now. The customer has not been emailed")]
         [InlineData(TechnicianAssignmentOutcome.Unchanged, "Zapryan", "SuccessMessage", "Nothing was changed: Zapryan was already the technician. No email was sent")]
         [InlineData(TechnicianAssignmentOutcome.Unchanged, null, "SuccessMessage", "Nothing was changed: this job had no technician")]
@@ -648,10 +648,11 @@
             Assert.Equal("Details", redirect.ActionName);
             Assert.Equal(newId, redirect.RouteValues["id"]);
 
-            // The two things the admin has to know: the hour is still on sale, and nobody was emailed.
+            // The two things the admin has to know: the hour is still on sale, and nobody was
+            // emailed yet, which happens when a technician is picked.
             var message = Assert.IsType<string>(controller.TempData["SuccessMessage"]);
             Assert.Contains("Its hour is still on sale on the website", message);
-            Assert.Contains("No email was sent to the customer", message);
+            Assert.Contains("No email was sent to the customer yet: they are emailed when a technician is picked.", message);
         }
 
         // The website is not on the form's list. A form sent without the page could still name

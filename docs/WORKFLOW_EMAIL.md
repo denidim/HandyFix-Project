@@ -37,7 +37,7 @@ Email Routing, which forwards each address to the company's one shared mailbox
 | Deposit paid | the payment succeeds | the customer | `bookings@` | Your Plumbing Handyman Surrey Booking is Confirmed! |
 | Deposit paid, notice | the payment succeeds | the company | **the customer** | New Confirmed Booking - {name} |
 | Deposit for a booking not held, notice | a deposit arrives for a booking that was dropped or cancelled, or was already paid | the company | **the customer** | Action needed: deposit paid for a booking that is not held - {name} |
-| Technician picked | an admin picks a technician on a paid booking, or changes it to another | the customer | `bookings@` | Your technician for your Plumbing Handyman Surrey booking |
+| Technician picked | an admin picks a technician on a paid booking, or on a written-in job with an email address, or changes it to another | the customer | `bookings@` | Your technician for your Plumbing Handyman Surrey booking |
 | Enquiry or application, notice | an enquiry or a job application is saved | the company | **the sender** | New enquiry - {name}, or New job application - {name} |
 | Acknowledgement | an enquiry or a job application is saved | the sender | `bookings@` | We have received your enquiry, or application |
 | Password reset link | "Forgot password?" is sent with the admin's login email | the admin's login email | `bookings@` | Reset your Plumbing Handyman Surrey admin password |
@@ -48,8 +48,9 @@ so pressing Reply in the company inbox answers the customer and not the site.
 **A customer who books on the website gets two emails and no more**: one when the deposit is
 paid, one when a technician is picked. Nothing goes out before the deposit, because a booking
 that is never paid is dropped fifteen minutes later. Nothing goes out when a job is cancelled or
-moved, and nothing at all for a job the admin wrote in by hand, whatever email address is on it:
-in each of those the admin is already speaking to the customer (`PROJECT_STATE.md` Section 3ce).
+moved: the admin is already speaking to the customer (`PROJECT_STATE.md` Section 3ce). A job the
+admin wrote in by hand sends nothing when it is written in, and the technician email once one is
+picked, if the job has an email address (`PROJECT_STATE.md` Section 3dt).
 
 **Besides the booking's details, the two say** (`PROJECT_STATE.md` Section 3dd):
 

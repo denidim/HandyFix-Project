@@ -52,6 +52,8 @@
                 ? "Direct Contact: " + EmailLayout.Link("tel:" + EmailText.PhoneLink(technician.PhoneNumber), EmailText.Encode(technician.PhoneNumber))
                 : null;
 
+            // A job the admin wrote in can have no service and no address yet: a row with nothing
+            // beside its name is left out of the details below rather than sent empty.
             var subject = "Your technician for your Plumbing Handyman Surrey booking";
             var body = EmailLayout.ForCustomer(
                 EmailLayout.Badge(EmailColour.Blue, "&#128295; Technician Allocated")
@@ -61,8 +63,8 @@
                 + EmailLayout.Text($"<strong>{technicianName} will call you before the visit</strong> to ask for further job-specific information if needed.")
                 + EmailLayout.Details(
                     EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
-                    EmailLayout.Row("Service(s)", EmailText.Encode(string.Join(", ", serviceNames))),
-                    EmailLayout.PlainRow("Address", EmailText.Encode(booking.Address)))
+                    serviceNames.Count > 0 ? EmailLayout.Row("Service(s)", EmailText.Encode(string.Join(", ", serviceNames))) : string.Empty,
+                    !string.IsNullOrWhiteSpace(booking.Address) ? EmailLayout.PlainRow("Address", EmailText.Encode(booking.Address)) : string.Empty)
                 + EmailLayout.Text($"{technicianName} will arrive equipped with all required professional tools. If you have parking restrictions, gate codes, or need to send photos of the work area, please reply to this email or send them on WhatsApp.")
                 + EmailLayout.WhatsAppButton("Message Us on WhatsApp"));
 

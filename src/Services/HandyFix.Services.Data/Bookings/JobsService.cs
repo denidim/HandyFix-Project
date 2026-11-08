@@ -241,13 +241,14 @@
 
             var newName = NameFormat.Full(technician.FirstName, technician.LastName);
 
-            // The site emails website customers only. For a job that was written in the admin is
-            // already speaking to the customer, and tells them who is coming.
-            if (booking.Source != BookingSource.Website)
+            // Every job is emailed the technician, a job written in by the admin as well as a
+            // website booking: from here on the two go the same way (Section 3dt). A job written
+            // in may have no email address, and then the admin tells the customer who is coming.
+            if (string.IsNullOrWhiteSpace(booking.Email))
             {
-                booking.History.Add(JobHistory.Line($"Technician picked: {newName}."));
+                booking.History.Add(JobHistory.Line($"Technician picked: {newName}. The job has no email address, so the customer was not emailed."));
                 await this.bookingRepository.SaveChangesAsync();
-                return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.AssignedNoEmailForWrittenInJob, TechnicianName = newName };
+                return new TechnicianAssignmentResult { Outcome = TechnicianAssignmentOutcome.AssignedNoEmailAddress, TechnicianName = newName };
             }
 
             // Saved before the email goes, so a send that fails cannot undo the assignment. The

@@ -26,9 +26,9 @@
         AssignedButEmailNotSent = 6,
 
         /// <summary>
-        /// The technician is saved on a job the admin wrote in. The site sends no email for
-        /// those: the admin tells the customer.
+        /// The technician is saved on a job with no email address, which only a job the admin
+        /// wrote in can be. The admin tells the customer who is coming.
         /// </summary>
-        AssignedNoEmailForWrittenInJob = 7,
+        AssignedNoEmailAddress = 7,
     }
 }
