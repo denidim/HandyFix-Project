@@ -402,10 +402,19 @@ page shows an estimate (the service's price) and no job can be "Paid in full".
 (service, hours spent, materials) and press **Email to Customer** (or **Download PDF**). The
 unpaid invoice is due on completion (same day as the invoice date) and includes a direct online
 payment link (`/Payment/Invoice/{bookingId}`) with an optional technician tip, plus the company's
-bank transfer details (`Invoice:PaymentDetails`). Once the customer pays and the money is confirmed
-in the account, record the payment in **Money List** (**Add Payment**) so *Still owed* becomes
-`£0.00` (*Paid in full*), and press **Email to Customer** again to send the final **PAID IN FULL**
-invoice receipt.
+bank transfer details (`Invoice:PaymentDetails`).
+
+**Paid through the link**, the site writes the payment in the money list by itself: a card line
+reading *"Card, invoice paid online"*, with any tip beside it and not counted towards the job. The
+job shows *Paid in full*, the invoice marked **PAID IN FULL** is emailed to the customer, and the
+company gets an "Invoice Paid Online" notice saying how much tip to pass on. As with the deposit,
+the site writes it only once Stripe itself says the page was paid, whether Stripe's message or the
+customer's return gets there first. A second payment page closes the first, so the balance cannot
+be paid twice.
+
+**Paid by bank transfer or in cash**, the admin records it with **Add Payment** once the money is
+confirmed, so *Still owed* becomes `£0.00` (*Paid in full*), and presses **Email to Customer** again
+to send the **PAID IN FULL** invoice.
 
 **The money list** has one line per payment, and under it the final price, what has been paid and
 what is still owed:
