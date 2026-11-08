@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
@@ -249,7 +250,7 @@
             Assert.Equal("Pending", site.Booking().Status.Name);
 
             HttpResponseMessage paid = await PostFromAsync(admin, jobPage, JobsPage + "/AddPayment", With(With(id, "amount", "50.00"), "method", "Cash"));
-            Assert.Contains("Nothing was changed. A payment can be written on a job that is booked or done", WebUtility.HtmlDecode(await paid.Content.ReadAsStringAsync()));
+            Assert.Contains("Nothing was changed. A payment can be written on a job that is booked, or done once its invoice is made", WebUtility.HtmlDecode(await paid.Content.ReadAsStringAsync()));
 
             HttpResponseMessage moved = await PostFromAsync(admin, jobPage, JobsPage + "/Move", With(With(id, "date", "2030-01-07"), "time", "10:00"));
             Assert.Contains("Nothing was changed. A job can be moved while it is booked", WebUtility.HtmlDecode(await moved.Content.ReadAsStringAsync()));
@@ -273,7 +274,9 @@
             // The line under "Mark as Done", in the owner's words (PROJECT_STATE.md Section 3ct).
             // "30-minute" is kept on one line by a span, so the words are read without the tags.
             var before = WebUtility.HtmlDecode(await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
-            Assert.Contains("Enter the final total for the job (minimum 1 hour, then billed in 30-minute blocks).", Regex.Replace(before, "<[^>]+>", string.Empty));
+            Assert.Contains("Enter the final total for the job + materials cost if any (minimum 1 hour, then billed in 30-minute blocks). This is the final price that will be invoiced to the customer!", Regex.Replace(before, "<[^>]+>", string.Empty));
+            Assert.Contains("Booking Workflow Steps", before);
+            Assert.Contains("(Move / Finish / Cancel)", before);
 
             // Done, with what it came to: an hour and one 30-minute block at £90 an hour.
             HttpResponseMessage done = await PostFromAsync(admin, jobPage, JobsPage + "/Complete", With(id, "finalPrice", "135.00"));
@@ -285,7 +288,16 @@
             Assert.Matches("<dt>Still owed</dt>\\s*<dd>£85.00</dd>", page);
             Assert.Contains("Deposit, card on the website", page);
 
-            // The box for the next payment starts at what is owed.
+            // The payment waits for the invoice, which comes first on the page (Section 3ds),
+            // and the invoice's text starts with the job's service.
+            Assert.Contains("Send the invoice first. Payments can be written once it is made.", page);
+            Assert.DoesNotContain("name=\"amount\"", page);
+            Assert.True(page.IndexOf("id=\"job-invoice\"", StringComparison.Ordinal) < page.IndexOf("id=\"job-payment\"", StringComparison.Ordinal));
+            Assert.Matches("<textarea name=\"workDone\"[^>]*>\\s*" + Regex.Escape(site.ServiceName) + "</textarea>", page);
+            HttpResponseMessage invoiced = await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(With(id, "workDone", site.ServiceName + ", 1.5 hours."), "send", "download"));
+            page = WebUtility.HtmlDecode(await invoiced.Content.ReadAsStringAsync());
+
+            // Then the box for the next payment opens, starting at what is owed.
             Assert.Matches("name=\"amount\"[^>]*value=\"85.00\"", page);
             Assert.DoesNotContain("id=\"job-complete\"", page);
             Assert.DoesNotContain("id=\"job-cancel\"", page);
@@ -304,6 +316,10 @@
             HttpResponseMessage rest = await PostFromAsync(admin, jobPage, JobsPage + "/AddPayment", With(With(id, "amount", "45.00"), "method", "Card"));
             page = WebUtility.HtmlDecode(await rest.Content.ReadAsStringAsync());
             Assert.Equal(("Done", "Paid in full"), LabelsOn(page));
+
+            // Paid in full, the invoice marked paid went to the customer by itself.
+            Assert.Contains("£45.00 is written on the job, paid by card. The invoice marked PAID IN FULL was emailed to the customer.", page);
+            Assert.Contains("paid in full", site.Emails.Sent.Last().Body);
             Assert.Matches("<dt>Paid so far</dt>\\s*<dd>£135.00</dd>", page);
             Assert.Matches("<dt>Still owed</dt>\\s*<dd>£0.00</dd>", page);
 
@@ -318,8 +334,10 @@
                     "Deposit of £50.00 paid on the website.",
                     "Technician picked: Zapryan. The customer was emailed.",
                     "Marked done. Final price £135.00.",
+                    "Invoice PHS-0001 made.",
                     "Payment of £40.00 written on the job: Cash.",
                     "Payment of £45.00 written on the job: Card.",
+                    "Invoice PHS-0001 emailed to the customer: paid in full.",
                 },
                 history);
 
@@ -350,6 +368,107 @@
             Assert.Matches("<textarea name=\"notes\"[^>]*>\\s*Stopcock is under the kitchen sink.</textarea>", page);
             var confirmation = await (await site.Browser().GetAsync("/Booking/Confirmed/" + booking.Id)).Content.ReadAsStringAsync();
             Assert.DoesNotContain("Stopcock", confirmation);
+        }
+
+        // A done job's invoice: emailed to the customer with its PDF, downloaded from the job's
+        // page, and listed for the month with its PDF, the CSV and the month's PDF.
+        [Fact]
+        public async Task ADoneJobsInvoiceIsEmailedWithItsPdfAndListedForTheMonth()
+        {
+            using var site = new Site();
+            Booking booking = await site.BookAndPayAsync(site.AFreeSlot());
+            HttpClient admin = await site.SignedInAdminAsync();
+            var jobPage = JobPage(booking.Id);
+            var id = new Dictionary<string, string> { ["id"] = booking.Id.ToString() };
+
+            // No invoice before the work is done: it has no final price yet.
+            Assert.DoesNotContain("id=\"job-invoice\"", await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
+            await PostFromAsync(admin, jobPage, JobsPage + "/Complete", With(id, "finalPrice", "135.00"));
+
+            var invoiceForm = With(id, "workDone", "Replaced the kitchen tap.");
+            HttpResponseMessage sent = await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(invoiceForm, "send", "email"));
+            var page = WebUtility.HtmlDecode(await sent.Content.ReadAsStringAsync());
+            Assert.Contains("Invoice PHS-0001 is emailed to the customer, with the PDF attached. It asks for £85.00 by", page);
+            Assert.Contains("Once it is paid, online or written below with Add Payment, the invoice marked PAID IN FULL goes to the customer by itself.", page);
+            Assert.Contains("Invoice PHS-0001, made", page);
+            Assert.Matches("<textarea name=\"workDone\"[^>]*>\\s*Replaced the kitchen tap.</textarea>", page);
+
+            RecordingEmailSender.Email email = site.Emails.Sent.Last();
+            Assert.Equal(booking.Email, email.To);
+            Assert.Contains("PHS-0001", email.Subject);
+            Assert.StartsWith("%PDF", Encoding.ASCII.GetString(Assert.Single(email.Attachments).Content, 0, 4));
+
+            // "Download PDF" comes back to the page with the link that fetches the file, once.
+            HttpResponseMessage download = await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(invoiceForm, "send", "download"));
+            page = WebUtility.HtmlDecode(await download.Content.ReadAsStringAsync());
+            Assert.Contains("Invoice PHS-0001 is saved and its PDF is downloading.", page);
+            Assert.Matches("<a(?=[^>]*data-auto-download)(?=[^>]*href=\"/Administration/Invoices/Pdf/" + booking.Id + "\")", page);
+            Assert.DoesNotContain("data-auto-download", await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
+
+            var list = WebUtility.HtmlDecode(await (await admin.GetAsync("/Administration/Invoices")).Content.ReadAsStringAsync());
+            Assert.Contains("PHS-0001", list);
+            Assert.Contains("Due ", list);
+
+            HttpResponseMessage pdf = await admin.GetAsync("/Administration/Invoices/Pdf/" + booking.Id);
+            Assert.Equal("application/pdf", pdf.Content.Headers.ContentType.MediaType);
+            var csv = await (await admin.GetAsync("/Administration/Invoices/Csv")).Content.ReadAsStringAsync();
+            Assert.Contains("PHS-0001", csv);
+            Assert.Contains("135.00,50.00,0.00,0.00,0.00,50.00,85.00", csv);
+            HttpResponseMessage month = await admin.GetAsync("/Administration/Invoices/ListPdf");
+            Assert.Equal("application/pdf", month.Content.Headers.ContentType.MediaType);
+
+            // The customer's online payment link from the invoice email opens the payment page
+            // with the fixed balance due (£85.00) and optional tip selector.
+            HttpClient customer = site.Browser();
+            var invoicePayUrl = "/Payment/Invoice/" + booking.Id;
+            var payPageRaw = await (await customer.GetAsync(invoicePayUrl)).Content.ReadAsStringAsync();
+            WebTests.AssertNoInlineCode(payPageRaw);
+            var payPage = WebUtility.HtmlDecode(payPageRaw);
+            Assert.Contains("Pay Invoice PHS-0001", payPage);
+            Assert.Contains("£85.00", payPage);
+            Assert.Contains("Add an optional tip for your technician", payPage);
+
+            // The address alone never shows the invoice paid: the first version took "?paid=true"
+            // at its word (Section 3dq), and a page id Stripe never paid changes nothing either.
+            foreach (var typed in new[] { "?paid=true", "?session_id=mock_invoice_typed" })
+            {
+                Assert.Contains("Pay Invoice PHS-0001", WebUtility.HtmlDecode(await (await customer.GetAsync(invoicePayUrl + typed)).Content.ReadAsStringAsync()));
+            }
+
+            var emailsBefore = site.Emails.Sent.Count;
+            HttpResponseMessage paidResponse = await PostFromAsync(
+                customer,
+                invoicePayUrl,
+                invoicePayUrl,
+                new Dictionary<string, string> { ["tipAmount"] = "10.00" });
+            var paidPage = WebUtility.HtmlDecode(await paidResponse.Content.ReadAsStringAsync());
+            Assert.Contains("Invoice PHS-0001 - Paid", paidPage);
+            Assert.Contains("has been received", paidPage);
+            Assert.Contains("is on its way to your email", paidPage);
+
+            // The payment is on the job by itself, the tip beside it and not counted towards it.
+            var jobAfter = WebUtility.HtmlDecode(await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
+            Assert.Contains("Card, invoice paid online (+ £10.00 tip)", jobAfter);
+            Assert.Contains("Invoice PHS-0001 paid online by card: £85.00, and a tip of £10.00 for the technician.", jobAfter);
+            Assert.Contains("Invoice PHS-0001 emailed to the customer: paid in full.", jobAfter);
+            csv = await (await admin.GetAsync("/Administration/Invoices/Csv")).Content.ReadAsStringAsync();
+            Assert.Contains("135.00,50.00,85.00,0.00,0.00,135.00,0.00,10.00,Paid", csv);
+
+            // The customer gets the invoice marked paid, and the company is told, tip and all.
+            List<RecordingEmailSender.Email> sentNow = site.Emails.Sent.Skip(emailsBefore).ToList();
+            RecordingEmailSender.Email paidInvoice = Assert.Single(sentNow, x => x.To == booking.Email);
+            Assert.Contains("paid in full", paidInvoice.Body);
+            Assert.Single(paidInvoice.Attachments);
+            RecordingEmailSender.Email notice = Assert.Single(sentNow, x => x.Subject.StartsWith("Invoice Paid Online"));
+            Assert.Contains("&pound;10.00", notice.Body);
+            Assert.Contains("PAID IN FULL", notice.Body);
+
+            // Paid, the page offers nothing more to pay, and its form sent again from a tab left
+            // open before the payment opens no second payment page.
+            Assert.DoesNotContain("tipAmount", await (await customer.GetAsync(invoicePayUrl)).Content.ReadAsStringAsync());
+            HttpResponseMessage again = await PostToAsync(customer, payPageRaw, invoicePayUrl, new Dictionary<string, string> { ["tipAmount"] = "5.00" });
+            Assert.Contains("is paid in full. Thank you for choosing", WebUtility.HtmlDecode(await again.Content.ReadAsStringAsync()));
+            Assert.Equal(1, site.Read(dbContext => dbContext.Payments.Count(p => p.Status.Name == "Completed")));
         }
 
         // "Cancel Booking" used to be offered on a completed booking. Pressed there, it would
@@ -434,10 +553,10 @@
         }
 
         // A job that came by phone: a first name, a number, a day and a time. It is a job from
-        // the start, with no deposit, no slot and no email, and it is finished and paid for on
-        // the same page as any other.
+        // the start, with no deposit, no slot and no email until it is paid, and it is finished
+        // and paid for on the same page as any other.
         [Fact]
-        public async Task AJobWrittenInByTheAdminIsAJobFromTheStartAndEmailsNobody()
+        public async Task AJobWrittenInByTheAdminIsAJobFromTheStartAndEmailsNobodyUntilItIsPaid()
         {
             using var site = new Site();
             HttpClient admin = await site.SignedInAdminAsync();
@@ -503,11 +622,15 @@
 
             // Done and paid in cash: no deposit ever came into it.
             await PostFromAsync(admin, jobPage, JobsPage + "/Complete", With(id, "finalPrice", "60.00"));
+            await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(With(id, "workDone", string.Empty), "send", "download"));
+            Assert.Empty(site.Emails.Sent);
             HttpResponseMessage paid = await PostFromAsync(admin, jobPage, JobsPage + "/AddPayment", With(With(id, "amount", "60.00"), "method", "Cash"));
             page = WebUtility.HtmlDecode(await paid.Content.ReadAsStringAsync());
             Assert.Equal(("Done", "Paid in full"), LabelsOn(page));
 
-            Assert.Empty(site.Emails.Sent);
+            // The one email it ever sends: the invoice marked paid, once the cash pays it in full.
+            Assert.Contains("The invoice marked PAID IN FULL was emailed to the customer.", page);
+            Assert.Equal("grace@example.com", Assert.Single(site.Emails.Sent).To);
         }
 
         // An enquiry that turns into work. The button opens the form with what the enquiry
@@ -1017,7 +1140,7 @@
             // On a phone the button beside the arrow has no plus, which reached the arrow.
             Assert.Matches("d-none d-md-inline-block\">add</span>\\s*<span>Write a job in</span>", page);
 
-            Assert.Matches(">Jobs</span>\\s*</a>\\s*<a\\b[^>]*href=\"/Administration/Calendar\"", page);
+            Assert.Matches(">Invoices</span>\\s*</a>\\s*<a\\b[^>]*href=\"/Administration/Calendar\"", page);
         }
 
         // "Unblock" in the admin calendar did nothing: it called the method that frees a slot

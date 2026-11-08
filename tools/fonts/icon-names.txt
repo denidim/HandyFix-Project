@@ -60,6 +60,7 @@ event_repeat
 expand_more
 faucet
 forum
+forward_to_inbox
 foundation
 gavel
 groups
@@ -89,8 +90,10 @@ person
 person_add
 person_pin_circle
 phone
+picture_as_pdf
 plumbing
 rate_review
+receipt_long
 refresh
 reply
 request_quote
@@ -105,6 +108,7 @@ shield_with_heart
 star
 star_outline
 sticky_note_2
+table_view
 task_alt
 timer
 tune

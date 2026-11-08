@@ -251,6 +251,16 @@ namespace HandyFix.Data.Migrations
                     b.Property<decimal?>("FinalPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("InvoiceNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InvoiceWorkDone")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("InvoicedOn")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -288,6 +298,10 @@ namespace HandyFix.Data.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique()
+                        .HasFilter("[InvoiceNumber] IS NOT NULL");
 
                     b.HasIndex("IsDeleted");
 
@@ -587,6 +601,9 @@ namespace HandyFix.Data.Migrations
 
                     b.Property<Guid>("StatusId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("Tip")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("TransactionId")
                         .HasMaxLength(500)

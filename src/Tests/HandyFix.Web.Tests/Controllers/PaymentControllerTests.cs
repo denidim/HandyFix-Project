@@ -5,8 +5,10 @@
 
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Web.Controllers;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
@@ -264,6 +266,64 @@
             paymentsService.Verify(x => x.HandleWebhookEventAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
 
+        [Fact]
+        public async Task PayInvoiceShouldRedirectToStripeWithBalancePlusOptionalTip()
+        {
+            var controller = BuildController(out _, out var paymentsService, out var invoicesService, out _);
+            var bookingId = Guid.NewGuid();
+            invoicesService
+                .Setup(x => x.GetAsync(bookingId))
+                .ReturnsAsync(new InvoiceViewModel { BookingId = bookingId, Number = 1, Total = 135m });
+            paymentsService
+                .Setup(x => x.CreateInvoiceCheckoutSessionAsync(bookingId, 10m, It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(new PaymentCheckoutResult { IsMock = false, SessionId = "cs_inv", RedirectUrl = "https://checkout.stripe.com/cs_inv" });
+
+            var result = await controller.PayInvoice(bookingId, 10m);
+
+            var redirect = Assert.IsType<RedirectResult>(result);
+            Assert.Equal("https://checkout.stripe.com/cs_inv", redirect.Url);
+            paymentsService.Verify(x => x.CreateInvoiceCheckoutSessionAsync(bookingId, 10m, It.Is<string>(url => url.EndsWith($"/Payment/Invoice/{bookingId}?session_id={{CHECKOUT_SESSION_ID}}")), It.IsAny<string>()));
+        }
+
+        // Back from Stripe, the page asks the service, which asks Stripe and writes the payment;
+        // the page then reads the invoice off the job (Section 3dq's page took "?paid=true").
+        [Fact]
+        public async Task InvoicePageBackFromStripeShouldConfirmThePageBeforeShowingThePaidInvoice()
+        {
+            var controller = BuildController(out _, out var paymentsService, out var invoicesService, out _);
+            var bookingId = Guid.NewGuid();
+            paymentsService.Setup(x => x.ConfirmCheckoutAsync("cs_inv")).ReturnsAsync(bookingId);
+            invoicesService
+                .Setup(x => x.GetAsync(bookingId))
+                .ReturnsAsync(new InvoiceViewModel { BookingId = bookingId, Number = 1, Total = 135m, Payments = new[] { new InvoicePaymentLine { Amount = 135m } } });
+
+            var result = await controller.Invoice(bookingId, "cs_inv");
+
+            var model = Assert.IsType<InvoicePaymentViewModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.True(model.JustPaid);
+            paymentsService.Verify(x => x.ConfirmCheckoutAsync("cs_inv"), Times.Once);
+        }
+
+        [Fact]
+        public async Task InvoicePageShouldNotSayJustPaidForAPageStripeDidNotPayOrForAnotherJob()
+        {
+            var controller = BuildController(out _, out var paymentsService, out var invoicesService, out _);
+            var bookingId = Guid.NewGuid();
+            paymentsService.Setup(x => x.ConfirmCheckoutAsync("cs_other")).ReturnsAsync(Guid.NewGuid());
+            invoicesService
+                .Setup(x => x.GetAsync(bookingId))
+                .ReturnsAsync(new InvoiceViewModel { BookingId = bookingId, Number = 1, Total = 135m });
+
+            var unpaid = Assert.IsType<InvoicePaymentViewModel>(Assert.IsType<ViewResult>(await controller.Invoice(bookingId, "cs_unpaid")).Model);
+            var other = Assert.IsType<InvoicePaymentViewModel>(Assert.IsType<ViewResult>(await controller.Invoice(bookingId, "cs_other")).Model);
+            var plain = Assert.IsType<InvoicePaymentViewModel>(Assert.IsType<ViewResult>(await controller.Invoice(bookingId, null)).Model);
+
+            Assert.False(unpaid.JustPaid);
+            Assert.False(other.JustPaid);
+            Assert.False(plain.JustPaid);
+            paymentsService.Verify(x => x.ConfirmCheckoutAsync(null), Times.Never);
+        }
+
         private static BookingDetailsViewModel WaitingForItsDeposit(Guid bookingId) => new BookingDetailsViewModel
         {
             Id = bookingId,
@@ -282,12 +342,20 @@
             out Mock<IBookingsService> bookingsService,
             out Mock<IPaymentsService> paymentsService,
             out Mock<ILogger<PaymentController>> logger)
+            => BuildController(out bookingsService, out paymentsService, out _, out logger);
+
+        private static PaymentController BuildController(
+            out Mock<IBookingsService> bookingsService,
+            out Mock<IPaymentsService> paymentsService,
+            out Mock<IInvoicesService> invoicesService,
+            out Mock<ILogger<PaymentController>> logger)
         {
             bookingsService = new Mock<IBookingsService>();
             paymentsService = new Mock<IPaymentsService>();
+            invoicesService = new Mock<IInvoicesService>();
             logger = new Mock<ILogger<PaymentController>>();
 
-            return new PaymentController(bookingsService.Object, paymentsService.Object, logger.Object)
+            return new PaymentController(bookingsService.Object, paymentsService.Object, invoicesService.Object, logger.Object)
             {
                 ControllerContext = new ControllerContext
                 {

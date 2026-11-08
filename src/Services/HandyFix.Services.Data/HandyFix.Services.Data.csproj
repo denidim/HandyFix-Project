@@ -15,7 +15,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="QuestPDF" />
     <PackageReference Include="Stripe.net" />
+  </ItemGroup>
+
+  <!-- The invoice PDFs' fonts (Outfit, the site's own, under the SIL Open Font License in Fonts/OFL.txt)
+       and the emblem, read from the site's tab icon so there is one copy of it. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Invoices\Fonts\*.ttf" />
+    <EmbeddedResource Include="..\..\Web\HandyFix.Web\wwwroot\favicon.svg" LogicalName="HandyFix.Invoices.Logo.svg" Link="Invoices\Logo.svg" />
   </ItemGroup>
 
 </Project>

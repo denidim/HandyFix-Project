@@ -47,6 +47,10 @@ services:
       # No email settings here, on purpose. The live site sends from bookings@
       # and sends its notices to info@, which is what the code does when it is
       # told nothing, and its subjects carry no mark.
+      # How a customer pays what is left on an invoice: the company's bank
+      # details, kept in .env and out of the public code. Empty, the invoice
+      # gives the phone number instead.
+      Invoice__PaymentDetails: ${INVOICE_PAYMENT_DETAILS:-}
       # Cloudflare Turnstile, the "are you a person" check on the public forms.
       Turnstile__SiteKey: ${TURNSTILE_SITE_KEY:?set TURNSTILE_SITE_KEY in .env}
       Turnstile__SecretKey: ${TURNSTILE_SECRET_KEY:?set TURNSTILE_SECRET_KEY in .env}

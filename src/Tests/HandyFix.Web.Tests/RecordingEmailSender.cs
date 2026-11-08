@@ -20,7 +20,7 @@
             IEnumerable<EmailAttachment> attachments = null,
             string replyTo = null)
         {
-            this.Sent.Enqueue(new Email { From = from, To = to, Subject = subject, Body = htmlContent, ReplyTo = replyTo });
+            this.Sent.Enqueue(new Email { From = from, To = to, Subject = subject, Body = htmlContent, ReplyTo = replyTo, Attachments = attachments });
             return Task.CompletedTask;
         }
 
@@ -35,6 +35,8 @@
             public string Body { get; set; }
 
             public string ReplyTo { get; set; }
+
+            public IEnumerable<EmailAttachment> Attachments { get; set; }
         }
     }
 }

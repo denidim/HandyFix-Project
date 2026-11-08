@@ -2,12 +2,14 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Threading.Tasks;
 
     using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services.Messaging;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
@@ -91,6 +93,7 @@
                 EmailLayout.Badge(EmailColour.Green, "&#10003; Deposit Received &amp; Booking Confirmed")
                 + EmailLayout.Heading($"Hi {EmailText.Encode(booking.CustomerFirstName)},")
                 + EmailLayout.Lead($"Great news! Your deposit of <strong>{deposit}</strong> has been received via Stripe and your booking is now locked in our schedule.")
+                + EmailLayout.Text("Please note that the remaining balance is calculated on the job (depending on whether we supplied any materials or the task needed more time) and is due immediately upon completion of the job. Once the work is finished, we will send your final invoice to your email with a quick payment link (Apple Pay, Google Pay, or Card) and our bank details so we can get everything settled and issue your PAID receipt before we head off.")
                 + EmailLayout.Details(
                     EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
                     EmailLayout.Row("Service(s)", ServiceNames(booking)),
@@ -144,6 +147,54 @@
                 replyTo: booking.Email);
         }
 
+        public async Task<bool> InvoicePaidOnlineToCompanyAsync(Booking booking, Payment payment, InvoiceViewModel invoice, bool customerEmailed)
+        {
+            var number = invoice == null ? "The invoice" : $"Invoice {EmailText.Encode(invoice.NumberText)}";
+            var tip = payment.Tip.GetValueOrDefault();
+            var stillOwed = invoice == null ? "-" : invoice.IsPaid ? "&pound;0.00 (Paid in full)" : $"&pound;{invoice.Balance:F2}";
+
+            var advice = customerEmailed
+                ? "The customer has been emailed the invoice marked <strong>PAID IN FULL</strong>. Nothing needs adding to the Money List by hand."
+                : "The paid invoice could not be emailed to the customer by itself: send it from the job's page. Nothing needs adding to the Money List by hand.";
+            if (tip > 0m)
+            {
+                advice += $"<br /><br />The customer added a tip of <strong>&pound;{tip:F2}</strong>: pass it on to the technician who did the job.";
+            }
+
+            if (invoice != null && invoice.Paid > invoice.Total)
+            {
+                advice += "<br /><br />The job has now been paid more than its final price: send the extra back in Stripe.";
+            }
+
+            var subject = $"Invoice Paid Online - {booking.CustomerFirstName} {booking.CustomerLastName}";
+            var body = EmailLayout.ForCompany(
+                EmailLayout.Badge(EmailColour.Green, "&#10003; Invoice Paid Online")
+                + EmailLayout.Heading($"{number} has just been paid.")
+                + EmailLayout.Lead("The customer paid the rest of the job by card on the invoice's payment page, via Stripe. It is written on the job's Money List.")
+                + EmailLayout.Details(
+                    EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
+                    EmailLayout.Row("Customer", CustomerName(booking)),
+                    EmailLayout.PlainRow("Customer Contact", ContactLinks(booking)),
+                    EmailLayout.Row("Service(s)", ServiceNames(booking)),
+                    EmailLayout.Divider(),
+                    EmailLayout.MoneyRow("Paid", $"&pound;{payment.Amount:F2} (Stripe)"),
+                    tip > 0m ? EmailLayout.MoneyRow("Tip for the Technician", $"&pound;{tip:F2}") : string.Empty,
+                    EmailLayout.MoneyRow("Still Owed", stillOwed))
+                + EmailLayout.Advice($"{advice}<br /><br />{ReplyTip}")
+                + EmailLayout.Button("&#9881;&#65039; Open Booking in Admin Panel", this.JobPage(booking)));
+
+            // Reply-To is the customer, so pressing Reply on this notice answers them.
+            return await this.emailSender.TrySendEmailAsync(
+                this.logger,
+                "invoice paid online, notice to the company",
+                this.settings.SystemFromAddress,
+                EmailOptions.WebsiteFromName,
+                this.settings.AdminNotificationAddress,
+                subject,
+                body,
+                replyTo: booking.Email);
+        }
+
         // To the company only. The customer is not told the booking is confirmed, because it is
         // not: someone has to ring them, and either find a new time or send the money back. The
         // time is the one the job was booked for, since its hour may have gone back on sale.
@@ -177,6 +228,58 @@
                 subject,
                 body,
                 replyTo: booking.Email);
+        }
+
+        // Sent by the admin from the job's page, once the work is done; sent again after a later
+        // payment, it reads "paid in full". The invoice itself is the PDF: the email says what
+        // it holds in a few lines, for a customer who reads it on a phone.
+        public async Task<bool> InvoiceAsync(string customerFirstName, InvoiceViewModel invoice, byte[] pdf, string paymentDetails)
+        {
+            var number = EmailText.Encode(invoice.NumberText);
+            var balance = $"&pound;{invoice.Balance:F2}";
+            var dueOn = invoice.DueOn.ToString("d MMMM yyyy", CultureInfo.InvariantCulture);
+            var paymentUrl = $"{this.settings.SiteUrl}/Payment/Invoice/{invoice.BookingId}";
+
+            var subject = $"Your invoice {invoice.NumberText} from Plumbing Handyman Surrey";
+            var body = EmailLayout.ForCustomer(
+                (invoice.IsPaid
+                    ? EmailLayout.Badge(EmailColour.Green, "&#10003; Paid in Full")
+                    : EmailLayout.Badge(EmailColour.Blue, "&#128196; Your Invoice"))
+                + EmailLayout.Heading($"Hi {EmailText.Encode(customerFirstName)},")
+                + EmailLayout.Lead(invoice.IsPaid
+                    ? $"Thank you for choosing us. Your invoice <strong>{number}</strong> is attached, and it is paid in full."
+                    : $"Thank you for choosing us. Your invoice <strong>{number}</strong> is attached. The balance of <strong>{balance}</strong> is due on completion (<strong>{dueOn}</strong>).")
+                + EmailLayout.Details(
+                    EmailLayout.ReferenceRow(invoice.JobReference),
+                    EmailLayout.Row("Invoice", number),
+                    EmailLayout.Row("Service(s)", EmailText.Encode(invoice.Services)),
+                    EmailLayout.Divider(),
+                    EmailLayout.MoneyRow("Total", $"&pound;{invoice.Total:F2}"),
+                    EmailLayout.MoneyRow("Paid", $"&pound;{invoice.Paid:F2}"),
+                    EmailLayout.MoneyRow(invoice.IsPaid ? "Balance" : "Balance Due", invoice.IsPaid ? "&pound;0.00 (Paid)" : balance))
+                + (invoice.IsPaid
+                    ? string.Empty
+                    : EmailLayout.Button($"Pay {balance} Online (Card, Apple Pay, Google Pay)", paymentUrl)
+                      + EmailLayout.Text($"<strong>How to pay:</strong> {EmailText.Encode(paymentDetails)}<br />Please give <strong>{number}</strong> as the reference."))
+                + EmailLayout.Text("Any questions about your invoice? Reply to this email or message us on WhatsApp.")
+                + EmailLayout.WhatsAppButton("Message Us on WhatsApp"));
+
+            var attachment = new EmailAttachment
+            {
+                Content = pdf,
+                FileName = $"Invoice {invoice.NumberText}.pdf",
+                MimeType = "application/pdf",
+            };
+
+            return await this.emailSender.TrySendEmailAsync(
+                this.logger,
+                "invoice, to the customer",
+                this.settings.BookingsFromAddress,
+                EmailOptions.CustomerFromName,
+                invoice.Email,
+                subject,
+                body,
+                attachments: new[] { attachment });
         }
 
         private static string CustomerName(Booking booking)

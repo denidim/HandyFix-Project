@@ -38,6 +38,13 @@ document.addEventListener('change', function (event) {
     }
 });
 
+// A link marked data-auto-download is followed as the page opens: the job page's "Download PDF"
+// saves the invoice, comes back, and fetches the file by this link (BookingsController.Invoice).
+const autoDownload = document.querySelector('a[data-auto-download]');
+if (autoDownload) {
+    autoDownload.click();
+}
+
 // The cookie banner's Accept button stores the consent cookie and takes the banner away. The
 // banner is drawn only until the visitor has accepted (_CookieConsentPartial).
 (function () {

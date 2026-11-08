@@ -11,6 +11,7 @@
     using HandyFix.Data.Repositories;
     using HandyFix.Services.Data.Availability;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Messaging;
     using HandyFix.Web.ViewModels.Booking;
@@ -81,6 +82,12 @@
             this.Availability = new AvailabilityService(slotRepo);
             var bookingEmails = TestEmails.Booking(this.EmailSender.Object);
 
+            this.Invoices = new InvoicesService(
+                bookingRepo,
+                bookingEmails,
+                Options.Create(new InvoiceOptions()),
+                TimeProvider.System);
+
             this.Payments = new PaymentsService(
                 new EfDeletableEntityRepository<Payment>(this.DbContext),
                 new EfDeletableEntityRepository<PaymentStatus>(this.DbContext),
@@ -90,7 +97,8 @@
                 Options.Create(stripeSettings),
                 environment.Object,
                 NullLogger<PaymentsService>.Instance,
-                this.Stripe.Object);
+                this.Stripe.Object,
+                this.Invoices);
 
             var serviceRepo = new EfDeletableEntityRepository<Service>(this.DbContext);
             var queryRunner = new DbQueryRunner(this.DbContext);
@@ -131,6 +139,8 @@
         public JobsService Jobs { get; }
 
         public PaymentsService Payments { get; }
+
+        public InvoicesService Invoices { get; }
 
         public AvailabilityService Availability { get; }
 
@@ -336,7 +346,7 @@
                     It.IsAny<string>()))
                 .Callback<string, string, string, string, string, IEnumerable<EmailAttachment>, string>(
                     (from, fromName, to, subject, body, attachments, replyTo) =>
-                        sent.Add(new SentEmail { To = to, Subject = subject, Body = body, ReplyTo = replyTo }))
+                        sent.Add(new SentEmail { To = to, Subject = subject, Body = body, ReplyTo = replyTo, Attachments = attachments }))
                 .Returns(Task.CompletedTask);
             return sent;
         }

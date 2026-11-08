@@ -10,6 +10,7 @@
     using HandyFix.Common;
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Payments;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
@@ -492,6 +493,100 @@
             Assert.Throws<StripeException>(() => gateway.ReadEvent(json, SignatureFor(json, "whsec_somebody_elses"), "whsec_test_secret"));
             Assert.ThrowsAny<Exception>(() => gateway.ReadEvent(json, string.Empty, "whsec_test_secret"));
         }
+
+        // Section 3dq opened a Stripe page for the rest of a done job and wrote nothing down: the
+        // money reached Stripe, the job still showed it owed, nobody was told, and the customer
+        // could pay it again. The page now has a pending card line, as a deposit's does.
+        [Fact]
+        public async Task AnInvoicePaidOnItsPageIsWrittenOnTheJobWithTheTipApartAndBothSidesAreEmailed()
+        {
+            using var world = new BookingWorld(Key);
+            Booking booking = await DoneAndInvoicedAsync(world, 135m);
+            List<SentEmail> sent = world.CaptureEmails();
+            SessionCreateOptions asked = null;
+            world.Stripe
+                .Setup(x => x.CreateCheckoutAsync(It.IsAny<SessionCreateOptions>()))
+                .Callback<SessionCreateOptions>(options => asked = options)
+                .ReturnsAsync(new Session { Id = "cs_test_invoice", Url = "https://checkout.stripe.com/c/pay/cs_test_invoice" });
+
+            PaymentCheckoutResult result = await world.Payments.CreateInvoiceCheckoutSessionAsync(booking.Id, 10m, "https://example.com/back", "https://example.com/back");
+
+            Assert.Equal("https://checkout.stripe.com/c/pay/cs_test_invoice", result.RedirectUrl);
+            Assert.Equal(new long?[] { 8500, 1000 }, asked.LineItems.Select(x => x.PriceData.UnitAmount).ToArray());
+            Assert.InRange(asked.ExpiresAt.Value, DateTime.UtcNow.AddMinutes(30), DateTime.UtcNow.AddMinutes(32));
+            Payment page = world.DbContext.Payments.Single(x => x.CheckoutSessionId == "cs_test_invoice");
+            Assert.Equal(85m, page.Amount);
+            Assert.Equal(10m, page.Tip);
+            Assert.Equal(PaymentMethods.Card, page.Method);
+            Assert.Equal("Pending", StatusOfPage(world, "cs_test_invoice"));
+
+            // Stripe's message says the page was paid, and the site asks Stripe, as for a deposit.
+            StripeAnswers(world, "cs_test_invoice", paid: true, "pi_invoice");
+            StripeSends(world, EventTypes.CheckoutSessionCompleted, "cs_test_invoice");
+            await world.Payments.HandleWebhookEventAsync("{}", "sig");
+
+            InvoiceViewModel invoice = await world.Invoices.GetAsync(booking.Id);
+            Assert.True(invoice.IsPaid);
+            Assert.Equal(135m, invoice.Paid);
+            Assert.Equal(85m, invoice.PaidByCard);
+            Assert.Equal(10m, invoice.Tips);
+            Assert.Equal("Completed", StatusOfPage(world, "cs_test_invoice"));
+            Assert.Equal("Completed", world.StatusOf(booking));
+            Assert.Contains("Invoice PHS-0001 paid online by card: £85.00, and a tip of £10.00 for the technician.", world.HistoryOf(booking));
+            Assert.Contains("Invoice PHS-0001 emailed to the customer: paid in full.", world.HistoryOf(booking));
+
+            SentEmail toCustomer = Assert.Single(sent, x => x.To == "ada@example.com");
+            Assert.Contains("paid in full", toCustomer.WhatIsRead());
+            Assert.Single(toCustomer.Attachments);
+            SentEmail notice = Assert.Single(sent, x => x.Subject.StartsWith("Invoice Paid Online", StringComparison.Ordinal));
+            Assert.Contains("&pound;10.00", notice.Body);
+            Assert.Contains("PAID IN FULL", notice.Body);
+
+            // The customer's return arrives as well, and writes nothing twice.
+            await world.Payments.ConfirmCheckoutAsync("cs_test_invoice");
+            Assert.Equal(2, sent.Count);
+            Assert.Single(world.HistoryOf(booking), line => line.Contains("paid online", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task ASecondInvoicePageClosesTheFirstAndAPageLeftUnpaidLeavesTheRestOwed()
+        {
+            using var world = new BookingWorld(Key);
+            Booking booking = await DoneAndInvoicedAsync(world, 135m);
+            world.Stripe
+                .SetupSequence(x => x.CreateCheckoutAsync(It.IsAny<SessionCreateOptions>()))
+                .ReturnsAsync(new Session { Id = "cs_first", Url = "https://checkout.stripe.com/c/pay/cs_first" })
+                .ReturnsAsync(new Session { Id = "cs_second", Url = "https://checkout.stripe.com/c/pay/cs_second" });
+            world.Stripe.Setup(x => x.ExpireCheckoutAsync("cs_first")).ReturnsAsync(new Session { Id = "cs_first", Status = "expired", PaymentStatus = "unpaid" });
+
+            await world.Payments.CreateInvoiceCheckoutSessionAsync(booking.Id, 0m, "https://example.com/back", "https://example.com/back");
+            await world.Payments.CreateInvoiceCheckoutSessionAsync(booking.Id, 0m, "https://example.com/back", "https://example.com/back");
+
+            world.Stripe.Verify(x => x.ExpireCheckoutAsync("cs_first"), Times.Once);
+            Assert.Equal("Cancelled", StatusOfPage(world, "cs_first"));
+            Assert.Equal("Pending", StatusOfPage(world, "cs_second"));
+            Assert.Null(world.DbContext.Payments.Single(x => x.CheckoutSessionId == "cs_second").Tip);
+
+            // The second page runs out unpaid: the job still owes the rest, and the money list
+            // shows only the deposit.
+            StripeSends(world, EventTypes.CheckoutSessionExpired, "cs_second");
+            await world.Payments.HandleWebhookEventAsync("{}", "sig");
+
+            Assert.Equal("Cancelled", StatusOfPage(world, "cs_second"));
+            Assert.Equal(85m, (await world.Invoices.GetAsync(booking.Id)).Balance);
+            Assert.Single(await world.Payments.GetMoneyListAsync<PaymentLineViewModel>(booking.Id));
+        }
+
+        private static async Task<Booking> DoneAndInvoicedAsync(BookingWorld world, decimal finalPrice)
+        {
+            Booking booking = await world.SeedPaidBookingAsync();
+            Assert.True(await world.Jobs.CompleteBookingAsync(booking.Id, finalPrice));
+            Assert.NotNull(await world.Invoices.MakeAsync(booking.Id, "Replaced the kitchen tap."));
+            return booking;
+        }
+
+        private static string StatusOfPage(BookingWorld world, string sessionId) =>
+            world.DbContext.Payments.Where(x => x.CheckoutSessionId == sessionId).Select(x => x.Status.Name).Single();
 
         private static void StripeAnswers(BookingWorld world, string sessionId, bool paid, string paymentIntentId = null)
         {

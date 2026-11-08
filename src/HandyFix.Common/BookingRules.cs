@@ -49,14 +49,31 @@
 
         // Money is written on a job that is on, and on one that is done: that is when most of it
         // comes in. Not on a cancelled or abandoned one, and not on a website booking before its
-        // deposit, which is paid on the website and nowhere else.
-        public static bool CanTakePayment(string statusName, bool cameFromWebsite, bool depositPaid)
+        // deposit, which is paid on the website and nowhere else. On a done job, only once its
+        // invoice is made: the invoice goes out first and the payment follows it, which is the
+        // order the admin's page reads in (Section 3ds).
+        public static bool CanTakePayment(string statusName, bool cameFromWebsite, bool depositPaid, bool invoiceMade)
         {
-            return statusName == BookingStatusNames.Completed || IsOn(statusName, cameFromWebsite, depositPaid);
+            return statusName == BookingStatusNames.Completed
+                ? invoiceMade
+                : IsOn(statusName, cameFromWebsite, depositPaid);
+        }
+
+        // A done job whose invoice is not made yet: its payment waits for the invoice.
+        public static bool PaymentWaitsForInvoice(string statusName, bool invoiceMade)
+        {
+            return statusName == BookingStatusNames.Completed && !invoiceMade;
         }
 
         // The final price is typed when the job is marked done, and can be put right afterwards.
         public static bool CanChangeFinalPrice(string statusName)
+        {
+            return statusName == BookingStatusNames.Completed;
+        }
+
+        // An invoice is for work that is done: it carries the final price, which a job only has
+        // once it is marked done.
+        public static bool CanInvoice(string statusName)
         {
             return statusName == BookingStatusNames.Completed;
         }

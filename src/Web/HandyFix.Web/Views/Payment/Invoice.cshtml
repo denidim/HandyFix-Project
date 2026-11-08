@@ -1,0 +1,136 @@
+@using System.Globalization
+@using HandyFix.Common
+@model HandyFix.Web.ViewModels.Payment.InvoicePaymentViewModel
+@{
+    this.Layout = "_Layout";
+    var invoice = Model.Invoice;
+    var paid = invoice.IsPaid;
+    this.ViewData["Title"] = $"Invoice {invoice.NumberText}";
+}
+
+<div class="page-container payment-page-container">
+    <div class="payment-status-card">
+        <div class="payment-status-icon-bubble">
+            <span class="material-symbols-outlined payment-status-icon icon-medium-weight">@(paid ? "check_circle" : "receipt_long")</span>
+        </div>
+        <h1 class="payment-status-title">@(paid ? $"Invoice {invoice.NumberText} - Paid" : $"Pay Invoice {invoice.NumberText}")</h1>
+
+        @if (paid)
+        {
+            @if (Model.JustPaid)
+            {
+                <p class="payment-status-desc">
+                    Thank you for choosing @GlobalConstants.SystemName. Your payment for invoice <strong>@invoice.NumberText</strong> (Job #@invoice.JobReference) has been received.
+                </p>
+                @if (!string.IsNullOrWhiteSpace(invoice.Email))
+                {
+                    <div class="payment-status-alert">
+                        <span class="material-symbols-outlined payment-status-alert-icon">info</span>
+                        <div>
+                            <p class="payment-status-alert-title">PAID Receipt</p>
+                            <p class="payment-status-alert-text">
+                                Your invoice marked <strong>PAID IN FULL</strong> is on its way to your email, for your records.
+                            </p>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="payment-status-desc">
+                    Invoice <strong>@invoice.NumberText</strong> (Job #@invoice.JobReference) is paid in full. Thank you for choosing @GlobalConstants.SystemName.
+                </p>
+            }
+            <div class="payment-status-actions">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary payment-status-btn">
+                    Return Home
+                </a>
+            </div>
+        }
+        else
+        {
+            <p class="payment-status-desc">
+                Hi @invoice.CustomerName, please review your invoice summary below and complete your payment securely via Stripe (Card, Apple Pay, or Google Pay).
+            </p>
+
+            <div class="border rounded-3 p-3 mb-4 text-start bg-light">
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Invoice</span>
+                    <span class="fw-bold">@invoice.NumberText</span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Job Reference</span>
+                    <span class="fw-semibold">#@invoice.JobReference</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(invoice.Services))
+                {
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted">Service(s)</span>
+                        <span class="fw-semibold text-end">@invoice.Services</span>
+                    </div>
+                }
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Terms</span>
+                    <span class="fw-semibold">@InvoiceTerms.PaymentTerms</span>
+                </div>
+                <hr class="my-2" />
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Total</span>
+                    <span class="fw-semibold">&pound;@invoice.Total.ToString("0.00", CultureInfo.InvariantCulture)</span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Paid So Far</span>
+                    <span class="fw-semibold">&pound;@invoice.Paid.ToString("0.00", CultureInfo.InvariantCulture)</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 mt-1 border-top">
+                    <span class="fw-bold">Balance Due (Fixed)</span>
+                    <span class="fw-bold text-primary fs-5" id="invoice-balance-amount" data-balance="@invoice.Balance.ToString("0.00", CultureInfo.InvariantCulture)">&pound;@invoice.Balance.ToString("0.00", CultureInfo.InvariantCulture)</span>
+                </div>
+            </div>
+
+            <form method="post" asp-controller="Payment" asp-action="PayInvoice" asp-route-bookingId="@invoice.BookingId" class="text-start">
+                <div class="mb-3">
+                    <label for="tip-amount-input" class="form-label fw-semibold">Add an optional tip for your technician</label>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm tip-preset-btn" data-tip="0">No tip</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm tip-preset-btn" data-tip="5">+&pound;5</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm tip-preset-btn" data-tip="10">+&pound;10</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm tip-preset-btn" data-tip="20">+&pound;20</button>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text">&pound;</span>
+                        <input id="tip-amount-input" name="tipAmount" type="number" step="0.01" min="0" max="10000" value="0.00" class="form-control" />
+                    </div>
+                    <small class="text-muted">The invoice balance of &pound;@invoice.Balance.ToString("0.00", CultureInfo.InvariantCulture) is fixed. Any optional tip goes directly towards thanking your technician.</small>
+                </div>
+
+                <div class="payment-status-actions mt-4">
+                    <button type="submit" class="btn btn-primary payment-status-btn w-100" id="pay-invoice-btn">
+                        <span class="material-symbols-outlined fs-20">lock</span>
+                        <span id="pay-invoice-btn-text">Pay &pound;@invoice.Balance.ToString("0.00", CultureInfo.InvariantCulture) Now</span>
+                    </button>
+                </div>
+            </form>
+        }
+
+        <div class="payment-status-security-note">
+            <div class="security-note-item">
+                <span class="material-symbols-outlined fs-14">lock</span>
+                <span>Secure Stripe Checkout</span>
+            </div>
+            <div class="security-note-item">
+                <span class="material-symbols-outlined fs-14">verified_user</span>
+                <span>Apple Pay, Google Pay &amp; Cards</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="payment-help-text">
+    Having trouble? <a asp-controller="Home" asp-action="Contact">Contact Support</a>, call <a href="tel:@GlobalConstants.BusinessPhoneInternational">@GlobalConstants.BusinessPhone</a> or message us on <a href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener">WhatsApp</a>
+</p>
+
+@section Scripts {
+    <script src="~/js/payment-invoice.js" asp-append-version="true"></script>
+}
+

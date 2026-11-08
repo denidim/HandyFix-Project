@@ -16,6 +16,13 @@
             return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Zone);
         }
 
+        // The other way: a time on a UK clock as the moment to compare saved ones with, such as
+        // the start of a month for the list of invoices made in it.
+        public static DateTime ToUtc(DateTime uk)
+        {
+            return TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(uk, DateTimeKind.Unspecified), Zone);
+        }
+
         // The zone goes by one name on Linux and another on Windows. A machine that knows
         // neither shows the time as it was saved, which is what every page did before, and not
         // an error page.

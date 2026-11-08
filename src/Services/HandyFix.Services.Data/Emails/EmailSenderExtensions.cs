@@ -1,6 +1,7 @@
 ﻿namespace HandyFix.Services.Data.Emails
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     using HandyFix.Services.Messaging;
@@ -25,11 +26,12 @@
             string to,
             string subject,
             string htmlContent,
-            string replyTo = null)
+            string replyTo = null,
+            IEnumerable<EmailAttachment> attachments = null)
         {
             try
             {
-                await emailSender.SendEmailAsync(from, fromName, to, subject, htmlContent, null, replyTo);
+                await emailSender.SendEmailAsync(from, fromName, to, subject, htmlContent, attachments, replyTo);
                 return true;
             }
             catch (Exception ex)

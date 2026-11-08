@@ -18,6 +18,7 @@
     using HandyFix.Services.Data.Emails;
     using HandyFix.Services.Data.EmailsNotSent;
     using HandyFix.Services.Data.Inquiries;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.ServiceAreas;
@@ -165,6 +166,7 @@
             // runs). None is checked at start-up: a missing one fails where it is used, as before.
             services.AddOptions<BusinessOptions>().BindConfiguration(BusinessOptions.Section);
             services.AddOptions<EmailOptions>().Configure<IConfiguration>((options, settings) => options.ReadFrom(settings));
+            services.AddOptions<InvoiceOptions>().Configure<IConfiguration>((options, settings) => options.ReadFrom(settings));
             services.AddOptions<StripeOptions>().BindConfiguration(StripeOptions.Section);
 
             // WebOptimizer: the public stylesheets combined into one minified file, in the order
@@ -224,6 +226,7 @@
             services.AddTransient<IJobsService, JobsService>();
             services.AddTransient<ITechniciansService, TechniciansService>();
             services.AddTransient<IPaymentsService, PaymentsService>();
+            services.AddTransient<IInvoicesService, InvoicesService>();
             services.AddTransient<IBookingEmails, BookingEmails>();
             services.AddTransient<IEnquiryEmails, EnquiryEmails>();
             services.AddTransient<IAccountEmails, AccountEmails>();

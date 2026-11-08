@@ -1,6 +1,7 @@
 ﻿namespace HandyFix.Web.ViewModels.Booking
 {
     using System;
+    using System.Globalization;
 
     using HandyFix.Common;
     using HandyFix.Data.Models;
@@ -27,6 +28,16 @@
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
+        /// A tip the customer added when paying the invoice online, apart from the amount.
+        /// </summary>
+        public decimal? Tip { get; set; }
+
+        /// <summary>
+        /// An invoice the customer paid on its payment page: written by the site, not the admin.
+        /// </summary>
+        public bool IsPaidOnline { get; set; }
+
+        /// <summary>
         /// The deposit paid on the website, whether it stayed or was sent back. Anything else
         /// was typed in by the admin and can be taken off again.
         /// </summary>
@@ -38,12 +49,16 @@
             ? "Deposit, card on the website (refunded)"
             : this.IsWebsiteDeposit
                 ? "Deposit, card on the website"
-                : this.Method;
+                : this.IsPaidOnline
+                    ? "Card, invoice paid online" + (this.Tip > 0m ? $" (+ £{this.Tip.Value.ToString("0.00", CultureInfo.InvariantCulture)} tip)" : string.Empty)
+                    : this.Method;
 
         public void CreateMappings(TypeAdapterConfig config)
         {
+            // Only a payment page has a session id: the admin's lines never do.
             config.NewConfig<Payment, PaymentLineViewModel>()
-                .Map(dest => dest.StatusName, src => src.Status.Name);
+                .Map(dest => dest.StatusName, src => src.Status.Name)
+                .Map(dest => dest.IsPaidOnline, src => src.CheckoutSessionId != null);
         }
     }
 }

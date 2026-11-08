@@ -8,6 +8,8 @@
 
     using HandyFix.Common;
     using HandyFix.Data.Models;
+    using HandyFix.Services.Data.Invoices;
+    using HandyFix.Services.Data.Payments;
     using HandyFix.Web.ViewModels.Booking;
 
     using Microsoft.EntityFrameworkCore;
@@ -377,15 +379,20 @@
             using var world = new BookingWorld();
             Booking booking = await world.SeedPaidBookingAsync();
             await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
+            await world.Invoices.MakeAsync(booking.Id, null);
 
-            var added = await world.Payments.AddPaymentAsync(booking.Id, 85.00m, method);
+            PaymentAddResult added = await world.Payments.AddPaymentAsync(booking.Id, 85.00m, method);
 
-            Assert.True(added);
+            Assert.True(added.Added);
             Payment payment = world.DbContext.Payments.Include(x => x.Status).Single(x => x.Method != null);
             Assert.Equal(85.00m, payment.Amount);
             Assert.Equal(method, payment.Method);
             Assert.Equal("Completed", payment.Status.Name);
-            Assert.Equal($"Payment of £85.00 written on the job: {method}.", world.HistoryOf(booking).Last());
+            Assert.Contains($"Payment of £85.00 written on the job: {method}.", world.HistoryOf(booking));
+
+            // It paid the job in full, so the invoice marked paid went to the customer by itself.
+            Assert.Equal(InvoiceEmailOutcome.Sent, added.PaidInvoice);
+            Assert.Equal("Invoice PHS-0001 emailed to the customer: paid in full.", world.HistoryOf(booking).Last());
 
             // The deposit and the payment together are what the business took.
             Assert.Equal(135.00m, await world.Payments.GetTotalRevenueAsync());
@@ -396,6 +403,54 @@
             Assert.True(list[0].IsWebsiteDeposit);
             Assert.Equal(method, list[1].Description);
             Assert.False(list[1].IsWebsiteDeposit);
+        }
+
+        // A done job takes a payment only once its invoice is made: the admin pressed Add Payment
+        // before sending the invoice on staging (Section 3ds), because the form came first.
+        [Fact]
+        public async Task ADoneJobsPaymentWaitsForItsInvoice()
+        {
+            using var world = new BookingWorld();
+            Booking booking = await world.SeedPaidBookingAsync();
+            await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
+
+            Assert.False((await world.Payments.AddPaymentAsync(booking.Id, 85.00m, "Cash")).Added);
+            Assert.Equal(new[] { "DepositPaid" }, world.PaymentStatusesOf(booking));
+
+            await world.Invoices.MakeAsync(booking.Id, null);
+
+            Assert.True((await world.Payments.AddPaymentAsync(booking.Id, 85.00m, "Cash")).Added);
+        }
+
+        // Paid in part, nothing goes by itself: the admin sends the invoice again if they wish.
+        [Fact]
+        public async Task APartPaymentSendsNoInvoiceByItself()
+        {
+            using var world = new BookingWorld();
+            List<SentEmail> sent = world.CaptureEmails();
+            Booking booking = await world.SeedPaidBookingAsync();
+            await world.Jobs.CompleteBookingAsync(booking.Id, 135.00m);
+            await world.Invoices.MakeAsync(booking.Id, null);
+            var before = sent.Count;
+
+            PaymentAddResult added = await world.Payments.AddPaymentAsync(booking.Id, 40.00m, "Cash");
+
+            Assert.True(added.Added);
+            Assert.Null(added.PaidInvoice);
+            Assert.Equal(before, sent.Count);
+        }
+
+        // A job that is booked and not done yet has no invoice, and still takes money paid ahead.
+        [Fact]
+        public async Task ABookedJobTakesAPaymentWithNoInvoice()
+        {
+            using var world = new BookingWorld();
+            Booking booking = await world.SeedWrittenInJobAsync();
+
+            PaymentAddResult added = await world.Payments.AddPaymentAsync(booking.Id, 50.00m, "Bank transfer");
+
+            Assert.True(added.Added);
+            Assert.Null(added.PaidInvoice);
         }
 
         [Theory]
@@ -411,7 +466,7 @@
 
             var added = await world.Payments.AddPaymentAsync(booking.Id, (decimal)amount, method);
 
-            Assert.False(added);
+            Assert.False(added.Added);
             Assert.Equal(new[] { "DepositPaid" }, world.PaymentStatusesOf(booking));
         }
 
@@ -424,7 +479,7 @@
             Booking booking = await world.SeedPaidBookingAsync();
             world.SetStatus(booking, status);
 
-            Assert.False(await world.Payments.AddPaymentAsync(booking.Id, 85.00m, "Cash"));
+            Assert.False((await world.Payments.AddPaymentAsync(booking.Id, 85.00m, "Cash")).Added);
         }
 
         // A website booking's first payment is its deposit, paid on the website and nowhere else.
@@ -435,7 +490,7 @@
             await world.SeedPendingPaymentAsync("12 Main Rd, Sutton");
             Booking booking = world.DbContext.Bookings.Single();
 
-            Assert.False(await world.Payments.AddPaymentAsync(booking.Id, 50.00m, "Cash"));
+            Assert.False((await world.Payments.AddPaymentAsync(booking.Id, 50.00m, "Cash")).Added);
         }
 
         [Fact]

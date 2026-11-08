@@ -6,7 +6,9 @@
 
     using HandyFix.Common;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
@@ -23,16 +25,74 @@
     {
         private readonly IBookingsService bookingsService;
         private readonly IPaymentsService paymentsService;
+        private readonly IInvoicesService invoicesService;
         private readonly ILogger<PaymentController> logger;
 
         public PaymentController(
             IBookingsService bookingsService,
             IPaymentsService paymentsService,
+            IInvoicesService invoicesService,
             ILogger<PaymentController> logger)
         {
             this.bookingsService = bookingsService;
             this.paymentsService = paymentsService;
+            this.invoicesService = invoicesService;
             this.logger = logger;
+        }
+
+        // The invoice's payment page, and where Stripe sends the customer back to. As with the
+        // deposit, coming back proves nothing: the service asks Stripe whether the page was
+        // paid, writes the money on the job when it was, and the page then reads the job.
+        [HttpGet]
+        [Route("Payment/Invoice/{bookingId:guid}")]
+        public async Task<IActionResult> Invoice(Guid bookingId, string session_id)
+        {
+            Guid? paidFor = string.IsNullOrWhiteSpace(session_id)
+                ? null
+                : await this.paymentsService.ConfirmCheckoutAsync(session_id);
+
+            InvoiceViewModel invoice = await this.invoicesService.GetAsync(bookingId);
+            if (invoice == null)
+            {
+                return this.NotFound();
+            }
+
+            return this.View(new InvoicePaymentViewModel
+            {
+                Invoice = invoice,
+                JustPaid = paidFor == bookingId && invoice.IsPaid,
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("Payment/Invoice/{bookingId:guid}")]
+        public async Task<IActionResult> PayInvoice(Guid bookingId, decimal? tipAmount)
+        {
+            InvoiceViewModel invoice = await this.invoicesService.GetAsync(bookingId);
+            if (invoice == null)
+            {
+                return this.NotFound();
+            }
+
+            if (invoice.IsPaid)
+            {
+                return this.RedirectToAction(nameof(this.Invoice), new { bookingId });
+            }
+
+            var tip = Math.Max(0m, tipAmount ?? 0m);
+            var successUrl = $"{this.Request.Scheme}://{this.Request.Host}/Payment/Invoice/{bookingId}?session_id={{CHECKOUT_SESSION_ID}}";
+            var cancelUrl = $"{this.Request.Scheme}://{this.Request.Host}/Payment/Invoice/{bookingId}";
+
+            PaymentCheckoutResult result = await this.paymentsService.CreateInvoiceCheckoutSessionAsync(bookingId, tip, successUrl, cancelUrl);
+            if (result == null)
+            {
+                return this.RedirectToAction(nameof(this.Invoice), new { bookingId });
+            }
+
+            return result.IsMock
+                ? this.RedirectToAction(nameof(this.Invoice), new { bookingId, session_id = result.SessionId })
+                : this.Redirect(result.RedirectUrl);
         }
 
         [HttpGet]
