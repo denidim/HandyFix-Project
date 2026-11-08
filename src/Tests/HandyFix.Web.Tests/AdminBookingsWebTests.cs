@@ -553,10 +553,11 @@
         }
 
         // A job that came by phone: a first name, a number, a day and a time. It is a job from
-        // the start, with no deposit, no slot and no email until it is paid, and it is finished
-        // and paid for on the same page as any other.
+        // the start, with no deposit and no slot. Nobody is emailed until a technician is picked;
+        // from there it goes the way a website booking does, and it is finished and paid for on
+        // the same page as any other (Section 3dt).
         [Fact]
-        public async Task AJobWrittenInByTheAdminIsAJobFromTheStartAndEmailsNobodyUntilItIsPaid()
+        public async Task AJobWrittenInByTheAdminIsAJobFromTheStartAndEmailsTheCustomerOnceATechnicianIsPicked()
         {
             using var site = new Site();
             HttpClient admin = await site.SignedInAdminAsync();
@@ -595,6 +596,8 @@
             var page = WebUtility.HtmlDecode(await written.Content.ReadAsStringAsync());
             Assert.Equal(jobPage, written.RequestMessage.RequestUri.AbsolutePath);
             Assert.Contains("The job is written in. Its hour is still on sale on the website", page);
+            Assert.Contains("No email was sent to the customer yet: they are emailed when a technician is picked.", page);
+            Assert.Empty(site.Emails.Sent);
             Assert.Equal(("Booked", "Not paid"), LabelsOn(page));
             Assert.Contains("Grace · came from: Phone", page);
             Assert.Contains("No, no deposit", page);
@@ -606,11 +609,14 @@
             Assert.False(site.Slot(slot.Id).IsBooked);
             Assert.Null(site.Slot(slot.Id).BookingId);
 
-            // A technician can be picked at once, and nobody is emailed about it.
+            // A technician can be picked at once, and the customer is emailed who is coming.
             Assert.Contains("<select name=\"technicianId\"", page);
-            Assert.Contains("No email goes out for a job that was written in.", page);
+            Assert.Contains("Saving a new technician emails the customer that technician's name and phone number.", page);
             HttpResponseMessage picked = await PostFromAsync(admin, jobPage, JobsPage + "/AssignTechnician", With(id, "technicianId", site.LaunchTechnicianId().ToString()));
-            Assert.Contains("Zapryan is now the technician for this job. No email goes out for a job that was written in: please tell the customer yourself.", WebUtility.HtmlDecode(await picked.Content.ReadAsStringAsync()));
+            Assert.Contains("Zapryan is now the technician for this job. The customer has been emailed the name and phone number.", WebUtility.HtmlDecode(await picked.Content.ReadAsStringAsync()));
+            RecordingEmailSender.Email technicianEmail = Assert.Single(site.Emails.Sent);
+            Assert.Equal("grace@example.com", technicianEmail.To);
+            Assert.Equal("Your technician for your Plumbing Handyman Surrey booking", technicianEmail.Subject);
 
             // The calendar shows it on its day, though it holds no slot there.
             var day = WebUtility.HtmlDecode(await (await admin.GetAsync("/Administration/Calendar?date=" + slot.StartTime.ToString("yyyy-MM-dd"))).Content.ReadAsStringAsync());
@@ -623,14 +629,15 @@
             // Done and paid in cash: no deposit ever came into it.
             await PostFromAsync(admin, jobPage, JobsPage + "/Complete", With(id, "finalPrice", "60.00"));
             await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(With(id, "workDone", string.Empty), "send", "download"));
-            Assert.Empty(site.Emails.Sent);
+            Assert.Single(site.Emails.Sent);
             HttpResponseMessage paid = await PostFromAsync(admin, jobPage, JobsPage + "/AddPayment", With(With(id, "amount", "60.00"), "method", "Cash"));
             page = WebUtility.HtmlDecode(await paid.Content.ReadAsStringAsync());
             Assert.Equal(("Done", "Paid in full"), LabelsOn(page));
 
-            // The one email it ever sends: the invoice marked paid, once the cash pays it in full.
+            // The second email: the invoice marked paid, once the cash pays it in full.
             Assert.Contains("The invoice marked PAID IN FULL was emailed to the customer.", page);
-            Assert.Equal("grace@example.com", Assert.Single(site.Emails.Sent).To);
+            Assert.Equal(2, site.Emails.Sent.Count);
+            Assert.Equal("grace@example.com", site.Emails.Sent.Last().To);
         }
 
         // An enquiry that turns into work. The button opens the form with what the enquiry

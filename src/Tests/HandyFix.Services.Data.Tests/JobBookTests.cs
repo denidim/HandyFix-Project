@@ -114,10 +114,11 @@
             Assert.Equal("Approved", world.StatusOf(job));
         }
 
-        // The site emails website customers only. For a written-in job the admin is already
-        // speaking to the customer, even when an email address is on the job.
+        // From the technician on, a written-in job goes the way a website booking does: the
+        // customer is emailed who is coming (Section 3dt). The job was written in with no
+        // service and no address, and the email leaves those rows out rather than send them empty.
         [Fact]
-        public async Task PickingATechnicianOnAWrittenInJobNeedsNoDepositAndSendsNoEmail()
+        public async Task PickingATechnicianOnAWrittenInJobNeedsNoDepositAndEmailsTheCustomer()
         {
             using var world = new BookingWorld();
             JobInputModel form = world.WrittenInJob();
@@ -129,11 +130,37 @@
 
             TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(id, technician.Id);
 
-            Assert.Equal(TechnicianAssignmentOutcome.AssignedNoEmailForWrittenInJob, result.Outcome);
+            Assert.Equal(TechnicianAssignmentOutcome.AssignedAndCustomerEmailed, result.Outcome);
+            Assert.Equal("Zapryan", result.TechnicianName);
+            Assert.Equal(technician.Id, world.DbContext.Bookings.Single().TechnicianId);
+            SentEmail email = Assert.Single(sent);
+            Assert.Equal("grace@example.com", email.To);
+            Assert.Equal("Your technician for your Plumbing Handyman Surrey booking", email.Subject);
+            Assert.Contains("<strong>Zapryan</strong>", email.Body);
+            Assert.Contains(BookingReference.Short(id), email.Body);
+            Assert.DoesNotContain("Service(s)", email.Body);
+            Assert.DoesNotContain("Address", email.Body);
+            Assert.Equal("Technician picked: Zapryan. The customer was emailed.", world.HistoryOf(job).Last());
+        }
+
+        // A job taken by phone may have no email address. The technician is saved all the same,
+        // and the admin is the one to tell the customer who is coming.
+        [Fact]
+        public async Task PickingATechnicianOnAJobWithNoEmailAddressSavesItAndSendsNothing()
+        {
+            using var world = new BookingWorld();
+            Booking job = await world.SeedWrittenInJobAsync();
+            Technician technician = world.AddTechnician("Zapryan");
+            List<SentEmail> sent = world.CaptureEmails();
+
+            TechnicianAssignmentResult result = await world.Jobs.AssignTechnicianAsync(job.Id, technician.Id);
+
+            Assert.Equal(TechnicianAssignmentOutcome.AssignedNoEmailAddress, result.Outcome);
             Assert.Equal("Zapryan", result.TechnicianName);
             Assert.Equal(technician.Id, world.DbContext.Bookings.Single().TechnicianId);
             Assert.Empty(sent);
-            Assert.Equal("Technician picked: Zapryan.", world.HistoryOf(job).Last());
+            Assert.Empty(world.DbContext.EmailsNotSent);
+            Assert.Equal("Technician picked: Zapryan. The job has no email address, so the customer was not emailed.", world.HistoryOf(job).Last());
         }
 
         [Fact]

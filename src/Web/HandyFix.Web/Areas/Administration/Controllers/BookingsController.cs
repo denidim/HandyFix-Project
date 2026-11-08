@@ -163,7 +163,7 @@
 
             Guid id = await this.jobsService.CreateWrittenInJobAsync(model);
 
-            this.TempData[SuccessMessageKey] = "The job is written in. Its hour is still on sale on the website: block it in the calendar if nobody else should be booked then. No email was sent to the customer.";
+            this.TempData[SuccessMessageKey] = "The job is written in. Its hour is still on sale on the website: block it in the calendar if nobody else should be booked then. No email was sent to the customer yet: they are emailed when a technician is picked.";
             return this.RedirectToAction(nameof(this.Details), new { id });
         }
 
@@ -340,8 +340,8 @@
                     this.TempData[ErrorMessageKey] = $"{result.TechnicianName} is now the technician for this job, but the email to the customer could not be sent. Please give them the name and phone number yourself.";
                     break;
 
-                case TechnicianAssignmentOutcome.AssignedNoEmailForWrittenInJob:
-                    this.TempData[SuccessMessageKey] = $"{result.TechnicianName} is now the technician for this job. No email goes out for a job that was written in: please tell the customer yourself.";
+                case TechnicianAssignmentOutcome.AssignedNoEmailAddress:
+                    this.TempData[SuccessMessageKey] = $"{result.TechnicianName} is now the technician for this job. This job has no email address: please tell the customer yourself who is coming.";
                     break;
 
                 case TechnicianAssignmentOutcome.Cleared:
