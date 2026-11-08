@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Tests
+namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -36,7 +36,7 @@
             Assert.Equal("Replaced the kitchen tap.", invoice.WorkDone);
             Assert.Equal("Leak Fix", invoice.Services);
             Assert.Equal("Ada Lovelace", invoice.CustomerName);
-            Assert.Equal(invoice.InvoicedOn.Date.AddDays(3), invoice.DueOn);
+            Assert.Equal(invoice.InvoicedOn.Date, invoice.DueOn);
             Assert.Contains("Invoice PHS-0001 made.", world.HistoryOf(booking));
         }
 
@@ -102,6 +102,8 @@
             Assert.Equal("ada@example.com", email.To);
             Assert.Contains("PHS-0001", email.Subject);
             Assert.Contains("110.00", email.WhatIsRead());
+            Assert.Contains($"/Payment/Invoice/{booking.Id}", email.Body);
+            Assert.Contains("Pay &pound;110.00 Online (Card, Apple Pay, Google Pay)", email.WhatIsRead());
             Assert.Contains(InvoiceOptions.DefaultPaymentDetails, email.WhatIsRead());
             var pdf = Assert.Single(email.Attachments);
             Assert.Equal("Invoice PHS-0001.pdf", pdf.FileName);
@@ -176,10 +178,10 @@
                 },
             };
 
-            var lines = Encoding.UTF8.GetString(InvoiceCsv.For(new[] { invoice }, new DateTime(2026, 11, 8))).TrimStart((char)0xFEFF).Split(Environment.NewLine);
+            var lines = Encoding.UTF8.GetString(InvoiceCsv.For(new[] { invoice }, new DateTime(2026, 11, 7))).TrimStart((char)0xFEFF).Split(Environment.NewLine);
 
             Assert.StartsWith("Invoice,Date,Customer,Job,Services,Total,", lines[0]);
-            Assert.Equal("PHS-0007,2026-11-07,\"'=Smith, \"\"Jo\"\"\",AB12CD34,Leak Fix,175.00,50.00,0.00,0.00,25.00,75.00,100.00,Due 10 Nov", lines[1]);
+            Assert.Equal("PHS-0007,2026-11-07,\"'=Smith, \"\"Jo\"\"\",AB12CD34,Leak Fix,175.00,50.00,0.00,0.00,25.00,75.00,100.00,Due 7 Nov", lines[1]);
         }
 
         [Fact]
@@ -198,8 +200,8 @@
         {
             var invoice = new InvoiceViewModel { Number = 1, InvoicedOn = new DateTime(2026, 11, 7, 18, 30, 0), Total = 90m };
 
-            Assert.Equal("Due 10 Nov", invoice.StatusOn(new DateTime(2026, 11, 10)));
-            Assert.Equal("Overdue", invoice.StatusOn(new DateTime(2026, 11, 11)));
+            Assert.Equal("Due 7 Nov", invoice.StatusOn(new DateTime(2026, 11, 7)));
+            Assert.Equal("Overdue", invoice.StatusOn(new DateTime(2026, 11, 8)));
         }
 
         // A website booking with its £50 deposit paid, marked done at the price given.

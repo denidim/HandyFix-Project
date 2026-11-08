@@ -391,11 +391,21 @@ technician — a different hour does not change who is doing it.
 
 ---
 
-## Step 4 — Done, and the money
+## Step 4 — Done, the invoice, and the money
 
 **Mark as Done** asks for the **final price**. The line under the button reads *"Enter the final
-total for the job (minimum 1 hour, then billed in 30-minute blocks)."* Until it is typed in the
+total for the job + materials cost if any (minimum 1 hour, then billed in 30-minute blocks). This
+is the final price that will be invoiced to the customer!"* Until it is typed in the
 page shows an estimate (the service's price) and no job can be "Paid in full".
+
+**The invoice (`#job-invoice`)** appears once the job is marked as done. First fill in *Work done*
+(service, hours spent, materials) and press **Email to Customer** (or **Download PDF**). The
+unpaid invoice is due on completion (same day as the invoice date) and includes a direct online
+payment link (`/Payment/Invoice/{bookingId}`) with an optional technician tip, plus the company's
+bank transfer details (`Invoice:PaymentDetails`). Once the customer pays and the money is confirmed
+in the account, record the payment in **Money List** (**Add Payment**) so *Still owed* becomes
+`£0.00` (*Paid in full*), and press **Email to Customer** again to send the final **PAID IN FULL**
+invoice receipt.
 
 **The money list** has one line per payment, and under it the final price, what has been paid and
 what is still owed:

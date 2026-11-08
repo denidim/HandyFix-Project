@@ -1,5 +1,7 @@
-﻿namespace HandyFix.Services.Data.Invoices
+namespace HandyFix.Services.Data.Invoices
 {
+    using System;
+
     using HandyFix.Common;
 
     using Microsoft.Extensions.Configuration;
@@ -14,10 +16,17 @@
 
         public string PaymentDetails { get; set; } = DefaultPaymentDetails;
 
+        public string SiteUrl { get; set; } = GlobalConstants.SiteUrl;
+
+        public string PaymentUrl(Guid bookingId) => $"{this.SiteUrl}/Payment/Invoice/{bookingId}";
+
         public void ReadFrom(IConfiguration configuration)
         {
             var value = configuration["Invoice:PaymentDetails"];
             this.PaymentDetails = string.IsNullOrWhiteSpace(value) ? DefaultPaymentDetails : value.Trim();
+
+            var siteUrl = configuration["Site:PublicUrl"];
+            this.SiteUrl = string.IsNullOrWhiteSpace(siteUrl) ? GlobalConstants.SiteUrl : siteUrl.Trim().TrimEnd('/');
         }
     }
 }

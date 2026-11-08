@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Invoices
+namespace HandyFix.Services.Data.Invoices
 {
     using System;
     using System.Collections.Generic;
@@ -100,7 +100,7 @@
 
         public byte[] Pdf(InvoiceViewModel invoice)
         {
-            return InvoicePdf.ForInvoice(invoice, this.settings.PaymentDetails);
+            return InvoicePdf.ForInvoice(invoice, this.settings.PaymentDetails, this.settings.PaymentUrl(invoice.BookingId));
         }
 
         public byte[] MonthPdf(IReadOnlyList<InvoiceViewModel> invoices, int year, int month)

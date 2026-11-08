@@ -74,12 +74,24 @@
                 <span class="material-symbols-filled text-secondary">payments</span>
                 <h2>3. Booking Deposit &amp; Payments</h2>
             </div>
-            <p class="font-body-md text-on-surface-variant mb-2">
-                To secure an appointment, a booking deposit of <strong>£@Deposit.PoundsAndPence</strong> is paid online when you book. Deposits are processed securely by <strong>Stripe</strong>; your card details never reach our servers. If the deposit isn't paid within 15 minutes, the time slot is released for other customers.
-            </p>
-            <p class="font-body-md text-on-surface-variant mb-0">
-                The full deposit is deducted from your final invoice when the work is complete.
-            </p>
+            <ul class="d-flex flex-column gap-2 p-0 list-unstyled pl-4 mb-0">
+                <li class="d-flex align-items-start gap-2">
+                    <span class="material-symbols-outlined text-secondary mt-1 fs-16">arrow_right</span>
+                    <span><strong>Deposit:</strong> To secure an appointment, a booking deposit of <strong>£@Deposit.PoundsAndPence</strong> is paid online when you book. Deposits are processed securely by <strong>Stripe</strong>; your card details never reach our servers. If the deposit isn't paid within 15 minutes, the time slot is released for other customers. The full deposit is deducted from your final invoice when the work is complete.</span>
+                </li>
+                <li class="d-flex align-items-start gap-2">
+                    <span class="material-symbols-outlined text-secondary mt-1 fs-16">arrow_right</span>
+                    <span><strong>Final Balance:</strong> The remaining balance is strictly due immediately upon completion of the work, prior to our team leaving the premises.</span>
+                </li>
+                <li class="d-flex align-items-start gap-2">
+                    <span class="material-symbols-outlined text-secondary mt-1 fs-16">arrow_right</span>
+                    <span><strong>Payment Methods:</strong> We accept instant payment via our secure Stripe payment link (Debit/Credit Card, Apple Pay, Google Pay) or immediate faster bank transfer.</span>
+                </li>
+                <li class="d-flex align-items-start gap-2">
+                    <span class="material-symbols-outlined text-secondary mt-1 fs-16">arrow_right</span>
+                    <span><strong>Late Payments:</strong> Any balance not settled on the day of completion may incur an administration fee and statutory interest.</span>
+                </li>
+            </ul>
         </section>
 
         <hr class="info-section-divider" />

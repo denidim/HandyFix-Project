@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Common
+namespace HandyFix.Common
 {
     using System;
     using System.Globalization;
@@ -7,9 +7,11 @@
     // here so the invoice, its email, the job's page and the list of invoices say the same.
     public static class InvoiceTerms
     {
-        // What is left after the work is paid within this many days of the invoice's date,
-        // decided with the owner on 2026-11-07.
-        public const int DaysToPay = 3;
+        // The remaining balance is due immediately upon completion of the work, on the same date
+        // as the invoice itself.
+        public const int DaysToPay = 0;
+
+        public const string PaymentTerms = "Due on Completion";
 
         // In front of every number the site gives. The owner's own invoices, written by hand
         // before the site made them, had numbers of their own: the prefix keeps the two apart.

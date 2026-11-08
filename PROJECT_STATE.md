@@ -3597,6 +3597,23 @@ The site took the deposit and kept every later payment on the job (Section 3ce),
 - **Locally, against SQL Server, in the browser**: a website booking paid through the pretend payment and marked done at £135; no Invoice box before that. "Download PDF" gave `Invoice PHS-0002.pdf`; "Email to Customer" straight after it answered "It asks for £85.00 by 10 November"; the CSV and the month's PDF downloaded. At 390px neither page scrolls sideways (`76-local-*`).
 - **Staging, after the push** (pipeline green): the Invoices page answers, with its menu link and icon; the month's PDF comes back as a real PDF, drawn on the Linux server with the fonts from the assembly, and the CSV with its header (`76-staging-*`).
 
+## 3dq. Due on Completion, Online Invoice Payment Link with Optional Tip, and Admin Job Workflow Guide (2026-11-08)
+
+Following Section 3dp, the developer refined the payment terms and invoice workflow so that all remaining balances are strictly due upon completion of the work, and customers can pay their invoice balance online in one click (Card, Apple Pay, Google Pay) with an optional tip for the technician, or by bank transfer.
+
+### What changed
+
+- **Terms & Conditions (`Views/Home/Terms.cshtml`, Section 3 "Booking Deposit & Payments")**: four explicit bullet points covering the £50 deposit, the final balance strictly due immediately upon completion before the team leaves, accepted payment methods (Stripe payment link for Card, Apple Pay, Google Pay, or immediate faster bank transfer), and late payment administration fees and statutory interest.
+- **Invoice due date and terms (`InvoiceTerms`, `InvoicePdf`, `BookingEmails`)**: `InvoiceTerms.DaysToPay` is now `0` (`DueOn` is the same date as `InvoicedOn`, never a future date) and `InvoiceTerms.PaymentTerms` is `"Due on Completion"`. An unpaid invoice PDF shows both `Due date` (the invoice date) and `Terms: Due on Completion` in the top strip, and includes a clickable online payment link (`/Payment/Invoice/{bookingId}`) alongside the bank transfer details and invoice reference `PHS-XXXX` in the payment box.
+- **Deposit confirmation email (`BookingEmails.DepositPaidToCustomerAsync`)**: explains that the remaining balance is calculated on the job (depending on materials or extra time) and is due immediately upon completion, when the final invoice will be emailed with a quick payment link and bank details so a `PAID` receipt can be issued before leaving.
+- **Online invoice payment page with optional tip (`PaymentController.Invoice` / `PayInvoice`, `PaymentsService.CreateInvoiceCheckoutSessionAsync`, `Views/Payment/Invoice.cshtml`, `wwwroot/js/payment-invoice.js`)**: `/Payment/Invoice/{bookingId}` displays the invoice summary (`PHS-XXXX`, job reference, services, total, paid so far, and fixed **Balance Due**), lets the customer add an optional tip (`No tip`, `+£5`, `+£10`, `+£20`, or custom amount), and opens a Stripe Checkout session with one line item for the fixed invoice balance and a second line item when a tip is added.
+- **Admin job page workflow guide & copy (`Areas/Administration/Views/Bookings/Details.cshtml`)**: added the 5-step **Booking Workflow Steps** card at the top of the right-hand column (`Technician` -> `The Job` -> `Invoice` -> `Add Payment` -> `Final Invoice`), added `(Move / Finish / Cancel)` next to the `The Job` heading, updated the guidance under `Mark as Done` to remind the admin to include any materials in the final price, and updated the `AddPayment` heading in `Money List` to explain the two-invoice sequence.
+- **Bank details configuration**: stored in local `.NET User Secrets` (`Invoice:PaymentDetails`) and ready for staging/production `.env` (`INVOICE_PAYMENT_DETAILS`), never in tracked files.
+
+### Verified
+
+- **Build** 0 warnings, 0 errors (Release); **tests** 1149/1149 (431 in `HandyFix.Services.Data.Tests` + 718 in `HandyFix.Web.Tests`), including unit and full-stack tests for the same-day due date, invoice email link, admin workflow copy, and `/Payment/Invoice/{bookingId}` checkout with optional tip.
+
 ---
 
 ## 4. Current Standing & Remaining Roadmap
@@ -3622,13 +3639,13 @@ The site took the deposit and kept every later payment on the job (Section 3ce),
 
 ### Invoices — agreed 2026-11-07
 
-> One invoice per job after the work, made from the job's own data, with the deposit taken off (Section 3dp). In order:
+> One invoice per job after the work, made from the job's own data, with the deposit taken off (Sections 3dp and 3dq). In order:
 
-1. **Built 2026-11-07 (Section 3dp), on staging, not yet live.** The invoice PDF and its email, the Invoice box on a done job's page, and the Invoices page with each month's CSV and PDF.
+1. **Built 2026-11-07 (Section 3dp) and refined 2026-11-08 (Section 3dq).** The invoice PDF and its email (due on completion, with online payment link `/Payment/Invoice/{bookingId}` + optional tip and bank details), the Invoice box and 5-step workflow guide on a done job's page, and the Invoices page with each month's CSV and PDF.
 2. **The developer's test bookings on staging**: a booking paid, marked done, the invoice downloaded and emailed, the rest written on the job and the invoice sent again as paid, the month's CSV and PDF.
-3. **One sentence in the Terms** (Section 3, "Booking Deposit & Payments") on when the rest is paid, in the owner's words.
+3. **Done 2026-11-08 (Section 3dq).** **Terms & Conditions** (Section 3, "Booking Deposit & Payments") updated with the four payment-terms bullets (Deposit, Final Balance due on completion, Payment Methods, Late Payments).
 4. **The pull request** that takes it live, then the same check on the live site.
-5. **The company's bank details for paying later**, in `INVOICE_PAYMENT_DETAILS` in both servers' `.env`, when the owner gives them. Until then the invoice gives the phone number.
+5. **The company's bank details**, set in local User Secrets (2026-11-08) and to be added in `INVOICE_PAYMENT_DETAILS` in both servers' `.env`.
 
 ### Launch Sprints — the working list from 2026-09-21 until launch
 

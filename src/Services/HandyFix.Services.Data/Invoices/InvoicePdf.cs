@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Invoices
+namespace HandyFix.Services.Data.Invoices
 {
     using System;
     using System.Collections.Generic;
@@ -46,9 +46,9 @@
             Logo = Setup();
         }
 
-        public static byte[] ForInvoice(InvoiceViewModel invoice, string paymentDetails)
+        public static byte[] ForInvoice(InvoiceViewModel invoice, string paymentDetails, string paymentUrl = null)
         {
-            return InvoiceDocument(invoice, paymentDetails).GeneratePdf();
+            return InvoiceDocument(invoice, paymentDetails, paymentUrl).GeneratePdf();
         }
 
         public static byte[] ForMonth(IReadOnlyList<InvoiceViewModel> invoices, int year, int month, DateTime todayUk)
@@ -58,14 +58,14 @@
 
         // The two documents before they are made into PDF files, for a test that draws them as
         // pictures to look at.
-        public static IDocument InvoiceDocument(InvoiceViewModel invoice, string paymentDetails)
+        public static IDocument InvoiceDocument(InvoiceViewModel invoice, string paymentDetails, string paymentUrl = null)
         {
             return Document
                 .Create(document => document.Page(page =>
                 {
                     Page(page, PageSizes.A4);
                     page.Header().Element(container => InvoiceHeader(container, invoice));
-                    page.Content().PaddingTop(22).Element(container => InvoiceBody(container, invoice, paymentDetails));
+                    page.Content().PaddingTop(22).Element(container => InvoiceBody(container, invoice, paymentDetails, paymentUrl));
                     page.Footer().Element(CompanyFooter);
                 }))
                 .WithMetadata(new DocumentMetadata { Title = $"Invoice {invoice.NumberText}", Author = GlobalConstants.SystemName });
@@ -115,7 +115,7 @@
             });
         }
 
-        private static void InvoiceBody(IContainer container, InvoiceViewModel invoice, string paymentDetails)
+        private static void InvoiceBody(IContainer container, InvoiceViewModel invoice, string paymentDetails, string paymentUrl)
         {
             container.Column(column =>
             {
@@ -133,7 +133,8 @@
                     }
                     else
                     {
-                        Fact(row.RelativeItem(), "Payment due by", Long(invoice.DueOn), Navy);
+                        Fact(row.RelativeItem(), "Due date", Long(invoice.DueOn), Navy);
+                        Fact(row.RelativeItem(), "Terms", InvoiceTerms.PaymentTerms, Navy);
                     }
                 });
 
@@ -200,7 +201,16 @@
                 {
                     column.Item().Border(1).BorderColor(Rule).Padding(12).Column(pay =>
                     {
-                        pay.Item().Text($"Please pay {Pounds(invoice.Balance)} by {Long(invoice.DueOn)}.").SemiBold();
+                        pay.Item().Text($"Please pay {Pounds(invoice.Balance)} on completion ({Long(invoice.DueOn)}). Terms: {InvoiceTerms.PaymentTerms}.").SemiBold();
+                        if (!string.IsNullOrWhiteSpace(paymentUrl))
+                        {
+                            pay.Item().PaddingTop(4).Text(text =>
+                            {
+                                text.Span("Pay online (Card, Apple Pay, Google Pay): ").SemiBold();
+                                text.Hyperlink(paymentUrl, paymentUrl).FontColor(Blue).Underline();
+                            });
+                        }
+
                         pay.Item().PaddingTop(4).Text(paymentDetails).LineHeight(1.35f);
                         pay.Item().PaddingTop(4).Text($"Please give {invoice.NumberText} as the reference.").FontColor(Muted);
                     });

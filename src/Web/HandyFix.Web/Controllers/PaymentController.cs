@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Controllers
+namespace HandyFix.Web.Controllers
 {
     using System;
     using System.IO;
@@ -6,7 +6,9 @@
 
     using HandyFix.Common;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
@@ -23,16 +25,67 @@
     {
         private readonly IBookingsService bookingsService;
         private readonly IPaymentsService paymentsService;
+        private readonly IInvoicesService invoicesService;
         private readonly ILogger<PaymentController> logger;
 
         public PaymentController(
             IBookingsService bookingsService,
             IPaymentsService paymentsService,
+            IInvoicesService invoicesService,
             ILogger<PaymentController> logger)
         {
             this.bookingsService = bookingsService;
             this.paymentsService = paymentsService;
+            this.invoicesService = invoicesService;
             this.logger = logger;
+        }
+
+        [HttpGet]
+        [Route("Payment/Invoice/{bookingId:guid}")]
+        public async Task<IActionResult> Invoice(Guid bookingId, bool paid = false)
+        {
+            InvoiceViewModel invoice = await this.invoicesService.GetAsync(bookingId);
+            if (invoice == null)
+            {
+                return this.NotFound();
+            }
+
+            return this.View(new InvoicePaymentViewModel
+            {
+                Invoice = invoice,
+                JustPaid = paid,
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("Payment/Invoice/{bookingId:guid}")]
+        public async Task<IActionResult> PayInvoice(Guid bookingId, decimal? tipAmount)
+        {
+            InvoiceViewModel invoice = await this.invoicesService.GetAsync(bookingId);
+            if (invoice == null)
+            {
+                return this.NotFound();
+            }
+
+            if (invoice.IsPaid)
+            {
+                return this.RedirectToAction(nameof(this.Invoice), new { bookingId });
+            }
+
+            var tip = Math.Max(0m, tipAmount ?? 0m);
+            var successUrl = $"{this.Request.Scheme}://{this.Request.Host}/Payment/Invoice/{bookingId}?paid=true";
+            var cancelUrl = $"{this.Request.Scheme}://{this.Request.Host}/Payment/Invoice/{bookingId}";
+
+            PaymentCheckoutResult result = await this.paymentsService.CreateInvoiceCheckoutSessionAsync(bookingId, tip, successUrl, cancelUrl);
+            if (result == null)
+            {
+                return this.RedirectToAction(nameof(this.Invoice), new { bookingId });
+            }
+
+            return result.IsMock
+                ? this.RedirectToAction(nameof(this.Invoice), new { bookingId, paid = true })
+                : this.Redirect(result.RedirectUrl);
         }
 
         [HttpGet]

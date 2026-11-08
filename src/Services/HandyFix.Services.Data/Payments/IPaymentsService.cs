@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Payments
+namespace HandyFix.Services.Data.Payments
 {
     using System;
     using System.Collections.Generic;
@@ -61,6 +61,13 @@
         /// never silently fakes a payment or attempts a doomed Stripe call.
         /// </summary>
         Task<PaymentCheckoutResult> CreateCheckoutSessionAsync(Guid bookingId, string successUrl, string cancelUrl);
+
+        /// <summary>
+        /// Opens a Stripe payment page for a completed job's invoice balance plus an optional
+        /// customer tip. Null when there is no unpaid invoice for the booking or the tip is out
+        /// of range.
+        /// </summary>
+        Task<PaymentCheckoutResult> CreateInvoiceCheckoutSessionAsync(Guid bookingId, decimal tipAmount, string successUrl, string cancelUrl);
 
         /// <summary>
         /// Checks that Stripe signed the message, then passes checkout.session.completed to

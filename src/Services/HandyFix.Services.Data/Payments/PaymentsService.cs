@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Payments
+namespace HandyFix.Services.Data.Payments
 {
     using System;
     using System.Collections.Generic;
@@ -519,6 +519,101 @@
             Session session = await this.stripeGateway.CreateCheckoutAsync(options);
 
             await this.CreatePaymentRecordAsync(bookingId, depositAmount, StripeProvider, session.Id);
+
+            return new PaymentCheckoutResult { IsMock = false, SessionId = session.Id, RedirectUrl = session.Url };
+        }
+
+        public async Task<PaymentCheckoutResult> CreateInvoiceCheckoutSessionAsync(Guid bookingId, decimal tipAmount, string successUrl, string cancelUrl)
+        {
+            if (tipAmount < 0m || tipAmount > 10000m)
+            {
+                return null;
+            }
+
+            Booking booking = await this.bookingRepository.AllAsNoTracking()
+                .Include(x => x.Status)
+                .Include(x => x.Payments).ThenInclude(p => p.Status)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
+
+            if (booking == null
+                || booking.InvoiceNumber == null
+                || !booking.FinalPrice.HasValue
+                || !BookingRules.CanInvoice(booking.Status?.Name))
+            {
+                return null;
+            }
+
+            var paid = booking.Payments
+                .Where(p => p.Status?.Name == PaymentStatusNames.DepositPaid || p.Status?.Name == PaymentStatusNames.Completed)
+                .Sum(p => p.Amount);
+            var balance = Math.Max(0m, booking.FinalPrice.Value - paid);
+            if (balance <= 0m)
+            {
+                return null;
+            }
+
+            var roundedTip = Math.Round(tipAmount, 2, MidpointRounding.AwayFromZero);
+            var keyMissing = string.IsNullOrWhiteSpace(this.stripeSettings.SecretKey);
+
+            if (keyMissing && !this.MockPaymentsAllowed())
+            {
+                throw new InvalidOperationException("Stripe is not configured for this environment. Set Stripe:SecretKey before accepting real payments.");
+            }
+
+            if (keyMissing)
+            {
+                return new PaymentCheckoutResult { IsMock = true, SessionId = $"mock_invoice_{Guid.NewGuid()}" };
+            }
+
+            var invoiceNumber = InvoiceTerms.Number(booking.InvoiceNumber.Value);
+            var lineItems = new List<SessionLineItemOptions>
+            {
+                new SessionLineItemOptions
+                {
+                    PriceData = new SessionLineItemPriceDataOptions
+                    {
+                        UnitAmount = (long)Math.Round(balance * 100m, MidpointRounding.AwayFromZero),
+                        Currency = "gbp",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        {
+                            Name = $"Invoice {invoiceNumber} (Job #{BookingReference.Short(bookingId)})",
+                            Description = "Remaining balance due on completion.",
+                        },
+                    },
+                    Quantity = 1,
+                },
+            };
+
+            if (roundedTip > 0m)
+            {
+                lineItems.Add(new SessionLineItemOptions
+                {
+                    PriceData = new SessionLineItemPriceDataOptions
+                    {
+                        UnitAmount = (long)Math.Round(roundedTip * 100m, MidpointRounding.AwayFromZero),
+                        Currency = "gbp",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        {
+                            Name = $"Tip for Technician (Job #{BookingReference.Short(bookingId)})",
+                            Description = "Optional tip added by customer.",
+                        },
+                    },
+                    Quantity = 1,
+                });
+            }
+
+            var options = new SessionCreateOptions
+            {
+                AllowedPaymentMethodTypes = new List<string> { "card" },
+                LineItems = lineItems,
+                Mode = "payment",
+                SuccessUrl = successUrl,
+                CancelUrl = cancelUrl,
+                CustomerEmail = string.IsNullOrWhiteSpace(booking.Email) ? null : booking.Email,
+                ClientReferenceId = bookingId.ToString(),
+            };
+
+            Session session = await this.stripeGateway.CreateCheckoutAsync(options);
 
             return new PaymentCheckoutResult { IsMock = false, SessionId = session.Id, RedirectUrl = session.Url };
         }

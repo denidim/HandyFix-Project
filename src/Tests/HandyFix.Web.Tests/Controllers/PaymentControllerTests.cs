@@ -1,12 +1,14 @@
-﻿namespace HandyFix.Web.Tests.Controllers
+namespace HandyFix.Web.Tests.Controllers
 {
     using System;
     using System.Threading.Tasks;
 
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Bookings;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Web.Controllers;
+    using HandyFix.Web.ViewModels.Administration.Invoices;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Payment;
 
@@ -264,6 +266,24 @@
             paymentsService.Verify(x => x.HandleWebhookEventAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
 
+        [Fact]
+        public async Task PayInvoiceShouldRedirectToStripeWithBalancePlusOptionalTip()
+        {
+            var controller = BuildController(out _, out var paymentsService, out var invoicesService, out _);
+            var bookingId = Guid.NewGuid();
+            invoicesService
+                .Setup(x => x.GetAsync(bookingId))
+                .ReturnsAsync(new InvoiceViewModel { BookingId = bookingId, Number = 1, Total = 135m });
+            paymentsService
+                .Setup(x => x.CreateInvoiceCheckoutSessionAsync(bookingId, 10m, It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(new PaymentCheckoutResult { IsMock = false, SessionId = "cs_inv", RedirectUrl = "https://checkout.stripe.com/cs_inv" });
+
+            var result = await controller.PayInvoice(bookingId, 10m);
+
+            var redirect = Assert.IsType<RedirectResult>(result);
+            Assert.Equal("https://checkout.stripe.com/cs_inv", redirect.Url);
+        }
+
         private static BookingDetailsViewModel WaitingForItsDeposit(Guid bookingId) => new BookingDetailsViewModel
         {
             Id = bookingId,
@@ -282,12 +302,20 @@
             out Mock<IBookingsService> bookingsService,
             out Mock<IPaymentsService> paymentsService,
             out Mock<ILogger<PaymentController>> logger)
+            => BuildController(out bookingsService, out paymentsService, out _, out logger);
+
+        private static PaymentController BuildController(
+            out Mock<IBookingsService> bookingsService,
+            out Mock<IPaymentsService> paymentsService,
+            out Mock<IInvoicesService> invoicesService,
+            out Mock<ILogger<PaymentController>> logger)
         {
             bookingsService = new Mock<IBookingsService>();
             paymentsService = new Mock<IPaymentsService>();
+            invoicesService = new Mock<IInvoicesService>();
             logger = new Mock<ILogger<PaymentController>>();
 
-            return new PaymentController(bookingsService.Object, paymentsService.Object, logger.Object)
+            return new PaymentController(bookingsService.Object, paymentsService.Object, invoicesService.Object, logger.Object)
             {
                 ControllerContext = new ControllerContext
                 {
