@@ -10,6 +10,7 @@
     using HandyFix.Data.Models;
     using HandyFix.Services.Data.Common;
     using HandyFix.Services.Data.Emails;
+    using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Mapping;
     using HandyFix.Web.ViewModels.Payment;
 
@@ -40,6 +41,7 @@
         private readonly IHostEnvironment environment;
         private readonly ILogger<PaymentsService> logger;
         private readonly IStripeGateway stripeGateway;
+        private readonly IInvoicesService invoices;
 
         public PaymentsService(
             IDeletableEntityRepository<Payment> paymentRepository,
@@ -50,7 +52,8 @@
             IOptions<StripeOptions> stripeSettings,
             IHostEnvironment environment,
             ILogger<PaymentsService> logger,
-            IStripeGateway stripeGateway)
+            IStripeGateway stripeGateway,
+            IInvoicesService invoices)
         {
             this.paymentRepository = paymentRepository;
             this.paymentStatusRepository = paymentStatusRepository;
@@ -61,45 +64,13 @@
             this.environment = environment;
             this.logger = logger;
             this.stripeGateway = stripeGateway;
+            this.invoices = invoices;
         }
 
-        public async Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId)
+        public Task<Guid> CreatePaymentRecordAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId)
         {
-            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Pending);
-            if (pendingStatus == null)
-            {
-                throw new InvalidOperationException($"Payment status '{PaymentStatusNames.Pending}' is not seeded.");
-            }
-
-            // Supersede any earlier, still-pending payment attempt for this booking so a
-            // customer retrying checkout doesn't pile up orphaned Pending rows pointing
-            // at abandoned Stripe sessions.
-            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Cancelled);
-            if (cancelledStatus != null)
-            {
-                List<Payment> existingPendingPayments = await this.paymentRepository.All()
-                    .Where(x => x.BookingId == bookingId && x.StatusId == pendingStatus.Id)
-                    .ToListAsync();
-
-                foreach (Payment existing in existingPendingPayments)
-                {
-                    existing.StatusId = cancelledStatus.Id;
-                }
-            }
-
-            var payment = new Payment
-            {
-                BookingId = bookingId,
-                Amount = amount,
-                Provider = provider,
-                CheckoutSessionId = checkoutSessionId,
-                StatusId = pendingStatus.Id,
-            };
-
-            await this.paymentRepository.AddAsync(payment);
-            await this.paymentRepository.SaveChangesAsync();
-
-            return payment.Id;
+            // A deposit: the only payment with no method of its own (see Payment.Method).
+            return this.AddPendingPaymentAsync(bookingId, amount, provider, checkoutSessionId, method: null, tip: null);
         }
 
         public async Task<Guid?> ConfirmCheckoutAsync(string checkoutSessionId)
@@ -145,7 +116,8 @@
             return payment.BookingId;
         }
 
-        // Writes down a deposit that has been paid. It asks nobody whether that is true: the
+        // Writes down a deposit, or an invoice paid online, that has been paid. It asks nobody
+        // whether that is true: the
         // customer's return from Stripe and Stripe's own message both come here through
         // ConfirmCheckoutAsync, which asks Stripe first, and it is not on the interface for
         // that reason.
@@ -159,6 +131,13 @@
 
             if (payment == null)
             {
+                return;
+            }
+
+            // A page opened for an invoice carries its method; a deposit's has none.
+            if (!string.IsNullOrEmpty(payment.Method))
+            {
+                await this.RecordInvoicePaymentAsync(payment, transactionId);
                 return;
             }
 
@@ -560,9 +539,25 @@
                 throw new InvalidOperationException("Stripe is not configured for this environment. Set Stripe:SecretKey before accepting real payments.");
             }
 
+            // A second try closes the page of the first, or the customer could pay on both.
+            CheckoutClosure earlierPages = await this.CloseCheckoutsAsync(bookingId);
+            if (earlierPages == CheckoutClosure.Paid)
+            {
+                return null;
+            }
+
+            if (earlierPages == CheckoutClosure.Unknown)
+            {
+                throw new InvalidOperationException("An earlier payment page for this invoice could not be closed at Stripe, so a new one was not opened.");
+            }
+
+            decimal? tip = roundedTip > 0m ? roundedTip : null;
+
             if (keyMissing)
             {
-                return new PaymentCheckoutResult { IsMock = true, SessionId = $"mock_invoice_{Guid.NewGuid()}" };
+                var mockSessionId = $"mock_invoice_{Guid.NewGuid()}";
+                await this.AddPendingPaymentAsync(bookingId, balance, MockProvider, mockSessionId, PaymentMethods.Card, tip);
+                return new PaymentCheckoutResult { IsMock = true, SessionId = mockSessionId };
             }
 
             var invoiceNumber = InvoiceTerms.Number(booking.InvoiceNumber.Value);
@@ -609,11 +604,14 @@
                 Mode = "payment",
                 SuccessUrl = successUrl,
                 CancelUrl = cancelUrl,
+                ExpiresAt = DateTime.UtcNow.Add(CheckoutLifetime),
                 CustomerEmail = string.IsNullOrWhiteSpace(booking.Email) ? null : booking.Email,
                 ClientReferenceId = bookingId.ToString(),
             };
 
             Session session = await this.stripeGateway.CreateCheckoutAsync(options);
+
+            await this.AddPendingPaymentAsync(bookingId, balance, StripeProvider, session.Id, PaymentMethods.Card, tip);
 
             return new PaymentCheckoutResult { IsMock = false, SessionId = session.Id, RedirectUrl = session.Url };
         }
@@ -706,6 +704,98 @@
             {
                 booking.History.Add(JobHistory.Line("The email telling the company of this deposit could not be sent."));
                 booking.EmailsNotSent.Add(new EmailNotSent { What = "The notice of a deposit for a booking not held, to the company" });
+                await this.paymentRepository.SaveChangesAsync();
+            }
+        }
+
+        // Every Stripe payment page has a pending line on the job from the moment it opens, so
+        // that Stripe's message, or the customer's return, has something to write the money on.
+        private async Task<Guid> AddPendingPaymentAsync(Guid bookingId, decimal amount, string provider, string checkoutSessionId, string method, decimal? tip)
+        {
+            PaymentStatus pendingStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Pending);
+            if (pendingStatus == null)
+            {
+                throw new InvalidOperationException($"Payment status '{PaymentStatusNames.Pending}' is not seeded.");
+            }
+
+            // Supersede any earlier, still-pending payment attempt for this booking so a
+            // customer retrying checkout doesn't pile up orphaned Pending rows pointing
+            // at abandoned Stripe sessions.
+            PaymentStatus cancelledStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Cancelled);
+            if (cancelledStatus != null)
+            {
+                List<Payment> existingPendingPayments = await this.paymentRepository.All()
+                    .Where(x => x.BookingId == bookingId && x.StatusId == pendingStatus.Id)
+                    .ToListAsync();
+
+                foreach (Payment existing in existingPendingPayments)
+                {
+                    existing.StatusId = cancelledStatus.Id;
+                }
+            }
+
+            var payment = new Payment
+            {
+                BookingId = bookingId,
+                Amount = amount,
+                Tip = tip,
+                Provider = provider,
+                Method = method,
+                CheckoutSessionId = checkoutSessionId,
+                StatusId = pendingStatus.Id,
+            };
+
+            await this.paymentRepository.AddAsync(payment);
+            await this.paymentRepository.SaveChangesAsync();
+
+            return payment.Id;
+        }
+
+        // An invoice paid on its own page: money towards a done job, not a deposit. It is written
+        // on the job as a card payment, so the job, its invoice and the month's list all count
+        // it, and nobody has to find it in Stripe and type it in. Before this (Section 3dq) the
+        // money reached Stripe and the site never knew.
+        private async Task RecordInvoicePaymentAsync(Payment payment, string transactionId)
+        {
+            PaymentStatus completedStatus = await this.paymentStatusRepository.All().FirstOrDefaultAsync(x => x.Name == PaymentStatusNames.Completed);
+            if (completedStatus == null)
+            {
+                throw new InvalidOperationException($"Payment status '{PaymentStatusNames.Completed}' is not seeded.");
+            }
+
+            // Stripe's message and the customer's return both come here; the second changes nothing.
+            if (payment.StatusId == completedStatus.Id)
+            {
+                return;
+            }
+
+            payment.TransactionId = transactionId;
+            payment.StatusId = completedStatus.Id;
+
+            Booking booking = payment.Booking;
+            var invoiceName = booking.InvoiceNumber.HasValue ? $"Invoice {InvoiceTerms.Number(booking.InvoiceNumber.Value)}" : "The invoice";
+            var tip = payment.Tip > 0m ? $", and a tip of {JobHistory.Pounds(payment.Tip.Value)} for the technician" : string.Empty;
+            booking.History.Add(JobHistory.Line($"{invoiceName} paid online by card: {JobHistory.Pounds(payment.Amount)}{tip}."));
+            await this.paymentRepository.SaveChangesAsync();
+
+            // The customer gets the invoice again, now reading paid in full, with its text as the
+            // admin left it; the email writes its own line on the job.
+            InvoiceEmailResult sent = await this.invoices.EmailAsync(booking.Id, booking.InvoiceWorkDone);
+            var customerEmailed = sent.Outcome == InvoiceEmailOutcome.Sent;
+            if (sent.Outcome == InvoiceEmailOutcome.NotSent)
+            {
+                booking.EmailsNotSent.Add(new EmailNotSent { What = "The paid invoice, to the customer" });
+            }
+
+            var companyTold = await this.bookingEmails.InvoicePaidOnlineToCompanyAsync(booking, payment, sent.Invoice, customerEmailed);
+            if (!companyTold)
+            {
+                booking.History.Add(JobHistory.Line("The email telling the company of this payment could not be sent."));
+                booking.EmailsNotSent.Add(new EmailNotSent { What = "The notice of an invoice paid online, to the company" });
+            }
+
+            if (!customerEmailed || !companyTold)
+            {
                 await this.paymentRepository.SaveChangesAsync();
             }
         }

@@ -3,6 +3,7 @@
     using System;
 
     using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
 
     using HandyFix.Data.Common.Models;
 
@@ -16,13 +17,22 @@
         [Range(0.01, 100000, ErrorMessage = "The {0} must be between 0.01 and 100000.")]
         public decimal Amount { get; set; }
 
+        /// <summary>
+        /// A tip the customer added when paying the invoice online, for the technician. Kept
+        /// apart from <see cref="Amount"/> so it never counts as money paid towards the job.
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        [Range(0, 10000, ErrorMessage = "The {0} must be between 0 and 10000.")]
+        public decimal? Tip { get; set; }
+
         [Required(ErrorMessage = "The {0} field is required.")]
         [MaxLength(100, ErrorMessage = "The {0} field cannot exceed 100 characters.")]
         public string Provider { get; set; } = null!;   // e.g. "Stripe", "PayPal"
 
         /// <summary>
         /// How a payment the admin wrote on the job was made: "Card", "Cash" or "Bank transfer".
-        /// Empty for the deposit paid on the website, which is always a card through Stripe.
+        /// "Card" too for an invoice paid online through Stripe. Empty for the deposit paid on
+        /// the website, which is always a card through Stripe: that is how the two are told apart.
         /// </summary>
         [MaxLength(50, ErrorMessage = "The {0} field cannot exceed 50 characters.")]
         public string Method { get; set; }

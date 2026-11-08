@@ -412,6 +412,14 @@
             Assert.Contains("£85.00", payPage);
             Assert.Contains("Add an optional tip for your technician", payPage);
 
+            // The address alone never shows the invoice paid: the first version took "?paid=true"
+            // at its word (Section 3dq), and a page id Stripe never paid changes nothing either.
+            foreach (var typed in new[] { "?paid=true", "?session_id=mock_invoice_typed" })
+            {
+                Assert.Contains("Pay Invoice PHS-0001", WebUtility.HtmlDecode(await (await customer.GetAsync(invoicePayUrl + typed)).Content.ReadAsStringAsync()));
+            }
+
+            var emailsBefore = site.Emails.Sent.Count;
             HttpResponseMessage paidResponse = await PostFromAsync(
                 customer,
                 invoicePayUrl,
@@ -419,6 +427,32 @@
                 new Dictionary<string, string> { ["tipAmount"] = "10.00" });
             var paidPage = WebUtility.HtmlDecode(await paidResponse.Content.ReadAsStringAsync());
             Assert.Contains("Invoice PHS-0001 - Paid", paidPage);
+            Assert.Contains("has been received", paidPage);
+            Assert.Contains("is on its way to your email", paidPage);
+
+            // The payment is on the job by itself, the tip beside it and not counted towards it.
+            var jobAfter = WebUtility.HtmlDecode(await (await admin.GetAsync(jobPage)).Content.ReadAsStringAsync());
+            Assert.Contains("Card, invoice paid online (+ £10.00 tip)", jobAfter);
+            Assert.Contains("Invoice PHS-0001 paid online by card: £85.00, and a tip of £10.00 for the technician.", jobAfter);
+            Assert.Contains("Invoice PHS-0001 emailed to the customer: paid in full.", jobAfter);
+            csv = await (await admin.GetAsync("/Administration/Invoices/Csv")).Content.ReadAsStringAsync();
+            Assert.Contains("135.00,50.00,85.00,0.00,0.00,135.00,0.00,10.00,Paid", csv);
+
+            // The customer gets the invoice marked paid, and the company is told, tip and all.
+            List<RecordingEmailSender.Email> sentNow = site.Emails.Sent.Skip(emailsBefore).ToList();
+            RecordingEmailSender.Email paidInvoice = Assert.Single(sentNow, x => x.To == booking.Email);
+            Assert.Contains("paid in full", paidInvoice.Body);
+            Assert.Single(paidInvoice.Attachments);
+            RecordingEmailSender.Email notice = Assert.Single(sentNow, x => x.Subject.StartsWith("Invoice Paid Online"));
+            Assert.Contains("&pound;10.00", notice.Body);
+            Assert.Contains("PAID IN FULL", notice.Body);
+
+            // Paid, the page offers nothing more to pay, and its form sent again from a tab left
+            // open before the payment opens no second payment page.
+            Assert.DoesNotContain("tipAmount", await (await customer.GetAsync(invoicePayUrl)).Content.ReadAsStringAsync());
+            HttpResponseMessage again = await PostToAsync(customer, payPageRaw, invoicePayUrl, new Dictionary<string, string> { ["tipAmount"] = "5.00" });
+            Assert.Contains("is paid in full. Thank you for choosing", WebUtility.HtmlDecode(await again.Content.ReadAsStringAsync()));
+            Assert.Equal(1, site.Read(dbContext => dbContext.Payments.Count(p => p.Status.Name == "Completed")));
         }
 
         // "Cancel Booking" used to be offered on a completed booking. Pressed there, it would

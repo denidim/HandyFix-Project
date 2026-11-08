@@ -71,6 +71,10 @@
 
         public decimal PaidByBankTransfer => this.PaidBy(PaymentMethods.BankTransfer);
 
+        // Tips added when the invoice was paid online: in Stripe's payout with the rest, but
+        // owed to the technician, not to the job.
+        public decimal Tips => this.Payments.Sum(x => x.Tip);
+
         // Whether the day to pay has gone by, on the UK day given.
         public bool IsOverdueOn(DateTime todayUk) => !this.IsPaid && todayUk.Date > this.DueOn;
 

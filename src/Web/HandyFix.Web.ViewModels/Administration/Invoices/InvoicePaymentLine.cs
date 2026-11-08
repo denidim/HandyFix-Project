@@ -22,6 +22,12 @@
 
         public decimal Amount { get; set; }
 
+        /// <summary>
+        /// A tip added to an invoice paid online, for the technician. Not part of
+        /// <see cref="Amount"/>: it pays nothing off the job.
+        /// </summary>
+        public decimal Tip { get; set; }
+
         public string Description => this.Method switch
         {
             DepositMethod => "Booking deposit, paid online by card",

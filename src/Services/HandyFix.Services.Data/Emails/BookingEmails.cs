@@ -147,6 +147,54 @@
                 replyTo: booking.Email);
         }
 
+        public async Task<bool> InvoicePaidOnlineToCompanyAsync(Booking booking, Payment payment, InvoiceViewModel invoice, bool customerEmailed)
+        {
+            var number = invoice == null ? "The invoice" : $"Invoice {EmailText.Encode(invoice.NumberText)}";
+            var tip = payment.Tip.GetValueOrDefault();
+            var stillOwed = invoice == null ? "-" : invoice.IsPaid ? "&pound;0.00 (Paid in full)" : $"&pound;{invoice.Balance:F2}";
+
+            var advice = customerEmailed
+                ? "The customer has been emailed the invoice marked <strong>PAID IN FULL</strong>. Nothing needs adding to the Money List by hand."
+                : "The paid invoice could not be emailed to the customer by itself: send it from the job's page. Nothing needs adding to the Money List by hand.";
+            if (tip > 0m)
+            {
+                advice += $"<br /><br />The customer added a tip of <strong>&pound;{tip:F2}</strong>: pass it on to the technician who did the job.";
+            }
+
+            if (invoice != null && invoice.Paid > invoice.Total)
+            {
+                advice += "<br /><br />The job has now been paid more than its final price: send the extra back in Stripe.";
+            }
+
+            var subject = $"Invoice Paid Online - {booking.CustomerFirstName} {booking.CustomerLastName}";
+            var body = EmailLayout.ForCompany(
+                EmailLayout.Badge(EmailColour.Green, "&#10003; Invoice Paid Online")
+                + EmailLayout.Heading($"{number} has just been paid.")
+                + EmailLayout.Lead("The customer paid the rest of the job by card on the invoice's payment page, via Stripe. It is written on the job's Money List.")
+                + EmailLayout.Details(
+                    EmailLayout.ReferenceRow(BookingReference.Short(booking.Id)),
+                    EmailLayout.Row("Customer", CustomerName(booking)),
+                    EmailLayout.PlainRow("Customer Contact", ContactLinks(booking)),
+                    EmailLayout.Row("Service(s)", ServiceNames(booking)),
+                    EmailLayout.Divider(),
+                    EmailLayout.MoneyRow("Paid", $"&pound;{payment.Amount:F2} (Stripe)"),
+                    tip > 0m ? EmailLayout.MoneyRow("Tip for the Technician", $"&pound;{tip:F2}") : string.Empty,
+                    EmailLayout.MoneyRow("Still Owed", stillOwed))
+                + EmailLayout.Advice($"{advice}<br /><br />{ReplyTip}")
+                + EmailLayout.Button("&#9881;&#65039; Open Booking in Admin Panel", this.JobPage(booking)));
+
+            // Reply-To is the customer, so pressing Reply on this notice answers them.
+            return await this.emailSender.TrySendEmailAsync(
+                this.logger,
+                "invoice paid online, notice to the company",
+                this.settings.SystemFromAddress,
+                EmailOptions.WebsiteFromName,
+                this.settings.AdminNotificationAddress,
+                subject,
+                body,
+                replyTo: booking.Email);
+        }
+
         // To the company only. The customer is not told the booking is confirmed, because it is
         // not: someone has to ring them, and either find a new time or send the money back. The
         // time is the one the job was booked for, since its hour may have gone back on sale.

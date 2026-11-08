@@ -4,7 +4,7 @@
 @{
     this.Layout = "_Layout";
     var invoice = Model.Invoice;
-    var paid = invoice.IsPaid || Model.JustPaid;
+    var paid = invoice.IsPaid;
     this.ViewData["Title"] = $"Invoice {invoice.NumberText}";
 }
 
@@ -17,18 +17,30 @@
 
         @if (paid)
         {
-            <p class="payment-status-desc">
-                Thank you for choosing @GlobalConstants.SystemName. Your payment for invoice <strong>@invoice.NumberText</strong> (Job #@invoice.JobReference) has been received.
-            </p>
-            <div class="payment-status-alert">
-                <span class="material-symbols-outlined payment-status-alert-icon">info</span>
-                <div>
-                    <p class="payment-status-alert-title">PAID Receipt</p>
-                    <p class="payment-status-alert-text">
-                        Once our team confirms your payment in our system, we will email your final <strong>PAID IN FULL</strong> invoice receipt for your records.
-                    </p>
-                </div>
-            </div>
+            @if (Model.JustPaid)
+            {
+                <p class="payment-status-desc">
+                    Thank you for choosing @GlobalConstants.SystemName. Your payment for invoice <strong>@invoice.NumberText</strong> (Job #@invoice.JobReference) has been received.
+                </p>
+                @if (!string.IsNullOrWhiteSpace(invoice.Email))
+                {
+                    <div class="payment-status-alert">
+                        <span class="material-symbols-outlined payment-status-alert-icon">info</span>
+                        <div>
+                            <p class="payment-status-alert-title">PAID Receipt</p>
+                            <p class="payment-status-alert-text">
+                                Your invoice marked <strong>PAID IN FULL</strong> is on its way to your email, for your records.
+                            </p>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="payment-status-desc">
+                    Invoice <strong>@invoice.NumberText</strong> (Job #@invoice.JobReference) is paid in full. Thank you for choosing @GlobalConstants.SystemName.
+                </p>
+            }
             <div class="payment-status-actions">
                 <a asp-controller="Home" asp-action="Index" class="btn btn-primary payment-status-btn">
                     Return Home

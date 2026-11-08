@@ -175,13 +175,16 @@
                 {
                     new InvoicePaymentLine { Method = InvoicePaymentLine.DepositMethod, Amount = 50m },
                     new InvoicePaymentLine { Method = PaymentMethods.BankTransfer, Amount = 25m },
+
+                    // Paid online with a tip: the tip has its own column and pays nothing off.
+                    new InvoicePaymentLine { Method = PaymentMethods.Card, Amount = 20m, Tip = 5m },
                 },
             };
 
             var lines = Encoding.UTF8.GetString(InvoiceCsv.For(new[] { invoice }, new DateTime(2026, 11, 7))).TrimStart((char)0xFEFF).Split(Environment.NewLine);
 
-            Assert.StartsWith("Invoice,Date,Customer,Job,Services,Total,", lines[0]);
-            Assert.Equal("PHS-0007,2026-11-07,\"'=Smith, \"\"Jo\"\"\",AB12CD34,Leak Fix,175.00,50.00,0.00,0.00,25.00,75.00,100.00,Due 7 Nov", lines[1]);
+            Assert.Equal("Invoice,Date,Customer,Job,Services,Total,Deposit (online card),Card,Cash,Bank transfer,Paid,Balance,Tip (online card),Status", lines[0]);
+            Assert.Equal("PHS-0007,2026-11-07,\"'=Smith, \"\"Jo\"\"\",AB12CD34,Leak Fix,175.00,50.00,20.00,0.00,25.00,95.00,80.00,5.00,Due 7 Nov", lines[1]);
         }
 
         [Fact]

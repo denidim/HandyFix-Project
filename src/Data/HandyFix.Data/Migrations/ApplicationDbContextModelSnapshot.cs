@@ -602,6 +602,9 @@ namespace HandyFix.Data.Migrations
                     b.Property<Guid>("StatusId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("Tip")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("TransactionId")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");

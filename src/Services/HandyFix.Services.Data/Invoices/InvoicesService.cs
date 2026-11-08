@@ -153,6 +153,7 @@
                         PaidOn = UkTime.FromUtc(p.CreatedOn),
                         Method = p.Status.Name == PaymentStatusNames.DepositPaid ? InvoicePaymentLine.DepositMethod : p.Method,
                         Amount = p.Amount,
+                        Tip = p.Tip ?? 0m,
                     })
                     .ToList(),
             };

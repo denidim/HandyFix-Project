@@ -236,7 +236,7 @@
                     columns.ConstantColumn(66);
                     columns.RelativeColumn(2);
                     columns.ConstantColumn(76);
-                    foreach (var unused in Enumerable.Range(0, 6))
+                    foreach (var unused in Enumerable.Range(0, 7))
                     {
                         columns.RelativeColumn();
                     }
@@ -251,7 +251,7 @@
                         header.Cell().Element(HeadCell).Text(name);
                     }
 
-                    foreach (var name in new[] { "Total", "Deposit", "Card", "Cash", "Transfer", "Balance" })
+                    foreach (var name in new[] { "Total", "Deposit", "Card", "Cash", "Transfer", "Balance", "Tip" })
                     {
                         header.Cell().Element(HeadCell).AlignRight().Text(name);
                     }
@@ -265,7 +265,7 @@
                     table.Cell().Element(BodyCell).Text(Short(invoice.InvoicedOn));
                     table.Cell().Element(BodyCell).Text(invoice.CustomerName);
                     table.Cell().Element(BodyCell).Text("#" + invoice.JobReference);
-                    foreach (var amount in new[] { invoice.Total, invoice.PaidDeposit, invoice.PaidByCard, invoice.PaidInCash, invoice.PaidByBankTransfer, invoice.Balance })
+                    foreach (var amount in new[] { invoice.Total, invoice.PaidDeposit, invoice.PaidByCard, invoice.PaidInCash, invoice.PaidByBankTransfer, invoice.Balance, invoice.Tips })
                     {
                         table.Cell().Element(BodyCell).AlignRight().Text(Pounds(amount));
                     }
@@ -284,6 +284,7 @@
                     invoices.Sum(x => x.PaidInCash),
                     invoices.Sum(x => x.PaidByBankTransfer),
                     invoices.Sum(x => x.Balance),
+                    invoices.Sum(x => x.Tips),
                 })
                 {
                     table.Cell().Element(SumCell).AlignRight().Text(Pounds(sum)).Bold();

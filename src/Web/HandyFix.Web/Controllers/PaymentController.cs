@@ -40,10 +40,17 @@
             this.logger = logger;
         }
 
+        // The invoice's payment page, and where Stripe sends the customer back to. As with the
+        // deposit, coming back proves nothing: the service asks Stripe whether the page was
+        // paid, writes the money on the job when it was, and the page then reads the job.
         [HttpGet]
         [Route("Payment/Invoice/{bookingId:guid}")]
-        public async Task<IActionResult> Invoice(Guid bookingId, bool paid = false)
+        public async Task<IActionResult> Invoice(Guid bookingId, string session_id)
         {
+            Guid? paidFor = string.IsNullOrWhiteSpace(session_id)
+                ? null
+                : await this.paymentsService.ConfirmCheckoutAsync(session_id);
+
             InvoiceViewModel invoice = await this.invoicesService.GetAsync(bookingId);
             if (invoice == null)
             {
@@ -53,7 +60,7 @@
             return this.View(new InvoicePaymentViewModel
             {
                 Invoice = invoice,
-                JustPaid = paid,
+                JustPaid = paidFor == bookingId && invoice.IsPaid,
             });
         }
 
@@ -74,7 +81,7 @@
             }
 
             var tip = Math.Max(0m, tipAmount ?? 0m);
-            var successUrl = $"{this.Request.Scheme}://{this.Request.Host}/Payment/Invoice/{bookingId}?paid=true";
+            var successUrl = $"{this.Request.Scheme}://{this.Request.Host}/Payment/Invoice/{bookingId}?session_id={{CHECKOUT_SESSION_ID}}";
             var cancelUrl = $"{this.Request.Scheme}://{this.Request.Host}/Payment/Invoice/{bookingId}";
 
             PaymentCheckoutResult result = await this.paymentsService.CreateInvoiceCheckoutSessionAsync(bookingId, tip, successUrl, cancelUrl);
@@ -84,7 +91,7 @@
             }
 
             return result.IsMock
-                ? this.RedirectToAction(nameof(this.Invoice), new { bookingId, paid = true })
+                ? this.RedirectToAction(nameof(this.Invoice), new { bookingId, session_id = result.SessionId })
                 : this.Redirect(result.RedirectUrl);
         }
 

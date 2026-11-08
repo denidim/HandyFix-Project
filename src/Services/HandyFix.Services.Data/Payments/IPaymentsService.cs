@@ -64,8 +64,9 @@
 
         /// <summary>
         /// Opens a Stripe payment page for a completed job's invoice balance plus an optional
-        /// customer tip. Null when there is no unpaid invoice for the booking or the tip is out
-        /// of range.
+        /// customer tip, closing any earlier one first, and puts a pending card payment on the
+        /// job that ConfirmCheckoutAsync completes once Stripe says it was paid. Null when there
+        /// is no unpaid invoice for the booking or the tip is out of range.
         /// </summary>
         Task<PaymentCheckoutResult> CreateInvoiceCheckoutSessionAsync(Guid bookingId, decimal tipAmount, string successUrl, string cancelUrl);
 

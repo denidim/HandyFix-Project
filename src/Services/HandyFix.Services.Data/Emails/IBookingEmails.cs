@@ -27,5 +27,9 @@
         // To the customer, when an admin sends the job's invoice: the PDF attached, and how to
         // pay what is left when anything is.
         Task<bool> InvoiceAsync(string customerFirstName, InvoiceViewModel invoice, byte[] pdf, string paymentDetails);
+
+        // To the company, when a customer pays their invoice on its payment page: the payment is
+        // on the job already, whether the paid invoice reached the customer, and any tip.
+        Task<bool> InvoicePaidOnlineToCompanyAsync(Booking booking, Payment payment, InvoiceViewModel invoice, bool customerEmailed);
     }
 }

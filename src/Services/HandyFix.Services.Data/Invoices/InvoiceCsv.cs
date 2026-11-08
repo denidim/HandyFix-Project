@@ -15,7 +15,7 @@
     {
         private static readonly string[] Header =
         {
-            "Invoice", "Date", "Customer", "Job", "Services", "Total", "Deposit (online card)", "Card", "Cash", "Bank transfer", "Paid", "Balance", "Status",
+            "Invoice", "Date", "Customer", "Job", "Services", "Total", "Deposit (online card)", "Card", "Cash", "Bank transfer", "Paid", "Balance", "Tip (online card)", "Status",
         };
 
         public static byte[] For(IEnumerable<InvoiceViewModel> invoices, DateTime todayUk)
@@ -39,6 +39,7 @@
                     Amount(invoice.PaidByBankTransfer),
                     Amount(invoice.Paid),
                     Amount(invoice.Balance),
+                    Amount(invoice.Tips),
                     invoice.StatusOn(todayUk),
                 };
 

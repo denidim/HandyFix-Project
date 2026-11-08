@@ -82,6 +82,12 @@
             this.Availability = new AvailabilityService(slotRepo);
             var bookingEmails = TestEmails.Booking(this.EmailSender.Object);
 
+            this.Invoices = new InvoicesService(
+                bookingRepo,
+                bookingEmails,
+                Options.Create(new InvoiceOptions()),
+                TimeProvider.System);
+
             this.Payments = new PaymentsService(
                 new EfDeletableEntityRepository<Payment>(this.DbContext),
                 new EfDeletableEntityRepository<PaymentStatus>(this.DbContext),
@@ -91,7 +97,8 @@
                 Options.Create(stripeSettings),
                 environment.Object,
                 NullLogger<PaymentsService>.Instance,
-                this.Stripe.Object);
+                this.Stripe.Object,
+                this.Invoices);
 
             var serviceRepo = new EfDeletableEntityRepository<Service>(this.DbContext);
             var queryRunner = new DbQueryRunner(this.DbContext);
@@ -117,12 +124,6 @@
                 this.Payments,
                 queryRunner,
                 bookingEmails);
-
-            this.Invoices = new InvoicesService(
-                bookingRepo,
-                bookingEmails,
-                Options.Create(new InvoiceOptions()),
-                TimeProvider.System);
         }
 
         public ApplicationDbContext DbContext { get; }
