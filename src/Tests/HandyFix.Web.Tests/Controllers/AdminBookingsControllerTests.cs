@@ -488,11 +488,30 @@
         {
             var controller = BuildController(out _, out _, out _, out var paymentsService);
             var bookingId = Guid.NewGuid();
-            paymentsService.Setup(x => x.AddPaymentAsync(bookingId, 85.00m, method)).ReturnsAsync(true);
+            paymentsService.Setup(x => x.AddPaymentAsync(bookingId, 85.00m, method)).ReturnsAsync(new PaymentAddResult { Added = true });
 
             await controller.AddPayment(bookingId, 85.00m, method);
 
             Assert.Equal(expectedText, Assert.IsType<string>(controller.TempData["SuccessMessage"]));
+        }
+
+        // The payment that pays a done job in full sends the invoice marked paid by itself, and
+        // the admin is told what became of it.
+        [Theory]
+        [InlineData(InvoiceEmailOutcome.Sent, "The invoice marked PAID IN FULL was emailed to the customer.")]
+        [InlineData(InvoiceEmailOutcome.NotSent, "could not be emailed: press Email to Customer in the Invoice box to try again.")]
+        [InlineData(InvoiceEmailOutcome.NoEmailAddress, "has no email address: download the invoice")]
+        public async Task AddPaymentShouldSayWhatBecameOfThePaidInvoice(InvoiceEmailOutcome outcome, string expectedText)
+        {
+            var controller = BuildController(out _, out _, out _, out var paymentsService);
+            var bookingId = Guid.NewGuid();
+            paymentsService.Setup(x => x.AddPaymentAsync(bookingId, 85.00m, "Cash")).ReturnsAsync(new PaymentAddResult { Added = true, PaidInvoice = outcome });
+
+            await controller.AddPayment(bookingId, 85.00m, "Cash");
+
+            var message = Assert.IsType<string>(controller.TempData["SuccessMessage"]);
+            Assert.StartsWith("£85.00 is written on the job, paid by cash.", message);
+            Assert.Contains(expectedText, message);
         }
 
         [Theory]
@@ -502,14 +521,14 @@
         public async Task AddPaymentShouldSayWhenNothingWasWritten(double? amount, bool serviceIsAsked)
         {
             var controller = BuildController(out _, out _, out _, out var paymentsService);
-            paymentsService.Setup(x => x.AddPaymentAsync(It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string>())).ReturnsAsync(false);
+            paymentsService.Setup(x => x.AddPaymentAsync(It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string>())).ReturnsAsync(new PaymentAddResult());
 
             await controller.AddPayment(Guid.NewGuid(), (decimal?)amount, "Cash");
 
             paymentsService.Verify(
                 x => x.AddPaymentAsync(It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string>()),
                 serviceIsAsked ? Times.Once() : Times.Never());
-            Assert.Contains("Nothing was changed. A payment can be written on a job that is booked or done", Assert.IsType<string>(controller.TempData["ErrorMessage"]));
+            Assert.Contains("Nothing was changed. A payment can be written on a job that is booked, or done once its invoice is made", Assert.IsType<string>(controller.TempData["ErrorMessage"]));
         }
 
         [Theory]

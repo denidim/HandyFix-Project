@@ -249,11 +249,12 @@
         // Every payment is one line on the job, so its page always shows what is still owed
         // (PROJECT_STATE.md Section 3ce). The website deposit is not written in here: the site
         // records that one by itself, above.
-        public async Task<bool> AddPaymentAsync(Guid bookingId, decimal amount, string method)
+        public async Task<PaymentAddResult> AddPaymentAsync(Guid bookingId, decimal amount, string method)
         {
+            var notAdded = new PaymentAddResult();
             if (amount <= 0m || amount > 100000m || !PaymentMethods.All.Contains(method))
             {
-                return false;
+                return notAdded;
             }
 
             Booking booking = await this.bookingRepository.All()
@@ -264,10 +265,14 @@
 
             if (booking == null
                 || completedStatus == null
-                || !BookingRules.CanTakePayment(booking.Status?.Name, booking.Source == BookingSource.Website, HasPayment(booking, PaymentStatusNames.DepositPaid)))
+                || !BookingRules.CanTakePayment(booking.Status?.Name, booking.Source == BookingSource.Website, HasPayment(booking, PaymentStatusNames.DepositPaid), booking.InvoiceNumber.HasValue))
             {
-                return false;
+                return notAdded;
             }
+
+            var paidBefore = booking.Payments
+                .Where(p => p.Status?.Name == PaymentStatusNames.DepositPaid || p.Status?.Name == PaymentStatusNames.Completed)
+                .Sum(p => p.Amount);
 
             await this.paymentRepository.AddAsync(new Payment
             {
@@ -280,7 +285,20 @@
             booking.History.Add(JobHistory.Line($"Payment of {JobHistory.Pounds(amount)} written on the job: {method}."));
 
             await this.paymentRepository.SaveChangesAsync();
-            return true;
+
+            // Pressing Add Payment is the admin's word that the money came. The payment that pays
+            // a done job in full is followed by the invoice marked paid, as an online one is.
+            var paysInFull = booking.Status?.Name == BookingStatusNames.Completed
+                && booking.FinalPrice.HasValue
+                && paidBefore < booking.FinalPrice.Value
+                && paidBefore + amount >= booking.FinalPrice.Value;
+            if (!paysInFull)
+            {
+                return new PaymentAddResult { Added = true };
+            }
+
+            InvoiceEmailResult sent = await this.EmailPaidInvoiceAsync(booking);
+            return new PaymentAddResult { Added = true, PaidInvoice = sent.Outcome };
         }
 
         // For a line typed in by mistake. Only a payment the admin wrote can be taken off; the
@@ -778,26 +796,30 @@
             booking.History.Add(JobHistory.Line($"{invoiceName} paid online by card: {JobHistory.Pounds(payment.Amount)}{tip}."));
             await this.paymentRepository.SaveChangesAsync();
 
-            // The customer gets the invoice again, now reading paid in full, with its text as the
-            // admin left it; the email writes its own line on the job.
-            InvoiceEmailResult sent = await this.invoices.EmailAsync(booking.Id, booking.InvoiceWorkDone);
-            var customerEmailed = sent.Outcome == InvoiceEmailOutcome.Sent;
-            if (sent.Outcome == InvoiceEmailOutcome.NotSent)
-            {
-                booking.EmailsNotSent.Add(new EmailNotSent { What = "The paid invoice, to the customer" });
-            }
+            InvoiceEmailResult sent = await this.EmailPaidInvoiceAsync(booking);
 
-            var companyTold = await this.bookingEmails.InvoicePaidOnlineToCompanyAsync(booking, payment, sent.Invoice, customerEmailed);
+            var companyTold = await this.bookingEmails.InvoicePaidOnlineToCompanyAsync(booking, payment, sent.Invoice, sent.Outcome == InvoiceEmailOutcome.Sent);
             if (!companyTold)
             {
                 booking.History.Add(JobHistory.Line("The email telling the company of this payment could not be sent."));
                 booking.EmailsNotSent.Add(new EmailNotSent { What = "The notice of an invoice paid online, to the company" });
-            }
-
-            if (!customerEmailed || !companyTold)
-            {
                 await this.paymentRepository.SaveChangesAsync();
             }
+        }
+
+        // The customer gets the invoice again, now reading paid in full, with its text as the
+        // admin left it; the email writes its own line on the job, and one that does not go is
+        // also in the dashboard's list.
+        private async Task<InvoiceEmailResult> EmailPaidInvoiceAsync(Booking booking)
+        {
+            InvoiceEmailResult sent = await this.invoices.EmailAsync(booking.Id, booking.InvoiceWorkDone);
+            if (sent.Outcome == InvoiceEmailOutcome.NotSent)
+            {
+                booking.EmailsNotSent.Add(new EmailNotSent { What = "The paid invoice, to the customer" });
+                await this.paymentRepository.SaveChangesAsync();
+            }
+
+            return sent;
         }
     }
 }

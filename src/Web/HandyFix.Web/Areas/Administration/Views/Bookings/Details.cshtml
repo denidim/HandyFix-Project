@@ -254,13 +254,11 @@
                 <span>Booking Workflow Steps</span>
             </h2>
             <ol class="ps-3 mb-2 fs-13 lh-snug text-on-surface-variant d-flex flex-column gap-2">
-                <li><strong>Technician</strong> - email with technician details is sent to the customer.</li>
-                <li><strong>The Job</strong> (After the job is done) - mark as done with final price calculated based on 30-min slots with minimum of 1h charge + any materials provided (each service's price is on its page under Services).</li>
-                <li><strong>Invoice</strong> - After pressing Mark as Done, the Money List updates with the remaining sum and the Invoice section appears. Do not press Add Payment yet! First fill and send the Invoice with the description of the service, hours spent, and any materials (e.g., <em>Boiler Installation &amp; Servicing, 2 hours, materials £30</em> - make sure this is calculated in the final price before pressing Mark as Done!), then email the invoice to the customer.</li>
-                <li><strong>Payment</strong> - If the customer pays through the invoice's online link, the payment is written in the Money List by itself and the job shows <em>Paid in full</em>. Only for a bank transfer or cash: once the money is confirmed, press Add Payment inside the Money List and choose how it was paid (<em>Paid by</em>).</li>
-                <li><strong>Final Invoice</strong> - After an online payment, the invoice marked <strong>PAID IN FULL</strong> is emailed to the customer by itself. After Add Payment, press Email to Customer again to send it.</li>
+                <li><strong>Technician</strong> - pick the technician: the customer is emailed their name.</li>
+                <li><strong>The Job</strong> - after the work, enter the final price (minimum 1 hour, then 30-minute blocks, plus any materials) and press Mark as Done.</li>
+                <li><strong>Invoice</strong> - check the Work done text (it starts with the service), add the hours and materials, and press Email to Customer.</li>
             </ol>
-            <p class="text-on-surface-variant mb-0 fs-11 italic">All steps above are saved with date and time in the History section at the bottom.</p>
+            <p class="text-on-surface-variant mb-0 fs-11 italic">Then the payment: paid through the invoice's link, it is written by itself; a bank transfer or cash is written with Add Payment. Either way, once the job is paid in full, the invoice marked PAID IN FULL goes to the customer by itself. Every step is saved with its date and time in the History at the bottom.</p>
         </section>
 
         <section class="glass-card rounded-xl p-4 shadow-sm border mb-4 admin-card">
@@ -496,56 +494,22 @@
                     <dd>@Model.StillOwedText</dd>
                 </div>
             </dl>
-
-            @if (Model.CanTakePayment)
-            {
-                <form asp-area="Administration" asp-controller="Bookings" asp-action="AddPayment" method="post" class="mt-4 pt-4 divider-subtle">
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    <label class="detail-label">Payment received by bank transfer or cash (online invoice payments are written here by themselves)</label>
-                    <div class="row align-items-end">
-                        <div class="col-sm-4 form-group mb-3">
-                            <label for="payment-amount" class="form-label font-label-sm text-on-surface-variant mb-2">Amount (£)</label>
-                            <input type="number" name="amount" id="payment-amount" class="form-control py-2 admin-form-control" step="0.01" min="0.01" max="100000" required value="@(Model.StillOwed > 0 ? plain(Model.StillOwed) : string.Empty)" />
-                        </div>
-                        <div class="col-sm-4 form-group mb-3">
-                            <label for="payment-method" class="form-label font-label-sm text-on-surface-variant mb-2">Paid by</label>
-                            <select name="method" id="payment-method" class="form-control py-2 admin-form-control" required>
-                                @foreach (var method in PaymentMethods.All)
-                                {
-                                    <option value="@method">@method</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-sm-4 form-group mb-3">
-                            <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
-                                <span class="material-symbols-outlined fs-20">add</span>
-                                <span>Add Payment</span>
-                            </button>
-                        </div>
-                    </div>
-                    <p class="text-on-surface-variant mb-0 fs-13 lh-snug">For money taken in person or by transfer. The deposit paid on the website is written here by the site itself.</p>
-                </form>
-            }
-            else if (Model.CanCancel)
-            {
-                <p class="text-on-surface-variant mb-0 mt-4 fs-13 lh-snug">A payment can be written here once the deposit is paid on the website.</p>
-            }
         </section>
 
         @if (Model.CanInvoice)
         {
-            <!-- The invoice: the final price, the payments above and what is left, as a PDF -->
+            <!-- 1. The invoice: the final price, the payments above and what is left, as a PDF -->
             <section class="admin-card p-4 p-md-5 shadow-sm mb-4" id="job-invoice">
                 <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
                     <span class="material-symbols-outlined text-secondary">receipt_long</span>
-                    <span>Invoice</span>
+                    <span>1. Invoice</span>
                 </h2>
                 <p class="font-body-md text-primary font-bold mb-3">@Model.InvoiceLine</p>
                 <form asp-area="Administration" asp-controller="Bookings" asp-action="Invoice" method="post" class="m-0">
                     <input type="hidden" name="id" value="@Model.Id" />
                     <div class="form-group mb-3">
                         <label for="invoice-work-done" class="form-label font-label-sm text-on-surface-variant mb-2">Work done (printed on the invoice)</label>
-                        <textarea name="workDone" id="invoice-work-done" rows="3" maxlength="2000" class="form-control admin-form-control" placeholder="For example: Replaced the kitchen tap and both isolation valves. 2 hours, parts £15.">@Model.InvoiceWorkDone</textarea>
+                        <textarea name="workDone" id="invoice-work-done" rows="3" maxlength="2000" class="form-control admin-form-control" placeholder="For example: Replaced the kitchen tap and both isolation valves. 2 hours, parts £15.">@Model.InvoiceWorkDoneOrServices</textarea>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <button type="submit" name="send" value="download" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
@@ -565,7 +529,7 @@
                         {
                             <span>This job has no email address: download the PDF and send it to the customer yourself.</span>
                         }
-                        The invoice shows the final price, every payment above, and what is left to pay on completion. After a later payment, send it again: it will say paid in full.
+                        The invoice shows the final price, every payment above, what is left to pay, the online payment link and the bank details.
                     </p>
                 </form>
                 @if (this.TempData["InvoiceDownload"] != null)
@@ -577,6 +541,71 @@
                     <p class="font-body-md mb-0 mt-3">
                         <a asp-area="Administration" asp-controller="Invoices" asp-action="Pdf" asp-route-id="@Model.Id" class="text-secondary font-bold" data-auto-download>If the PDF did not download, press here.</a>
                     </p>
+                }
+            </section>
+        }
+
+        @if (Model.CanTakePayment || Model.PaymentWaitsForInvoice || Model.CanCancel)
+        {
+            <!-- 2. The payment: under the invoice on a done job, as it follows the invoice -->
+            <section class="admin-card p-4 p-md-5 shadow-sm mb-4" id="job-payment">
+                <h2 class="font-headline-sm text-primary mb-4 pb-3 d-flex align-items-center gap-2 section-title-underline">
+                    <span class="material-symbols-outlined text-secondary">payments</span>
+                    <span>@(Model.CanInvoice ? "2. Payment" : "Payment")</span>
+                </h2>
+                @if (Model.PaymentWaitsForInvoice)
+                {
+                    <p class="text-on-surface-variant mb-0 fs-13 lh-snug">Send the invoice first. Payments can be written once it is made.</p>
+                }
+                else if (Model.CanTakePayment)
+                {
+                    @if (Model.CanInvoice)
+                    {
+                        <p class="text-on-surface-variant mb-3 fs-13 lh-snug">Paid through the invoice's online link? It is written in the Money List by itself, and the invoice marked PAID IN FULL goes to the customer.</p>
+                    }
+                    <form asp-area="Administration" asp-controller="Bookings" asp-action="AddPayment" method="post" class="m-0">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <label class="detail-label">Payment received by bank transfer or cash</label>
+                        <div class="row align-items-end">
+                            <div class="col-sm-4 form-group mb-3">
+                                <label for="payment-amount" class="form-label font-label-sm text-on-surface-variant mb-2">Amount (£)</label>
+                                <input type="number" name="amount" id="payment-amount" class="form-control py-2 admin-form-control" step="0.01" min="0.01" max="100000" required value="@(Model.StillOwed > 0 ? plain(Model.StillOwed) : string.Empty)" />
+                            </div>
+                            <div class="col-sm-4 form-group mb-3">
+                                <label for="payment-method" class="form-label font-label-sm text-on-surface-variant mb-2">Paid by</label>
+                                <select name="method" id="payment-method" class="form-control py-2 admin-form-control" required>
+                                    @foreach (var method in PaymentMethods.All)
+                                    {
+                                        <option value="@method">@method</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-sm-4 form-group mb-3">
+                                <button type="submit" class="btn btn-primary font-button-text w-100 d-flex align-items-center justify-content-center gap-2 rounded-lg btn-block-py2">
+                                    <span class="material-symbols-outlined fs-20">add</span>
+                                    <span>Add Payment</span>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-on-surface-variant mb-0 fs-13 lh-snug">
+                            @if (!Model.CanInvoice)
+                            {
+                                <span>For money taken in person or by transfer. The deposit paid on the website is written here by the site itself.</span>
+                            }
+                            else if (string.IsNullOrWhiteSpace(Model.Email))
+                            {
+                                <span>Once the job is paid in full, download the invoice above: it will say paid in full.</span>
+                            }
+                            else
+                            {
+                                <span>Once the job is paid in full, the invoice marked PAID IN FULL is emailed to the customer by itself.</span>
+                            }
+                        </p>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-on-surface-variant mb-0 fs-13 lh-snug">A payment can be written here once the deposit is paid on the website.</p>
                 }
             </section>
         }

@@ -398,11 +398,19 @@ total for the job + materials cost if any (minimum 1 hour, then billed in 30-min
 is the final price that will be invoiced to the customer!"* Until it is typed in the
 page shows an estimate (the service's price) and no job can be "Paid in full".
 
-**The invoice (`#job-invoice`)** appears once the job is marked as done. First fill in *Work done*
-(service, hours spent, materials) and press **Email to Customer** (or **Download PDF**). The
-unpaid invoice is due on completion (same day as the invoice date) and includes a direct online
-payment link (`/Payment/Invoice/{bookingId}`) with an optional technician tip, plus the company's
-bank transfer details (`Invoice:PaymentDetails`).
+Under the money list, a done job's page reads in the order the work goes: **1. Invoice**, then
+**2. Payment**.
+
+**1. Invoice (`#job-invoice`)** appears once the job is marked as done. Its *Work done* box opens
+with the job's service already in it; the admin adds the hours and any materials and presses
+**Email to Customer** (or **Download PDF**). The unpaid invoice is due on completion (same day as
+the invoice date) and includes a direct online payment link (`/Payment/Invoice/{bookingId}`) with
+an optional technician tip, plus the company's bank transfer details (`Invoice:PaymentDetails`).
+
+**2. Payment (`#job-payment`)** stays closed on a done job until its invoice is made, by the email
+or the download, and says *"Send the invoice first."* The rule is on the server too
+(`BookingRules.CanTakePayment`), so a page left open in another tab cannot write a payment first.
+A job that is booked and not done yet has no invoice, and takes a payment as before.
 
 **Paid through the link**, the site writes the payment in the money list by itself: a card line
 reading *"Card, invoice paid online"*, with any tip beside it and not counted towards the job. The
@@ -413,8 +421,11 @@ customer's return gets there first. A second payment page closes the first, so t
 be paid twice.
 
 **Paid by bank transfer or in cash**, the admin records it with **Add Payment** once the money is
-confirmed, so *Still owed* becomes `£0.00` (*Paid in full*), and presses **Email to Customer** again
-to send the **PAID IN FULL** invoice.
+confirmed: pressing it is the admin's word that the money came. When that payment makes the job
+*Paid in full*, the invoice marked **PAID IN FULL** is emailed to the customer by itself, as after
+an online payment, and the message at the top says so. A job with no email address says to
+download the invoice instead. A part payment sends nothing by itself; **Email to Customer** sends
+the invoice with what is left.
 
 **The money list** has one line per payment, and under it the final price, what has been paid and
 what is still owed:
@@ -424,8 +435,9 @@ what is still owed:
 | *Deposit, card on the website* | Written by the site when the deposit is paid. It cannot be taken off. |
 | *Card*, *Cash*, *Bank transfer* | Written by the admin: **Add Payment**, with the amount and how it was paid. The box starts at what is still owed. A line typed by mistake has a **Take off** button. |
 
-A payment can be written on a job that is on or done, not on one that is cancelled or abandoned,
-and not on a website booking before its deposit, which is paid on the website and nowhere else.
+A payment can be written on a job that is on, or done once its invoice is made; not on one that is
+cancelled or abandoned, and not on a website booking before its deposit, which is paid on the
+website and nowhere else.
 The final price of a done job can be put right afterwards (**Change the Final Price**).
 
 **Code:** `JobsService.CompleteBookingAsync` / `ChangeFinalPriceAsync`,

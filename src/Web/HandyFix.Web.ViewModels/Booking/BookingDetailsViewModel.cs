@@ -159,7 +159,17 @@
 
         public bool CanCancel => BookingRules.CanCancel(this.StatusName);
 
-        public bool CanTakePayment => BookingRules.CanTakePayment(this.StatusName, this.CameFromWebsite, this.IsDepositPaid);
+        public bool CanTakePayment => BookingRules.CanTakePayment(this.StatusName, this.CameFromWebsite, this.IsDepositPaid, this.InvoiceNumber.HasValue);
+
+        public bool PaymentWaitsForInvoice => BookingRules.PaymentWaitsForInvoice(this.StatusName, this.InvoiceNumber.HasValue);
+
+        /// <summary>
+        /// What the invoice's "work done" box opens with: the text kept on the job, or the job's
+        /// services before any is kept, for the admin to add the hours and materials to.
+        /// </summary>
+        public string InvoiceWorkDoneOrServices => string.IsNullOrWhiteSpace(this.InvoiceWorkDone)
+            ? string.Join(", ", this.Services ?? Enumerable.Empty<string>())
+            : this.InvoiceWorkDone;
 
         public bool CanChangeFinalPrice => BookingRules.CanChangeFinalPrice(this.StatusName);
 

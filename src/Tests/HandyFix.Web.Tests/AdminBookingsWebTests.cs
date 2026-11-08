@@ -250,7 +250,7 @@
             Assert.Equal("Pending", site.Booking().Status.Name);
 
             HttpResponseMessage paid = await PostFromAsync(admin, jobPage, JobsPage + "/AddPayment", With(With(id, "amount", "50.00"), "method", "Cash"));
-            Assert.Contains("Nothing was changed. A payment can be written on a job that is booked or done", WebUtility.HtmlDecode(await paid.Content.ReadAsStringAsync()));
+            Assert.Contains("Nothing was changed. A payment can be written on a job that is booked, or done once its invoice is made", WebUtility.HtmlDecode(await paid.Content.ReadAsStringAsync()));
 
             HttpResponseMessage moved = await PostFromAsync(admin, jobPage, JobsPage + "/Move", With(With(id, "date", "2030-01-07"), "time", "10:00"));
             Assert.Contains("Nothing was changed. A job can be moved while it is booked", WebUtility.HtmlDecode(await moved.Content.ReadAsStringAsync()));
@@ -288,7 +288,16 @@
             Assert.Matches("<dt>Still owed</dt>\\s*<dd>£85.00</dd>", page);
             Assert.Contains("Deposit, card on the website", page);
 
-            // The box for the next payment starts at what is owed.
+            // The payment waits for the invoice, which comes first on the page (Section 3ds),
+            // and the invoice's text starts with the job's service.
+            Assert.Contains("Send the invoice first. Payments can be written once it is made.", page);
+            Assert.DoesNotContain("name=\"amount\"", page);
+            Assert.True(page.IndexOf("id=\"job-invoice\"", StringComparison.Ordinal) < page.IndexOf("id=\"job-payment\"", StringComparison.Ordinal));
+            Assert.Matches("<textarea name=\"workDone\"[^>]*>\\s*" + Regex.Escape(site.ServiceName) + "</textarea>", page);
+            HttpResponseMessage invoiced = await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(With(id, "workDone", site.ServiceName + ", 1.5 hours."), "send", "download"));
+            page = WebUtility.HtmlDecode(await invoiced.Content.ReadAsStringAsync());
+
+            // Then the box for the next payment opens, starting at what is owed.
             Assert.Matches("name=\"amount\"[^>]*value=\"85.00\"", page);
             Assert.DoesNotContain("id=\"job-complete\"", page);
             Assert.DoesNotContain("id=\"job-cancel\"", page);
@@ -307,6 +316,10 @@
             HttpResponseMessage rest = await PostFromAsync(admin, jobPage, JobsPage + "/AddPayment", With(With(id, "amount", "45.00"), "method", "Card"));
             page = WebUtility.HtmlDecode(await rest.Content.ReadAsStringAsync());
             Assert.Equal(("Done", "Paid in full"), LabelsOn(page));
+
+            // Paid in full, the invoice marked paid went to the customer by itself.
+            Assert.Contains("£45.00 is written on the job, paid by card. The invoice marked PAID IN FULL was emailed to the customer.", page);
+            Assert.Contains("paid in full", site.Emails.Sent.Last().Body);
             Assert.Matches("<dt>Paid so far</dt>\\s*<dd>£135.00</dd>", page);
             Assert.Matches("<dt>Still owed</dt>\\s*<dd>£0.00</dd>", page);
 
@@ -321,8 +334,10 @@
                     "Deposit of £50.00 paid on the website.",
                     "Technician picked: Zapryan. The customer was emailed.",
                     "Marked done. Final price £135.00.",
+                    "Invoice PHS-0001 made.",
                     "Payment of £40.00 written on the job: Cash.",
                     "Payment of £45.00 written on the job: Card.",
+                    "Invoice PHS-0001 emailed to the customer: paid in full.",
                 },
                 history);
 
@@ -374,6 +389,7 @@
             HttpResponseMessage sent = await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(invoiceForm, "send", "email"));
             var page = WebUtility.HtmlDecode(await sent.Content.ReadAsStringAsync());
             Assert.Contains("Invoice PHS-0001 is emailed to the customer, with the PDF attached. It asks for £85.00 by", page);
+            Assert.Contains("Once it is paid, online or written below with Add Payment, the invoice marked PAID IN FULL goes to the customer by itself.", page);
             Assert.Contains("Invoice PHS-0001, made", page);
             Assert.Matches("<textarea name=\"workDone\"[^>]*>\\s*Replaced the kitchen tap.</textarea>", page);
 
@@ -537,10 +553,10 @@
         }
 
         // A job that came by phone: a first name, a number, a day and a time. It is a job from
-        // the start, with no deposit, no slot and no email, and it is finished and paid for on
-        // the same page as any other.
+        // the start, with no deposit, no slot and no email until it is paid, and it is finished
+        // and paid for on the same page as any other.
         [Fact]
-        public async Task AJobWrittenInByTheAdminIsAJobFromTheStartAndEmailsNobody()
+        public async Task AJobWrittenInByTheAdminIsAJobFromTheStartAndEmailsNobodyUntilItIsPaid()
         {
             using var site = new Site();
             HttpClient admin = await site.SignedInAdminAsync();
@@ -606,11 +622,15 @@
 
             // Done and paid in cash: no deposit ever came into it.
             await PostFromAsync(admin, jobPage, JobsPage + "/Complete", With(id, "finalPrice", "60.00"));
+            await PostFromAsync(admin, jobPage, JobsPage + "/Invoice", With(With(id, "workDone", string.Empty), "send", "download"));
+            Assert.Empty(site.Emails.Sent);
             HttpResponseMessage paid = await PostFromAsync(admin, jobPage, JobsPage + "/AddPayment", With(With(id, "amount", "60.00"), "method", "Cash"));
             page = WebUtility.HtmlDecode(await paid.Content.ReadAsStringAsync());
             Assert.Equal(("Done", "Paid in full"), LabelsOn(page));
 
-            Assert.Empty(site.Emails.Sent);
+            // The one email it ever sends: the invoice marked paid, once the cash pays it in full.
+            Assert.Contains("The invoice marked PAID IN FULL was emailed to the customer.", page);
+            Assert.Equal("grace@example.com", Assert.Single(site.Emails.Sent).To);
         }
 
         // An enquiry that turns into work. The button opens the form with what the enquiry

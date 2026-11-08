@@ -405,11 +405,21 @@
         [HttpPost]
         public async Task<IActionResult> AddPayment(Guid id, decimal? amount, string method)
         {
-            var added = amount > 0m && await this.paymentsService.AddPaymentAsync(id, amount.Value, method);
+            PaymentAddResult result = amount > 0m ? await this.paymentsService.AddPaymentAsync(id, amount.Value, method) : null;
+            if (result?.Added != true)
+            {
+                this.TempData[ErrorMessageKey] = "Nothing was changed. A payment can be written on a job that is booked, or done once its invoice is made: type an amount above £0 and pick how it was paid.";
+                return this.RedirectToAction(nameof(this.Details), new { id });
+            }
 
-            this.TempData[added ? SuccessMessageKey : ErrorMessageKey] = added
-                ? $"{Pounds(amount.Value)} is written on the job, paid by {method.ToLowerInvariant()}."
-                : "Nothing was changed. A payment can be written on a job that is booked or done: type an amount above £0 and pick how it was paid.";
+            // The payment that pays a done job in full sends the invoice marked paid by itself.
+            this.TempData[SuccessMessageKey] = $"{Pounds(amount.Value)} is written on the job, paid by {method.ToLowerInvariant()}." + result.PaidInvoice switch
+            {
+                InvoiceEmailOutcome.Sent => " The invoice marked PAID IN FULL was emailed to the customer.",
+                InvoiceEmailOutcome.NotSent => " The invoice marked PAID IN FULL could not be emailed: press Email to Customer in the Invoice box to try again.",
+                InvoiceEmailOutcome.NoEmailAddress => " The job is paid in full and has no email address: download the invoice, which now says paid in full, and send it yourself.",
+                _ => string.Empty,
+            };
 
             return this.RedirectToAction(nameof(this.Details), new { id });
         }
@@ -473,7 +483,7 @@
                     this.TempData[SuccessMessageKey] = $"Invoice {invoice.NumberText} is emailed to the customer, with the PDF attached. "
                         + (invoice.IsPaid
                             ? "It says it is paid in full."
-                            : $"It asks for {Pounds(invoice.Balance)} by {invoice.DueOn.ToString("d MMMM", CultureInfo.InvariantCulture)}. Once they pay, write the payment on the job and email the invoice again: it will say paid in full.");
+                            : $"It asks for {Pounds(invoice.Balance)} by {invoice.DueOn.ToString("d MMMM", CultureInfo.InvariantCulture)}. Once it is paid, online or written below with Add Payment, the invoice marked PAID IN FULL goes to the customer by itself.");
                     break;
 
                 case InvoiceEmailOutcome.NoEmailAddress:

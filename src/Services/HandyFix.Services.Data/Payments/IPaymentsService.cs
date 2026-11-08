@@ -29,11 +29,12 @@
         Task<decimal> GetTotalRevenueAsync();
 
         /// <summary>
-        /// Writes a payment on a job: "Card", "Cash" or "Bank transfer". False, with nothing
-        /// changed, when the job is missing, cancelled or abandoned, or the amount or the way it
-        /// was paid is not one the site takes.
+        /// Writes a payment on a job: "Card", "Cash" or "Bank transfer". Not added, with nothing
+        /// changed, when the job is missing, cancelled or abandoned, done with no invoice made
+        /// yet, or the amount or the way it was paid is not one the site takes. A payment that
+        /// pays a done job in full emails the invoice marked paid in full.
         /// </summary>
-        Task<bool> AddPaymentAsync(Guid bookingId, decimal amount, string method);
+        Task<PaymentAddResult> AddPaymentAsync(Guid bookingId, decimal amount, string method);
 
         /// <summary>
         /// Takes a payment the admin wrote off the job again. The website deposit cannot be.
