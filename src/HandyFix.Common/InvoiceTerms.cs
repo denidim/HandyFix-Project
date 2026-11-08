@@ -1,4 +1,4 @@
-namespace HandyFix.Common
+﻿namespace HandyFix.Common
 {
     using System;
     using System.Globalization;

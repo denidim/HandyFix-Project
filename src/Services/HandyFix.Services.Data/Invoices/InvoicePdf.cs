@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Invoices
+﻿namespace HandyFix.Services.Data.Invoices
 {
     using System;
     using System.Collections.Generic;

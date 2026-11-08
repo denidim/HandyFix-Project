@@ -1,4 +1,4 @@
-namespace HandyFix.Services.Data.Emails
+﻿namespace HandyFix.Services.Data.Emails
 {
     using System;
     using System.Collections.Generic;

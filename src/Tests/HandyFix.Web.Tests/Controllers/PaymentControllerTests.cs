@@ -1,4 +1,4 @@
-namespace HandyFix.Web.Tests.Controllers
+﻿namespace HandyFix.Web.Tests.Controllers
 {
     using System;
     using System.Threading.Tasks;
