@@ -10,7 +10,8 @@
 
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == CategorySlugs.SmallBuildingWorks;
-    var durationHours = isBuilding ? "Day Rate / Survey" : Durations.HoursOrMinutes(Model.EstimatedDurationMinutes);
+    var isQuoteOnly = isBuilding || Model.IsQuoteOnly;
+    var durationHours = isQuoteOnly ? "Day Rate / Survey" : Durations.HoursOrMinutes(Model.EstimatedDurationMinutes);
 
     // Dynamic Image path
     var serviceImage = Model.ImageUrl;
@@ -108,7 +109,7 @@
                     <span class="spec-bento-value">@Model.CategoryName</span>
                 </div>
                 <div class="spec-bento-card col-span-2">
-                    @if (isBuilding)
+                    @if (isQuoteOnly)
                     {
                         <span class="material-symbols-outlined spec-bento-icon">request_quote</span>
                         <span class="spec-bento-label">Pricing Model</span>
@@ -173,7 +174,7 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        @if (isBuilding)
+                        @if (isQuoteOnly)
                         {
                             <text>@Model.Name is quoted individually after a free on-site survey, so we can account for the scope, materials, and finish you want before agreeing a fixed price. There's no obligation to book once you have your quote.</text>
                         }
@@ -223,10 +224,10 @@
             <div class="sidebar-sticky-wrapper">
                 <!-- CTA Booking Card -->
                 <div class="sidebar-booking-card">
-                @if (isBuilding)
+                @if (isQuoteOnly)
                 {
                     <h3 class="sidebar-booking-title">Request a Project Quote</h3>
-                    <p class="sidebar-booking-desc">Discuss your project with our multi-trade building and refurbishment team across Surrey and South London.</p>
+                    <p class="sidebar-booking-desc">Discuss your project with our @(isBuilding ? "multi-trade building and refurbishment" : "local plumbing and handyman") team across Surrey and South London.</p>
                     
                     <div class="sidebar-booking-features">
                         <div class="sidebar-booking-feature-item">
@@ -239,14 +240,24 @@
                         </div>
                         <div class="sidebar-booking-feature-item">
                             <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
-                            <span>Fully insured multi-trade team</span>
+                            <span>@(isGasSafe ? "Gas Safe registered engineer" : (isBuilding ? "Fully insured multi-trade team" : "Certified master technicians"))</span>
                         </div>
                     </div>
 
-                    <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn">
-                        <span>Request Free Estimate</span>
-                        <span class="material-symbols-outlined">arrow_forward</span>
-                    </a>
+                    <div class="sidebar-booking-actions">
+                        <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn">
+                            <span>Request Free Estimate</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        </a>
+                        <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="sidebar-booking-btn sidebar-booking-btn-ghost">
+                            <span class="material-symbols-outlined">call</span>
+                            <span>Call Us: @GlobalConstants.BusinessPhone</span>
+                        </a>
+                        <a href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener" class="sidebar-booking-btn sidebar-booking-btn-ghost">
+                            <partial name="_WhatsAppIcon" />
+                            <span>Message us on WhatsApp</span>
+                        </a>
+                    </div>
                     <p class="sidebar-booking-note">No obligation &bull; Free initial survey</p>
                 }
                 else
@@ -336,7 +347,7 @@
                                                              Description = related.Description,
                                                              BasePrice = related.BasePrice,
                                                              EstimatedDurationMinutes = related.EstimatedDurationMinutes,
-                                                             IsQuoteBased = related.CategorySlug == CategorySlugs.SmallBuildingWorks,
+                                                             IsQuoteBased = related.CategorySlug == CategorySlugs.SmallBuildingWorks || related.IsQuoteOnly,
                                                              DivisionClass = related.CategorySlug == CategorySlugs.SmallBuildingWorks ? "pricing-card-building" : (related.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
                                                              CtaText = "View Details",
                                                              CtaUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = related.CategorySlug, serviceSlug = related.Slug }),
@@ -377,7 +388,7 @@
     { "@@type": "AdministrativeArea", "name": "Epsom" },
     { "@@type": "AdministrativeArea", "name": "Kingston" }
   ]
-  @if (!isBuilding)
+  @if (!isQuoteOnly)
   {
     @:,"offers": { "@@type": "Offer", "price": @Json.Serialize(Model.BasePrice.ToString("F2", CultureInfo.InvariantCulture)), "priceCurrency": "GBP" }
   }
@@ -395,7 +406,7 @@
       "name": @Json.Serialize($"How much does {Model.Name} cost?"),
       "acceptedAnswer": {
         "@@type": "Answer",
-        "text": @Json.Serialize(isBuilding ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}.")
+        "text": @Json.Serialize(isQuoteOnly ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}.")
       }
     },
     {

@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.ViewModels.Administration.Services
+namespace HandyFix.Web.ViewModels.Administration.Services
 {
     using System;
     using System.Collections.Generic;
@@ -39,6 +39,9 @@
 
         [Display(Name = "Popular service")]
         public bool IsPopular { get; set; }
+
+        [Display(Name = "Quote only (no hourly slot booking)")]
+        public bool IsQuoteOnly { get; set; }
 
         [Required(ErrorMessage = "Category is required.")]
         public Guid CategoryId { get; set; }

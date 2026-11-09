@@ -134,6 +134,7 @@
         <div class="pricing-cards-grid">
             @foreach (var svc in Model.TypicalJobs)
             {
+                var isQuoteOnly = svc.CategorySlug == CategorySlugs.SmallBuildingWorks || svc.IsQuoteOnly;
                 <partial name="_PricingCard" model="@(new PricingCardViewModel
                                                      {
                                                          Name = svc.Name,
@@ -143,10 +144,12 @@
                                                          Description = svc.Description,
                                                          BasePrice = svc.BasePrice,
                                                          EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
-                                                         IsQuoteBased = svc.CategorySlug == CategorySlugs.SmallBuildingWorks,
+                                                         IsQuoteBased = isQuoteOnly,
                                                          DivisionClass = svc.CategorySlug == CategorySlugs.SmallBuildingWorks ? "pricing-card-building" : (svc.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
-                                                         CtaText = "Book Now",
-                                                         CtaUrl = this.Url.Action("Index", "Booking", new { selectedServiceId = svc.Id, categorySlug = svc.CategorySlug }),
+                                                         CtaText = isQuoteOnly ? "Request Quote" : "Book Now",
+                                                         CtaUrl = isQuoteOnly
+                                                             ? this.Url.Action("Contact", "Home", new { service = svc.Name })
+                                                             : this.Url.Action("Index", "Booking", new { selectedServiceId = svc.Id, categorySlug = svc.CategorySlug }),
                                                      })" />
             }
         </div>

@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Data.Seeding
+namespace HandyFix.Data.Seeding
 {
     using System;
     using System.Linq;
@@ -109,6 +109,7 @@
                         DisplayOrder = firstInTheirCategory.Contains(item.Slug) ? 0 : Service.DefaultDisplayOrder,
                         IsPopular = popular.Contains(item.Slug),
                         IsGasSafeWork = gasSafeWork.Contains(item.Slug),
+                        IsQuoteOnly = item.CategoryId == smallBuildingCategory.Id || gasSafeWork.Contains(item.Slug),
                     });
                 }
 

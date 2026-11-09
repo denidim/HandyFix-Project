@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Tests
+namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.Linq;
@@ -49,12 +49,14 @@
             Assert.Equal(4, this.dbContext.Services.Count(s => s.IsPopular));
             Assert.Equal(38, this.dbContext.ServiceImages.Count());
 
-            // Only the boiler service carries the Gas Safe logo, and it is a plumbing one.
+            // Only the boiler service carries the Gas Safe logo, and it is a plumbing one that is quoted rather than booked by the hour.
             Service boiler = this.dbContext.Services.Include(s => s.Category).Single(s => s.IsGasSafeWork);
             Assert.Equal("boiler-installation-servicing", boiler.Slug);
             Assert.Equal("plumbing", boiler.Category.Slug);
             Assert.Equal(90.00m, boiler.BasePrice);
             Assert.Equal(60, boiler.EstimatedDurationMinutes);
+            Assert.True(boiler.IsQuoteOnly);
+            Assert.Equal(9, this.dbContext.Services.Count(s => s.IsQuoteOnly));
         }
 
         // An admin deleting a seeded service used to stop the site from starting. The delete is a

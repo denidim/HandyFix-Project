@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Tests.Controllers
+namespace HandyFix.Web.Tests.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -52,6 +52,7 @@
                     IsActive = false,
                     DisplayOrder = 3,
                     IsPopular = true,
+                    IsQuoteOnly = true,
                 });
 
             var result = await controller.Edit(id);
@@ -60,6 +61,7 @@
             Assert.False(model.IsActive);
             Assert.Equal(3, model.DisplayOrder);
             Assert.True(model.IsPopular);
+            Assert.True(model.IsQuoteOnly);
         }
 
         [Fact]
@@ -71,12 +73,13 @@
             model.IsActive = false;
             model.DisplayOrder = 0;
             model.IsPopular = true;
+            model.IsQuoteOnly = true;
 
             var result = await controller.Edit(model);
 
             AssertGoesBackToTheAdminList(result);
             servicesService.Verify(
-                x => x.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, false, model.CategoryId, 0, true),
+                x => x.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, false, model.CategoryId, 0, true, true),
                 Times.Once);
         }
 
@@ -87,12 +90,13 @@
             var model = ValidService();
             model.DisplayOrder = 12;
             model.IsPopular = true;
+            model.IsQuoteOnly = true;
 
             var result = await controller.Create(model);
 
             AssertGoesBackToTheAdminList(result);
             servicesService.Verify(
-                x => x.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, 12, true),
+                x => x.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, 12, true, true),
                 Times.Once);
         }
 
@@ -109,7 +113,7 @@
             Assert.IsType<ViewResult>(result);
             Assert.True(controller.ModelState.ContainsKey(nameof(model.Name)));
             servicesService.Verify(
-                x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>()),
+                x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<bool>()),
                 Times.Never);
         }
 
@@ -136,7 +140,7 @@
             Assert.IsType<ViewResult>(result);
             Assert.True(refusing.ModelState.ContainsKey(nameof(model.Name)));
             refusingService.Verify(
-                x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>()),
+                x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<bool>()),
                 Times.Never);
         }
 
@@ -237,7 +241,7 @@
             var controller = BuildController(out var servicesService, out _, out var logger);
             var serviceId = Guid.NewGuid();
             servicesService
-                .Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>()))
+                .Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(serviceId);
             servicesService
                 .Setup(x => x.SetServiceImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()))
@@ -258,7 +262,7 @@
             var serviceId = Guid.NewGuid();
             var failure = StorageOutOfReach();
             servicesService
-                .Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>()))
+                .Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(serviceId);
             servicesService
                 .Setup(x => x.SetServiceImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()))

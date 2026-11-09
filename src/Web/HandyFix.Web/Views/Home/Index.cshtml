@@ -255,6 +255,7 @@
             @foreach (var svc in Model.PopularServices)
             {
                 var svcIsBuilding = svc.CategorySlug == CategorySlugs.SmallBuildingWorks;
+                var svcIsQuoteOnly = svcIsBuilding || svc.IsQuoteOnly;
                 var svcBadgeClass = svcIsBuilding ? "bento-badge-building" : (svc.CategoryName == "Plumbing" ? "bento-badge-plumbing" : "bento-badge-handyman");
                 <a class="bento-card"
                      asp-route="ServiceDetails"
@@ -276,9 +277,9 @@
 
                     <div class="bento-card-top">
                         <span class="bento-badge @svcBadgeClass">@svc.CategoryName</span>
-                        @* A building job is quoted after a survey: its stored duration is a placeholder
-                           day, not a time anyone books, so the pill is left off. *@
-                        @if (svc.EstimatedDurationMinutes > 0 && !svcIsBuilding)
+                        @* A quote-only job is quoted after a survey: its stored duration is a placeholder,
+                           not a time anyone books, so the pill is left off. *@
+                        @if (svc.EstimatedDurationMinutes > 0 && !svcIsQuoteOnly)
                         {
                             <span class="bento-duration-pill">
                                 <span class="material-symbols-outlined">schedule</span>
@@ -297,7 +298,7 @@
 
                         <div class="bento-card-footer">
                             <div class="bento-price-wrap">
-                                @if (svcIsBuilding)
+                                @if (svcIsQuoteOnly)
                                 {
                                     <span class="bento-price-amount">Survey &amp; Fixed Quote</span>
                                 }
@@ -309,7 +310,7 @@
                             </div>
 
                             <span class="bento-action-pill">
-                                @(svcIsBuilding ? "Request Quote" : "Book")
+                                @(svcIsQuoteOnly ? "Request Quote" : "Book")
                                 <span class="material-symbols-outlined">arrow_forward</span>
                             </span>
                         </div>

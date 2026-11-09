@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Tests
+namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.IO;
@@ -41,7 +41,7 @@
             await dbContext.SaveChangesAsync();
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.CreateAsync("Leaky Pipe Repair", "Repairing leaky pipes quickly", 60.00m, 45, category.Id, 7, true);
+            await service.CreateAsync("Leaky Pipe Repair", "Repairing leaky pipes quickly", 60.00m, 45, category.Id, 7, true, true);
 
             Assert.Equal(1, dbContext.Services.Count());
             var created = dbContext.Services.First();
@@ -51,6 +51,7 @@
             Assert.Equal(category.Id, created.CategoryId);
             Assert.Equal(7, created.DisplayOrder);
             Assert.True(created.IsPopular);
+            Assert.True(created.IsQuoteOnly);
         }
 
         [Fact]
@@ -366,7 +367,7 @@
             await dbContext.SaveChangesAsync();
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.UpdateAsync(serviceEntity.Id, "Tap Replacement", "new description", 75m, 60, false, newCategory.Id, 5, true);
+            await service.UpdateAsync(serviceEntity.Id, "Tap Replacement", "new description", 75m, 60, false, newCategory.Id, 5, true, true);
 
             var updated = dbContext.Services.First(x => x.Id == serviceEntity.Id);
             Assert.Equal("Tap Replacement", updated.Name);
@@ -378,6 +379,7 @@
             Assert.Equal("tap-replacement", updated.Slug);
             Assert.Equal(5, updated.DisplayOrder);
             Assert.True(updated.IsPopular);
+            Assert.True(updated.IsQuoteOnly);
         }
 
         // The Gas Safe mark is not on the admin form, so an edit there, a rename included, must

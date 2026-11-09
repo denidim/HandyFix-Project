@@ -35,7 +35,7 @@
             },
         };
 
-        if (!isBuilding)
+        if (!isBuilding && !svc.IsQuoteOnly)
         {
             entry["price"] = svc.BasePrice.ToString("F2", CultureInfo.InvariantCulture);
             entry["priceCurrency"] = "GBP";
@@ -86,7 +86,8 @@
             <h2 class="visually-hidden">@Model.Name services</h2>
             @foreach (var svc in Model.Services)
             {
-                var duration = isBuilding ? "Day Rate / Survey" : Durations.HoursOrMinutes(svc.EstimatedDurationMinutes);
+                var isQuoteOnly = isBuilding || svc.IsQuoteOnly;
+                var duration = isQuoteOnly ? "Day Rate / Survey" : Durations.HoursOrMinutes(svc.EstimatedDurationMinutes);
 
                 // The card shows its picture 88px wide on a phone and 256px on a computer, from a
                 // picture 1024 wide. With a small copy beside it the browser picks by the screen;
@@ -103,7 +104,7 @@
                         <div class="service-card-main-header">
                             <h3 class="service-card-title">@svc.Name</h3>
                             <div class="service-card-price-box">
-                                @if (isBuilding)
+                                @if (isQuoteOnly)
                                 {
                                     <span class="service-card-price">Survey &amp; Fixed Quote</span>
                                     <a asp-controller="Services"
@@ -137,7 +138,7 @@
                         </div>
 
                         <div class="service-card-actions">
-                            @if (isBuilding)
+                            @if (isQuoteOnly)
                             {
                                 <a asp-controller="Home"
                                    asp-action="Contact"

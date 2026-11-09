@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Services
+namespace HandyFix.Services.Data.Services
 {
     using System;
     using System.Collections.Generic;
@@ -16,9 +16,9 @@
 
         Task<T> GetBySlugAsync<T>(string slug);
 
-        Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId, int displayOrder, bool isPopular);
+        Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false);
 
-        Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular);
+        Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false);
 
         Task<bool> NameIsTakenAsync(string name, Guid? exceptId = null);
 

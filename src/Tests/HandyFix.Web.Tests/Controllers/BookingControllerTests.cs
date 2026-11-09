@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Tests.Controllers
+namespace HandyFix.Web.Tests.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -215,6 +215,32 @@
             var model = Assert.IsType<BookingInputModel>(Assert.IsType<ViewResult>(result).Model);
             Assert.Equal(new[] { "KT9", "KT10" }, model.ServedPostcodeDistricts);
             Assert.False(model.PostcodeNotServed);
+        }
+
+        [Fact]
+        public async Task IndexGetShouldRedirectAQuoteOnlyServiceToTheContactForm()
+        {
+            var controller = BuildController(out var servicesService, out _, out _, out _);
+            var boilerId = Guid.NewGuid();
+            servicesService
+                .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel>
+                {
+                    new ServiceViewModel
+                    {
+                        Id = boilerId,
+                        Name = "Boiler Installation & Servicing",
+                        CategorySlug = "plumbing",
+                        IsQuoteOnly = true,
+                    },
+                });
+
+            var result = await controller.Index(categorySlug: "plumbing", date: null, selectedServiceId: boilerId);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Contact", redirect.ActionName);
+            Assert.Equal("Home", redirect.ControllerName);
+            Assert.Equal("Boiler Installation & Servicing", redirect.RouteValues["service"]);
         }
 
         // A submission with a program's mark on it. The other forms answer one with their usual

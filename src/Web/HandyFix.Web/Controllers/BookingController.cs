@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Controllers
+namespace HandyFix.Web.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -74,15 +74,24 @@
             {
                 IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
 
-                // A link that names a service but no category would open on the default Plumbing
-                // tab, where a handyman service is not in the list and gets replaced by the
-                // general plumbing one (PROJECT_STATE Section 3br). The service knows its category.
-                if (string.IsNullOrEmpty(categorySlug) && selectedServiceId.HasValue)
+                // A quote-only service (such as boiler installation & servicing) cannot be booked
+                // as an hourly slot, so a link naming it goes to the Contact form on that service.
+                // For a bookable service, a link that names the service but no category opens on
+                // the service's own category tab (PROJECT_STATE Section 3br).
+                if (selectedServiceId.HasValue)
                 {
                     ServiceViewModel selected = services.FirstOrDefault(s => s.Id == selectedServiceId.Value);
-                    if (selected != null && selected.CategorySlug != QuoteOnlyCategorySlug)
+                    if (selected != null)
                     {
-                        categorySlug = selected.CategorySlug;
+                        if (selected.IsQuoteOnly)
+                        {
+                            return this.RedirectToAction("Contact", "Home", new { service = selected.Name });
+                        }
+
+                        if (string.IsNullOrEmpty(categorySlug) && selected.CategorySlug != QuoteOnlyCategorySlug)
+                        {
+                            categorySlug = selected.CategorySlug;
+                        }
                     }
                 }
 
