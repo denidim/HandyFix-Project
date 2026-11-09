@@ -1,4 +1,4 @@
-namespace HandyFix.Web.Tests
+﻿namespace HandyFix.Web.Tests
 {
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
