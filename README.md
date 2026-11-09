@@ -15,12 +15,13 @@ A booking website for a real plumbing and handyman business based in **Chessingt
 
 - **Online booking with a deposit.** The admin opens time slots; a customer picks one and pays a £50 deposit on Stripe's hosted payment page. Two customers cannot take the same slot: claiming one runs in a transaction, guarded by a `RowVersion` concurrency token. The site believes a payment only after asking Stripe, both when the customer comes back and when Stripe's webhook calls. A booking left unpaid for 15 minutes is dropped, its payment page is closed at Stripe and its slot goes back on offer.
 - **Quotes for bigger work.** Building and refurbishment services go through an enquiry form with photos, not the slot calendar.
-- **The Job Book.** The admin panel gives every job a page, whether it was booked on the website or written in by hand after a phone call: the technician, the final price, each payment, private notes and a history line for every change. Around it sit a calendar, slot generation, and editing for services, categories, service areas, technicians, enquiries and reviews.
+- **The Job Book.** The admin panel gives every job a page, whether it was booked on the website or written in by hand after a phone call: the technician, the final price, the invoice, each payment, private notes and a history line for every change. Picking a technician emails the customer their name and phone number on written-in jobs too, whenever the job has an email address. Around it sit a calendar, slot generation, an invoices list, and editing for services, categories, service areas, technicians, enquiries and reviews.
+- **Invoices and online balance payment.** A done job gets a numbered PDF invoice (`PHS-0001`, `PHS-0002`, …), downloaded or emailed from the job's page, with the deposit and any earlier payments taken off. The invoice carries an online payment link where the customer can pay the remaining balance by card, Apple Pay or Google Pay (with an optional tip for the technician, kept separate from the job's price) or pay by bank transfer or cash; once paid in full, the site emails the `PAID IN FULL` invoice automatically. The Invoices page exports each month's list as CSV and PDF for the accountant, broken down by deposit, card, cash, bank transfer and tips.
 - **Public forms that hold up to abuse.** Rate limiting, a hidden-field and time check, Cloudflare Turnstile, and server-side validation of UK phone numbers and postcodes, including a check that the postcode is in an area the business serves.
-- **Email.** Booking, payment and enquiry emails go through Brevo, from role addresses on the business's domain.
-- **Local SEO.** A page for each of the 15 service areas, built from data the admin can edit; JSON-LD structured data; a generated `sitemap.xml`.
-- **Photos.** Customers' photos are stored in Cloudflare R2. Service pictures uploaded by the admin are resized and re-encoded to WebP.
-- **Automated tests and deploys.** Over 900 tests run on every push. A push to `dev` deploys to staging; a merged pull request into `main` deploys to production.
+- **Email.** Booking, payment, invoice and enquiry emails go through Brevo, from role addresses on the business's domain.
+- **Local SEO.** A page for each service area, built from data the admin can edit. When the owner adds a town, the site works out its postcode district and position on the coverage diagram via `postcodes.io` and its drive time from Chessington via `OSRM`; JSON-LD structured data; a generated `sitemap.xml`.
+- **Photos.** Customers' photos and the service and area pictures uploaded by the admin are stored in Cloudflare R2; admin uploads are resized and re-encoded to WebP with phone-sized copies.
+- **Automated tests and deploys.** Over 1,100 tests run on every push, and the Release build fails on any compiler or StyleCop warning. A push to `dev` deploys to staging; a merged pull request into `main` deploys to production.
 
 ---
 
@@ -40,7 +41,7 @@ The application is a layered ASP.NET Core MVC solution (see [Project Structure](
 │ • DNS and proxy for the domain  │                  │
 │ • DDoS protection, TLS at edge  │                  │
 │ • Turnstile (form person check) │                  │
-│ • R2 (customers' job photos)    │                  │
+│ • R2 (job & admin photos)       │                  │
 └────────────────┬────────────────┘                  │
                  │ Full (strict) TLS with            │
                  │ Cloudflare's origin certificate   │
@@ -103,8 +104,8 @@ Staging is reached directly, on the server's own hostname, with a certificate Ca
 ### Every change is tested before it is deployed
 
 ```text
-push to dev             →  build  →  900+ tests  →  Docker image  →  GHCR  →  staging
-merged PR, dev → main   →  build  →  900+ tests  →  Docker image  →  GHCR  →  production
+push to dev             →  build  →  1,100+ tests  →  Docker image  →  GHCR  →  staging
+merged PR, dev → main   →  build  →  1,100+ tests  →  Docker image  →  GHCR  →  production
 ```
 
 - **GitHub Actions** runs the whole test suite on every push: service tests, controller tests, and full-stack tests that boot the real application against SQLite in memory. A failing test stops the deploy.
@@ -126,10 +127,11 @@ More detail: [docs/WORKFLOW_DEPLOYMENT.md](docs/WORKFLOW_DEPLOYMENT.md) for both
 - **Backend**: .NET 10, ASP.NET Core MVC + Razor Pages (Identity)
 - **Database**: SQL Server 2022 + EF Core 10 (code-first migrations)
 - **Mapping**: [Mapster](https://github.com/MapsterMapper/Mapster), via an `IMapFrom<T>` / `IMapTo<T>` convention registered at startup
-- **Frontend**: Bootstrap 5 + jQuery / vanilla JS
-- **Payments**: Stripe Checkout (hosted payment page) with a signed webhook
+- **Frontend**: Bootstrap 5 + vanilla JS (page scripts in dedicated files)
+- **Payments**: Stripe Checkout (hosted payment page for deposits and invoice balances) with a signed webhook
+- **Invoices & PDF**: QuestPDF (Community licence) for job invoices and monthly accountant statements
 - **Email**: Brevo
-- **File storage**: Cloudflare R2 (S3-compatible)
+- **File storage**: Cloudflare R2 (S3-compatible) + SkiaSharp (WebP resizing)
 - **Abuse protection**: ASP.NET Core rate limiter, Cloudflare Turnstile
 - **Architecture**: Clean Architecture — layered projects, MVC Areas for the admin panel
 - **Testing**: xUnit + Moq; EF Core SQLite in memory where a test needs real transactions or concurrency checks
@@ -223,13 +225,15 @@ If `Stripe:SecretKey` / `Brevo:ApiKey` are unset, the app falls back to a preten
 
 **The two `Admin:Seed*` settings are read once in a database's life**: at the first start, which makes the admin account. Setting or changing them later changes nothing. After that the admin changes the password and the login email in the admin panel, on the Account page ([docs/WORKFLOW_ADMIN_ACCOUNT.md](docs/WORKFLOW_ADMIN_ACCOUNT.md)).
 
+An optional setting, `Invoice:PaymentDetails` (`INVOICE_PAYMENT_DETAILS` in the servers' `.env`), holds the company's bank transfer details printed on unpaid PDF invoices; when unset, the invoice shows the business phone number instead.
+
 ---
 
 ## 📄 Documentation
 
 - **[PROJECT_STATE.md](PROJECT_STATE.md)** — architectural memory: what the system is, what's been built and verified, what's left, and the decisions worth remembering. Start here.
 - **[DESIGN.md](DESIGN.md)** — design tokens, utility classes, page-shell templates, and the admin/card/area component families.
-- **[docs/WORKFLOW_BOOKINGS.md](docs/WORKFLOW_BOOKINGS.md)** — every job end to end, booked on the website or written in by the admin: capacity → the booking and its deposit, or the job written in → the technician → done, with the final price → each payment on the job; plus cancelling, moving, notes and the job's history.
+- **[docs/WORKFLOW_BOOKINGS.md](docs/WORKFLOW_BOOKINGS.md)** — every job end to end, booked on the website or written in by the admin: capacity → the booking and its deposit, or the job written in → the technician → done, with the final price → the PDF invoice, online or manual payment, and the `PAID IN FULL` receipt; plus cancelling, moving, notes and the job's history.
 - **[docs/WORKFLOW_SERVICE_AREAS.md](docs/WORKFLOW_SERVICE_AREAS.md)** — how a service area is created, seeded and published.
 - **[docs/WORKFLOW_SERVICES.md](docs/WORKFLOW_SERVICES.md)** — services & categories admin CRUD and the local WebP image pipeline.
 - **[docs/WORKFLOW_TECHNICIANS.md](docs/WORKFLOW_TECHNICIANS.md)** — the technician roster: create, deactivate vs. delete, the technician a new database starts with.
