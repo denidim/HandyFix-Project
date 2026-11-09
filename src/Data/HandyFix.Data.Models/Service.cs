@@ -1,4 +1,4 @@
-namespace HandyFix.Data.Models
+﻿namespace HandyFix.Data.Models
 {
     using System;
     using System.Collections.Generic;
