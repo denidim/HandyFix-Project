@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Tests
+namespace HandyFix.Web.Tests
 {
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
@@ -64,6 +64,23 @@
 
             Assert.Single(Regex.Matches(html, "class=\"service-card-gas-safe\""));
             Assert.Single(Regex.Matches(html, "service-horizontal-card-gas-safe"));
+        }
+
+        [Fact]
+        public async Task TheBoilerServiceIsQuoteOnlyAndNotInTheHourlyBookingSelect()
+        {
+            string boilerPage = await this.GetAsync(BoilerPage);
+
+            Assert.Contains("Free Survey &amp; Fixed Quote", boilerPage);
+            Assert.Contains("Day Rate / Survey", boilerPage);
+            Assert.Contains("Request Free Estimate", boilerPage);
+            Assert.Contains("Gas Safe registered engineer", boilerPage);
+            Assert.DoesNotContain("Book a Slot", boilerPage);
+            Assert.DoesNotContain("Starting Price", boilerPage);
+
+            string bookingPage = await this.GetAsync("/Booking?categorySlug=plumbing");
+            Assert.DoesNotContain("Boiler Installation &amp; Servicing", bookingPage);
+            Assert.Contains("General Plumbing Maintenance", bookingPage);
         }
 
         private async Task<string> GetAsync(string url)

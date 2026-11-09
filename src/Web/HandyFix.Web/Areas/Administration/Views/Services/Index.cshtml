@@ -102,6 +102,10 @@
                                             {
                                                 <span class="ms-1 px-2 py-1 rounded-full fs-11 tint-info">Popular</span>
                                             }
+                                            @if (svc.IsQuoteOnly)
+                                            {
+                                                <span class="ms-1 px-2 py-1 rounded-full fs-11 tint-secondary">Quote Only</span>
+                                            }
                                             @if (!svc.IsActive)
                                             {
                                                 <span class="ms-1 px-2 py-1 rounded-full fs-11 tint-neutral-soft">Inactive</span>

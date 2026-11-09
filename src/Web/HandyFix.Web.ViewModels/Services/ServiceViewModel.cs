@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.ViewModels.Services
+namespace HandyFix.Web.ViewModels.Services
 {
     using System;
     using System.Linq;
@@ -37,6 +37,8 @@
         public bool IsPopular { get; set; }
 
         public bool IsGasSafeWork { get; set; }
+
+        public bool IsQuoteOnly { get; set; }
 
         /// <summary>
         /// Set by the controller of a page that shows the picture small, not mapped: the address of

@@ -737,6 +737,9 @@ namespace HandyFix.Data.Migrations
                     b.Property<bool>("IsPopular")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsQuoteOnly")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("datetime2");
 

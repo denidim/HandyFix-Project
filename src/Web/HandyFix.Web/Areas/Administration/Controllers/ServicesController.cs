@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Areas.Administration.Controllers
+namespace HandyFix.Web.Areas.Administration.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -72,7 +72,7 @@
                 return this.View(model);
             }
 
-            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, model.DisplayOrder, model.IsPopular);
+            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, model.DisplayOrder, model.IsPopular, model.IsQuoteOnly);
 
             try
             {
@@ -118,6 +118,7 @@
                 IsActive = service.IsActive,
                 DisplayOrder = service.DisplayOrder,
                 IsPopular = service.IsPopular,
+                IsQuoteOnly = service.IsQuoteOnly,
                 CurrentImageUrl = service.ImageUrl,
             };
 
@@ -154,7 +155,7 @@
                 return this.View(model);
             }
 
-            await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId, model.DisplayOrder, model.IsPopular);
+            await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId, model.DisplayOrder, model.IsPopular, model.IsQuoteOnly);
 
             // A rename no longer touches the picture; only a new upload does (PROJECT_STATE.md
             // Section 3cq).

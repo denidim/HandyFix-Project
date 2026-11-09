@@ -87,6 +87,15 @@
                 </div>
             </div>
 
+            <!-- Quote-only checkbox -->
+            <div class="form-group">
+                <div class="form-check d-flex align-items-center gap-2 m-0 ps-0">
+                    <input asp-for="IsQuoteOnly" class="form-check-input checkbox-lg" type="checkbox" />
+                    <label asp-for="IsQuoteOnly" class="form-check-label font-label-sm text-on-surface font-bold label-clickable">Quote only (no hourly slot booking)</label>
+                </div>
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">When ticked, customers request a free quote instead of booking an hourly slot with a deposit, and the card shows "Survey &amp; Fixed Quote" instead of the base price.</span>
+            </div>
+
             <!-- Service Image Upload -->
             <div class="form-group">
                 <label asp-for="ImageFile" class="form-label font-label-sm text-on-surface-variant mb-2">Service Image</label>

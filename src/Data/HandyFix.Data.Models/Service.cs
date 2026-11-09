@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Data.Models
+namespace HandyFix.Data.Models
 {
     using System;
     using System.Collections.Generic;
@@ -57,6 +57,9 @@
         // and an admin edit keeps it, since the edit writes only the fields the form has. Not
         // tied to the slug, which a rename in the admin changes.
         public bool IsGasSafeWork { get; set; }
+
+        // Quoted after a survey rather than booked online as an hourly slot with a deposit.
+        public bool IsQuoteOnly { get; set; }
 
         [Required(ErrorMessage = "The {0} field is required.")]
         public Guid CategoryId { get; set; }

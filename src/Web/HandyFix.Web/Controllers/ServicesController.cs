@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Controllers
+namespace HandyFix.Web.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -131,9 +131,9 @@
                 .Take(3)
                 .WithMediumCopies(this.imageStorage);
 
-            var isBuildingService = service.CategorySlug == CategorySlugs.SmallBuildingWorks;
+            var isQuoteOnly = service.CategorySlug == CategorySlugs.SmallBuildingWorks || service.IsQuoteOnly;
 
-            var description = isBuildingService
+            var description = isQuoteOnly
                 ? $"Need {service.Name.ToLower()} in Surrey or South London? Free on-site survey and a fixed quote before any work begins. Request your quote today."
                 : $"Need {service.Name.ToLower()} in Surrey or South London? Certified plumbers and handymen, transparent pricing starting from £{service.BasePrice}. Book a slot now.";
             this.SetPageMeta(

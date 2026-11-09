@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.ViewModels.Services
+namespace HandyFix.Web.ViewModels.Services
 {
     using System;
     using System.Collections.Generic;
@@ -38,6 +38,8 @@
         public bool IsPopular { get; set; }
 
         public bool IsGasSafeWork { get; set; }
+
+        public bool IsQuoteOnly { get; set; }
 
         public IEnumerable<ServiceViewModel> RelatedServices { get; set; }
 
