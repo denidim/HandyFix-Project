@@ -156,8 +156,8 @@ StyleCop analyzers run on every build (configured globally in `src/Directory.Bui
    grouped first.
 2. **No inline fully-qualified types.** Write `IEnumerable<ServiceViewModel>` with a `using` at the
    top, not `IEnumerable<HandyFix.Web.ViewModels.Services.ServiceViewModel>` inline.
-3. **Files are stored UTF-8 with a BOM** (StyleCop SA1412). A new `.cs` file without one produces a
-   warning.
+3. **UTF-8 encoding** (`SA1412` is disabled in `src/Rules.ruleset` so UTF-8 files with or without a
+   BOM build cleanly across Windows and Linux CI regardless of which editor or agent wrote them).
 4. Match the surrounding code's conventions — `this.` prefixes, trailing commas in multi-line
    initialisers, comment density and naming.
 
