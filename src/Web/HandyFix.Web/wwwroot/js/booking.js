@@ -59,38 +59,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Category Filter Logic
     const categoryRadios = document.querySelectorAll('input[name="service-category"]');
+    const allServiceOptions = Array.from(serviceSelect.options);
 
     function filterServices() {
         const activeCategory = document.querySelector('input[name="service-category"]:checked').value;
-        let firstCategoryOptionVal = "";
 
-        // The list arrives in display order (an admin field on each service), so a
-        // category's first option is its default: the general call-out, unless an admin
-        // has put another service ahead of it. This once looked for "general" in the
-        // name, which a rename would have broken (PROJECT_STATE Section 3ca).
-        Array.from(serviceSelect.options).forEach(opt => {
-            if (opt.value === "") {
-                opt.style.display = "";
-                return;
-            }
-            if (opt.dataset.category === activeCategory) {
-                opt.style.display = "";
-                if (!firstCategoryOptionVal) firstCategoryOptionVal = opt.value;
-            } else {
-                opt.style.display = "none";
-            }
-        });
+        // A phone's native select sheet ignores display:none on an option and shows every
+        // option still inside the select. Keeping only the chosen category's options in the
+        // select hides the rest on phones and computers alike. The list arrives in display
+        // order (an admin field on each service), so the first option after the blank one is
+        // the category's default: the general call-out, unless an admin has put another
+        // service ahead of it (PROJECT_STATE Section 3ca).
+        serviceSelect.replaceChildren(
+            ...allServiceOptions.filter(opt => opt.value === "" || opt.dataset.category === activeCategory)
+        );
+        const firstCategoryOptionVal = serviceSelect.options[1]?.value || "";
 
         // The service named in the link if it belongs to this category, else the default
         const targetServiceId = form.dataset.selectedServiceId || "";
         const matchedOpt = targetServiceId
             ? Array.from(serviceSelect.options).find(o => o.value.toLowerCase() === targetServiceId.toLowerCase())
             : null;
-        if (matchedOpt && matchedOpt.dataset.category === activeCategory) {
-            serviceSelect.value = matchedOpt.value;
-        } else {
-            serviceSelect.value = firstCategoryOptionVal || "";
-        }
+        serviceSelect.value = matchedOpt ? matchedOpt.value : firstCategoryOptionVal;
 
         updateSummaryPrice();
         checkFormValidity();
