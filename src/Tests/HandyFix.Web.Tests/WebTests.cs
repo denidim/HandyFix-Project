@@ -274,14 +274,14 @@
             Assert.True(response.Headers.CacheControl?.Public);
         }
 
-        // Every answer, a page, a file or a page that is not there, carries the three headers
+        // Every answer, a page, a file or a page that is not there, carries the four headers
         // Program.Configure sets, each once.
         [Theory]
         [InlineData("/")]
         [InlineData("/Contact")]
         [InlineData("/favicon.svg")]
         [InlineData("/no-such-page")]
-        public async Task EveryAnswerCarriesTheThreeBrowserHeaders(string path)
+        public async Task EveryAnswerCarriesTheFourBrowserHeaders(string path)
         {
             var client = this.server.CreateClient();
             var response = await client.GetAsync(path);
@@ -289,6 +289,7 @@
             Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
             Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
             Assert.Equal("SAMEORIGIN", response.Headers.GetValues("X-Frame-Options").Single());
+            Assert.Equal("same-origin", response.Headers.GetValues("Cross-Origin-Opener-Policy").Single());
         }
 
         // Outside Development a browser is told to use HTTPS only, for a year. The header itself is
