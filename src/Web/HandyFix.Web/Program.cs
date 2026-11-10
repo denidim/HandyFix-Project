@@ -286,17 +286,21 @@
             // depends on this having already corrected them from the forwarded headers.
             app.UseForwardedHeaders();
 
-            // Three headers on every answer, pages, files and error pages alike: the browser takes
+            // Four headers on every answer, pages, files and error pages alike: the browser takes
             // a file as the type it is sent as and does not guess; another site is told only this
-            // site's name as where a visitor came from, never the page's address; and the site is
+            // site's name as where a visitor came from, never the page's address; the site is
             // shown inside a frame only on the site itself, so no other page can lay it under
-            // buttons of its own.
+            // buttons of its own; and a page of another site that opened this one in a new window
+            // gets no hold on that window, so it cannot swap the page for a fake. Nothing here
+            // needs that hold: Stripe's payment page is a redirect, not a pop-up, and Turnstile
+            // is a frame inside the page.
             app.Use((context, next) =>
             {
                 IHeaderDictionary headers = context.Response.Headers;
                 headers["X-Content-Type-Options"] = "nosniff";
                 headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                 headers["X-Frame-Options"] = "SAMEORIGIN";
+                headers["Cross-Origin-Opener-Policy"] = "same-origin";
                 return next(context);
             });
 
