@@ -43,7 +43,7 @@
     <div class="d-flex align-items-center gap-3">
         <h2 class="admin-page-title">Enquiry #@Model.Id</h2>
     </div>
-    <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Received on @UkTime.FromUtc(Model.CreatedOn).ToString("MMMM dd, yyyy 'at' hh:mm tt")</p>
+    <p class="font-body-md text-on-surface-variant mt-1 admin-page-subtitle">Received on @UkTime.FromUtc(Model.CreatedOn).ToString("d MMMM yyyy 'at' HH:mm")</p>
 </div>
 
 <!-- Bento Layout -->

@@ -32,11 +32,11 @@
                         <div class="stack-gap-2">
                             <div class="flex items-center gap-2">
                                 <span class="material-symbols-outlined text-secondary">calendar_today</span>
-                                <p class="font-body-md font-bold">@Model.ScheduledTime.ToString("dddd, MMM dd, yyyy")</p>
+                                <p class="font-body-md font-bold">@Model.ScheduledTime.ToString("dddd d MMM yyyy")</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="material-symbols-outlined text-secondary">schedule</span>
-                                <p class="font-body-md">@Model.ScheduledTime.ToString("hh:mm tt") - @Model.ScheduledEndTime.ToString("hh:mm tt")</p>
+                                <p class="font-body-md">@Model.ScheduledTime.ToString("HH:mm") - @Model.ScheduledEndTime.ToString("HH:mm")</p>
                             </div>
                         </div>
                     </div>

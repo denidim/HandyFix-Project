@@ -82,8 +82,8 @@
             var page = WebUtility.HtmlDecode(await (await site.Browser().GetAsync("/Booking/Confirmed/" + booking.Id)).Content.ReadAsStringAsync());
             Assert.Contains(">#" + BookingReference.Short(booking.Id) + "</p>", page);
             Assert.DoesNotContain(booking.Id.ToString(), page);
-            Assert.Contains(">" + slot.StartTime.ToString("hh:mm tt") + " - " + slot.EndTime.ToString("hh:mm tt") + "</p>", page);
-            Assert.DoesNotContain(slot.StartTime.AddHours(2).ToString("hh:mm tt"), page);
+            Assert.Contains(">" + slot.StartTime.ToString("HH:mm") + " - " + slot.EndTime.ToString("HH:mm") + "</p>", page);
+            Assert.DoesNotContain(slot.StartTime.AddHours(2).ToString("HH:mm"), page);
             Assert.DoesNotContain("text you", page);
             Assert.Contains("We'll email you your technician's name and phone number as soon as one is assigned.", page);
         }
@@ -157,7 +157,7 @@
             Assert.Contains("Saving a new technician emails the customer that technician's name and phone number.", opened);
             Assert.Equal(("Booked", "Deposit paid"), LabelsOn(opened));
             Assert.Contains("Job #" + BookingReference.Short(booking.Id), opened);
-            Assert.Contains("<span>" + UkTime.FromUtc(booking.CreatedOn).ToString("hh:mm tt") + "</span>", opened);
+            Assert.Contains("<span>" + UkTime.FromUtc(booking.CreatedOn).ToString("HH:mm") + "</span>", opened);
             Assert.DoesNotContain("Approve Booking", opened);
             Assert.DoesNotContain("/Bookings/Approve", opened);
 
@@ -520,7 +520,7 @@
             Assert.Contains("refunded by hand in Stripe", page);
             Assert.Equal(("Cancelled", "Deposit paid"), LabelsOn(page));
             Assert.Contains("The customer rang: a neighbour fixed the tap.", page);
-            Assert.Contains("<span>" + slot.StartTime.ToString("dddd, MMMM dd, yyyy") + "</span>", page);
+            Assert.Contains("<span>" + slot.StartTime.ToString("dddd d MMMM yyyy") + "</span>", page);
             Assert.DoesNotContain("No date kept", page);
             Assert.False(site.Slot(slot.Id).IsBooked);
             Assert.Equal(emailsBefore, site.Emails.Sent.Count);
@@ -601,7 +601,7 @@
             Assert.Equal(("Booked", "Not paid"), LabelsOn(page));
             Assert.Contains("Grace · came from: Phone", page);
             Assert.Contains("No, no deposit", page);
-            Assert.Contains("<span>" + slot.StartTime.ToString("hh:mm tt") + " - " + slot.StartTime.AddHours(1).ToString("hh:mm tt") + "</span>", page);
+            Assert.Contains("<span>" + slot.StartTime.ToString("HH:mm") + " - " + slot.StartTime.AddHours(1).ToString("HH:mm") + "</span>", page);
             Assert.Contains("Not written down", page);
             Assert.Contains("None picked", page);
 
@@ -733,7 +733,7 @@
 
             var page = WebUtility.HtmlDecode(await moved.Content.ReadAsStringAsync());
             Assert.Contains("The job is moved to " + newSlot.StartTime.ToString("dddd d MMMM yyyy 'at' HH:mm", CultureInfo.InvariantCulture) + ". The hour it had is back on sale. The new hour is taken off sale. The customer has not been emailed: please tell them yourself.", page);
-            Assert.Contains("<span>" + newSlot.StartTime.ToString("hh:mm tt") + " - " + newSlot.EndTime.ToString("hh:mm tt") + "</span>", page);
+            Assert.Contains("<span>" + newSlot.StartTime.ToString("HH:mm") + " - " + newSlot.EndTime.ToString("HH:mm") + "</span>", page);
             Assert.False(site.Slot(oldSlot.Id).IsBooked);
             Assert.Equal(booking.Id, site.Slot(newSlot.Id).BookingId);
             Assert.Equal(emailsBefore, site.Emails.Sent.Count);
