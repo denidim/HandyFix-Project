@@ -36,6 +36,13 @@
         Task<bool> ReleaseSlotAsync(Guid slotId);
 
         /// <summary>
+        /// Frees a slot from its job and opens it if it was blocked as well, so it really is on
+        /// sale afterwards: the calendar's "Release". False when there is no such slot, or when
+        /// the calendar changed in the same moment.
+        /// </summary>
+        Task<bool> PutSlotBackOnSaleAsync(Guid slotId);
+
+        /// <summary>
         /// Opens a blocked slot again. False when there is no such slot.
         /// </summary>
         Task<bool> UnblockSlotAsync(Guid slotId);

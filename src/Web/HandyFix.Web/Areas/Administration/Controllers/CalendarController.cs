@@ -105,7 +105,9 @@
         [HttpPost]
         public async Task<IActionResult> ReleaseSlot(Guid id, DateTime returnDate)
         {
-            var released = await this.availabilityService.ReleaseSlotAsync(id);
+            // Freed from its job and opened too: on a day blocked with "Block Entire Day" the
+            // hour used to stay blocked while the line below said it was back on sale.
+            var released = await this.availabilityService.PutSlotBackOnSaleAsync(id);
 
             this.TempData[released ? SuccessMessageKey : ErrorMessageKey] = released
                 ? "The hour is back on sale on the website. The job that held it keeps its day and time: open the job if it should be moved or cancelled."
