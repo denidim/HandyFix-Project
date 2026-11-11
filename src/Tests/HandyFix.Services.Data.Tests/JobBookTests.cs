@@ -827,6 +827,43 @@
             Assert.Equal(booking.Id, world.Slot(world.SlotId).BookingId);
         }
 
+        // "Block Entire Day" marks the hours that jobs hold as well. "Release" on such an hour
+        // freed it from its job and left the block, while the page said the hour was back on
+        // sale (PROJECT_STATE.md Section 3ee).
+        [Fact]
+        public async Task ReleasingAnHourOnABlockedDayPutsItBackOnSale()
+        {
+            using var world = new BookingWorld();
+            await world.SeedPaidBookingAsync();
+            await world.Availability.BlockDateAsync(world.Slot(world.SlotId).StartTime);
+            Assert.True(world.Slot(world.SlotId).IsBooked);
+            Assert.True(world.Slot(world.SlotId).IsBlocked);
+
+            Assert.True(await world.Availability.PutSlotBackOnSaleAsync(world.SlotId));
+
+            AvailabilitySlot slot = world.Slot(world.SlotId);
+            Assert.False(slot.IsBooked);
+            Assert.Null(slot.BookingId);
+            Assert.False(slot.IsBlocked);
+
+            Assert.False(await world.Availability.PutSlotBackOnSaleAsync(Guid.NewGuid()));
+        }
+
+        // A job that is moved or cancelled on a blocked day leaves the block where it is:
+        // nobody asked for that day to be opened.
+        [Fact]
+        public async Task AnHourFreedByItsJobOnABlockedDayStaysBlocked()
+        {
+            using var world = new BookingWorld();
+            await world.SeedPaidBookingAsync();
+            await world.Availability.BlockDateAsync(world.Slot(world.SlotId).StartTime);
+
+            Assert.True(await world.Availability.ReleaseSlotAsync(world.SlotId));
+
+            Assert.False(world.Slot(world.SlotId).IsBooked);
+            Assert.True(world.Slot(world.SlotId).IsBlocked);
+        }
+
         // What a job still owes, as its page says it (worked out in the page until PROJECT_STATE.md
         // Section 3dj). A job that was cancelled or abandoned owes nothing, whatever its estimate;
         // the £90 job here has its £50 deposit in.

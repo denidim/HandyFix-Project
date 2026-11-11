@@ -137,6 +137,36 @@
             }
         }
 
+        // "Release" in the admin calendar. The admin was asked "Put this hour back on sale?" and
+        // said yes, so the hour is freed from its job and opened as well, in one save. "Block
+        // Entire Day" marks the hours that jobs hold too, and such an hour, only freed, stayed
+        // blocked while the page said it was back on sale (PROJECT_STATE.md Section 3ee). A job
+        // that is moved or cancelled still goes through ReleaseSlotAsync, which leaves a block
+        // where it is: nobody asked for that day to be opened.
+        public async Task<bool> PutSlotBackOnSaleAsync(Guid slotId)
+        {
+            AvailabilitySlot slot = await this.slotRepository.All().FirstOrDefaultAsync(x => x.Id == slotId);
+            if (slot == null)
+            {
+                return false;
+            }
+
+            slot.IsBooked = false;
+            slot.BookingId = null;
+            slot.IsBlocked = false;
+
+            try
+            {
+                await this.slotRepository.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Another request already changed this slot between our read and write.
+                return false;
+            }
+        }
+
         // "Unblock" in the admin calendar. It used to go through ReleaseSlotAsync, which frees a
         // slot from its booking and leaves the block where it was, so a blocked hour, or a day
         // blocked with "Block Entire Day", could never be opened again
