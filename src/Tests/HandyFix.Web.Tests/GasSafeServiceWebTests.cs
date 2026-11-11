@@ -30,10 +30,10 @@
             Assert.Contains("class=\"gas-safe-logo-feature\" src=\"" + GasSafeLogo.Url, html);
             Assert.DoesNotContain("24/7 Available", html);
 
-            // The two boxes that fit a boiler visit, not taps and leak detection.
+            // The two boxes that fit a boiler visit, not taps and leaking pipes.
             Assert.Contains("Survey &amp; Planning", html);
             Assert.Contains("Gas Safe Registered", html);
-            Assert.DoesNotContain("Leak Detection", html);
+            Assert.DoesNotContain("Leaks &amp; Burst Pipes", html);
         }
 
         // The description is written in paragraphs, and the page draws each one as its own.
@@ -53,7 +53,7 @@
             string html = await this.GetAsync("/Services/plumbing/tap-repairs");
 
             Assert.Contains("24/7 Available", html);
-            Assert.Contains("Leak Detection", html);
+            Assert.Contains("Leaks &amp; Burst Pipes", html);
             Assert.DoesNotContain(GasSafeLogo.Url, html);
         }
 
