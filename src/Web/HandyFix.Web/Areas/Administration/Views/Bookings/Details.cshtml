@@ -148,11 +148,11 @@
                     {
                         <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
                             <span class="material-symbols-outlined text-secondary fs-16">calendar_today</span>
-                            <span>@Model.ScheduledTime.ToString("dddd, MMMM dd, yyyy")</span>
+                            <span>@Model.ScheduledTime.ToString("dddd d MMMM yyyy")</span>
                         </p>
                         <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
                             <span class="material-symbols-outlined text-secondary fs-16">schedule</span>
-                            <span>@Model.ScheduledTime.ToString("hh:mm tt") - @Model.ScheduledEndTime.ToString("hh:mm tt")</span>
+                            <span>@Model.ScheduledTime.ToString("HH:mm") - @Model.ScheduledEndTime.ToString("HH:mm")</span>
                         </p>
                         <a asp-area="Administration" asp-controller="Calendar" asp-action="Index" asp-route-date="@Model.ScheduledTime.ToString("yyyy-MM-dd")" class="fs-13">Open this day in the calendar</a>
                     }
@@ -166,11 +166,11 @@
                     <label class="detail-label">@(Model.CameFromWebsite ? "Booked on the Website" : "Written In")</label>
                     <p class="font-body-md text-primary mb-1 d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-secondary fs-16">mail</span>
-                        <span>@receivedOn.ToString("MMMM dd, yyyy")</span>
+                        <span>@receivedOn.ToString("d MMMM yyyy")</span>
                     </p>
                     <p class="font-body-md text-primary mb-0 d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-secondary fs-16">schedule</span>
-                        <span>@receivedOn.ToString("hh:mm tt")</span>
+                        <span>@receivedOn.ToString("HH:mm")</span>
                     </p>
                 </div>
             </div>
