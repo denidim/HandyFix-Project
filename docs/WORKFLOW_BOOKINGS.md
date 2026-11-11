@@ -87,8 +87,8 @@ Also on this page, each answering with a line that says what it did:
 | --- | --- |
 | **Block** | Takes a free hour off sale. |
 | **Unblock** | Opens a blocked hour again. |
-| **Block Entire Day** | Blocks every hour of the day. Each is opened again with its own Unblock. |
-| **Release** | Puts an hour a job holds back on sale. It asks first: the job keeps its day and time, so another customer could then book the same hour. |
+| **Block Entire Day** | Blocks every hour of the day. Each is opened again with its own Unblock. The hours that jobs hold are marked as well: one that its job later leaves, moved or cancelled, stays blocked, because nobody asked for that day to be opened. |
+| **Release** | Puts an hour a job holds back on sale. It asks first: the job keeps its day and time, so another customer could then book the same hour. On a day blocked with Block Entire Day it opens the hour as well, so the hour really is on sale afterwards (`PutSlotBackOnSaleAsync`, `PROJECT_STATE.md` Section 3ee). |
 
 **The day lists every job on it**, above the slots, written-in ones too. A written-in job holds no
 slot, so the slots alone would show its hour as free; the slot at that hour says *"Still on sale,
