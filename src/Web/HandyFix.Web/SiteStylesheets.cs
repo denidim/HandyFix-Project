@@ -29,6 +29,7 @@
 
             "/css/components/navbar.css",
             "/css/components/footer.css",
+            "/css/components/cookie-notice.css",
             "/css/components/logo.css",
             "/css/components/buttons.css",
             "/css/components/cards.css",

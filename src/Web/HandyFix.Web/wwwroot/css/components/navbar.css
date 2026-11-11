@@ -233,9 +233,8 @@
   display: block;
 }
 
-/* The mobile dropdown is anchored to the header, not to whatever renders below it (the
-   cookie-consent banner). Without this, opening the menu on a first mobile visit leaves the
-   banner's "Accept" button and text visibly colliding underneath the translucent dropdown. */
+/* The cookie notice (the element right after the header) is hidden while the mobile menu is
+   open, so the notice's line does not show through or across the translucent dropdown. */
 .header-docked:has(.mobile-nav-dropdown.is-open) + #cookieConsent {
   visibility: hidden;
 }
