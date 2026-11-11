@@ -139,27 +139,47 @@
                 .AnyAsync(x => x.Slug == slug && x.Id != exceptId);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             Service service = await this.servicesRepository.All()
                 .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
-            if (service != null)
+            if (service == null)
             {
-                List<string> pictures = service.Images.Select(x => x.ImageUrl).ToList();
-
-                this.servicesRepository.Delete(service);
-                await this.servicesRepository.SaveChangesAsync();
-
-                // After the service is gone, so a picture is never missing from a service still
-                // shown. An upload leaves the bucket; a built-in picture stays in the site's files,
-                // where it used to be deleted until the next deploy put it back.
-                foreach (var picture in pictures)
-                {
-                    await this.imageStorageService.DeleteServiceImageAsync(picture);
-                }
+                return false;
             }
+
+            // The delete is a soft one, and every page leaves a deleted row out: a job that has
+            // this service would read "None picked" from then on, on its page, in the job list
+            // and in the month's file for the accountant. So a service a job has is not deleted;
+            // it is switched off (the Active tick), which keeps its name on its jobs. The same
+            // rule as a technician with jobs (TechniciansService.DeleteAsync). A line that was
+            // taken off a job, when its service was changed, does not count: that job no longer
+            // has this service.
+            var hasJobs = await this.servicesRepository.All()
+                .Where(x => x.Id == id)
+                .SelectMany(x => x.BookingServices)
+                .AnyAsync(x => !x.IsDeleted);
+            if (hasJobs)
+            {
+                return false;
+            }
+
+            List<string> pictures = service.Images.Select(x => x.ImageUrl).ToList();
+
+            this.servicesRepository.Delete(service);
+            await this.servicesRepository.SaveChangesAsync();
+
+            // After the service is gone, so a picture is never missing from a service still
+            // shown. An upload leaves the bucket; a built-in picture stays in the site's files,
+            // where it used to be deleted until the next deploy put it back.
+            foreach (var picture in pictures)
+            {
+                await this.imageStorageService.DeleteServiceImageAsync(picture);
+            }
+
+            return true;
         }
 
         public async Task AddOrUpdateServiceImageAsync(Guid serviceId, string imageUrl)

@@ -23,6 +23,9 @@
         // the rest of the admin's changes in place; a new one then opens on its Edit page.
         private const string PictureNotSavedMessage = "The picture could not be saved. The service itself is saved: try the picture again.";
 
+        // {0} is the service's name. A service is switched off with the Active tick on its Edit page.
+        private const string HasJobsMessage = "\"{0}\" has jobs and can't be deleted. Switch it off instead: untick \"Is Active Service\" on its Edit page, and its jobs keep it.";
+
         // Carries a new service's picture error from Create to its Edit page.
         private const string PictureErrorKey = "PictureError";
 
@@ -42,7 +45,7 @@
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>(activeOnly: false);
+            IEnumerable<ServiceAdminListViewModel> services = await this.servicesService.GetAllAsync<ServiceAdminListViewModel>(activeOnly: false);
             return this.View(services);
         }
 
@@ -181,11 +184,15 @@
             // The name is read first: it is gone once the service is.
             ServiceDetailsViewModel service = await this.servicesService.GetByIdAsync<ServiceDetailsViewModel>(id);
 
-            await this.servicesService.DeleteAsync(id);
+            // Refused for a service a job has. The list shows a lock in place of the button for
+            // such a service, so this is a delete sent from a list opened before the job was made.
+            var deleted = await this.servicesService.DeleteAsync(id);
 
             if (service != null)
             {
-                this.TempData["SuccessMessage"] = $"Service \"{service.Name}\" was deleted.";
+                this.TempData[deleted ? "SuccessMessage" : "ErrorMessage"] = deleted
+                    ? $"Service \"{service.Name}\" was deleted."
+                    : string.Format(HasJobsMessage, service.Name);
             }
 
             return this.RedirectToList();
