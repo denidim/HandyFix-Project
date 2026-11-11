@@ -13,6 +13,13 @@
     var isQuoteOnly = isBuilding || Model.IsQuoteOnly;
     var durationHours = isQuoteOnly ? "Day Rate / Survey" : Durations.HoursOrMinutes(Model.EstimatedDurationMinutes);
 
+    // The phone's floating "Book Now" opens the booking with this service already chosen
+    // (_MobileStickyCta). A quote-only service cannot be booked, so its button stays the plain one.
+    if (!isQuoteOnly)
+    {
+        this.ViewData["BookNowUrl"] = this.Url.Action("Index", "Booking", new { selectedServiceId = Model.Id, categorySlug = Model.CategorySlug });
+    }
+
     // Dynamic Image path
     var serviceImage = Model.ImageUrl;
 
@@ -281,13 +288,13 @@
                     </div>
 
                     <div class="sidebar-booking-actions">
-                        <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn">
-                            <span>Request Your Booking</span>
-                            <span class="material-symbols-outlined">arrow_forward</span>
-                        </a>
-                        <a asp-controller="Booking" asp-action="Index" asp-route-selectedServiceId="@Model.Id" asp-route-categorySlug="@Model.CategorySlug" class="sidebar-booking-btn sidebar-booking-btn-outline">
+                        <a asp-controller="Booking" asp-action="Index" asp-route-selectedServiceId="@Model.Id" asp-route-categorySlug="@Model.CategorySlug" class="sidebar-booking-btn sidebar-booking-btn-book">
                             <span class="material-symbols-outlined">calendar_month</span>
                             <span>Book a Slot</span>
+                        </a>
+                        <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn sidebar-booking-btn-outline">
+                            <span>Request Your Booking</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
                         </a>
                         <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="sidebar-booking-btn sidebar-booking-btn-ghost">
                             <span class="material-symbols-outlined">call</span>
