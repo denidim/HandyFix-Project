@@ -946,6 +946,41 @@
             Assert.NotNull(site.Booking().TotalAmount);
         }
 
+        // Every page leaves a deleted service out, so a job that had it read "None picked" from
+        // then on (PROJECT_STATE.md Section 3ef). The list of services has a lock in place of the
+        // delete button for a service a job has; a delete sent anyway is refused and says why,
+        // and the job keeps its service. A service no job has is deleted as before.
+        [Fact]
+        public async Task AServiceAJobHasCannotBeDeletedAndTheListShowsALockInPlaceOfTheButton()
+        {
+            const string ServicesPage = "/Administration/Services";
+            using var site = new Site();
+            Booking booking = await site.BookAndPayAsync(site.AFreeSlot());
+            HttpClient admin = await site.SignedInAdminAsync();
+            Guid onTheJob = site.Read(dbContext => dbContext.BookingServices.Single().ServiceId);
+            Guid onNoJob = site.Read(dbContext => dbContext.Services.First(x => x.Id != onTheJob).Id);
+            var name = site.Read(dbContext => dbContext.Services.Single(x => x.Id == onTheJob).Name);
+
+            var list = await (await admin.GetAsync(ServicesPage)).Content.ReadAsStringAsync();
+            Assert.DoesNotContain(ServicesPage + "/Delete/" + onTheJob, list);
+            Assert.Contains(ServicesPage + "/Delete/" + onNoJob, list);
+            Assert.Single(Regex.Matches(list, "title=\"Has jobs - switch it off instead of deleting\""));
+
+            HttpResponseMessage refused = await PostToAsync(admin, list, ServicesPage + "/Delete/" + onTheJob, new Dictionary<string, string>());
+            Assert.Contains(
+                "\"" + name + "\" has jobs and can't be deleted. Switch it off instead",
+                WebUtility.HtmlDecode(await refused.Content.ReadAsStringAsync()));
+            Assert.False(site.Read(dbContext => dbContext.Services.IgnoreQueryFilters().Single(x => x.Id == onTheJob).IsDeleted));
+
+            var jobPage = WebUtility.HtmlDecode(await (await admin.GetAsync(JobsPage + "/Details/" + booking.Id)).Content.ReadAsStringAsync());
+            Assert.Contains(name, jobPage);
+            Assert.DoesNotContain("None picked", jobPage);
+
+            HttpResponseMessage deleted = await PostToAsync(admin, list, ServicesPage + "/Delete/" + onNoJob, new Dictionary<string, string>());
+            Assert.Contains("was deleted.", WebUtility.HtmlDecode(await deleted.Content.ReadAsStringAsync()));
+            Assert.True(site.Read(dbContext => dbContext.Services.IgnoreQueryFilters().Single(x => x.Id == onNoJob).IsDeleted));
+        }
+
         // A cancelled job is a record of what happened. Its page has no button, the form does
         // not open, and one that was opened before the job was cancelled changes nothing.
         [Fact]

@@ -188,11 +188,34 @@
             servicesService
                 .Setup(x => x.GetByIdAsync<ServiceDetailsViewModel>(id))
                 .ReturnsAsync(new ServiceDetailsViewModel { Id = id, Name = "Gutter Clearing" });
+            servicesService.Setup(x => x.DeleteAsync(id)).ReturnsAsync(true);
 
             await controller.Delete(id);
 
             Assert.Equal("Service \"Gutter Clearing\" was deleted.", controller.TempData["SuccessMessage"]);
             servicesService.Verify(x => x.DeleteAsync(id), Times.Once);
+        }
+
+        // A service a job has is not deleted (PROJECT_STATE Section 3ef). The list shows a lock in
+        // place of the button, so this is a delete sent from a list that was opened before the job
+        // was made: the admin is told why nothing happened, and what to do instead.
+        [Fact]
+        public async Task DeleteShouldSayWhyAServiceWithJobsWasNotDeleted()
+        {
+            var controller = BuildController(out var servicesService, out _);
+            var id = Guid.NewGuid();
+            servicesService
+                .Setup(x => x.GetByIdAsync<ServiceDetailsViewModel>(id))
+                .ReturnsAsync(new ServiceDetailsViewModel { Id = id, Name = "Gutter Clearing" });
+            servicesService.Setup(x => x.DeleteAsync(id)).ReturnsAsync(false);
+
+            var result = await controller.Delete(id);
+
+            AssertGoesBackToTheAdminList(result);
+            Assert.Null(controller.TempData["SuccessMessage"]);
+            Assert.Equal(
+                "\"Gutter Clearing\" has jobs and can't be deleted. Switch it off instead: untick \"Is Active Service\" on its Edit page, and its jobs keep it.",
+                controller.TempData["ErrorMessage"]);
         }
 
         // The picture's error goes under the picture box. A file the site does not take is the
