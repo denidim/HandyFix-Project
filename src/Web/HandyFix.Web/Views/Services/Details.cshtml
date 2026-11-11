@@ -13,27 +13,34 @@
     var isQuoteOnly = isBuilding || Model.IsQuoteOnly;
     var durationHours = isQuoteOnly ? "Day Rate / Survey" : Durations.HoursOrMinutes(Model.EstimatedDurationMinutes);
 
+    // The phone's floating "Book Now" opens the booking with this service already chosen
+    // (_MobileStickyCta). A quote-only service cannot be booked, so its button stays the plain one.
+    if (!isQuoteOnly)
+    {
+        this.ViewData["BookNowUrl"] = this.Url.Action("Index", "Booking", new { selectedServiceId = Model.Id, categorySlug = Model.CategorySlug });
+    }
+
     // Dynamic Image path
     var serviceImage = Model.ImageUrl;
 
     // Feature dynamic data
     var feat1Icon = isBuilding ? "foundation" : (isPlumbing ? "faucet" : "shelves");
-    var feat1Title = isBuilding ? "Site Survey & Planning" : (isPlumbing ? "Fixture Installations" : "Furniture Assembly");
+    var feat1Title = isBuilding ? "Site Survey & Planning" : (isPlumbing ? "Tap & Fixture Fitting" : "Furniture Assembly");
     var feat1Desc = isBuilding
         ? "Detailed on-site assessment, material specification, and transparent written quotation before work starts."
         : (isPlumbing 
-            ? "Expert installation of faucets, showerheads, and designer mixer taps with seamless finishing."
+            ? "We fit new taps, mixer taps and showerheads, then check every joint for drips."
             : "Flat-pack furniture assembly, shelf mounting, and cabinets put together securely and efficiently.");
 
     var feat2Icon = isBuilding ? "construction" : (isPlumbing ? "plumbing" : "build");
-    var feat2Title = isBuilding ? "Multi-Trade Execution" : (isPlumbing ? "Leak Detection" : "Home Repairs");
+    var feat2Title = isBuilding ? "Multi-Trade Execution" : (isPlumbing ? "Leaks & Burst Pipes" : "Home Repairs");
     var feat2Desc = isBuilding
         ? "Complete trade coverage including plastering, tiling, carpentry, and plumbing done to British building standards."
         : (isPlumbing 
-            ? "Non-invasive thermal imaging and pressure testing to find and fix hidden leaks instantly."
+            ? "Leaking pipe, dripping tap or burst pipe? We repair or replace the part and check it stays dry."
             : "TV wall mounting, mirror hanging, door trimming, and general odd jobs handled by experts.");
 
-    // Gas work has two boxes of its own: taps and leak detection are not what a boiler visit
+    // Gas work has two boxes of its own: taps and leaking pipes are not what a boiler visit
     // is. The second box shows the Gas Safe logo where the others show an icon.
     var isGasSafe = Model.IsGasSafeWork;
     if (isGasSafe)
@@ -281,13 +288,13 @@
                     </div>
 
                     <div class="sidebar-booking-actions">
-                        <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn">
-                            <span>Request Your Booking</span>
-                            <span class="material-symbols-outlined">arrow_forward</span>
-                        </a>
-                        <a asp-controller="Booking" asp-action="Index" asp-route-selectedServiceId="@Model.Id" asp-route-categorySlug="@Model.CategorySlug" class="sidebar-booking-btn sidebar-booking-btn-outline">
+                        <a asp-controller="Booking" asp-action="Index" asp-route-selectedServiceId="@Model.Id" asp-route-categorySlug="@Model.CategorySlug" class="sidebar-booking-btn sidebar-booking-btn-book">
                             <span class="material-symbols-outlined">calendar_month</span>
                             <span>Book a Slot</span>
+                        </a>
+                        <a asp-controller="Home" asp-action="Contact" asp-route-service="@Model.Name" class="sidebar-booking-btn sidebar-booking-btn-outline">
+                            <span>Request Your Booking</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
                         </a>
                         <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="sidebar-booking-btn sidebar-booking-btn-ghost">
                             <span class="material-symbols-outlined">call</span>

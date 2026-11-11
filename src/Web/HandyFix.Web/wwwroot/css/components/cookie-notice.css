@@ -1,0 +1,60 @@
+/* The cookie notice: one slim line pinned to the bottom of the screen until the visitor presses OK
+   (_CookieConsentPartial). The site sets only essential cookies, so the notice only informs; it
+   asks for no choice. It was a Bootstrap alert in the page flow that took about a quarter of the
+   first phone screen (PROJECT_STATE Section 3dy). */
+#cookieConsent {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-index-mobile-cta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--primary);
+  color: var(--border-subtle);
+  font-family: var(--font-family-base);
+  /* Smaller than the site's smallest text size, so the line and its button fit one row on a phone. */
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.18);
+}
+
+#cookieConsent a {
+  color: var(--secondary-fixed-dim);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.cookie-notice-ok {
+  flex: none;
+  padding: var(--spacing-1) var(--spacing-4);
+  background-color: var(--accent);
+  color: #ffffff;
+  border: 0;
+  border-radius: var(--radius-md);
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color var(--transition-fast);
+}
+
+.cookie-notice-ok:hover {
+  background-color: var(--accent-hover);
+}
+
+@media (max-width: 767px) {
+  #cookieConsent {
+    justify-content: space-between;
+    padding: var(--spacing-2) var(--spacing-3);
+  }
+
+  /* On a phone the floating "Book Now" bar (_MobileStickyCta) holds the bottom of the screen:
+     16px above and below a 42px button. The notice sits just above it, never on top of it.
+     The booking and sign-in pages have no such bar, so there the notice keeps the bottom. */
+  body:has(.mobile-cta-bar) #cookieConsent {
+    bottom: 74px;
+  }
+}

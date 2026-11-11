@@ -161,7 +161,7 @@
                     DriveTimeMinutes = 15,
                     IsFeatured = false,
                     Districts = "KT8, KT10",
-                    IntroCopy = "Cobham's mix of period cottages around the village, larger family homes along Fairmile and Downside, and the newer executive developments near Stoke D'Abernon all come with their own maintenance quirks. Esher shares much of that same character, from the streets near Sandown Park to the homes towards Claygate and West End.",
+                    IntroCopy = "Esher has older cottages and period houses around the High Street and Esher Green, family homes in the roads towards Hinchley Wood and Claygate, and large detached houses on its quieter roads. Older pipework and original bathrooms bring the usual dripping taps, leaking joints and blocked sinks. We are about 15 minutes away in Chessington and bring the tools and common parts to finish most jobs in one visit.",
                     NeighbourhoodsCopy = "Our technicians carry the range of tools and parts to handle a large executive home or a village cottage without a second visit, and materials for higher-spec fixtures are always agreed with you up front.",
                     Faqs = new[]
                     {

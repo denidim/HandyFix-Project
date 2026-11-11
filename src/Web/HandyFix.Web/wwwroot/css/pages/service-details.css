@@ -438,7 +438,7 @@
   transform: translateX(4px);
 }
 
-/* Request (primary) / Book a Slot / Call Us / WhatsApp, stacked full-width. */
+/* Book a Slot (the one filled button) / Request / Call Us / WhatsApp, stacked full-width. */
 .sidebar-booking-actions {
   display: flex;
   flex-direction: column;
@@ -456,9 +456,21 @@
   color: #ffffff;
 }
 
-/* The primary button's arrow nudges right on hover; these two lead with an icon instead,
+/* The main button: it leads to the booking, the site's main message ("pick a time that suits you").
+   The dark green, because white text on the lighter --success is too pale to read. */
+.sidebar-booking-btn-book {
+  background-color: var(--success-strong);
+  color: #ffffff;
+}
+
+.sidebar-booking-btn-book:hover {
+  background-color: #ffffff;
+  color: var(--success-strong);
+}
+
+/* Request's arrow nudges right on hover; these buttons lead with an icon instead,
    where the same nudge reads as the icon slipping out of place. */
-.sidebar-booking-btn-outline:hover .material-symbols-outlined,
+.sidebar-booking-btn-book:hover .material-symbols-outlined,
 .sidebar-booking-btn-ghost:hover .material-symbols-outlined {
   transform: none;
 }

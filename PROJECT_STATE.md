@@ -3719,6 +3719,83 @@ PageSpeed Insights read 97 for performance on a phone and 100 for the rest. The 
 
 - **Build** 0 errors; **tests** 1162/1162 (437 + 725); the header test now checks four headers.
 
+## 3dx. A Service Page Leads to the Booking First (2026-11-11)
+
+The first of the quick fixes in the search and growth plan (kept in `docs/private/`). On a service page the filled, first button was "Request Your Booking", which leads to the enquiry form; "Book a Slot" came second, outlined. That is the opposite of the site's main message, "pick a time that suits you". The developer decided to keep the enquiry button, because not everyone wants to pay a deposit, but to swap the order.
+
+### What changed
+
+- **`Views/Services/Details.cshtml`**: on a bookable service, "Book a Slot" is now first and the one filled button, in the site's dark green (`--success-strong`, #047857; white text on the lighter `--success` is too pale to read). "Request Your Booking" comes second as the outlined button. The label "Book a Slot" stays: it says what happens next. Quote-only services are unchanged.
+- **`wwwroot/css/pages/service-details.css`**: the new `.sidebar-booking-btn-book`. Under the mouse it turns white with green text, like the box's other buttons. Its calendar icon stays still on hover; the arrow on "Request Your Booking" nudges right as it did when that button was first.
+- **`Views/Shared/_MobileStickyCta.cshtml`**: a page can give the phone's floating "Book Now" its own address in `ViewData["BookNowUrl"]`. A bookable service page sends it to `/Booking` with that service already chosen; before, it opened the booking with nothing chosen. Every other page, and a quote-only service, keeps the plain `/Booking`.
+
+### Verified
+
+- **Build** 0 warnings, 0 errors; **tests** 1166/1166 (437 + 729), from 1162. The new `ServicePageBookingWebTests` checks that "Book a Slot" comes before "Request Your Booking" with the right classes, that the floating "Book Now" on a service page carries the same address as "Book a Slot", and that the boiler page and the home page keep the plain `/Booking`.
+- **Local browser** (1280 and 390 wide): the button is green and turns white under the mouse; tapping the floating "Book Now" on the tap repairs page opened `/Booking` with "Tap Repairs" chosen.
+
+## 3dy. The Cookie Notice Becomes One Slim Line (2026-11-11)
+
+The second quick fix. On a first visit the notice was a Bootstrap alert in the page flow, 157 of 664 pixels: about a quarter of the first phone screen, on every page. The site sets only essential cookies (form security, the one-off confirmation messages, the notice's own cookie, and the staff sign-in), and the ICO's guidance on PECR exempts strictly necessary cookies from consent while calling it good practice to tell visitors about them. So a short line with a link to the Cookie Policy is enough. The developer chose this option over a corner card on desktop.
+
+### What changed
+
+- **`Views/Shared/_CookieConsentPartial.cshtml`**: "We only use essential cookies. Cookie policy" and an "OK" button. The button still carries `data-cookie-string`, so `site.js` stores the same `.AspNet.Consent` cookie and takes the line away as before; the Bootstrap alert classes are gone.
+- **`wwwroot/css/components/cookie-notice.css`** (new, listed in `SiteStylesheets.cs`): a navy line fixed to the bottom of the screen, 40 pixels high. On a phone it sits just above the floating "Book Now" bar, never on top of it; on the booking and sign-in pages, which have no such bar, it keeps the bottom.
+- **`wwwroot/css/components/navbar.css`**: only the comment of the rule that hides the notice while the phone menu is open; the rule still applies.
+- **`WebTests.CookieBannerSaysWhatItsButtonAndLinkDo`** checks the new text, link and button.
+
+### Verified
+
+- **Tests** 1166/1166 (437 + 729).
+- **Local browser**: 40 pixels high at 390 and 1280 wide; on a phone it ends at 590 and "Book Now" starts at 606; hidden while the menu is open; gone after OK and still gone after a reload; on `/Booking` it keeps the bottom.
+
+## 3dz. No More Leak Detection or Thermal Imaging on the Site (2026-11-11)
+
+The third quick fix. Every plumbing service page promised "Non-invasive thermal imaging and pressure testing to find and fix hidden leaks". The company has no thermal camera and does not offer leak detection; it came off the Google profile on 10 Nov as specialist work that is not ours. The plumbing cards also listed "Leak Detection" and "Drainage Solutions", and the company clears blockages inside the home only. The developer decided that every such text is replaced with plain copy about work we do, in words people search for, with no gap left.
+
+### What changed
+
+- **`Views/Services/Details.cshtml`** (the two boxes on every plumbing service page): "Leak Detection" became "Leaks & Burst Pipes" ("Leaking pipe, dripping tap or burst pipe? We repair or replace the part and check it stays dry."). "Fixture Installations", with the American "faucets" and "seamless finishing", became "Tap & Fixture Fitting" ("We fit new taps, mixer taps and showerheads, then check every joint for drips."). The boiler page keeps its own two boxes.
+- **`Views/Home/Index.cshtml` and `Views/Services/Index.cshtml`** (the plumbing card): "Leak Repairs", "Blocked Sinks & Toilets" and "Tap Repairs" (the service's real name) instead of "Leak Detection", "Drainage Solutions" and "Tap Replacement".
+- **`Views/Home/About.cshtml`**: "Leak isolation & diagnostics" became "Leaking pipe & burst pipe repairs".
+- **Two service descriptions** (`ServicesSeeder` and the data migration `UpdateLeakAndBlockedDrainTexts`). The seeder fills an empty table only, so the migration changes the staging and live rows by slug. "Leak Repairs" reads "Fixing leaking pipes, joints and fittings under sinks and around baths, toilets and radiators." (no more "behind walls"). "Blocked Drains" keeps its name and address, because people search for it, and reads "Clearing blocked sinks, toilets, baths and showers inside the home. We do not clear outside drains."
+- **Tests**: the new `WorkWeDoNotOfferWebTests` checks seven pages for "Leak Detection", "thermal", "Drainage" and "behind walls", and that both plumbing cards name the new work. `GasSafeServiceWebTests` follows the new box title.
+
+### Verified
+
+- **Tests** 1174/1174 (437 + 737).
+- **Local run**: the migration applied to the local database; `/Services/plumbing` shows both new descriptions; the two boxes on the tap repairs page keep the same layout at 1280 and 390 wide (previews 82).
+
+## 3ea. The FAQ Drops HVAC, Electrical Failures and the "Dashboard" (2026-11-11)
+
+The fourth quick fix. Two answers in `Views/Home/FAQ.cshtml` described a business we are not. Booking told visitors to select "Plumbing, Electrical, etc." from "our main dashboard": there is no electrical category and no dashboard. The emergency answer promised callouts for "electrical failures, and HVAC issues". The company decided that HVAC and air conditioning come off, and minor electrical work stays inside handyman jobs.
+
+### What changed
+
+- **"How do I book a service?"**: "Press Book Now, pick the job you need and a time that suits you, and tell us what is wrong. A £50 deposit secures your slot. Once it is paid you get a confirmation email, and another one with your technician's name when one is assigned." Both emails exist (`BookingEmails`). The deposit comes from `Deposit.Pounds`, as in the page's other answers.
+- **"Do you offer 24/7 emergency services?"**: "We answer the phone 24/7, so call us about a burst pipe, a flood or a leak you cannot stop", with the 60 to 90 minutes kept. The price sentence is left as it is on purpose. The evening and emergency rate of £150 an hour belongs to the emergencies release, which changes it in the FAQ, on Pricing, in the Terms and on the Emergency Plumbing service together, so the site never shows two prices.
+- **`WorkWeDoNotOfferWebTests`**: the seven pages are also checked for "HVAC" and "Electrical, etc.", and a new test reads both FAQ answers.
+
+### Verified
+
+- **Tests** 1175/1175 (437 + 738).
+
+## 3eb. Esher's Page Opens with Esher, Not Cobham (2026-11-11)
+
+The fifth quick fix. The Esher page opened with the Cobham page's sentence ("Cobham's mix of period cottages around the village…") and only then turned to Esher.
+
+### What changed
+
+- **Esher's opening paragraph** (`ServiceAreasSeeder` and the data migration `UpdateEsherIntro`, by slug, as in Section 3dz): "Esher has older cottages and period houses around the High Street and Esher Green, family homes in the roads towards Hinchley Wood and Claygate, and large detached houses on its quieter roads. Older pipework and original bathrooms bring the usual dripping taps, leaking joints and blocked sinks. We are about 15 minutes away in Chessington and bring the tools and common parts to finish most jobs in one visit." It names only places that are certain and gives no building dates that nobody has checked. The second paragraph fits Esher and stays until every area page gets its own text.
+- **`WebTests.EsherPageOpensWithEsherNotCobham`**.
+
+### Verified
+
+- **Build** (Release) 0 warnings, 0 errors; **tests** 1176/1176 (437 + 739).
+- **Local run**: the migration applied; `/Areas/esher` opens with the new paragraph, and `/FAQ` shows the new booking answer.
+- **Staging, all five quick fixes (Sections 3dx to 3eb), 19 checks passed**: "Book a Slot" first and #047857 green; the cookie notice 40 pixels high at the bottom on a desktop and above "Book Now" on a phone (590 against 606), gone after OK and a reload; the floating "Book Now" opened `/Booking` with "Tap Repairs" chosen; six pages free of leak detection, thermal, drainage, HVAC and the electrical category; both migrations applied (the two service descriptions and Esher's opening); both FAQ answers.
+
 ---
 
 ## 4. Current Standing & Remaining Roadmap

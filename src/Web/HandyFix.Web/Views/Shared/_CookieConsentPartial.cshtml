@@ -8,10 +8,10 @@
 
 @if (showBanner)
 {
-    <div id="cookieConsent" class="alert alert-info alert-dismissible fade show" role="alert">
-        We only use essential cookies that make this site work, such as keeping forms secure. No tracking or analytics. <a asp-area="" asp-controller="Home" asp-action="CookiePolicy">Read our Cookie Policy</a>.
-        <button type="button" class="btn btn-primary accept-policy close" data-bs-dismiss="alert" data-cookie-string="@cookieString">
-            Accept
-        </button>
+    @* One slim line at the bottom of the screen (css/components/cookie-notice.css). site.js stores
+       the consent cookie from the button's data-cookie-string and takes the line away. *@
+    <div id="cookieConsent" role="alert">
+        <span>We only use essential cookies. <a asp-area="" asp-controller="Home" asp-action="CookiePolicy">Cookie policy</a></span>
+        <button type="button" class="cookie-notice-ok" data-cookie-string="@cookieString">OK</button>
     </div>
 }

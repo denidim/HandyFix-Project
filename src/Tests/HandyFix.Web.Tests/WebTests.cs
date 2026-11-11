@@ -116,6 +116,17 @@
             Assert.Contains("BreadcrumbList", responseContent);
         }
 
+        // Esher's page opened with Cobham's sentence, copied from the Cobham page (PROJECT_STATE
+        // Section 3eb).
+        [Fact]
+        public async Task EsherPageOpensWithEsherNotCobham()
+        {
+            var html = await this.server.CreateClient().GetStringAsync("/Areas/esher");
+
+            Assert.Contains("Esher has older cottages and period houses around the High Street and Esher Green", html);
+            Assert.DoesNotContain("period cottages around the village", html);
+        }
+
         [Fact]
         public async Task AreaDetailsPageShouldReturn404ForUnknownSlug()
         {
@@ -249,7 +260,8 @@
         }
 
         // The cookie banner's button was named "Close" for a screen reader while it reads "Accept",
-        // and its link said "Learn More" without saying of what (PROJECT_STATE Section 3co).
+        // and its link said "Learn More" without saying of what (PROJECT_STATE Section 3co). Since
+        // Section 3dy it is one slim line: "Cookie policy" and an "OK" that still carries the cookie.
         [Fact]
         public async Task CookieBannerSaysWhatItsButtonAndLinkDo()
         {
@@ -257,9 +269,11 @@
             var page = await client.GetStringAsync("/");
 
             var banner = Regex.Match(page, "<div id=\"cookieConsent\".*?</div>", RegexOptions.Singleline).Value;
-            Assert.Contains(">Read our Cookie Policy</a>", banner);
+            Assert.Contains("We only use essential cookies.", banner);
+            Assert.Contains(">Cookie policy</a>", banner);
             Assert.DoesNotContain("aria-label", banner);
-            Assert.Matches("<button[^>]*accept-policy[^>]*>\\s*Accept\\s*</button>", banner);
+            Assert.DoesNotContain("alert-dismissible", banner);
+            Assert.Matches("<button type=\"button\" class=\"cookie-notice-ok\" data-cookie-string=\"[^\"]+\">OK</button>", banner);
         }
 
         // A file linked with its version in the address may be kept for a year, since a changed file
