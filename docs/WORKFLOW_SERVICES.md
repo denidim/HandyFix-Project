@@ -31,8 +31,8 @@ seeder.
 > The admin area is routed as `Administration`, not `Admin`. `/Admin/...` will 404.
 
 Standard Create / Edit / Delete via `ServicesController`. Fields: Name, Description, Base Price,
-Estimated Duration, Category, Display Order, the Popular tick, and an optional hero image upload.
-The Edit form also has the Active tick.
+Estimated Duration, Category, Display Order, the Popular tick, the Quote only tick, and an optional
+hero image upload. The Edit form also has the Active tick.
 
 | Rule | Value |
 | --- | --- |
@@ -77,6 +77,44 @@ Unticking "Is Active Service (Visible to Public)" takes a service off sale witho
 It leaves every public list and the booking page, its own page answers 404, the Pricing page
 stops showing it among the typical jobs, and it no longer counts towards its category's "from"
 price. It stays in the admin list with an Inactive badge, and bookings already made keep it.
+
+### The Quote only tick: no hourly slot
+
+"Quote only (no hourly slot booking)" takes a service out of the booking page's list. Its pages
+show "Day Rate / Survey" and "Free Survey & Fixed Quote" in place of a duration and a slot, and
+their buttons read "Request Free Estimate" or "Request Quote": they open the Contact form with the
+service named, so the job starts as an enquiry (`WORKFLOW_ENQUIRIES.md`). A booking link that names
+the service (`/Booking?selectedServiceId=...`) is sent to the same Contact form. The admin list
+shows a Quote Only badge. Boiler Installation & Servicing has it, since a boiler is priced after a
+survey (`PROJECT_STATE.md` Section 3dv).
+
+Every service in Small Building & Refurbishments is quoted the same way whether ticked or not: the
+pages decide it by the category as well as by the tick. The seeder and the `AddIsQuoteOnlyToService`
+migration tick them anyway, so the badge in the admin list tells the truth.
+
+### The Gas Safe mark: set by the site, not on the form
+
+Gas work (`Service.IsGasSafeWork`) is not a field on the admin form, so an admin edit or a rename
+keeps it. It is set for Boiler Installation & Servicing by the seeder on a new database and by the
+`AddBoilerInstallationServicing` migration on one that has services. A marked service shows the
+Gas Safe Register logo on its page (in place of "24/7 Available", and in a feature box of its own)
+and at the bottom right of its card in the category list; its quote box promises a "Gas Safe
+registered engineer".
+
+### A blank line in the Description starts a new paragraph
+
+The service page splits the Description at each blank line (`Presentation/Paragraphs.cs`), so a
+long description reads as paragraphs. A one-hour service reads "1 Hour", not "1 Hours"
+(`Presentation/Durations.cs`).
+
+### The service page's buttons
+
+A bookable service's page leads with **Book a Slot** (the one filled, dark green button), which
+opens `/Booking` with that service chosen on its category's tab. **Request Your Booking** comes
+second and opens the Contact form with the service named. On a phone, the floating **Book Now** on
+that page goes to the same chosen-service booking; on every other page it opens plain `/Booking`
+(`ViewData["BookNowUrl"]`, `_MobileStickyCta.cshtml`). A quote-only service's page has no slot
+button, only the quote button, the phone and WhatsApp.
 
 ### The seeder fills an empty table, once
 

@@ -3796,6 +3796,21 @@ The fifth quick fix. The Esher page opened with the Cobham page's sentence ("Cob
 - **Local run**: the migration applied; `/Areas/esher` opens with the new paragraph, and `/FAQ` shows the new booking answer.
 - **Staging, all five quick fixes (Sections 3dx to 3eb), 19 checks passed**: "Book a Slot" first and #047857 green; the cookie notice 40 pixels high at the bottom on a desktop and above "Book Now" on a phone (590 against 606), gone after OK and a reload; the floating "Book Now" opened `/Booking` with "Tap Repairs" chosen; six pages free of leak detection, thermal, drainage, HVAC and the electrical category; both migrations applied (the two service descriptions and Esher's opening); both FAQ answers.
 
+## 3ec. The Workflow Documents Catch Up with the Services (2026-11-11)
+
+Every `docs/WORKFLOW_*.md` was checked against the code changed since it was last written. Two had fallen behind the services work of 7 to 11 November; the rest describe the site as it is.
+
+### What changed
+
+- **`WORKFLOW_SERVICES.md`**: the Quote only tick (left out of the booking page, a quote button to the Contact form, a booking link sent there too, the admin's badge; Small Building & Refurbishments quoted by its category as well, Section 3dv); the Gas Safe mark (set by the seeder and a migration, not on the form; the logo on the service page and its card); a blank line in a description starts a paragraph, and "1 Hour"; the service page's buttons, "Book a Slot" first and the floating "Book Now" carrying the service (Section 3dx).
+- **`WORKFLOW_BOOKINGS.md`**, Step 2: how a customer reaches the booking page (a service page's Book a Slot, the service list holding only the chosen category, Section 3du), and which services are not booked there but start as an enquiry.
+- **Checked, unchanged**: `WORKFLOW_FORMS.md` (Turnstile on the first touch is in it), `WORKFLOW_TECHNICIANS.md` (later changes moved the delete question into an attribute and changed nothing it describes), `WORKFLOW_EMAIL.md` (the technician's call line is in it), and the other workflows.
+- **The Job Book, version 11**: the website lane says a service page opens the booking with its service picked, and gains a branch for work priced after a survey (building work, boilers), which starts as an enquiry; one new question, why a boiler or building work is not booked online.
+
+### Verified
+
+- Documents only; no code changed. Every statement was read back against the code it names (`BookingController.Index`, `Services/Details.cshtml`, `Services/Category.cshtml`, `_MobileStickyCta.cshtml`, `ServicesSeeder`, the `AddIsQuoteOnlyToService` migration).
+
 ---
 
 ## 4. Current Standing & Remaining Roadmap
