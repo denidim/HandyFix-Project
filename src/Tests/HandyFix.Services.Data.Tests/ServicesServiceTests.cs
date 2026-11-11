@@ -79,11 +79,46 @@
             await dbContext.SaveChangesAsync();
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.DeleteAsync(serviceEntity.Id);
+            Assert.True(await service.DeleteAsync(serviceEntity.Id));
 
             var inDb = dbContext.Services.IgnoreQueryFilters().FirstOrDefault(x => x.Id == serviceEntity.Id);
             Assert.NotNull(inDb);
             Assert.True(inDb.IsDeleted);
+        }
+
+        // Every page leaves a deleted service out, so a job that had it read "None picked" from
+        // then on (PROJECT_STATE.md Section 3ef). A service a job has is refused, as a technician
+        // with jobs is. One whose only line was taken off a job, when the job's service was
+        // changed, can go: no job has it any more.
+        [Fact]
+        public async Task DeleteAsyncShouldRefuseAServiceAJobHasAndTakeOneNoJobHasAnyMore()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
+
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
+            dbContext.ServiceCategories.Add(category);
+
+            var onAJob = new Service { Id = Guid.NewGuid(), Name = "Tap Repairs", Description = "some description", Slug = "tap-repairs", BasePrice = 90, CategoryId = category.Id };
+            var takenOffAJob = new Service { Id = Guid.NewGuid(), Name = "Toilet Repairs", Description = "some description", Slug = "toilet-repairs", BasePrice = 90, CategoryId = category.Id };
+            dbContext.Services.AddRange(onAJob, takenOffAJob);
+
+            var booking = new Booking { CustomerFirstName = "Ada", PhoneNumber = "07700 900123", StatusId = Guid.NewGuid() };
+            dbContext.Bookings.Add(booking);
+            dbContext.BookingServices.Add(new BookingService { BookingId = booking.Id, ServiceId = onAJob.Id, PriceAtBooking = 90 });
+            dbContext.BookingServices.Add(new BookingService { BookingId = booking.Id, ServiceId = takenOffAJob.Id, PriceAtBooking = 90, IsDeleted = true, DeletedOn = DateTime.UtcNow });
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+
+            Assert.False(await service.DeleteAsync(onAJob.Id));
+            Assert.False(dbContext.Services.IgnoreQueryFilters().Single(x => x.Id == onAJob.Id).IsDeleted);
+
+            Assert.True(await service.DeleteAsync(takenOffAJob.Id));
+            Assert.True(dbContext.Services.IgnoreQueryFilters().Single(x => x.Id == takenOffAJob.Id).IsDeleted);
         }
 
         // The service goes first and its picture after, so a picture is never missing from a service

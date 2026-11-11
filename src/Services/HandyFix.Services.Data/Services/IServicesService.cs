@@ -22,7 +22,11 @@
 
         Task<bool> NameIsTakenAsync(string name, Guid? exceptId = null);
 
-        Task DeleteAsync(Guid id);
+        /// <summary>
+        /// Deletes a service no job has. Returns false, and deletes nothing, for a service that a
+        /// job has: that one is switched off instead (PROJECT_STATE.md Section 3ef).
+        /// </summary>
+        Task<bool> DeleteAsync(Guid id);
 
         Task SetServiceImageAsync(Guid serviceId, IFormFile imageFile);
     }
