@@ -116,6 +116,17 @@
             Assert.Contains("BreadcrumbList", responseContent);
         }
 
+        // Esher's page opened with Cobham's sentence, copied from the Cobham page (PROJECT_STATE
+        // Section 3eb).
+        [Fact]
+        public async Task EsherPageOpensWithEsherNotCobham()
+        {
+            var html = await this.server.CreateClient().GetStringAsync("/Areas/esher");
+
+            Assert.Contains("Esher has older cottages and period houses around the High Street and Esher Green", html);
+            Assert.DoesNotContain("period cottages around the village", html);
+        }
+
         [Fact]
         public async Task AreaDetailsPageShouldReturn404ForUnknownSlug()
         {
