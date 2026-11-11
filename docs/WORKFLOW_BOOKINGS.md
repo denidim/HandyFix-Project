@@ -157,6 +157,19 @@ real. In production it never runs.
 At **`/Booking`** the customer picks a service, picks a date, picks a slot, fills in their details,
 optionally uploads photos of the problem, and submits.
 
+**How a customer gets here.** A service's own page leads with **Book a Slot**, which opens
+`/Booking` with that service already chosen on its category's tab; on a phone the floating
+**Book Now** on that page does the same. Everywhere else Book Now opens plain `/Booking`. The
+service list holds only the chosen category's services (`booking.js` puts that category's options
+in the list; hiding the others did not work in a phone's own picker, `PROJECT_STATE.md` Section 3du).
+
+**Not every service is booked this way.** Small Building & Refurbishments and any service with the
+Quote only tick (Boiler Installation & Servicing) are left out of the list. Their pages ask for a
+quote instead and open the Contact form with the service named, so that job starts as an enquiry
+and becomes a job with "Make this a job" (`WORKFLOW_ENQUIRIES.md`). A booking link naming one is
+sent to the same form (`BookingController.Index`). See `WORKFLOW_SERVICES.md`, "The Quote only
+tick".
+
 1. `BookingsService.CreateBookingAsync` creates the `Booking` with status **`Pending`** and claims
    the slot — **both inside one transaction**. If the slot was taken in the meantime the whole
    thing rolls back and the customer is returned to the form with *"This slot was just taken by
