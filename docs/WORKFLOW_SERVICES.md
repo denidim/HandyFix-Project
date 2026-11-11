@@ -43,6 +43,15 @@ hero image upload. The Edit form also has the Active tick.
 | Display Order | 0–999, starts at 100 (`Service.DefaultDisplayOrder`) |
 | Image upload | optional, **20 MB max**, `.jpg`/`.jpeg`/`.png`/`.webp` only |
 
+**Only a service no job has can be deleted** (`PROJECT_STATE.md` Section 3ef). The list shows a
+lock in place of the delete button for a service that a job has, and `ServicesService.DeleteAsync`
+refuses one sent anyway; the list then says why and what to do instead: switch it off (the Active
+tick, below), which keeps its name on its jobs. The reason is the next paragraph: a deleted row is
+left out by every query, so a job that had the service read "None picked" from then on, on its
+page, in the job list and in the month's file for the accountant. A line that was taken off a job,
+when the job's service was changed, does not count as a job. Technicians follow the same rule
+(`WORKFLOW_TECHNICIANS.md`).
+
 **Delete is a soft delete**: the row stays in the database with `IsDeleted` set, because past
 bookings point at it, and every query leaves it out. `ServicesService.DeleteAsync` removes the
 image file from disk *before* marking the row, so a failed image delete doesn't leave an orphaned
@@ -242,6 +251,7 @@ was always the safer design for a value that also has to match a hero-image file
 | A new service sits in the wrong place in a list | Its Display Order. 100 is the shared default; a lower number moves it up. |
 | The home page shows a service nobody ticked as popular | Fewer than four are ticked, so the list fills the grid. Tick four. |
 | A service's page answers 404 | It is switched off (Active unticked) or deleted. |
+| A service has a lock where its delete button was | A job has it, so it cannot be deleted. Untick "Is Active Service" on its Edit page: it leaves the website and its jobs keep its name. |
 | A service added to `ServicesSeeder.cs` never appears | The table already has services, so the seeder does nothing. Add it in the admin panel. |
 | "Another service already has this name" on a name that is nowhere in the list | A deleted service had it. Its row is kept for past bookings, and its slug with it. Use a different name. |
 | Category tile image doesn't show | It's a manual file drop (`{slug}-category-hero.webp`), not an admin upload — confirm the file actually exists on disk. |
