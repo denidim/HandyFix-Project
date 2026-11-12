@@ -11,11 +11,20 @@
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == CategorySlugs.SmallBuildingWorks;
     var isQuoteOnly = isBuilding || Model.IsQuoteOnly;
+
+    // An emergency is taken by phone and WhatsApp at any hour, never booked as a 9 to 5 slot
+    // (PROJECT_STATE Section 3eg): the page offers the call and WhatsApp in place of the booking.
+    var isEmergency = Model.IsEmergency && !isQuoteOnly;
     var durationHours = isQuoteOnly ? "Day Rate / Survey" : Durations.HoursOrMinutes(Model.EstimatedDurationMinutes);
 
     // The phone's floating "Book Now" opens the booking with this service already chosen
-    // (_MobileStickyCta). A quote-only service cannot be booked, so its button stays the plain one.
-    if (!isQuoteOnly)
+    // (_MobileStickyCta). A quote-only service cannot be booked, so its button stays the plain one;
+    // on the emergency page it calls the business instead.
+    if (isEmergency)
+    {
+        this.ViewData["MobileCtaCalls"] = true;
+    }
+    else if (!isQuoteOnly)
     {
         this.ViewData["BookNowUrl"] = this.Url.Action("Index", "Booking", new { selectedServiceId = Model.Id, categorySlug = Model.CategorySlug });
     }
@@ -80,19 +89,26 @@
                 <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
                     <span class="material-symbols-outlined">verified</span> Professional Service
                 </span>
-                @* Plumbing only: emergencies (leaks, bursts) are a plumbing thing - handyman and
-                   building jobs are planned work, so "24/7" would promise the wrong thing. Gas
-                   work is planned too, and shows its Gas Safe registration in that place. *@
+                @* "24/7" only on the emergency page, which is the one service taken at any hour.
+                   Every other plumbing service is booked online, Monday to Saturday, 9 to 5, so
+                   its page says that instead. Gas work shows its Gas Safe registration in that
+                   place; handyman and building pages show the one badge. *@
                 @if (isGasSafe)
                 {
                     <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
                         <img class="gas-safe-logo-pill" src="@GasSafeLogo.Url" asp-append-version="true" alt=""> Gas Safe Registered
                     </span>
                 }
+                else if (isEmergency)
+                {
+                    <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined">call</span> 24/7 by Phone &amp; WhatsApp
+                    </span>
+                }
                 else if (isPlumbing)
                 {
                     <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
-                        <span class="material-symbols-outlined">schedule</span> 24/7 Available
+                        <span class="material-symbols-outlined">calendar_month</span> Pick a Time That Suits You
                     </span>
                 }
             </div>
@@ -106,9 +122,18 @@
             <!-- Quick Specs Bento -->
             <div class="specs-bento-grid">
                 <div class="spec-bento-card">
-                    <span class="material-symbols-outlined spec-bento-icon">history</span>
-                    <span class="spec-bento-label">Typical Duration</span>
-                    <span class="spec-bento-value">@durationHours</span>
+                    @if (isEmergency)
+                    {
+                        <span class="material-symbols-outlined spec-bento-icon">schedule</span>
+                        <span class="spec-bento-label">We Aim to Arrive In</span>
+                        <span class="spec-bento-value">60 to 90 Minutes</span>
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined spec-bento-icon">history</span>
+                        <span class="spec-bento-label">Typical Duration</span>
+                        <span class="spec-bento-value">@durationHours</span>
+                    }
                 </div>
                 <div class="spec-bento-card">
                     <span class="material-symbols-outlined spec-bento-icon">category</span>
@@ -121,6 +146,12 @@
                         <span class="material-symbols-outlined spec-bento-icon">request_quote</span>
                         <span class="spec-bento-label">Pricing Model</span>
                         <span class="spec-bento-value">Free Survey &amp; Fixed Quote</span>
+                    }
+                    else if (isEmergency)
+                    {
+                        <span class="material-symbols-outlined spec-bento-icon">payments</span>
+                        <span class="spec-bento-label">Emergency Rate</span>
+                        <span class="spec-bento-value">£@Model.BasePrice.ToString("F0") per Hour</span>
                     }
                     else
                     {
@@ -184,6 +215,10 @@
                         @if (isQuoteOnly)
                         {
                             <text>@Model.Name is quoted individually after a free on-site survey, so we can account for the scope, materials, and finish you want before agreeing a fixed price. There's no obligation to book once you have your quote.</text>
+                        }
+                        else if (isEmergency)
+                        {
+                            <text>Our emergency rate is £@Model.BasePrice.ToString("F0") per hour, day or night, with a one-hour minimum, plus any parts required. There's no separate call-out fee, and we always tell you the price before we start.</text>
                         }
                         else
                         {
@@ -266,6 +301,38 @@
                         </a>
                     </div>
                     <p class="sidebar-booking-note">No obligation &bull; Free initial survey</p>
+                }
+                else if (isEmergency)
+                {
+                    <h3 class="sidebar-booking-title">Plumbing Emergency? Call Us Now</h3>
+                    <p class="sidebar-booking-desc">We answer the phone 24 hours a day, 7 days a week, evenings and Sundays included.</p>
+
+                    <div class="sidebar-booking-features">
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>Phone answered 24/7</span>
+                        </div>
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>We aim to be with you in 60 to 90 minutes</span>
+                        </div>
+                        <div class="sidebar-booking-feature-item">
+                            <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
+                            <span>£@Model.BasePrice.ToString("F0") per hour, one-hour minimum</span>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-booking-actions">
+                        <a href="tel:@GlobalConstants.BusinessPhoneInternational" class="sidebar-booking-btn sidebar-booking-btn-book">
+                            <span class="material-symbols-outlined">call</span>
+                            <span>Call @GlobalConstants.BusinessPhone</span>
+                        </a>
+                        <a href="@GlobalConstants.BusinessWhatsAppUrl" target="_blank" rel="noopener" class="sidebar-booking-btn sidebar-booking-btn-ghost">
+                            <partial name="_WhatsAppIcon" />
+                            <span>Message us on WhatsApp</span>
+                        </a>
+                    </div>
+                    <p class="sidebar-booking-note">Not an emergency? <a asp-controller="Booking" asp-action="Index" asp-route-categorySlug="@Model.CategorySlug">Pick a time that suits you online</a>, Monday to Saturday, 9am to 5pm.</p>
                 }
                 else
                 {
@@ -413,7 +480,7 @@
       "name": @Json.Serialize($"How much does {Model.Name} cost?"),
       "acceptedAnswer": {
         "@@type": "Answer",
-        "text": @Json.Serialize(isQuoteOnly ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}.")
+        "text": @Json.Serialize(isQuoteOnly ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : (isEmergency ? $"Our emergency rate is £{Model.BasePrice:F0} per hour, day or night, with a one-hour minimum, plus any parts required." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}."))
       }
     },
     {

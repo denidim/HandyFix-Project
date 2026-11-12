@@ -310,7 +310,7 @@
                             </div>
 
                             <span class="bento-action-pill">
-                                @(svcIsQuoteOnly ? "Request Quote" : "Book")
+                                @(svcIsQuoteOnly ? "Request Quote" : (svc.IsEmergency ? "24/7 by Phone" : "Book"))
                                 <span class="material-symbols-outlined">arrow_forward</span>
                             </span>
                         </div>

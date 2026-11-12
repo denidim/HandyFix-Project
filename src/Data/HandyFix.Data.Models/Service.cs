@@ -61,6 +61,11 @@
         // Quoted after a survey rather than booked online as an hourly slot with a deposit.
         public bool IsQuoteOnly { get; set; }
 
+        // Taken by phone and WhatsApp at any hour, never booked online: an emergency cannot wait
+        // for the next free slot in the 9 to 5 calendar. Its page shows the call and WhatsApp
+        // buttons, and its price is the emergency rate that the FAQ and the Terms quote.
+        public bool IsEmergency { get; set; }
+
         [Required(ErrorMessage = "The {0} field is required.")]
         public Guid CategoryId { get; set; }
 

@@ -18,7 +18,9 @@
     var specBadgeText = isBuilding ? "Survey & Fixed Quote" : (isPlumbing ? "Licensed & Insured" : "Multi-Skill Pros");
     var specBadgeClass = isBuilding ? "category-hero-badge-building" : (isPlumbing ? "category-hero-badge-primary" : "category-hero-badge-tertiary");
     var specBadgeIcon = isBuilding ? "foundation" : (isPlumbing ? "verified" : "handyman");
-    var availabilityText = isBuilding ? "Planned & Quoted" : "24/7 Availability";
+    // Only plumbing has emergencies, taken by phone at any hour; handyman work is booked online,
+    // Monday to Saturday, 9 to 5 (PROJECT_STATE Section 3eg).
+    var availabilityText = isBuilding ? "Planned & Quoted" : (isPlumbing ? "Emergencies 24/7 by Phone" : "Mon–Sat, 9am–5pm");
 
     // The list below as search engines read it: each service with its own address, and the price
     // the card shows. The quote-only category shows none, so its entries carry none.
@@ -144,6 +146,16 @@
                                    asp-action="Contact"
                                    asp-route-service="@svc.Name"
                                    class="btn btn-primary service-card-btn">Request Quote</a>
+                            }
+                            else if (svc.IsEmergency)
+                            {
+                                @* Not booked online: the card goes to the page with the call and
+                                   WhatsApp buttons (PROJECT_STATE Section 3eg). *@
+                                <a asp-controller="Services"
+                                   asp-action="Details"
+                                   asp-route-categorySlug="@Model.Slug"
+                                   asp-route-serviceSlug="@svc.Slug"
+                                   class="btn btn-primary service-card-btn">24/7 by Phone</a>
                             }
                             else
                             {

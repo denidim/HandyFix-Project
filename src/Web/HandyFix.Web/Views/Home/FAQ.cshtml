@@ -92,7 +92,8 @@
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
                 <div class="accordion-content">
-                    Yes. We answer the phone 24/7, so call us about a burst pipe, a flood or a leak you cannot stop. Emergency plumbing is charged at our standard Plumbing rate of £90 per hour (one-hour minimum) plus any parts required. There's no separate call-out fee. We aim to have a technician with you within 60 to 90 minutes.
+                    @* The rate comes from the emergency service, set in the admin panel (PROJECT_STATE Section 3eg). *@
+                    Yes. We answer the phone 24/7, so call or WhatsApp us about a burst pipe, a flood or a leak you cannot stop, day or night, evenings and Sundays included. Emergency plumbing is charged at @this.ViewData["EmergencyRate"] (one-hour minimum) plus any parts required. There's no separate call-out fee. We aim to have a technician with you within 60 to 90 minutes. For anything that can wait, <a asp-controller="Booking" asp-action="Index">pick a time that suits you online</a>, Monday to Saturday, 9am to 5pm.
                 </div>
             </div>
         </div>

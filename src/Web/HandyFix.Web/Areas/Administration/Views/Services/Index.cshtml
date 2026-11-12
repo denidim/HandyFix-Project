@@ -111,6 +111,10 @@
                                             {
                                                 <span class="ms-1 px-2 py-1 rounded-full fs-11 tint-secondary">Quote Only</span>
                                             }
+                                            @if (svc.IsEmergency)
+                                            {
+                                                <span class="ms-1 px-2 py-1 rounded-full fs-11 tint-error-soft">Emergency</span>
+                                            }
                                             @if (!svc.IsActive)
                                             {
                                                 <span class="ms-1 px-2 py-1 rounded-full fs-11 tint-neutral-soft">Inactive</span>

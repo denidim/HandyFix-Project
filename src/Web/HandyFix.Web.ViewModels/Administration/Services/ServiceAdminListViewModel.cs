@@ -34,6 +34,8 @@ namespace HandyFix.Web.ViewModels.Administration.Services
 
         public bool IsQuoteOnly { get; set; }
 
+        public bool IsEmergency { get; set; }
+
         /// <summary>
         /// How many jobs have this service. With one or more the list shows a lock in place of the
         /// delete button: such a service is switched off, not deleted (PROJECT_STATE.md Section 3ef).

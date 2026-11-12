@@ -41,6 +41,8 @@
 
         public bool IsQuoteOnly { get; set; }
 
+        public bool IsEmergency { get; set; }
+
         public IEnumerable<ServiceViewModel> RelatedServices { get; set; }
 
         public void CreateMappings(TypeAdapterConfig config)

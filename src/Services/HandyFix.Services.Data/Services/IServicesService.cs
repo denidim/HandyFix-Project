@@ -16,9 +16,16 @@
 
         Task<T> GetBySlugAsync<T>(string slug);
 
-        Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false);
+        /// <summary>
+        /// The hourly price of the emergency service, which the FAQ and the Terms quote, so the
+        /// rate is set in one place, the admin panel. Null when no active service is marked as an
+        /// emergency.
+        /// </summary>
+        Task<decimal?> GetEmergencyRateAsync();
 
-        Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false);
+        Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false, bool isEmergency = false);
+
+        Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false, bool isEmergency = false);
 
         Task<bool> NameIsTakenAsync(string name, Guid? exceptId = null);
 

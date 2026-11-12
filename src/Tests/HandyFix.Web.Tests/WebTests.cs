@@ -915,6 +915,11 @@
                     Assert.Equal("Request Quote", action);
                     Assert.DoesNotContain("bento-duration-pill", card);
                 }
+                else if (card.Contains("emergency-plumbing"))
+                {
+                    // Taken by phone at any hour, not booked online (PROJECT_STATE Section 3eg).
+                    Assert.Equal("24/7 by Phone", action);
+                }
                 else
                 {
                     Assert.Equal("Book", action);

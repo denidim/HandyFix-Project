@@ -75,7 +75,7 @@
                 return this.View(model);
             }
 
-            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, model.DisplayOrder, model.IsPopular, model.IsQuoteOnly);
+            Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, model.DisplayOrder, model.IsPopular, model.IsQuoteOnly, model.IsEmergency);
 
             try
             {
@@ -122,6 +122,7 @@
                 DisplayOrder = service.DisplayOrder,
                 IsPopular = service.IsPopular,
                 IsQuoteOnly = service.IsQuoteOnly,
+                IsEmergency = service.IsEmergency,
                 CurrentImageUrl = service.ImageUrl,
             };
 
@@ -158,7 +159,7 @@
                 return this.View(model);
             }
 
-            await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId, model.DisplayOrder, model.IsPopular, model.IsQuoteOnly);
+            await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId, model.DisplayOrder, model.IsPopular, model.IsQuoteOnly, model.IsEmergency);
 
             // A rename no longer touches the picture; only a new upload does (PROJECT_STATE.md
             // Section 3cq).

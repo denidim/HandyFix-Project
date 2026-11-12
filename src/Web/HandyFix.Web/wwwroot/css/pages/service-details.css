@@ -482,6 +482,13 @@
   margin: var(--spacing-4) 0 0 0;
 }
 
+/* The emergency page's "Pick a time that suits you online": underlined, so it reads as a link
+   in the small grey line. */
+.sidebar-booking-note a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 /* Trust sidebar box */
 .sidebar-trust-box {
   background-color: var(--surface-container-lowest);

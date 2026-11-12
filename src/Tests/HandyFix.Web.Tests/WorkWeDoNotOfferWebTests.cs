@@ -45,8 +45,13 @@ namespace HandyFix.Web.Tests
             string faq = await this.server.CreateClient().GetStringAsync("/FAQ");
 
             Assert.Contains("Press Book Now, pick the job you need and a time that suits you", faq);
-            Assert.Contains("We answer the phone 24/7, so call us about a burst pipe", faq);
+            Assert.Contains("We answer the phone 24/7, so call or WhatsApp us about a burst pipe", faq);
             Assert.Contains("within 60 to 90 minutes", faq);
+
+            // The emergency rate from the emergency service, not the standard rate
+            // (PROJECT_STATE Section 3eg).
+            Assert.Contains("Emergency plumbing is charged at £150 per hour (one-hour minimum)", System.Net.WebUtility.HtmlDecode(faq));
+            Assert.DoesNotContain("standard Plumbing rate", faq);
             Assert.DoesNotContain("dashboard", faq);
         }
 
