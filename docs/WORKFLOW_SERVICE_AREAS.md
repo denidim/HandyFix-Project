@@ -65,14 +65,18 @@ A district is the first half of a postcode: the `KT9` of `KT9 2QN`. Each area li
 covers, with commas between them (`KT5, KT6, KT7`); the list page shows them in its Postcodes
 column. Typing is tidied on save, and a box left empty is filled from the town's name (above).
 
-The public booking page takes a booking **only for a postcode whose district some area lists**.
-Anyone else is shown an enquiry link and the phone number instead of the payment step
-(`WORKFLOW_BOOKINGS.md`, Step 2). So:
+The public booking page takes a booking **only for a postcode whose district is within 15 miles of
+the Chessington base, or one some area lists**. The 15 miles are a fixed list of 251 districts in
+`BookingRadius.cs`: every district with at least one postcode inside the circle (the company's
+decision of 11 November 2026). Anyone else is shown an enquiry link and the phone number instead of
+the payment step (`WORKFLOW_BOOKINGS.md`, Step 2). So:
 
-- To start taking bookings somewhere new, add its district to the nearest area. It does not need
-  an area page of its own: Ashtead's `KT21` sits on the Epsom area.
-- Deleting an area removes its districts from the check with it.
-- If no area lists any district, the check is off and every postcode is accepted.
+- A town within the 15 miles is bookable before it has an area page: Twickenham's `TW1` and
+  Richmond's `TW9` are taken with no area listing them.
+- To take bookings past the 15 miles, add the district to the nearest area.
+- Deleting an area removes only the districts it alone brought: one within the 15 miles stays.
+- If the company changes the radius, the list is rebuilt from a new postcode download; it is not
+  edited in the admin panel.
 
 The 15 seeded areas start with the lists in `ServiceAreasSeeder.cs`; a database that already had
 them got the same lists from the `AddPostcodeDistrictsToServiceArea` migration.
