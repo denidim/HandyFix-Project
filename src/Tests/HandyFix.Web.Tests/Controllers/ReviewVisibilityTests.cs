@@ -26,39 +26,21 @@
     using Xunit;
 
     /// <summary>
-    /// On-site review display is deferred until the Google Business Profile import ships, and is
-    /// gated behind Business:ShowOnSiteReviews (PROJECT_STATE.md section 3n). The gate has to do
-    /// two things: hide the display, and skip the fetch entirely - a stray Admin-approved row must
-    /// not be able to leak onto a public page before the toggle is deliberately flipped.
+    /// Our Google reviews, typed in by the admin, show on /Reviews and the home page with no
+    /// switch to turn on (PROJECT_STATE.md Section 3eh; until then Business:ShowOnSiteReviews hid
+    /// them, Section 3n). The full-stack checks of the page itself are in ReviewsPageWebTests.
     /// </summary>
     public class ReviewVisibilityTests
     {
         [Fact]
-        public async Task ReviewsPageShouldNotFetchOrExposeReviewsWhileTheToggleIsOff()
+        public async Task ReviewsPageShouldShowTheNewestApprovedReviews()
         {
-            var controller = BuildHomeController(showOnSiteReviews: false, out var reviewsService);
+            var controller = BuildHomeController(out var reviewsService);
 
             var result = await controller.Reviews();
 
             var model = Assert.IsType<ReviewsListViewModel>(Assert.IsType<ViewResult>(result).Model);
 
-            Assert.False(model.ShowOnSiteReviews);
-            Assert.Empty(model.Reviews);
-
-            // Not fetched at all, rather than fetched and then hidden by the view.
-            reviewsService.Verify(x => x.GetLatestApprovedAsync<ReviewViewModel>(It.IsAny<int>()), Times.Never);
-        }
-
-        [Fact]
-        public async Task ReviewsPageShouldShowReviewsOnceTheToggleIsOn()
-        {
-            var controller = BuildHomeController(showOnSiteReviews: true, out var reviewsService);
-
-            var result = await controller.Reviews();
-
-            var model = Assert.IsType<ReviewsListViewModel>(Assert.IsType<ViewResult>(result).Model);
-
-            Assert.True(model.ShowOnSiteReviews);
             Assert.Single(model.Reviews);
             reviewsService.Verify(x => x.GetLatestApprovedAsync<ReviewViewModel>(50), Times.Once);
         }
@@ -70,7 +52,6 @@
             // not a code change (VISION_AND_CONTEXT.md section 7). Each must reach its own button:
             // swapped, "Read Our Google Reviews" would open the form for writing one.
             var controller = BuildHomeController(
-                showOnSiteReviews: false,
                 out _,
                 googleReviewsUrl: "https://g.page/r/example",
                 googleLeaveReviewUrl: "https://g.page/r/example/review");
@@ -87,7 +68,7 @@
         {
             // Not guessed: with no links the view shows the card without buttons, rather than
             // buttons that go nowhere.
-            var controller = BuildHomeController(showOnSiteReviews: false, out _);
+            var controller = BuildHomeController(out _);
 
             var result = await controller.Reviews();
             var model = Assert.IsType<ReviewsListViewModel>(Assert.IsType<ViewResult>(result).Model);
@@ -97,35 +78,19 @@
         }
 
         [Fact]
-        public async Task HomepageShouldNotFetchOrExposeSliderReviewsWhileTheToggleIsOff()
+        public async Task HomepageShouldShowTheSixNewestApprovedReviews()
         {
-            var controller = BuildHomeController(showOnSiteReviews: false, out var reviewsService);
+            var controller = BuildHomeController(out var reviewsService);
 
             var result = await controller.Index();
 
             var model = Assert.IsType<HomeIndexViewModel>(Assert.IsType<ViewResult>(result).Model);
 
-            Assert.False(model.ShowOnSiteReviews);
-            Assert.Empty(model.SliderReviews);
-            reviewsService.Verify(x => x.GetLatestApprovedAsync<ReviewViewModel>(It.IsAny<int>()), Times.Never);
-        }
-
-        [Fact]
-        public async Task HomepageShouldShowSliderReviewsOnceTheToggleIsOn()
-        {
-            var controller = BuildHomeController(showOnSiteReviews: true, out var reviewsService);
-
-            var result = await controller.Index();
-
-            var model = Assert.IsType<HomeIndexViewModel>(Assert.IsType<ViewResult>(result).Model);
-
-            Assert.True(model.ShowOnSiteReviews);
             Assert.Single(model.SliderReviews);
             reviewsService.Verify(x => x.GetLatestApprovedAsync<ReviewViewModel>(6), Times.Once);
         }
 
         private static HomeController BuildHomeController(
-            bool showOnSiteReviews,
             out Mock<IReviewsService> reviewsService,
             string googleReviewsUrl = null,
             string googleLeaveReviewUrl = null)
@@ -147,7 +112,6 @@
 
             var business = new BusinessOptions
             {
-                ShowOnSiteReviews = showOnSiteReviews,
                 GoogleReviewsUrl = googleReviewsUrl,
                 GoogleLeaveReviewUrl = googleLeaveReviewUrl,
             };

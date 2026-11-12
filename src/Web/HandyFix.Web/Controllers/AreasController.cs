@@ -9,7 +9,6 @@
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Presentation;
-    using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
@@ -17,7 +16,6 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Options;
 
     [AllowAnonymous]
     public class AreasController : BaseController
@@ -25,7 +23,6 @@
         private readonly IServiceAreasService areasService;
         private readonly IServicesService servicesService;
         private readonly IReviewsService reviewsService;
-        private readonly BusinessOptions business;
         private readonly IImageStorageService imageStorage;
         private readonly IWebHostEnvironment environment;
 
@@ -33,14 +30,12 @@
             IServiceAreasService areasService,
             IServicesService servicesService,
             IReviewsService reviewsService,
-            IOptions<BusinessOptions> business,
             IImageStorageService imageStorage,
             IWebHostEnvironment environment)
         {
             this.areasService = areasService;
             this.servicesService = servicesService;
             this.reviewsService = reviewsService;
-            this.business = business.Value;
             this.imageStorage = imageStorage;
             this.environment = environment;
         }
@@ -75,12 +70,10 @@
             IEnumerable<ServiceViewModel> handymanServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman");
             var relatedServices = plumbingServices.Take(2).Concat(handymanServices.Take(2)).ToList();
 
-            // Hidden on-site until the Google Business Profile import ships, see
-            // Business:ShowOnSiteReviews.
-            var showOnSiteReviews = this.business.ShowOnSiteReviews;
-            IEnumerable<ReviewViewModel> reviews = showOnSiteReviews
-                ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(3)
-                : Enumerable.Empty<ReviewViewModel>();
+            // Only the reviews from this town (Section 3eh): the same three on every area page
+            // would be the same text on 25 pages, and a review from the town is the proof its
+            // page needs. With none the page leaves the section out.
+            IEnumerable<ReviewViewModel> reviews = await this.reviewsService.GetLatestApprovedInTownAsync<ReviewViewModel>(area.Name, 3);
 
             var picture = PictureLookups.AreaPictureOf(this.environment, area.Slug, area.HeroImageUrl);
             var model = new ServiceAreaDetailsPageViewModel
@@ -88,7 +81,6 @@
                 Area = area,
                 RelatedServices = relatedServices.WithMediumCopies(this.imageStorage),
                 Reviews = reviews,
-                ShowOnSiteReviews = showOnSiteReviews,
                 Picture = picture,
                 PhonePicture = PictureLookups.AreaPhonePictureOf(this.environment, this.imageStorage, area.Slug, area.HeroImageUrl),
             };

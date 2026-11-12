@@ -21,7 +21,9 @@
         </div>
     </section>
 
-    @if (Model.ShowOnSiteReviews)
+    @* Our Google reviews, typed in word for word by the admin (PROJECT_STATE Section 3eh). With
+       none yet, the page is the card with the two Google buttons alone. *@
+    @if (Model.Reviews.Any())
     {
         <div class="reviews-container mt-12">
             <!-- Sidebar: Google Reviews CTA -->
@@ -29,87 +31,30 @@
                 <div class="glass-card rounded-xl p-4 sticky-top reviews-sidebar-sticky text-center">
                     <span class="material-symbols-outlined text-secondary fs-36 mb-2">rate_review</span>
                     <h2 class="font-headline-md text-primary mb-2">Loved our work?</h2>
-                    <p class="text-muted mb-4">We'd love it if you shared your experience on Google. It's the best way to help other homeowners find us.</p>
-                    @if (hasReadLink || hasLeaveLink)
+                    <p class="text-muted mb-4">These are our customers' own words from Google. Had us round recently? Your review helps other homeowners find us.</p>
+                    @if (hasReadLink)
                     {
-                        @if (hasReadLink)
-                        {
-                            <a href="@Model.GoogleReviewsUrl" target="_blank" rel="noopener" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
-                                <span>Read Our Google Reviews</span>
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        }
-                        @if (hasLeaveLink)
-                        {
-                            <a href="@Model.GoogleLeaveReviewUrl" target="_blank" rel="noopener" class="btn btn-outline-primary btn-block py-3 mt-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
-                                <span>Leave a Google Review</span>
-                                <span class="material-symbols-outlined">open_in_new</span>
-                            </a>
-                        }
+                        <a href="@Model.GoogleReviewsUrl" target="_blank" rel="noopener" class="btn btn-primary btn-block py-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
+                            <span>Read Our Google Reviews</span>
+                            <span class="material-symbols-outlined">open_in_new</span>
+                        </a>
                     }
-                    else
+                    @if (hasLeaveLink)
                     {
-                        <p class="text-muted fs-14 mb-0">Our Google Business Profile is coming soon.</p>
+                        <a href="@Model.GoogleLeaveReviewUrl" target="_blank" rel="noopener" class="btn btn-outline-primary btn-block py-3 mt-3 d-flex align-items-center justify-content-center gap-2 rounded-lg fs-16 fw-semibold">
+                            <span>Leave a Google Review</span>
+                            <span class="material-symbols-outlined">open_in_new</span>
+                        </a>
                     }
                 </div>
             </aside>
 
             <!-- Main Feed: Testimonials -->
             <main class="order-1 order-lg-2">
-                <!-- Testimonial List -->
                 <div class="review-feed">
-                    @if (Model.Reviews.Any())
+                    @foreach (var review in Model.Reviews)
                     {
-                        @foreach (var review in Model.Reviews)
-                        {
-                            <!-- Card -->
-                            <article class="review-card">
-                                <div class="review-author-row">
-                                    <div class="review-author-info">
-                                        <div class="review-avatar">
-                                            @if (!string.IsNullOrEmpty(review.CustomerName) && review.CustomerName.Length >= 2)
-                                            {
-                                                <span>@review.CustomerName.Substring(0, 2).ToUpper()</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="material-symbols-outlined">person</span>
-                                            }
-                                        </div>
-                                        <div>
-                                            <h3 class="font-headline-sm text-primary mb-0 fs-16 fw-bold">@review.CustomerName</h3>
-                                            <p class="text-muted mb-0 fs-14">Client Review</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-warning d-flex">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            if (i <= review.Rating)
-                                            {
-                                                <span class="material-symbols-outlined icon-fill fs-20">star</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="material-symbols-outlined icon-unfill fs-20">star</span>
-                                            }
-                                        }
-                                    </div>
-                                </div>
-                                <p class="font-body-md text-on-surface mb-3">
-                                    "@review.Comment"
-                                </p>
-                                <div class="d-flex justify-content-end align-items-center">
-                                    <small class="text-muted fs-14">@review.CreatedOn.ToString("dd MMM yyyy")</small>
-                                </div>
-                            </article>
-                        }
-                    }
-                    else
-                    {
-                        <div class="text-center p-5 text-muted bg-light rounded-xl reviews-empty-state">
-                            <span class="material-symbols-outlined text-muted mb-2 fs-36">rate_review</span>
-                            <p class="mb-0">No reviews published yet. Be the first to share your experience!</p>
-                        </div>
+                        <partial name="_ReviewCard" model="review" />
                     }
                 </div>
             </main>

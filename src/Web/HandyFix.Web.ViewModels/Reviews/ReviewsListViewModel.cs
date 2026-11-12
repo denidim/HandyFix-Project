@@ -11,7 +11,5 @@
 
         // Opens Google's form for writing a review.
         public string GoogleLeaveReviewUrl { get; set; }
-
-        public bool ShowOnSiteReviews { get; set; }
     }
 }

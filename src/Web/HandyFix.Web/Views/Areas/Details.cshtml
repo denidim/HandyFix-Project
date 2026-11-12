@@ -134,50 +134,15 @@
     }
 
     <!-- Reviews -->
-    @if (Model.ShowOnSiteReviews && Model.Reviews != null && Model.Reviews.Any())
+    @* This town's own Google reviews only (PROJECT_STATE Section 3eh); with none, no section. *@
+    @if (Model.Reviews != null && Model.Reviews.Any())
     {
         <section class="area-reviews-section">
-            <h2 class="details-section-title text-center">What Our Customers Say</h2>
+            <h2 class="details-section-title text-center">What Our Customers in @Model.Area.Name Say</h2>
             <div class="review-feed">
                 @foreach (var review in Model.Reviews)
                 {
-                    <article class="review-card">
-                        <div class="review-author-row">
-                            <div class="review-author-info">
-                                <div class="review-avatar">
-                                    @if (!string.IsNullOrEmpty(review.CustomerName) && review.CustomerName.Length >= 2)
-                                    {
-                                        <span>@review.CustomerName.Substring(0, 2).ToUpper()</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="material-symbols-outlined">person</span>
-                                    }
-                                </div>
-                                <div>
-                                    <h3 class="font-headline-sm text-primary mb-0 fs-16 fw-bold">@review.CustomerName</h3>
-                                    <p class="text-muted mb-0 fs-14">Client Review</p>
-                                </div>
-                            </div>
-                            <div class="text-warning d-flex">
-                                @for (int i = 1; i <= 5; i++)
-                                {
-                                    if (i <= review.Rating)
-                                    {
-                                        <span class="material-symbols-outlined icon-fill fs-20">star</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="material-symbols-outlined icon-unfill fs-20">star</span>
-                                    }
-                                }
-                            </div>
-                        </div>
-                        <p class="font-body-md text-on-surface mb-3">"@review.Comment"</p>
-                        <div class="d-flex justify-content-end align-items-center">
-                            <small class="text-muted fs-14">@review.CreatedOn.ToString("dd MMM yyyy")</small>
-                        </div>
-                    </article>
+                    <partial name="_ReviewCard" model="review" />
                 }
             </div>
         </section>

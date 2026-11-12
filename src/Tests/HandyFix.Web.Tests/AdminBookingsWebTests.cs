@@ -1140,7 +1140,9 @@
             Assert.Single(Regex.Matches(dashboard, "<a\\b(?=[^>]*class=\"dashboard-stat-card)(?=[^>]*href=\"/Administration/Enquiries\")[^>]*>"));
             Assert.Contains("href=\"" + JobsPage + "/Create\"", dashboard);
 
-            Assert.DoesNotContain("href=\"/Administration/Reviews\"", dashboard);
+            // The menu leads to the reviews again: the managers type each new Google review in
+            // there (Section 3eh; Section 3ch had taken the link off while the page was always empty).
+            Assert.Contains("href=\"/Administration/Reviews\"", dashboard);
             Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync("/Administration/Reviews")).StatusCode);
         }
 

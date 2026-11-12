@@ -542,7 +542,8 @@
             var content = await (await browser.GetAsync("/Administration/Dashboard")).Content.ReadAsStringAsync();
             MatchCollection links = Regex.Matches(content, "<a class=\"admin-nav-link\"[^>]*>.*?</a>", RegexOptions.Singleline);
 
-            Assert.Equal(9, links.Count);
+            // Ten since Reviews came back (Section 3eh).
+            Assert.Equal(10, links.Count);
             foreach (Match link in links)
             {
                 var title = Regex.Match(link.Value, "title=\"([^\"]+)\"").Groups[1].Value;

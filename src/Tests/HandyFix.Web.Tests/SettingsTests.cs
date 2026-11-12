@@ -26,7 +26,6 @@
                 builder.ConfigureAppConfiguration((context, configuration) => configuration.AddInMemoryCollection(
                     new Dictionary<string, string>
                     {
-                        ["Business:ShowOnSiteReviews"] = "true",
                         ["Business:GoogleReviewsUrl"] = "https://g.page/r/example",
                         ["Business:GoogleLeaveReviewUrl"] = "https://g.page/r/example/review",
                         ["Email:BookingsFromAddress"] = "hello@staging.example",
@@ -40,7 +39,6 @@
                     })));
 
             BusinessOptions business = host.Services.GetRequiredService<IOptions<BusinessOptions>>().Value;
-            Assert.True(business.ShowOnSiteReviews);
             Assert.Equal("https://g.page/r/example", business.GoogleReviewsUrl);
             Assert.Equal("https://g.page/r/example/review", business.GoogleLeaveReviewUrl);
 
@@ -72,7 +70,6 @@
                     })));
 
             BusinessOptions business = host.Services.GetRequiredService<IOptions<BusinessOptions>>().Value;
-            Assert.False(business.ShowOnSiteReviews);
             Assert.Equal("https://g.page/r/CRa4VR4BecsDEBM", business.GoogleReviewsUrl);
             Assert.Equal("https://g.page/r/CRa4VR4BecsDEBM/review", business.GoogleLeaveReviewUrl);
 
