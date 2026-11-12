@@ -229,8 +229,12 @@
                 .Select(x => x.PostcodeDistricts)
                 .ToListAsync();
 
+            // The areas' own districts and every district within 15 miles of the base
+            // (PROJECT_STATE.md Section 3ek): a town added in the admin panel is taken even
+            // when it lies past the 15 miles.
             return lists
                 .SelectMany(UkPostcode.ParseDistricts)
+                .Concat(BookingRadius.Districts)
                 .Distinct()
                 .OrderBy(d => d)
                 .ToList();
@@ -239,11 +243,7 @@
         public async Task<bool> IsPostcodeServedAsync(string postcode)
         {
             IReadOnlyList<string> districts = await this.GetServedPostcodeDistrictsAsync();
-
-            // With no district listed on any area there is nothing to check against, and the
-            // check is off. Turning every booking away because a list is empty would be worse
-            // than taking one from too far.
-            return districts.Count == 0 || UkPostcode.IsInDistricts(postcode, districts);
+            return UkPostcode.IsInDistricts(postcode, districts);
         }
 
         public async Task DeleteAsync(Guid id)

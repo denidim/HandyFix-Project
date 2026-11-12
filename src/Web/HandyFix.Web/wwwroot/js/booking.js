@@ -19,9 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const enquiryLink = document.getElementById("slot-enquiry-link");
     const enquiryBaseHref = enquiryLink.getAttribute("href");
 
-    // Postcode: bookings are taken only in the districts the service areas list. The
-    // server has the last word (BookingController); this tells the visitor as soon as
-    // the postcode is typed, before the rest of the form is filled in.
+    // Postcode: bookings are taken only within 15 miles of the base or in a district a
+    // service area lists. The server has the last word (BookingController); this tells
+    // the visitor as soon as the postcode is typed, before the rest of the form is filled in.
     const postcodeInput = document.getElementById("Postcode");
     const postcodeNotice = document.getElementById("postcode-not-served");
     const postcodeNoticeDistrict = document.getElementById("postcode-not-served-district");
@@ -35,8 +35,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return wholePostcode.test(compact) ? compact.slice(0, -3) : null;
     }
 
-    // An empty list means no area lists a district, and then the check is off. A few
-    // London districts carry a letter ("SW1A"); those count as their district ("SW1").
+    // The server always sends the 15-mile list, so an empty one means the page lost it;
+    // then this check steps aside and the server's decides. A few London districts carry
+    // a letter ("SW1A"); those count as their district ("SW1").
     function isPostcodeServed() {
         const district = postcodeDistrict();
         if (!district || servedDistricts.length === 0) return true;

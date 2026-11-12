@@ -3947,6 +3947,23 @@ The site has no analytics, so nothing told which channel brings work.
 
 ---
 
+## 3ek. Online Booking Within 15 Miles of the Base (2026-11-12)
+
+Until now online booking took only the postcode districts the area pages list, so a town with no page of its own was turned away even next door: Twickenham and Richmond, both on the Google profile, could not book online. The company decided on 11 November that online booking takes every district with a postcode within 15 miles of the Chessington base.
+
+- **`BookingRadius.cs`** (next to `ServiceAreasService`): a fixed list of 251 districts, built from a 15-mile radius search of postcodes around the base (133,892 postcodes), keeping only the district part (KT9, TW1). *Why the district and not the whole postcode:* the form already checks the district, the list stays a few hundred short codes instead of a hundred thousand postcodes, and new houses get new postcodes but almost never a new district, so it does not go stale. *Why in code and not in the database:* it changes only when the company picks a new radius, so it needs no admin screen and no migration, and every change shows in git. The 15 miles reach the West End and the City and touch Slough; a district on the edge can reach a little past 15 miles, which the company accepts.
+- **`GetServedPostcodeDistrictsAsync`** gives the areas' own districts together with the list, so a town added in the admin panel is still taken even when it lies past the 15 miles. The old rule "no area lists a district, so the check is off" is gone: the list is never empty.
+- **The booking page** is unchanged: it gets the longer list and checks as the postcode is typed, and the server checks again on submit. The notice for a postcode past the 15 miles is the same.
+- `WORKFLOW_BOOKINGS.md` and `WORKFLOW_SERVICE_AREAS.md` describe the new rule. *Not in this section:* the new town pages (Twickenham, Richmond and the others on the profile). They get their text with every other area page's, so that each one reads differently.
+
+### Verified
+
+- **Build** 0 warnings, 0 errors; **tests** 1219/1219 (452 + 767). The four postcode tests in `ServiceAreasServiceTests` now check the new rule: Twickenham's TW1 and Richmond's TW9 are taken with no area listing them, RG1 (Reading, past the 15 miles) only while an area lists it, Manchester never, and every district comes once and in order.
+- **In the browser, on a local copy** (18 checks): the booking page carries the 251 districts; TW1, TW9, TW10, SW1A and KT9 postcodes are taken as they are typed; M1 and RG1 get the notice with their district.
+- **On staging**, after the deploy from `dev`: the same 18 checks, 18 of 18.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Code Quality Sprints — from the audit of 2026-11-06

@@ -182,9 +182,9 @@
                     $"{chosen.Name} is not booked online. Please call us or message us on WhatsApp on {GlobalConstants.BusinessPhone}.");
             }
 
-            // Before anything is saved or a deposit asked for: a postcode outside the districts
-            // the service areas list is a job we may not be able to reach. The page says so as
-            // the postcode is typed; this is the check a visitor cannot skip.
+            // Before anything is saved or a deposit asked for: a postcode past the 15 miles that no
+            // service area lists is a job we may not be able to reach. The page says so as the
+            // postcode is typed; this is the check a visitor cannot skip.
             if (!await this.serviceAreasService.IsPostcodeServedAsync(model.Postcode))
             {
                 model.PostcodeNotServed = true;

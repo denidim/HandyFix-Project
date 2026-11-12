@@ -242,12 +242,13 @@ A pattern has to mean the same in .NET and in JavaScript: no named groups, no lo
 `[0-9]` instead of `\d`. `FormsWebTests` checks that each field's pattern reaches the page.
 
 **The postcode decides whether the booking is taken at all.** Its district (the `KT9` of
-`KT9 2QN`) must be one that some service area lists in its Postcode Districts field
-(`/Administration/ServiceAreas`, see `WORKFLOW_SERVICE_AREAS.md`). Otherwise nothing is saved and
-no deposit is asked for: the customer sees a notice with an enquiry link, the phone number and
-WhatsApp. The page checks as the postcode is typed, so most people find out before filling in the
-rest; `BookingController` checks again on submit, which is the one that counts. If **no** area
-lists any district, the check is off and every postcode is accepted.
+`KT9 2QN`) must be within 15 miles of the Chessington base (the fixed list in `BookingRadius.cs`,
+the company's decision of 11 November 2026) or one that some service area lists in its Postcode
+Districts field (`/Administration/ServiceAreas`, see `WORKFLOW_SERVICE_AREAS.md`). Otherwise
+nothing is saved and no deposit is asked for: the customer sees a notice with an enquiry link, the
+phone number and WhatsApp. The page checks as the postcode is typed, so most people find out
+before filling in the rest; `BookingController` checks again on submit, which is the one that
+counts.
 
 The booking keeps one address: `BookingsService.JoinAddressAndPostcode` adds the postcode to the
 street, written the standard way (`1 Ash Road, Chessington, KT9 2QN`).
@@ -581,7 +582,7 @@ job made before this has no lines for what happened before.
 | The customer says no email named their technician | None is sent until a technician is picked on the booking's page. If one was picked and the page answered "the email to the customer could not be sent", tell the customer yourself and see the next row. |
 | A customer says no email arrived | The job's history says if it could not be sent, and so does the dashboard for a week. The booking itself is unaffected. For why, look in the application log for `Email not sent`; the usual causes are a sender address Brevo has not verified, or a wrong API key. |
 | A slot is stuck as booked with no real customer | Wait up to 5 minutes for the cleanup sweep, or Release it manually on the Calendar. |
-| A customer in our area is told "we don't take online bookings for KT21 yet" | No service area lists that district. Add it to the nearest area's Postcode Districts at `/Administration/ServiceAreas`. |
+| A customer in our area is told "we don't take online bookings for RG1 yet" | The district is past the 15 miles and no service area lists it. To take it, add it to the nearest area's Postcode Districts at `/Administration/ServiceAreas`. |
 | The Proceed to Payment button stays grey | A field is empty, the description is under 20 characters, or the postcode is outside the districts we cover (its notice says so). |
 
 ---
