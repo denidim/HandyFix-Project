@@ -90,7 +90,7 @@
             };
 
             this.SetPageMeta(
-                $"Handyman & Plumbing in {area.Name}",
+                $"Plumber & Handyman in {area.Name}",
                 $"Local handyman and plumbing services in {area.Name}. Transparent hourly pricing, no call-out fee, usually available within days. Book online today.",
                 this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme));
 

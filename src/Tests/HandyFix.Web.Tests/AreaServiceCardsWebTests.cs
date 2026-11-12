@@ -64,6 +64,17 @@ namespace HandyFix.Web.Tests
             }
         }
 
+        // "Plumber" is the word people type, and no area title had it.
+        [Fact]
+        public async Task TheTitleAndTheHeadingNameThePlumberFirst()
+        {
+            string html = await this.GetAsync("/Areas/chessington");
+
+            Assert.Contains("<h1 class=\"service-hero-title\">Plumber &amp; Handyman in Chessington</h1>", html);
+            Assert.Contains("Plumber &amp; Handyman in Chessington", Regex.Match(html, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value);
+            Assert.Contains("<h2 class=\"details-section-title text-center\">Services in Chessington</h2>", html);
+        }
+
         // The same card on the Pricing page keeps a plain name and its picture goes to the booking.
         [Fact]
         public async Task ThePricingPagesCardsKeepTheirPlainNames()
@@ -73,6 +84,24 @@ namespace HandyFix.Web.Tests
             Assert.Contains("<h3 class=\"pricing-card-title\">", html);
             Assert.DoesNotContain("pricing-card-title-link", html);
             Assert.Matches("<a class=\"pricing-card-media card-image-link\" href=\"/Booking\\?", html);
+        }
+
+        [Fact]
+        public async Task ABlankLineInATownsTextStartsANewParagraph()
+        {
+            const string slug = "dorking";
+            string before = await this.SetNeighbourhoodsCopyAsync(slug, "The first part about the town.\r\n\r\nThe second part about the town.");
+            try
+            {
+                string html = await this.GetAsync("/Areas/" + slug);
+
+                Assert.Contains("<p>The first part about the town.</p>", html);
+                Assert.Contains("<p>The second part about the town.</p>", html);
+            }
+            finally
+            {
+                await this.SetNeighbourhoodsCopyAsync(slug, before);
+            }
         }
 
         private async Task<IReadOnlyList<string>> CardLinksAsync(string url)
@@ -85,6 +114,18 @@ namespace HandyFix.Web.Tests
             using IServiceScope scope = this.server.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             return db.ServiceAreas.Select(x => x.Slug).ToList();
+        }
+
+        // Sets the text and gives back what was there, so the test can put it back.
+        private async Task<string> SetNeighbourhoodsCopyAsync(string slug, string text)
+        {
+            using IServiceScope scope = this.server.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var area = db.ServiceAreas.Single(x => x.Slug == slug);
+            string before = area.LocalNeighbourhoodsCopy;
+            area.LocalNeighbourhoodsCopy = text;
+            await db.SaveChangesAsync();
+            return before;
         }
 
         private async Task<string> GetAsync(string url)
