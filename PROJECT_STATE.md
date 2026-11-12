@@ -3955,12 +3955,15 @@ Until now online booking took only the postcode districts the area pages list, s
 - **`GetServedPostcodeDistrictsAsync`** gives the areas' own districts together with the list, so a town added in the admin panel is still taken even when it lies past the 15 miles. The old rule "no area lists a district, so the check is off" is gone: the list is never empty.
 - **The booking page** is unchanged: it gets the longer list and checks as the postcode is typed, and the server checks again on submit. The notice for a postcode past the 15 miles is the same.
 - `WORKFLOW_BOOKINGS.md` and `WORKFLOW_SERVICE_AREAS.md` describe the new rule. *Not in this section:* the new town pages (Twickenham, Richmond and the others on the profile). They get their text with every other area page's, so that each one reads differently.
+- **The pictures for the 16 new towns** are in `wwwroot/images/areas/` already, each with its phone strip: Twickenham, Richmond, St Margarets, Ham, Teddington, Molesey, New Malden, Ashtead, Cheam, Tolworth, Claygate, Thames Ditton, Hersham, Hampton, Morden and Raynes Park, painted in the same style as the others through `tools/image-gen` (four for each season), in three batches each checked before the next. The area page finds a picture by the town's slug, so each one shows as soon as its page is added. Guildford's page stays, although the Google profile no longer lists the town.
 
 ### Verified
 
 - **Build** 0 warnings, 0 errors; **tests** 1219/1219 (452 + 767). The four postcode tests in `ServiceAreasServiceTests` now check the new rule: Twickenham's TW1 and Richmond's TW9 are taken with no area listing them, RG1 (Reading, past the 15 miles) only while an area lists it, Manchester never, and every district comes once and in order.
 - **In the browser, on a local copy** (18 checks): the booking page carries the 251 districts; TW1, TW9, TW10, SW1A and KT9 postcodes are taken as they are typed; M1 and RG1 get the notice with their district.
 - **On staging**, after the deploy from `dev`: the same 18 checks, 18 of 18.
+- **Live**, after PR #100: the same 18 checks, 18 of 18.
+- **The pictures**: only the 32 new files changed (the phone strips of the old pictures came out the same); on staging all 32 are served as WebP.
 
 ---
 
