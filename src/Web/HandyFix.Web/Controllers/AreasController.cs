@@ -68,7 +68,11 @@
 
             IEnumerable<ServiceViewModel> plumbingServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Plumbing");
             IEnumerable<ServiceViewModel> handymanServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman");
-            var relatedServices = plumbingServices.Take(2).Concat(handymanServices.Take(2)).ToList();
+
+            // The town's own two plumbing and two handyman services, picked from its slug as the
+            // database holds it, not as the address was typed (Section 3el). Every town showed
+            // the first two of each until then, so the area pages carried the same four cards.
+            var relatedServices = AreaServices.For(area.Slug, plumbingServices.ToList(), handymanServices.ToList());
 
             // Only the reviews from this town (Section 3eh): the same three on every area page
             // would be the same text on 25 pages, and a review from the town is the proof its
@@ -86,7 +90,7 @@
             };
 
             this.SetPageMeta(
-                $"Handyman & Plumbing in {area.Name}",
+                $"Plumber & Handyman in {area.Name}",
                 $"Local handyman and plumbing services in {area.Name}. Transparent hourly pricing, no call-out fee, usually available within days. Book online today.",
                 this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme));
 

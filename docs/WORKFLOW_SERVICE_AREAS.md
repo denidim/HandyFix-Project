@@ -96,6 +96,18 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 
 ### Things worth knowing
 
+- **The two texts are drawn in paragraphs.** In "About the Town" and "Local Streets and Landmarks"
+  a blank line starts a new paragraph on the town's page (`Paragraphs.Of`, as on a service page).
+  A text with no blank line is one paragraph, as before.
+- **A town's four service cards are worked out, not chosen.** The page shows two plumbing and two
+  handyman services picked from the town's slug (`AreaServices.For`), so towns show different
+  services, one town shows the same four on every visit, and a new town gets its own with nothing
+  to set in the admin. Each card carries the start of the service's description
+  (`Summaries.Of`: the first sentence, and the second when the first is very short), its price, a
+  button that books it, and its name as a link to the service's own page, where the full
+  description is. Adding a service, switching one off or moving one in its category's order
+  changes what several towns show. Until `PROJECT_STATE.md` Section 3el every town printed the
+  same four in full.
 - **The business record's towns are not the area pages.** Every page writes one record of the
   business for Google (`IBusinessRecord`: type `Plumber`, open 24 hours, a link to the Google
   profile), and its `areaServed` is the fixed list in `HandyFix.Common/ServiceAreaTowns.cs`: the

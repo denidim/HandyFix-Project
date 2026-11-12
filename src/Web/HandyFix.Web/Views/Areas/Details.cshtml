@@ -43,7 +43,7 @@
                 <span class="material-symbols-outlined text-xs">chevron_right</span>
                 <span class="text-white">@area.Name</span>
             </nav>
-            <h1 class="service-hero-title">Handyman &amp; Plumbing in @area.Name</h1>
+            <h1 class="service-hero-title">Plumber &amp; Handyman in @area.Name</h1>
             <div class="service-hero-badges">
                 <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
                     <span class="material-symbols-outlined">verified</span> Professional Service
@@ -77,15 +77,20 @@
     <!-- Description -->
     <section class="details-prose">
         <h2 class="details-section-title">About @area.Name</h2>
-        <p>@area.IntroCopy</p>
-        <p>@area.LocalNeighbourhoodsCopy</p>
+        @* Each text in its paragraphs: a blank line in the admin's box starts a new one. *@
+        @foreach (var paragraph in Paragraphs.Of(area.IntroCopy).Concat(Paragraphs.Of(area.LocalNeighbourhoodsCopy)))
+        {
+            <p>@paragraph</p>
+        }
     </section>
 
     <!-- Related Services -->
     @if (Model.RelatedServices != null && Model.RelatedServices.Any())
     {
         <section class="pricing-typical-jobs-section">
-            <h2 class="details-section-title text-center">Popular Services in @area.Name</h2>
+            @* The town's own four (AreaServices), each with its short text and a link to its page;
+               the full description is on that page only (PROJECT_STATE Section 3el). *@
+            <h2 class="details-section-title text-center">Services in @area.Name</h2>
             <div class="pricing-cards-grid">
                 @foreach (var svc in Model.RelatedServices)
                 {
@@ -96,7 +101,8 @@
                                                              IconName = svc.CategorySlug == CategorySlugs.SmallBuildingWorks ? "foundation" : (svc.CategoryName == "Plumbing" ? "water_drop" : "handyman"),
                                                              ImageUrl = svc.ImageUrl,
                                                              MediumCopyUrl = svc.MediumCopyUrl,
-                                                             Description = svc.Description,
+                                                             Description = Summaries.Of(svc.Description),
+                                                             DetailsUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = svc.CategorySlug, serviceSlug = svc.Slug }),
                                                              BasePrice = svc.BasePrice,
                                                              EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
                                                              IsQuoteBased = isQuoteOnly,
