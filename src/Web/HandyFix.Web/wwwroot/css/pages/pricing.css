@@ -289,6 +289,20 @@
   margin: 0 0 var(--spacing-2) 0;
 }
 
+/* The name as a link to the service's own page (an area page's cards). Underlined, so it reads
+   as a link beside the button, which books. */
+.pricing-card-title-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.pricing-card-title-link:hover,
+.pricing-card-title-link:focus-visible {
+  text-decoration-thickness: 2px;
+}
+
 .pricing-card-desc {
   color: var(--text-main);
   font-size: var(--fs-body-md);

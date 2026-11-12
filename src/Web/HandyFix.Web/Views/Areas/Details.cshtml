@@ -85,7 +85,9 @@
     @if (Model.RelatedServices != null && Model.RelatedServices.Any())
     {
         <section class="pricing-typical-jobs-section">
-            <h2 class="details-section-title text-center">Popular Services in @area.Name</h2>
+            @* The town's own four (AreaServices), each with its short text and a link to its page;
+               the full description is on that page only (PROJECT_STATE Section 3el). *@
+            <h2 class="details-section-title text-center">Services in @area.Name</h2>
             <div class="pricing-cards-grid">
                 @foreach (var svc in Model.RelatedServices)
                 {
@@ -96,7 +98,8 @@
                                                              IconName = svc.CategorySlug == CategorySlugs.SmallBuildingWorks ? "foundation" : (svc.CategoryName == "Plumbing" ? "water_drop" : "handyman"),
                                                              ImageUrl = svc.ImageUrl,
                                                              MediumCopyUrl = svc.MediumCopyUrl,
-                                                             Description = svc.Description,
+                                                             Description = Summaries.Of(svc.Description),
+                                                             DetailsUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = svc.CategorySlug, serviceSlug = svc.Slug }),
                                                              BasePrice = svc.BasePrice,
                                                              EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
                                                              IsQuoteBased = isQuoteOnly,

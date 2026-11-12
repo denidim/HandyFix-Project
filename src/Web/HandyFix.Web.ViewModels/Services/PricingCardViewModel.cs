@@ -27,5 +27,10 @@
         public string CtaText { get; set; }
 
         public string CtaUrl { get; set; }
+
+        // The service's own page, on a card that should lead there: the name becomes a link to
+        // it and the picture goes there too, while the button keeps its own address. Null leaves
+        // the name as plain text and the picture going where the button goes.
+        public string DetailsUrl { get; set; }
     }
 }

@@ -11,9 +11,12 @@
         // copy up before it is drawn.
         var mediumCopy = Model.MediumCopyUrl;
 
-        @* Links to the same place as the card's button; with no button, href="@null" drops the
-           attribute and the <a> is a plain, non-interactive box. *@
-        <a class="pricing-card-media card-image-link" href="@(string.IsNullOrWhiteSpace(Model.CtaUrl) ? null : Model.CtaUrl)" tabindex="-1" aria-hidden="true">
+        @* Links to the service's own page when the card has one, else to the same place as the
+           card's button; with neither, href="@null" drops the attribute and the <a> is a plain,
+           non-interactive box. *@
+        var mediaUrl = !string.IsNullOrWhiteSpace(Model.DetailsUrl) ? Model.DetailsUrl : Model.CtaUrl;
+
+        <a class="pricing-card-media card-image-link" href="@(string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl)" tabindex="-1" aria-hidden="true">
             <img class="pricing-card-image" src="@Model.ImageUrl" alt="@Model.Name" width="1024" height="1024" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src='/images/hero.webp';"
                  srcset="@(mediumCopy == null ? null : $"{mediumCopy} {ImageStorageService.MediumCopyWidth}w, {Model.ImageUrl} 1024w")"
                  sizes="@(mediumCopy == null ? null : "(max-width: 575.98px) calc(100vw - 48px), 424px")">
@@ -28,7 +31,14 @@
             <span class="material-symbols-outlined">@Model.IconName</span>
         </div>
     }
-    <h3 class="pricing-card-title">@Model.Name</h3>
+    @if (string.IsNullOrWhiteSpace(Model.DetailsUrl))
+    {
+        <h3 class="pricing-card-title">@Model.Name</h3>
+    }
+    else
+    {
+        <h3 class="pricing-card-title"><a class="pricing-card-title-link" href="@Model.DetailsUrl">@Model.Name</a></h3>
+    }
     @if (!string.IsNullOrWhiteSpace(Model.Description))
     {
         <p class="pricing-card-desc">@Model.Description</p>
