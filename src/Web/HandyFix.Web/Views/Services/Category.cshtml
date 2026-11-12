@@ -1,5 +1,6 @@
 @model HandyFix.Web.ViewModels.Services.CategoryViewModel
 @using System.Globalization
+@inject HandyFix.Web.Services.IBusinessRecord Business
 @using HandyFix.Services
 @* Anything written inside a script block below goes through Json.Serialize. Razor's own HTML
    encoding is wrong there: a script block is never HTML-decoded (PROJECT_STATE Section 3bv). *@
@@ -46,9 +47,6 @@
         return entry;
     }).ToList();
 
-    var areasServed = Model.LocalAreas
-        .Select(a => new Dictionary<string, object> { ["@type"] = "City", ["name"] = a.Name })
-        .ToList();
 }
 
 <div class="page-container services-page">
@@ -267,21 +265,8 @@
   "name": @Json.Serialize($"{Model.Name} Services"),
   "description": @Json.Serialize(Model.Description),
   "url": @Json.Serialize(this.ViewData["Canonical"]),
-  "provider": {
-    "@@type": "LocalBusiness",
-    "name": "Plumbing Handyman Surrey",
-    "telephone": @Json.Serialize(GlobalConstants.BusinessPhoneInternational),
-    "priceRange": "££",
-    "address": {
-      "@@type": "PostalAddress",
-      "streetAddress": @Json.Serialize(GlobalConstants.CompanyAddressStreet),
-      "addressLocality": @Json.Serialize(GlobalConstants.CompanyAddressTown),
-      "addressRegion": @Json.Serialize(GlobalConstants.CompanyAddressCounty),
-      "postalCode": @Json.Serialize(GlobalConstants.CompanyAddressPostcode),
-      "addressCountry": "GB"
-    }
-  },
-  "areaServed": @Json.Serialize(areasServed),
+  "provider": @Json.Serialize(Business.BuildAsProvider()),
+  "areaServed": @Json.Serialize(Business.AreaServed()),
   "hasOfferCatalog": {
     "@@type": "OfferCatalog",
     "name": @Json.Serialize($"{Model.Name} Services"),

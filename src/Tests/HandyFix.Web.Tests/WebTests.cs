@@ -11,6 +11,7 @@
 
     using HandyFix.Common;
     using HandyFix.Data;
+    using HandyFix.Web.Settings;
 
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.HttpsPolicy;
@@ -613,10 +614,11 @@
         }
 
         [Fact]
-        public async Task HomePageStructuredDataNamesThePhoneAndTheCompanyAndNoSocialProfiles()
+        public async Task HomePageStructuredDataNamesThePhoneAndTheCompanyAndTheGoogleProfile()
         {
             // The home page JSON-LD used to list two social profiles the business never had
-            // (PROJECT_STATE Section 3bu, roadmap L1 item 2). "sameAs" comes back only with real ones.
+            // (PROJECT_STATE Section 3bu, roadmap L1 item 2). "sameAs" now holds the one real
+            // profile, the Google Business Profile, taken from the configuration (Section 3eg).
             var client = this.server.CreateClient();
             var response = await client.GetAsync("/");
             response.EnsureSuccessStatusCode();
@@ -625,11 +627,71 @@
             var phone = Regex.Match(content, "\"telephone\":\\s*(\"[^\"]*\")");
             Assert.True(phone.Success);
             Assert.Equal(GlobalConstants.BusinessPhoneInternational, JsonSerializer.Deserialize<string>(phone.Groups[1].Value));
-            Assert.Contains("\"legalName\": \"" + GlobalConstants.CompanyLegalName + "\"", content);
-            Assert.Contains("\"foundingDate\": \"" + GlobalConstants.CompanyIncorporatedOn + "\"", content);
-            Assert.Contains("\"streetAddress\": \"" + GlobalConstants.CompanyAddressStreet + "\"", content);
-            Assert.Contains("\"postalCode\": \"" + GlobalConstants.CompanyAddressPostcode + "\"", content);
-            Assert.DoesNotContain("\"sameAs\"", content);
+
+            var business = Assert.Single(JsonLdElements(content), b => b.GetProperty("@type").GetString() == "Plumber");
+            Assert.Equal(GlobalConstants.CompanyLegalName, business.GetProperty("legalName").GetString());
+            Assert.Equal(GlobalConstants.CompanyIncorporatedOn, business.GetProperty("foundingDate").GetString());
+            Assert.Equal(GlobalConstants.CompanyAddressStreet, business.GetProperty("address").GetProperty("streetAddress").GetString());
+            Assert.Equal(GlobalConstants.CompanyAddressPostcode, business.GetProperty("address").GetProperty("postalCode").GetString());
+
+            var googleProfile = this.server.Services.GetRequiredService<IOptions<BusinessOptions>>().Value.GoogleReviewsUrl;
+            Assert.False(string.IsNullOrEmpty(googleProfile));
+            Assert.Equal(new[] { googleProfile }, business.GetProperty("sameAs").EnumerateArray().Select(link => link.GetString()));
+        }
+
+        // The home, service, category and area pages each used to write their own copy of the
+        // business, and the copies disagreed with each other and with the Google profile. Now one
+        // builder writes them all (PROJECT_STATE Section 3eg).
+        [Fact]
+        public async Task EveryPageDescribesTheBusinessTheSameWay()
+        {
+            var client = this.server.CreateClient();
+
+            var home = BusinessOn(JsonLdElements(await client.GetStringAsync("/")));
+            var service = BusinessOn(JsonLdElements(await client.GetStringAsync("/Services/plumbing/tap-repairs")));
+            var category = BusinessOn(JsonLdElements(await client.GetStringAsync("/Services/plumbing")));
+            var area = BusinessOn(JsonLdElements(await client.GetStringAsync("/Areas/cobham")));
+
+            Assert.Equal("Plumber", home.GetProperty("@type").GetString());
+            Assert.Equal(GlobalConstants.SiteUrl + "/#business", home.GetProperty("@id").GetString());
+            Assert.Equal(ServiceAreaTowns.Names, home.GetProperty("areaServed").EnumerateArray().Select(town => town.GetProperty("name").GetString()));
+
+            // The pages that use it as a provider carry the same record, apart from "@context".
+            foreach (var provider in new[] { service, category, area })
+            {
+                Assert.Equal("Plumber", provider.GetProperty("@type").GetString());
+                Assert.Equal(home.GetProperty("@id").GetString(), provider.GetProperty("@id").GetString());
+                Assert.Equal(
+                    ServiceAreaTowns.Names,
+                    provider.GetProperty("areaServed").EnumerateArray().Select(town => town.GetProperty("name").GetString()));
+                Assert.Equal(
+                    home.GetProperty("openingHoursSpecification").GetRawText(),
+                    provider.GetProperty("openingHoursSpecification").GetRawText());
+                Assert.False(provider.TryGetProperty("@context", out _));
+            }
+        }
+
+        // The answer to "Do you cover my location?" is built from the same twenty towns, on the
+        // page and in its FAQ schema, and no longer names Guildford.
+        [Fact]
+        public async Task ServicePageCoverageAnswerNamesTheTownsOfTheProfile()
+        {
+            var page = await this.server.CreateClient().GetStringAsync("/Services/plumbing/tap-repairs");
+            var answer = "We cover " + ServiceAreaTowns.AsSentenceList() + ", across Surrey and South West London.";
+
+            Assert.Contains(answer, WebUtility.HtmlDecode(page));
+            Assert.Contains("Twickenham", answer);
+
+            // Guildford can still be a link in the page's footer; it must not be a place served.
+            Assert.DoesNotContain("Guildford", answer);
+            Assert.DoesNotContain(
+                JsonLdElements(page),
+                block => block.GetRawText().Contains("Guildford"));
+
+            var faq = Assert.Single(JsonLdElements(page), b => b.GetProperty("@type").GetString() == "FAQPage");
+            var coverage = faq.GetProperty("mainEntity").EnumerateArray()
+                .Single(question => question.GetProperty("name").GetString() == "Do you cover my location?");
+            Assert.Equal(answer, coverage.GetProperty("acceptedAnswer").GetProperty("text").GetString());
         }
 
         // The list of services had no description, so search engines made one up from whatever
@@ -1202,6 +1264,19 @@
         {
             return Regex.Matches(html, "<script type=\"application/ld(?:\\+|&#x2B;)json\">(.*?)</script>", RegexOptions.Singleline)
                 .Select(match => match.Groups[1].Value);
+        }
+
+        // The business record of a page: the top-level Plumber on the home page, the provider of
+        // the Service record on every other page.
+        private static JsonElement BusinessOn(List<JsonElement> blocks)
+        {
+            var home = blocks.Where(b => b.GetProperty("@type").GetString() == "Plumber").ToList();
+            if (home.Count == 1)
+            {
+                return home[0];
+            }
+
+            return Assert.Single(blocks, b => b.GetProperty("@type").GetString() == "Service").GetProperty("provider");
         }
 
         // The JSON-LD blocks of a page, parsed, each copied out of its document before the

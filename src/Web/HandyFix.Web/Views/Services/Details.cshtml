@@ -1,5 +1,6 @@
 @model HandyFix.Web.ViewModels.Services.ServiceDetailsViewModel
 @using System.Globalization
+@inject HandyFix.Web.Services.IBusinessRecord Business
 @using HandyFix.Web.ViewModels.Services
 @* Anything written inside a script block below goes through Json.Serialize. Razor's own HTML
    encoding is wrong there: a script block is never HTML-decoded, so "&" reached search engines
@@ -7,6 +8,10 @@
 @{
     this.Layout = "_Layout";
     this.ViewData["Title"] = Model.Name;
+
+    // The answer to "Do you cover my location?", on the page and in its FAQ schema, from the
+    // same list of towns as the business record (PROJECT_STATE Section 3eg).
+    var coverAnswer = $"We cover {ServiceAreaTowns.AsSentenceList()}, across Surrey and South West London.";
 
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == CategorySlugs.SmallBuildingWorks;
@@ -233,7 +238,7 @@
                         <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
                     </summary>
                     <div class="faq-accordion-content">
-                        We operate throughout Chessington, Cobham, Esher, Weybridge, Guildford, Epsom, Kingston, Wimbledon, and surrounding areas across Surrey and South London.
+                        @coverAnswer
                     </div>
                 </details>
 
@@ -438,30 +443,8 @@
   "@@context": "https://schema.org",
   "@@type": "Service",
   "serviceType": @Json.Serialize(Model.Name),
-  "provider": {
-    "@@type": "LocalBusiness",
-    "name": "Plumbing Handyman Surrey",
-    "telephone": @Json.Serialize(GlobalConstants.BusinessPhoneInternational),
-    "priceRange": "££",
-    "address": {
-      "@@type": "PostalAddress",
-      "streetAddress": @Json.Serialize(GlobalConstants.CompanyAddressStreet),
-      "addressLocality": @Json.Serialize(GlobalConstants.CompanyAddressTown),
-      "addressRegion": @Json.Serialize(GlobalConstants.CompanyAddressCounty),
-      "postalCode": @Json.Serialize(GlobalConstants.CompanyAddressPostcode),
-      "addressCountry": "GB"
-    }
-  },
-  "areaServed": [
-    { "@@type": "AdministrativeArea", "name": "Surrey" },
-    { "@@type": "AdministrativeArea", "name": "South London" },
-    { "@@type": "AdministrativeArea", "name": "Chessington" },
-    { "@@type": "AdministrativeArea", "name": "Cobham" },
-    { "@@type": "AdministrativeArea", "name": "Esher" },
-    { "@@type": "AdministrativeArea", "name": "Guildford" },
-    { "@@type": "AdministrativeArea", "name": "Epsom" },
-    { "@@type": "AdministrativeArea", "name": "Kingston" }
-  ]
+  "provider": @Json.Serialize(Business.BuildAsProvider()),
+  "areaServed": @Json.Serialize(Business.AreaServed())
   @if (!isQuoteOnly)
   {
     @:,"offers": { "@@type": "Offer", "price": @Json.Serialize(Model.BasePrice.ToString("F2", CultureInfo.InvariantCulture)), "priceCurrency": "GBP" }
@@ -488,7 +471,7 @@
       "name": "Do you cover my location?",
       "acceptedAnswer": {
         "@@type": "Answer",
-        "text": "We operate throughout Chessington, Cobham, Esher, Weybridge, Guildford, Epsom, Kingston, Wimbledon, and surrounding areas across Surrey and South London."
+        "text": @Json.Serialize(coverAnswer)
       }
     }
   ]
