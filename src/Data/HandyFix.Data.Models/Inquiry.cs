@@ -37,6 +37,10 @@
         [MaxLength(3000, ErrorMessage = "The {0} field cannot exceed 3000 characters.")]
         public string Message { get; set; } = null!;
 
+        // The visitor's answer to "How did you hear about us?"; "Make this a Job" carries it to
+        // the job (PROJECT_STATE.md Section 3ej).
+        public HeardAbout HeardAbout { get; set; }
+
         public virtual ICollection<InquiryImage> Images { get; set; }
 
         public virtual ICollection<EmailNotSent> EmailsNotSent { get; set; }

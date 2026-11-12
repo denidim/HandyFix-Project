@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    using HandyFix.Web.ViewModels.Administration.Dashboard;
     using HandyFix.Web.ViewModels.Booking;
 
     public interface IBookingsService
@@ -44,6 +45,10 @@
         Task<int> ReleaseAbandonedBookingsAsync(TimeSpan olderThan);
 
         Task<int> GetTotalCountAsync();
+
+        // How many jobs made since then gave each answer to "How did you hear about us?",
+        // cancelled ones too (PROJECT_STATE.md Section 3ej).
+        Task<IReadOnlyList<HeardAboutCountViewModel>> GetHeardAboutCountsAsync(DateTime since);
 
         Task<int> GetPendingCountAsync();
 

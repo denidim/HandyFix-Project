@@ -209,6 +209,18 @@
                             </div>
                             <p class="booking-field-hint">We use your postcode to check that you are in an area we cover.</p>
                         </div>
+                        @* Optional on purpose: a required question just before the deposit could
+                           lose the booking (PROJECT_STATE Section 3ej). *@
+                        <div class="form-group">
+                            <label asp-for="HeardAbout" class="text-label-sm font-label-sm text-on-surface-variant mb-1 d-block font-weight-bold">How did you hear about us?</label>
+                            <select asp-for="HeardAbout" class="form-control">
+                                <option value="NotSaid">Please choose (optional)</option>
+                                @foreach (var answer in HandyFix.Data.Models.HeardAboutText.Answers)
+                                {
+                                    <option value="@answer">@HandyFix.Data.Models.HeardAboutText.Label(answer)</option>
+                                }
+                            </select>
+                        </div>
 
                         @* Shown by the script as soon as a whole postcode outside our districts is
                            typed, and by the server if a booking for one is sent anyway

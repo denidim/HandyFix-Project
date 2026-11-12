@@ -249,6 +249,7 @@
                 ServiceId = job.BookingServices.Where(x => !x.IsDeleted).Select(x => (Guid?)x.ServiceId).FirstOrDefault(),
                 ProblemDescription = job.ProblemDescription,
                 Source = job.Source == BookingSource.Website ? null : job.Source,
+                HeardAbout = job.HeardAbout,
             };
         }
 

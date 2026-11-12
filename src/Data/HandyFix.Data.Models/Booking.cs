@@ -67,6 +67,13 @@
         public BookingSource Source { get; set; }
 
         /// <summary>
+        /// What made the customer look for us: their answer on the booking or enquiry form, or
+        /// what they told the admin (PROJECT_STATE.md Section 3ej). Not the same as
+        /// <see cref="Source"/>.
+        /// </summary>
+        public HeardAbout HeardAbout { get; set; }
+
+        /// <summary>
         /// The job's own day and hour. A website booking gets them from the slot it claims; a
         /// written-in job has them typed in and claims no slot. They are kept here, and not read
         /// off the slot, so that a cancelled or abandoned job still says when it was for: the slot

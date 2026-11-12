@@ -21,6 +21,8 @@
 
         public string Message { get; set; }
 
+        public HeardAbout HeardAbout { get; set; }
+
         public DateTime CreatedOn { get; set; }
 
         public IEnumerable<string> ImageUrls { get; set; }

@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
+    using HandyFix.Data.Models;
     using HandyFix.Web.ViewModels.Services;
     using HandyFix.Web.ViewModels.Validation;
 
@@ -60,6 +61,10 @@
 
         [Required(ErrorMessage = "Please select an available appointment slot.")]
         public Guid SlotId { get; set; }
+
+        // Optional: a question the customer must answer just before the deposit could lose the
+        // booking. Left empty it is "Not said" (PROJECT_STATE.md Section 3ej).
+        public HeardAbout HeardAbout { get; set; }
 
         [Required(ErrorMessage = "Please select a service.")]
         public Guid ServiceId { get; set; }

@@ -47,6 +47,8 @@
 
         public BookingSource Source { get; set; }
 
+        public HeardAbout HeardAbout { get; set; }
+
         /// <summary>
         /// The job's own day and hour. Left at its default for a booking that was cancelled or
         /// abandoned before jobs kept their own date, which <see cref="HasDate"/> says.

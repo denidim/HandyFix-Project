@@ -105,6 +105,7 @@
                 ProblemDescription = NullIfBlank(model.ProblemDescription),
                 StatusId = bookedStatus.Id,
                 Source = model.Source.Value,
+                HeardAbout = HeardAboutText.Checked(model.HeardAbout),
 
                 // An hour in the calendar is a start time, and one hour is the least a customer
                 // pays for. No slot is claimed: the admin blocks the hour in the calendar by hand,
@@ -602,6 +603,14 @@
                 changed.Add("where it came from");
                 sentences.Add($"Where it came from was {booking.Source}.");
                 booking.Source = source;
+            }
+
+            HeardAbout heardAbout = HeardAboutText.Checked(model.HeardAbout);
+            if (booking.HeardAbout != heardAbout)
+            {
+                changed.Add("how they heard about us");
+                sentences.Add($"How they heard about us was: {HeardAboutText.Label(booking.HeardAbout)}.");
+                booking.HeardAbout = heardAbout;
             }
 
             // Last, because it is the one box that can be long: it gets what is left of the line.

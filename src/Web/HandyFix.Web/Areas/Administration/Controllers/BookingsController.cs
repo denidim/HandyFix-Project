@@ -140,6 +140,7 @@
                 model.Email = enquiry.Email;
                 model.ProblemDescription = enquiry.Message;
                 model.Source = BookingSource.Enquiry;
+                model.HeardAbout = enquiry.HeardAbout;
             }
 
             return await this.JobForm(model);
@@ -196,6 +197,7 @@
                 ServiceId = job.ServiceId,
                 ProblemDescription = job.ProblemDescription,
                 Source = job.CameFromWebsite ? null : job.Source,
+                HeardAbout = job.HeardAbout,
             };
 
             return await this.EditForm(model, job);

@@ -59,6 +59,10 @@
         [Display(Name = "What is the job")]
         public string ProblemDescription { get; set; }
 
+        // What the customer said made them look for us, or "Not said" (PROJECT_STATE.md Section 3ej).
+        [Display(Name = "Heard about us from")]
+        public HeardAbout HeardAbout { get; set; }
+
         /// <summary>
         /// For the page only: the services the picker offers.
         /// </summary>

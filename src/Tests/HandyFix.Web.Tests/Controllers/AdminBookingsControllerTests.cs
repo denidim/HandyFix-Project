@@ -594,6 +594,7 @@
                     PhoneNumber = "07700 900123",
                     Email = "jane.doe@example.com",
                     Message = "[Category: Plumbing] The stopcock will not turn.",
+                    HeardAbout = HeardAbout.GoogleSearch,
                 });
 
             var result = await controller.Create(enquiryId);
@@ -608,6 +609,9 @@
             Assert.Equal("[Category: Plumbing] The stopcock will not turn.", model.ProblemDescription);
             Assert.Equal(BookingSource.Enquiry, model.Source);
             Assert.Equal(enquiryId, model.EnquiryId);
+
+            // The visitor's answer to "How did you hear about us?" goes on to the job (Section 3ej).
+            Assert.Equal(HeardAbout.GoogleSearch, model.HeardAbout);
         }
 
         // Opened from a day in the calendar, the form starts with that day; opened from the

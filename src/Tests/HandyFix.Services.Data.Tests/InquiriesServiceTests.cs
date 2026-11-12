@@ -156,6 +156,25 @@
             Assert.False(await service.IsRecentDuplicateAsync(model));
         }
 
+        // The visitor's answer to "How did you hear about us?" is kept with the enquiry, so
+        // "Make this a Job" can carry it to the job (PROJECT_STATE.md Section 3ej).
+        [Fact]
+        public async Task CreateInquiryAsyncShouldKeepHowTheVisitorHeardAboutUs()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            InquiriesService service = BuildService(dbContext);
+
+            await service.CreateInquiryAsync(
+                new ContactInputModel { Name = "Jane Doe", Email = "jane@example.com", PhoneNumber = "07123456789", Message = "Kitchen tap is dripping.", HeardAbout = HeardAbout.Nextdoor },
+                new List<string>());
+            await service.CreateInquiryAsync(
+                new ContactInputModel { Name = "John Doe", Email = "john@example.com", PhoneNumber = "07123456780", Message = "Shower is leaking.", HeardAbout = (HeardAbout)99 },
+                new List<string>());
+
+            Assert.Equal(HeardAbout.Nextdoor, dbContext.Inquiries.Single(x => x.Name == "Jane Doe").HeardAbout);
+            Assert.Equal(HeardAbout.NotSaid, dbContext.Inquiries.Single(x => x.Name == "John Doe").HeardAbout);
+        }
+
         // A deleted enquiry is gone: sending the same words again after it was deleted is new.
         [Fact]
         public async Task IsRecentDuplicateAsyncShouldNotCountADeletedEnquiry()

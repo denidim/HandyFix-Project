@@ -251,6 +251,9 @@ namespace HandyFix.Data.Migrations
                     b.Property<decimal?>("FinalPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("HeardAbout")
+                        .HasColumnType("int");
+
                     b.Property<int?>("InvoiceNumber")
                         .HasColumnType("int");
 
@@ -498,6 +501,9 @@ namespace HandyFix.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("HeardAbout")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
