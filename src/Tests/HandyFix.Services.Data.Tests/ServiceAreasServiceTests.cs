@@ -1,6 +1,7 @@
 ﻿namespace HandyFix.Services.Data.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -467,10 +468,13 @@
             Assert.Null(dbContext.ServiceAreas.Single(x => x.Id == area.Id).DiagramLabelSide);
         }
 
+        // The areas' districts and the 15-mile list together (PROJECT_STATE.md Section 3ek):
+        // RG1 is past the 15 miles and still taken because an area lists it, TW1 is taken with no
+        // area listing it, and KT6, on two areas and in the list, comes once.
         [Fact]
-        public async Task GetServedPostcodeDistrictsAsyncShouldGiveEveryAreasDistrictsOnceInOrder()
+        public async Task GetServedPostcodeDistrictsAsyncShouldGiveTheAreasAndThe15MileDistrictsOnceInOrder()
         {
-            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5, KT6", "KT1, KT6", null, string.Empty);
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5, KT6", "KT1, KT6, RG1", null, string.Empty);
             var service = new ServiceAreasService(
                 new EfDeletableEntityRepository<ServiceArea>(dbContext),
                 new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
@@ -478,17 +482,22 @@
                 Mock.Of<IPostcodeLocator>(),
                 Mock.Of<IDriveTimeCalculator>());
 
-            Assert.Equal(new[] { "KT1", "KT5", "KT6" }, await service.GetServedPostcodeDistrictsAsync());
+            IReadOnlyList<string> districts = await service.GetServedPostcodeDistrictsAsync();
+
+            Assert.Contains("RG1", districts);
+            Assert.Contains("TW1", districts);
+            Assert.Single(districts, d => d == "KT6");
+            Assert.Equal(districts.OrderBy(d => d), districts);
         }
 
         [Theory]
         [InlineData("KT5 8AB", true)]
-        [InlineData("kt11aa", true)]
-        [InlineData("KT9 2QN", false)]
+        [InlineData("rg11aa", true)]
+        [InlineData("TW1 3SX", true)]
         [InlineData("M1 1AE", false)]
-        public async Task IsPostcodeServedAsyncShouldAskWhetherSomeAreaListsTheDistrict(string postcode, bool expected)
+        public async Task IsPostcodeServedAsyncShouldAskWhetherAnAreaOrThe15MileListHasTheDistrict(string postcode, bool expected)
         {
-            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5, KT6", "KT1");
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5, KT6", "RG1");
             var service = new ServiceAreasService(
                 new EfDeletableEntityRepository<ServiceArea>(dbContext),
                 new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
@@ -499,10 +508,10 @@
             Assert.Equal(expected, await service.IsPostcodeServedAsync(postcode));
         }
 
-        // With no district on any area the check has nothing to go on. It is off, so an empty
-        // setup cannot turn every booking away.
+        // Twickenham and Richmond had no area page, so they could not book online (finding 12 of
+        // the SEO audit). The 15-mile list takes them with no area listing a district at all.
         [Fact]
-        public async Task IsPostcodeServedAsyncShouldAcceptEveryPostcodeWhenNoAreaListsADistrict()
+        public async Task IsPostcodeServedAsyncShouldTakeThe15MileDistrictsWhenNoAreaListsOne()
         {
             using ApplicationDbContext dbContext = ContextWithAreasCovering(null, string.Empty);
             var service = new ServiceAreasService(
@@ -512,14 +521,17 @@
                 Mock.Of<IPostcodeLocator>(),
                 Mock.Of<IDriveTimeCalculator>());
 
-            Assert.True(await service.IsPostcodeServedAsync("M1 1AE"));
+            Assert.True(await service.IsPostcodeServedAsync("TW1 3SX"));
+            Assert.True(await service.IsPostcodeServedAsync("TW9 1AA"));
+            Assert.False(await service.IsPostcodeServedAsync("M1 1AE"));
         }
 
-        // A deleted area's districts stop counting the moment it is gone.
+        // A deleted area's districts stop counting the moment it is gone. RG1 is past the 15
+        // miles, so only the area made it count.
         [Fact]
         public async Task IsPostcodeServedAsyncShouldNotCountADeletedAreasDistricts()
         {
-            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5", "KT9");
+            using ApplicationDbContext dbContext = ContextWithAreasCovering("KT5", "RG1");
             var service = new ServiceAreasService(
                 new EfDeletableEntityRepository<ServiceArea>(dbContext),
                 new EfDeletableEntityRepository<ServiceAreaFaq>(dbContext),
@@ -527,10 +539,10 @@
                 Mock.Of<IPostcodeLocator>(),
                 Mock.Of<IDriveTimeCalculator>());
 
-            Guid chessington = dbContext.ServiceAreas.Single(x => x.PostcodeDistricts == "KT9").Id;
-            await service.DeleteAsync(chessington);
+            Guid reading = dbContext.ServiceAreas.Single(x => x.PostcodeDistricts == "RG1").Id;
+            await service.DeleteAsync(reading);
 
-            Assert.False(await service.IsPostcodeServedAsync("KT9 2QN"));
+            Assert.False(await service.IsPostcodeServedAsync("RG1 1AA"));
             Assert.True(await service.IsPostcodeServedAsync("KT5 8AB"));
         }
 

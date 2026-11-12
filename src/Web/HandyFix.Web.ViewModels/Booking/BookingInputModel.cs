@@ -81,8 +81,8 @@
 
         public DateTime? SelectedDate { get; set; }
 
-        // The districts bookings are taken in, for the page's own check as the postcode is typed.
-        // Empty means no service area lists any, and then every postcode is accepted.
+        // The districts bookings are taken in, for the page's own check as the postcode is typed:
+        // every district within 15 miles of the base and any an area lists (Section 3ek).
         public IEnumerable<string> ServedPostcodeDistricts { get; set; } = new List<string>();
 
         // Set when the server turned the booking down for its postcode, so the page can show the

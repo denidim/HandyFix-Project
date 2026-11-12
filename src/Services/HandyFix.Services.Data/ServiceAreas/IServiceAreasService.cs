@@ -46,14 +46,14 @@
         Task SetHeroImageAsync(Guid areaId, IFormFile imageFile);
 
         /// <summary>
-        /// Every postcode district some area lists, each once, in order.
+        /// Every postcode district online booking takes, each once, in order: the ones the areas
+        /// list and every district within 15 miles of the base (PROJECT_STATE.md Section 3ek).
         /// </summary>
         Task<IReadOnlyList<string>> GetServedPostcodeDistrictsAsync();
 
         /// <summary>
-        /// Whether a booking can be taken for this postcode: its district is one some area lists.
-        /// True for any postcode when no area lists a district, so an empty setup cannot turn
-        /// every booking away.
+        /// Whether a booking can be taken for this postcode: its district is one some area lists,
+        /// or one within 15 miles of the base.
         /// </summary>
         Task<bool> IsPostcodeServedAsync(string postcode);
 
