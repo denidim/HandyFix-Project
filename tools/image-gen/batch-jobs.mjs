@@ -246,4 +246,61 @@ export const jobs = [
   area("guildford",
     "The Norman castle keep in Guildford's castle gardens, bright spring flower beds of tulips, " +
     "lawns and blossom trees, the town's rooftops beyond, bright spring sunshine."),
+
+  // ---- The 16 new towns (SEO item 4, 12 Nov 2026): 4 spring, 4 summer, 4 autumn, 4 winter ----
+  area("twickenham",
+    "The Thames embankment at Twickenham: a small arched footbridge crossing to a wooded island with " +
+    "boatyards, small boats moored along the bank, old riverside buildings with no signs or lettering " +
+    "and a square stone church tower beyond, willows, bright high-summer sunshine."),
+  area("richmond",
+    "The famous view from the top of Richmond Hill: the Thames winding in a wide bend through water " +
+    "meadows and woodland far below, a terrace of elegant Georgian houses along the hilltop, trees in " +
+    "rich autumn colour, bright autumn afternoon sunshine."),
+  area("st-margarets",
+    "A quiet residential avenue in St Margarets, Twickenham: tall Edwardian semi-detached houses with " +
+    "gables and bay windows, front gardens with low hedges, cherry trees in full pink blossom, bright " +
+    "spring morning sunshine."),
+  area("ham",
+    "Ham Common on a crisp frosty winter morning: a wide village green with a small pond, elegant " +
+    "Georgian houses around its edge, bare old oak trees, bright low sunshine and clear blue sky."),
+  area("teddington",
+    "Teddington Lock on the Thames: the weir with white water, a long narrow footbridge across the " +
+    "river, small pleasure boats waiting in the lock, riverside willows in fresh spring green, bright " +
+    "spring sunshine."),
+  area("molesey",
+    "Molesey Lock on the Thames on a crisp frosty winter morning: lock gates and a lock-keeper's " +
+    "cottage, the river sparkling, the red-brick Tudor chimneys of a great palace visible through " +
+    "bare trees across the water, bright clear winter sunshine."),
+  area("new-malden",
+    "A wide suburban avenue in New Malden: 1930s semi-detached houses with bay windows and tile-hung " +
+    "gables, neat front gardens, street trees in golden autumn colour, bright crisp autumn sunshine."),
+  area("ashtead",
+    "Ashtead Common: ancient pollarded oak trees in open woodland, a sunlit path winding between them, " +
+    "a carpet of spring bluebells, bright spring morning sunshine through fresh green leaves."),
+  area("cheam",
+    "Cheam village: a historic white weatherboarded timber-framed Tudor house on a corner, old " +
+    "cottages beside it, colourful summer flowers in front gardens, bright high-summer sunshine."),
+  area("tolworth",
+    "Open meadows by the little Hogsmill River near Tolworth: tall grass and wildflowers, hedgerows " +
+    "and trees along the water, a footpath through the fields, bright summer sunshine and blue sky."),
+  area("claygate",
+    "Claygate village in Surrey: a village green with a small white cricket pavilion, cottages and a " +
+    "church spire beyond, spring blossom trees and daffodils, bright spring sunshine."),
+  area("thames-ditton",
+    "The Thames at Thames Ditton: old white-painted riverside cottages with gardens running down to " +
+    "the water, small boats moored, the trees of a great park on the far bank in rich autumn colour, " +
+    "bright autumn sunshine."),
+  area("hersham",
+    "Hersham village green in Surrey: a wide green with big old trees in golden autumn colour, a few " +
+    "cottages and houses around its edge with no signs or lettering, bright autumn sunshine."),
+  area("hampton",
+    "Bushy Park near Hampton on a crisp frosty winter morning: a herd of deer grazing on open " +
+    "parkland under huge old trees, a long avenue of trees in the distance, bright low sunshine."),
+  area("morden",
+    "Morden Hall Park: the little River Wandle with a white wooden footbridge, an old water mill with " +
+    "a wooden wheel, a rose garden in full bloom, bright high-summer sunshine."),
+  area("raynes-park",
+    "A sloping street of Edwardian red-brick terraced houses near Raynes Park with white bay windows " +
+    "and tiled front paths, a light covering of snow on the roofs and gardens, bright clear winter " +
+    "sunshine."),
 ];
