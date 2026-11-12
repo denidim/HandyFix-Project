@@ -263,6 +263,7 @@
                     ? string.Empty
                     : EmailLayout.Button($"Pay {balance} Online (Card, Apple Pay, Google Pay)", paymentUrl)
                       + EmailLayout.Text($"<strong>How to pay:</strong> {EmailText.Encode(paymentDetails)}<br />Please give <strong>{number}</strong> as the reference."))
+                + ReviewRequest(invoice.IsPaid, this.settings.GoogleLeaveReviewUrl)
                 + EmailLayout.Text("Any questions about your invoice? Reply to this email or message us on WhatsApp.")
                 + EmailLayout.WhatsAppButton("Message Us on WhatsApp"));
 
@@ -282,6 +283,20 @@
                 subject,
                 body,
                 attachments: new[] { attachment });
+        }
+
+        // The Google review button, on the paid-in-full invoice only (PROJECT_STATE.md Section
+        // 3ei). Every customer whose invoice is paid gets it, without anyone choosing, so nobody
+        // is picked for being happy: Google forbids asking only some customers.
+        private static string ReviewRequest(bool isPaid, string reviewUrl)
+        {
+            if (!isPaid || string.IsNullOrWhiteSpace(reviewUrl))
+            {
+                return string.Empty;
+            }
+
+            return EmailLayout.Text("Happy with the work? A short Google review helps other homeowners find us.")
+                + EmailLayout.Button("Leave a Google Review", reviewUrl);
         }
 
         private static string CustomerName(Booking booking)

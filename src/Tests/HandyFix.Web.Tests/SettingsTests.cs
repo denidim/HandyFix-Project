@@ -48,6 +48,7 @@
             Assert.Equal("[STAGING]", email.SubjectPrefix);
             Assert.Equal("inbox@staging.example", email.AdminNotificationAddress);
             Assert.Equal("https://staging.example", email.SiteUrl);
+            Assert.Equal("https://g.page/r/example/review", email.GoogleLeaveReviewUrl);
 
             StripeOptions stripe = host.Services.GetRequiredService<IOptions<StripeOptions>>().Value;
             Assert.Equal("rk_test_example", stripe.SecretKey);
@@ -77,6 +78,9 @@
             Assert.Null(email.SubjectPrefix);
             Assert.Equal("info@plumbing-handyman-surrey.co.uk", email.AdminNotificationAddress);
             Assert.Equal("https://plumbing-handyman-surrey.co.uk", email.SiteUrl);
+
+            // The paid-in-full invoice email asks for a review on the live site (Section 3ei).
+            Assert.Equal("https://g.page/r/CRa4VR4BecsDEBM/review", email.GoogleLeaveReviewUrl);
         }
     }
 }

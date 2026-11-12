@@ -41,7 +41,12 @@
         // the live site's address.
         public string SiteUrl { get; set; } = GlobalConstants.SiteUrl;
 
-        // Each value from its own key. The keys sit in three sections, so they are named one by
+        // Google's form for leaving a review of the business, the same link the Reviews page's
+        // button opens. The paid-in-full invoice email carries it as a button (PROJECT_STATE.md
+        // Section 3ei); with no link set, the email has no button. Null when there is none.
+        public string GoogleLeaveReviewUrl { get; set; }
+
+        // Each value from its own key. The keys sit in four sections, so they are named one by
         // one rather than bound as a section. A key that is missing, empty or only spaces keeps
         // the default: a compose file passes an empty string for a value its .env leaves out.
         public void ReadFrom(IConfiguration configuration)
@@ -51,6 +56,7 @@
             this.AdminNotificationAddress = Read(configuration, "Admin:NotificationEmail", DefaultAdminNotificationAddress);
             this.SubjectPrefix = Read(configuration, "Email:SubjectPrefix", null);
             this.SiteUrl = Read(configuration, "Site:PublicUrl", GlobalConstants.SiteUrl).TrimEnd('/');
+            this.GoogleLeaveReviewUrl = Read(configuration, "Business:GoogleLeaveReviewUrl", null);
         }
 
         private static string Read(IConfiguration configuration, string key, string fallback)

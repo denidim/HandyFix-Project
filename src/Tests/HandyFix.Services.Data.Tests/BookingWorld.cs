@@ -18,6 +18,7 @@
 
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging.Abstractions;
     using Microsoft.Extensions.Options;
@@ -34,7 +35,7 @@
 
         // With a Stripe key the payments service goes to Stripe (the stand-in, here) as the live
         // site does; without one, and in Development, it uses the pretend payment.
-        public BookingWorld(string stripeSecretKey = null, string environmentName = null)
+        public BookingWorld(string stripeSecretKey = null, string environmentName = null, IConfiguration emailConfiguration = null)
         {
             this.DbContext = new ApplicationDbContext(
                 new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -80,7 +81,7 @@
             var slotRepo = new EfDeletableEntityRepository<AvailabilitySlot>(this.DbContext);
 
             this.Availability = new AvailabilityService(slotRepo);
-            var bookingEmails = TestEmails.Booking(this.EmailSender.Object);
+            var bookingEmails = TestEmails.Booking(this.EmailSender.Object, emailConfiguration);
 
             this.Invoices = new InvoicesService(
                 bookingRepo,
