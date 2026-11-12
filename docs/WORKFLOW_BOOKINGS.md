@@ -236,6 +236,7 @@ Contact and Join Our Team forms use the same attributes.
 | Address | the street and town, 5 to 280 characters |
 | Postcode | a whole UK postcode, in a box of its own (`[UkPostcode]`) |
 | Description | at least 20 characters, and not mostly web links (`[NotMostlyLinks]`, server only) |
+| How did you hear about us? | optional, a menu under the postcode; left alone it is "Not said". Optional on purpose: a required question just before the deposit could lose the booking (`PROJECT_STATE.md` Section 3ej) |
 
 A pattern has to mean the same in .NET and in JavaScript: no named groups, no look-behind, and
 `[0-9]` instead of `\d`. `FormsWebTests` checks that each field's pattern reaches the page.
@@ -323,6 +324,7 @@ For a job that did not come through the website: by phone, WhatsApp, an enquiry 
 | Day, time | required: a job has a day and an hour |
 | Came from | Phone, WhatsApp, Enquiry, Agency or Other. Never "Website": the site makes those itself |
 | Last name, email, address, service, what the job is | optional |
+| How they heard about us | optional, the same answers as the website's menu, or "Not said". Ask on the phone |
 
 What makes it different from a website booking, each on purpose:
 
@@ -343,11 +345,19 @@ What makes it different from a website booking, each on purpose:
   no price until the final one is typed in.
 
 **From an enquiry**: the enquiry's page has **Make this a job**, which opens the form with the
-name, phone number, email and message filled in and "Enquiry" picked. An enquiry has one name box;
+name, phone number, email, message and the visitor's answer to "How did you hear about us?" filled
+in and "Enquiry" picked. An enquiry has one name box;
 its first word is taken as the first name. The enquiry itself stays where it is.
 
 A box typed wrongly is put right afterwards with **Edit the Details** on the job's page (see
 "Editing the details" below); the day and time, with **Move**.
+
+**How customers heard about us.** Every job keeps its answer (`Booking.HeardAbout`), shown on the
+job's page under "Came From". *Not the same thing:* "Came from" is the way the job reached us (the
+website, the phone), "Heard about us from" is what made the customer look for us. The dashboard's
+table "How Customers Heard About Us, Last 30 Days" counts the answers of every job made in that
+time, cancelled ones too, each answer with its line, a nought included. An enquiry's answer is
+counted once it is made a job.
 
 **Code:** `JobsService.CreateWrittenInJobAsync`, `JobInputModel`,
 `BookingsController.Create`, `Areas/Administration/Views/Bookings/Create.cshtml`.

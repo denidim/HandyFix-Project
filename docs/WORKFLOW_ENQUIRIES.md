@@ -41,6 +41,7 @@ starts with `[Job Application]`, so applications reach this list without a table
 | Phone Number | required, a UK mobile or landline (`[UkPhone]`), ≤20 chars |
 | Message | required, 10–2900 chars on the form (3000 in the column, which leaves room for the category prefix), and not mostly web links (`[NotMostlyLinks]`) |
 | Images | optional, uploaded to Cloudflare R2 (see below) |
+| How did you hear about us? | optional, a menu; left alone it is "Not said". Shown on the enquiry's page (`PROJECT_STATE.md` Section 3ej) |
 
 The rules are the shared attributes in `HandyFix.Web.ViewModels/Validation/`, the same ones the
 booking form uses; `WORKFLOW_BOOKINGS.md` Step 2 says how they reach the browser.
@@ -101,8 +102,9 @@ No approve/respond/mark-read action exists. Responding to an enquiry happens out
 entirely (phone/email, using the contact details on the row).
 
 **An enquiry that turns into work becomes a job.** The enquiry's page has **Make this a job**,
-which opens the admin's "Write a job in" form with the name, phone number, email and message
-already filled in and "Enquiry" picked as where it came from. The admin adds the day and the
+which opens the admin's "Write a job in" form with the name, phone number, email, message and the
+answer to "How did you hear about us?" already filled in and "Enquiry" picked as where it came
+from. The admin adds the day and the
 time. The enquiry itself is not changed or removed. `WORKFLOW_BOOKINGS.md` has the rest ("Step 2,
 the other way").
 
