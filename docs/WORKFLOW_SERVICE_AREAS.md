@@ -86,12 +86,19 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
 | Coverage diagram | `_AreaCoverageMap.cshtml`, from the area's place (below) |
 | Footer "Service Areas" column | `FooterServiceAreasViewComponent` |
 | Pricing & Category local-area badges | `ServicesController` |
-| `LocalBusiness` / `FAQPage` / `BreadcrumbList` JSON-LD | `Areas/Details.cshtml` |
+| `Service` (provider: the shared business record) / `FAQPage` / `BreadcrumbList` JSON-LD | `Areas/Details.cshtml` |
 | `sitemap.xml` | `SeoController.Sitemap` (generated, never static) |
 | Which postcodes the booking page accepts | `IServiceAreasService.IsPostcodeServedAsync` |
 
 ### Things worth knowing
 
+- **The business record's towns are not the area pages.** Every page writes one record of the
+  business for Google (`IBusinessRecord`: type `Plumber`, open 24 hours, a link to the Google
+  profile), and its `areaServed` is the fixed list in `HandyFix.Common/ServiceAreaTowns.cs`: the
+  20 places of the Google Business Profile's service area, so the site and the profile name the
+  same places. The service pages' "Do you cover my location?" answer reads the same list. Adding a
+  town in the admin gives it a page but does not add it to that list: change the list together
+  with the profile (`PROJECT_STATE.md` Section 3eg).
 - **The slug is made once and never regenerated.** Renaming a town keeps its page address, unlike
   a service, whose slug follows its name. This is deliberate: the slug is load-bearing in two
   independent places (the public URL and the file name of a picture that came with the site), so
