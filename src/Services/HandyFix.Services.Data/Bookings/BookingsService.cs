@@ -13,6 +13,7 @@
     using HandyFix.Services.Data.Common;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.Administration.Dashboard;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Validation;
 
@@ -112,6 +113,7 @@
                 TotalAmount = totalAmount,
                 DepositAmount = depositAmount,
                 Source = BookingSource.Website,
+                HeardAbout = HeardAboutText.Checked(model.HeardAbout),
 
                 // The job's own copy of its day and hour. It keeps them when it gives the slot
                 // back, so a cancelled or abandoned booking still says when it was for.
@@ -328,6 +330,26 @@
         public async Task<int> GetPendingCountAsync()
         {
             return await this.bookingRepository.All().CountAsync(x => x.Status.Name == BookingStatusNames.Pending);
+        }
+
+        public async Task<IReadOnlyList<HeardAboutCountViewModel>> GetHeardAboutCountsAsync(DateTime since)
+        {
+            var counts = await this.bookingRepository.All()
+                .Where(x => x.CreatedOn >= since)
+                .GroupBy(x => x.HeardAbout)
+                .Select(x => new { Answer = x.Key, Count = x.Count() })
+                .ToListAsync();
+
+            // Every answer has its line, a nought included: a channel that brings nobody is worth
+            // seeing too. "Not said" comes last.
+            return HeardAboutText.Answers
+                .Append(HeardAbout.NotSaid)
+                .Select(answer => new HeardAboutCountViewModel
+                {
+                    Label = HeardAboutText.Label(answer),
+                    Count = counts.Where(x => x.Answer == answer).Sum(x => x.Count),
+                })
+                .ToList();
         }
 
         public BookingSummaryStats GetSummaryStats(IEnumerable<BookingDetailsViewModel> bookings)

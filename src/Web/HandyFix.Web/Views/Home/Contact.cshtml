@@ -104,6 +104,18 @@
                 <span asp-validation-for="Images" class="validation-error"></span>
             </div>
 
+            <!-- How did you hear about us? Optional, as on the booking form (PROJECT_STATE Section 3ej) -->
+            <div class="form-field">
+                <label class="form-label fw-semibold" asp-for="HeardAbout">How did you hear about us?</label>
+                <select asp-for="HeardAbout" class="form-control">
+                    <option value="NotSaid">Please choose (optional)</option>
+                    @foreach (var answer in HandyFix.Data.Models.HeardAboutText.Answers)
+                    {
+                        <option value="@answer">@HandyFix.Data.Models.HeardAboutText.Label(answer)</option>
+                    }
+                </select>
+            </div>
+
             <partial name="_FormGuard" model="@FormNames.Contact" />
 
             <!-- Submit Button -->

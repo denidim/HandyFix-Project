@@ -11,6 +11,8 @@
     using HandyFix.Services.Data.Invoices;
     using HandyFix.Web.ViewModels.Administration.Invoices;
 
+    using Microsoft.Extensions.Configuration;
+
     using Xunit;
 
     // A job's invoice: one number per job, the deposit and every later payment taken off the
@@ -74,6 +76,45 @@
             Assert.Equal(110m, invoice.PaidInCash);
             Assert.Equal("Paid", invoice.StatusOn(invoice.DueOn.AddDays(10)));
             Assert.Equal(new[] { "Booking deposit, paid online by card", "Paid in cash" }, invoice.Payments.Select(x => x.Description));
+        }
+
+        // Every customer whose invoice is paid in full is asked for a Google review, by a button
+        // in that email; nobody else is, and with no review link set nobody is (Section 3ei).
+        [Fact]
+        public async Task OnlyThePaidInFullInvoiceAsksForAGoogleReview()
+        {
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string> { ["Business:GoogleLeaveReviewUrl"] = "https://g.page/r/example/review" })
+                .Build();
+            using var world = new BookingWorld(emailConfiguration: configuration);
+            Booking booking = await DoneBookingAsync(world, 160m);
+            List<SentEmail> sent = world.CaptureEmails();
+
+            await world.Invoices.EmailAsync(booking.Id, null);
+            await world.Payments.AddPaymentAsync(booking.Id, 110m, PaymentMethods.Cash);
+
+            Assert.Equal(2, sent.Count);
+            Assert.DoesNotContain("Leave a Google Review", sent[0].WhatIsRead());
+            Assert.DoesNotContain("g.page/r/example/review", sent[0].Body);
+            Assert.Contains("Paid in Full", sent[1].WhatIsRead());
+            Assert.Contains("Happy with the work? A short Google review helps other homeowners find us.", sent[1].WhatIsRead());
+            Assert.Contains("Leave a Google Review", sent[1].WhatIsRead());
+            Assert.Contains("href=\"https://g.page/r/example/review\"", sent[1].Body);
+        }
+
+        [Fact]
+        public async Task WithNoReviewLinkThePaidInvoiceHasNoReviewButton()
+        {
+            using var world = new BookingWorld();
+            Booking booking = await DoneBookingAsync(world, 160m);
+            await world.Invoices.MakeAsync(booking.Id, null);
+            List<SentEmail> sent = world.CaptureEmails();
+
+            await world.Payments.AddPaymentAsync(booking.Id, 110m, PaymentMethods.Cash);
+
+            SentEmail paid = Assert.Single(sent);
+            Assert.Contains("Paid in Full", paid.WhatIsRead());
+            Assert.DoesNotContain("Leave a Google Review", paid.WhatIsRead());
         }
 
         [Fact]

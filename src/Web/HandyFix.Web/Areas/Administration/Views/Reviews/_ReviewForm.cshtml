@@ -1,0 +1,76 @@
+@model HandyFix.Web.ViewModels.Reviews.ReviewInputModel
+@{
+    var action = Model.IsNew ? "Create" : "Edit";
+    var submitLabel = Model.IsNew ? "Add Review" : "Update Review";
+}
+
+<div class="rounded-xl shadow-sm p-5 p-md-5 admin-card">
+    <form asp-area="Administration" asp-controller="Reviews" asp-action="@action" method="post" class="d-flex flex-column gap-5">
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="row gy-4">
+            <div class="col-md-6 form-group">
+                <label asp-for="CustomerName" class="form-label font-label-sm text-on-surface-variant mb-2">Name</label>
+                <input asp-for="CustomerName" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" placeholder="Sarah K." required />
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">The first name and the first letter of the surname, as on Google.</span>
+                <span asp-validation-for="CustomerName" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 form-group">
+                <label asp-for="ReviewedOn" class="form-label font-label-sm text-on-surface-variant mb-2">Date on Google</label>
+                <input asp-for="ReviewedOn" class="form-control py-3 admin-form-control form-pad-standard" type="date" required />
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">The website shows the month and year only.</span>
+                <span asp-validation-for="ReviewedOn" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="row gy-4">
+            <div class="col-md-6 form-group">
+                <label asp-for="Town" class="form-label font-label-sm text-on-surface-variant mb-2">Town (optional)</label>
+                <input asp-for="Town" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" list="review-towns" autocomplete="off" />
+                <datalist id="review-towns">
+                    @foreach (var town in Model.TownSuggestions)
+                    {
+                        <option value="@town"></option>
+                    }
+                </datalist>
+                <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Pick one of our towns and the review also shows on that town's page.</span>
+                <span asp-validation-for="Town" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 form-group">
+                <label asp-for="JobDone" class="form-label font-label-sm text-on-surface-variant mb-2">Job Done (optional)</label>
+                <input asp-for="JobDone" class="form-control py-3 admin-form-control form-pad-standard" maxlength="100" placeholder="Boiler service" />
+                <span asp-validation-for="JobDone" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="row gy-4">
+            <div class="col-md-6 form-group">
+                <label asp-for="Rating" class="form-label font-label-sm text-on-surface-variant mb-2">Stars</label>
+                <select asp-for="Rating" class="form-control py-3 admin-form-control form-pad-standard" required>
+                    @for (int stars = 5; stars >= 1; stars--)
+                    {
+                        <option value="@stars" selected="@(Model.Rating == stars)">@stars @(stars == 1 ? "star" : "stars")</option>
+                    }
+                </select>
+                <span asp-validation-for="Rating" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Comment" class="form-label font-label-sm text-on-surface-variant mb-2">Review Text</label>
+            <textarea asp-for="Comment" class="form-control py-3 admin-form-control form-pad-standard" rows="7" maxlength="4000" required></textarea>
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Copied from Google word for word, without changes.</span>
+            <span asp-validation-for="Comment" class="text-danger small"></span>
+        </div>
+
+        <div class="pt-4 d-flex flex-column flex-md-row align-items-center justify-content-end gap-3 form-actions-row">
+            <a asp-area="Administration" asp-controller="Reviews" asp-action="Index" class="btn btn-outline font-button-text admin-btn-outline btn-py3-px8">Cancel</a>
+            <button class="btn btn-primary font-button-text d-flex align-items-center justify-content-center gap-2 rounded-lg btn-py3-px8" type="submit">
+                <span class="material-symbols-outlined">save</span>
+                <span>@submitLabel</span>
+            </button>
+        </div>
+    </form>
+</div>

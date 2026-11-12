@@ -26,7 +26,6 @@
                 builder.ConfigureAppConfiguration((context, configuration) => configuration.AddInMemoryCollection(
                     new Dictionary<string, string>
                     {
-                        ["Business:ShowOnSiteReviews"] = "true",
                         ["Business:GoogleReviewsUrl"] = "https://g.page/r/example",
                         ["Business:GoogleLeaveReviewUrl"] = "https://g.page/r/example/review",
                         ["Email:BookingsFromAddress"] = "hello@staging.example",
@@ -40,7 +39,6 @@
                     })));
 
             BusinessOptions business = host.Services.GetRequiredService<IOptions<BusinessOptions>>().Value;
-            Assert.True(business.ShowOnSiteReviews);
             Assert.Equal("https://g.page/r/example", business.GoogleReviewsUrl);
             Assert.Equal("https://g.page/r/example/review", business.GoogleLeaveReviewUrl);
 
@@ -50,6 +48,7 @@
             Assert.Equal("[STAGING]", email.SubjectPrefix);
             Assert.Equal("inbox@staging.example", email.AdminNotificationAddress);
             Assert.Equal("https://staging.example", email.SiteUrl);
+            Assert.Equal("https://g.page/r/example/review", email.GoogleLeaveReviewUrl);
 
             StripeOptions stripe = host.Services.GetRequiredService<IOptions<StripeOptions>>().Value;
             Assert.Equal("rk_test_example", stripe.SecretKey);
@@ -72,7 +71,6 @@
                     })));
 
             BusinessOptions business = host.Services.GetRequiredService<IOptions<BusinessOptions>>().Value;
-            Assert.False(business.ShowOnSiteReviews);
             Assert.Equal("https://g.page/r/CRa4VR4BecsDEBM", business.GoogleReviewsUrl);
             Assert.Equal("https://g.page/r/CRa4VR4BecsDEBM/review", business.GoogleLeaveReviewUrl);
 
@@ -80,6 +78,9 @@
             Assert.Null(email.SubjectPrefix);
             Assert.Equal("info@plumbing-handyman-surrey.co.uk", email.AdminNotificationAddress);
             Assert.Equal("https://plumbing-handyman-surrey.co.uk", email.SiteUrl);
+
+            // The paid-in-full invoice email asks for a review on the live site (Section 3ei).
+            Assert.Equal("https://g.page/r/CRa4VR4BecsDEBM/review", email.GoogleLeaveReviewUrl);
         }
     }
 }

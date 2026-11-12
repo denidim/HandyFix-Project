@@ -35,3 +35,17 @@
         <span asp-validation-for="Email" class="text-danger small"></span>
     </div>
 </div>
+
+<div class="row gy-4">
+    <div class="col-md-6 form-group">
+        <label asp-for="HeardAbout" class="form-label font-label-sm text-on-surface-variant mb-2">How They Heard About Us</label>
+        <select asp-for="HeardAbout" class="form-control py-3 admin-form-control form-pad-standard">
+            <option value="NotSaid">Not said</option>
+            @foreach (var answer in HandyFix.Data.Models.HeardAboutText.Answers)
+            {
+                <option value="@answer">@HandyFix.Data.Models.HeardAboutText.Label(answer)</option>
+            }
+        </select>
+        <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">Ask on the phone: "How did you hear about us?" The Dashboard counts the answers.</span>
+    </div>
+</div>

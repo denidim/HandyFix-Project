@@ -37,8 +37,11 @@
             <span class="material-symbols-outlined" aria-hidden="true">mail</span>
             <span class="admin-nav-label">Enquiries</span>
         </a>
-        @* No "Reviews" link: no review can reach the site until the Google import is built
-           (PROJECT_STATE.md Sections 3n and 3ch). The page is still at /Administration/Reviews. *@
+        @* Back since Section 3eh: the managers type each new Google review in here. *@
+        <a class="admin-nav-link" asp-area="Administration" asp-controller="Reviews" asp-action="Index" title="Reviews">
+            <span class="material-symbols-outlined" aria-hidden="true">rate_review</span>
+            <span class="admin-nav-label">Reviews</span>
+        </a>
         <a class="admin-nav-link" asp-area="Administration" asp-controller="Account" asp-action="Index" title="Account">
             <span class="material-symbols-outlined" aria-hidden="true">manage_accounts</span>
             <span class="admin-nav-label">Account</span>

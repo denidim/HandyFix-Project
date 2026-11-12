@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
+    using HandyFix.Data.Models;
     using HandyFix.Web.ViewModels.Validation;
 
     using Microsoft.AspNetCore.Http;
@@ -39,6 +40,9 @@
         public string Category { get; set; }
 
         public List<IFormFile> Images { get; set; } = new List<IFormFile>();
+
+        // Optional, as on the booking form; left empty it is "Not said" (Section 3ej).
+        public HeardAbout HeardAbout { get; set; }
 
         // Set by the server, never read from the form: how many attached photos could not be
         // put into storage, so the notice to the company can say they were lost.

@@ -11,9 +11,8 @@
 
         public IEnumerable<ServiceViewModel> RelatedServices { get; set; }
 
+        // This town's reviews only (Section 3eh).
         public IEnumerable<ReviewViewModel> Reviews { get; set; }
-
-        public bool ShowOnSiteReviews { get; set; }
 
         /// <summary>
         /// The area's picture: the one the admin uploaded, else the one that came with the site;

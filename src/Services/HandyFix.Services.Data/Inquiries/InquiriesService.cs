@@ -58,6 +58,7 @@
                 Email = model.Email,
                 PhoneNumber = model.PhoneNumber,
                 Message = BuildMessage(model),
+                HeardAbout = HeardAboutText.Checked(model.HeardAbout),
             };
 
             await this.inquiryRepository.AddAsync(inquiry);

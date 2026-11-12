@@ -48,6 +48,8 @@
                 TotalRevenue = await this.paymentsService.GetTotalRevenueAsync(),
                 EmailsNotSent = await this.emailsNotSentService.GetSinceAsync<EmailNotSentViewModel>(
                     DateTime.UtcNow.AddDays(-IndexViewModel.EmailsNotSentDays)),
+                HeardAbout = await this.bookingsService.GetHeardAboutCountsAsync(
+                    DateTime.UtcNow.AddDays(-IndexViewModel.HeardAboutDays)),
             };
 
             return this.View(viewModel);

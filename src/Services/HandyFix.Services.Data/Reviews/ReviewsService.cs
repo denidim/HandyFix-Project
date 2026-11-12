@@ -41,11 +41,57 @@
             }
         }
 
-        public async Task<IEnumerable<T>> GetLatestApprovedAsync<T>(int count)
+        public async Task<T> GetByIdAsync<T>(Guid id)
         {
             return await this.reviewRepository.All()
-                .Where(x => x.IsApproved)
-                .OrderByDescending(x => x.CreatedOn)
+                .Where(x => x.Id == id)
+                .To<T>()
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Guid> CreateAsync(ReviewInputModel input)
+        {
+            var review = new Review { IsApproved = true };
+            Fill(review, input);
+
+            await this.reviewRepository.AddAsync(review);
+            await this.reviewRepository.SaveChangesAsync();
+
+            return review.Id;
+        }
+
+        public async Task<bool> UpdateAsync(Guid id, ReviewInputModel input)
+        {
+            Review review = await this.reviewRepository.All().FirstOrDefaultAsync(x => x.Id == id);
+            if (review == null)
+            {
+                return false;
+            }
+
+            Fill(review, input);
+            await this.reviewRepository.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<IEnumerable<T>> GetLatestApprovedAsync<T>(int count)
+        {
+            return await NewestFirst(this.reviewRepository.All().Where(x => x.IsApproved))
+                .Take(count)
+                .To<T>()
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> GetLatestApprovedInTownAsync<T>(string town, int count)
+        {
+            if (string.IsNullOrWhiteSpace(town))
+            {
+                return new List<T>();
+            }
+
+            // Lower-cased on both sides: the live database ignores case, Sqlite in the tests does not.
+            var townLower = town.Trim().ToLower();
+            return await NewestFirst(this.reviewRepository.All().Where(x => x.IsApproved && x.Town.ToLower() == townLower))
                 .Take(count)
                 .To<T>()
                 .ToListAsync();
@@ -76,8 +122,8 @@
                     ? query.OrderByDescending(x => x.Rating)
                     : query.OrderBy(x => x.Rating),
                 _ => descending
-                    ? query.OrderByDescending(x => x.CreatedOn)
-                    : query.OrderBy(x => x.CreatedOn),
+                    ? query.OrderByDescending(x => x.ReviewedOn ?? x.CreatedOn)
+                    : query.OrderBy(x => x.ReviewedOn ?? x.CreatedOn),
             };
 
             return await query.To<T>().ToListAsync();
@@ -97,6 +143,27 @@
                 TotalPublished = reviewList.Count(r => r.IsApproved),
                 ApprovalRate = reviewList.Any() ? (reviewList.Count(r => r.IsApproved) * 100) / reviewList.Count : 0,
             };
+        }
+
+        // A review saved before Section 3eh has no Google date; its own save date stands in.
+        private static IQueryable<Review> NewestFirst(IQueryable<Review> query)
+        {
+            return query.OrderByDescending(x => x.ReviewedOn ?? x.CreatedOn);
+        }
+
+        private static void Fill(Review review, ReviewInputModel input)
+        {
+            review.CustomerName = input.CustomerName.Trim();
+            review.Town = NullIfBlank(input.Town);
+            review.JobDone = NullIfBlank(input.JobDone);
+            review.Rating = input.Rating;
+            review.Comment = input.Comment.Trim();
+            review.ReviewedOn = input.ReviewedOn?.Date;
+        }
+
+        private static string NullIfBlank(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
     }
 }

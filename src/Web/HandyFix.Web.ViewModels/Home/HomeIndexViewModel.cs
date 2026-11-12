@@ -16,8 +16,6 @@
 
         public IEnumerable<ReviewViewModel> SliderReviews { get; set; }
 
-        public bool ShowOnSiteReviews { get; set; }
-
         /// <summary>
         /// Each card picture on the page with the address of its middle copy, or null when it has
         /// none: the three divisions' and the popular services'. The page used to look each one up

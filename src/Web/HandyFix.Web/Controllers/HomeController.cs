@@ -80,19 +80,15 @@
             IEnumerable<ServiceViewModel> services = await this.servicesService.GetAllAsync<ServiceViewModel>();
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
 
-            // Approved Reviews for slider — hidden on-site until the Google Business Profile
-            // import ships, see Business:ShowOnSiteReviews.
-            var showOnSiteReviews = this.business.ShowOnSiteReviews;
-            IEnumerable<ReviewViewModel> sliderReviews = showOnSiteReviews
-                ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6)
-                : Enumerable.Empty<ReviewViewModel>();
+            // The six newest of our Google reviews, typed in by the admin (Section 3eh). With none
+            // the page leaves the section out.
+            IEnumerable<ReviewViewModel> sliderReviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(6);
 
             var model = new HomeIndexViewModel
             {
                 Services = services,
                 Categories = categories,
                 SliderReviews = sliderReviews,
-                ShowOnSiteReviews = showOnSiteReviews,
                 PopularServices = PickPopularServices(services),
             };
 
@@ -273,17 +269,13 @@
         [Route("Reviews")]
         public async Task<IActionResult> Reviews()
         {
-            var showOnSiteReviews = this.business.ShowOnSiteReviews;
-            IEnumerable<ReviewViewModel> approvedReviews = showOnSiteReviews
-                ? await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(50)
-                : Enumerable.Empty<ReviewViewModel>();
+            IEnumerable<ReviewViewModel> approvedReviews = await this.reviewsService.GetLatestApprovedAsync<ReviewViewModel>(50);
 
             var model = new ReviewsListViewModel
             {
                 Reviews = approvedReviews,
                 GoogleReviewsUrl = this.business.GoogleReviewsUrl,
                 GoogleLeaveReviewUrl = this.business.GoogleLeaveReviewUrl,
-                ShowOnSiteReviews = showOnSiteReviews,
             };
 
             this.SetPageMeta(
