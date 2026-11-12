@@ -3922,7 +3922,7 @@ The third website item of the SEO plan, with 3ei and 3ej (one release). `/Review
 - **Each card**: the initials ("Sarah K." gives SK), the name, "{Town} · {Job}", the stars, the text with its paragraphs, and "Google review, November 2026". *Why the month only:* Google shows "2 weeks ago", not a day.
 - **No review data for search engines**: no `Review`, `aggregateRating` or `ratingValue` in any page's structured data. Google ignores or penalises stars a business serves about itself; the stars on the cards are pictures for people.
 - **Found and fixed on the way**: the cards' and the admin list's stars were drawn empty whatever the rating (`icon-fill` loses to the outlined icon class, which the icon stylesheet sets later); they now use `material-symbols-filled`, as the home page does. The home page section's intro line, "homeowners across Cobham, Esher, and Epsom", now reads "Real Google reviews from homeowners across Surrey and South London.", and its empty "No reviews yet" line is gone with the section.
-- **The first six reviews** go in on the live site after the release, in Chrome (SEO plan step 26).
+- **The first reviews** went in on the live site the same evening, in Chrome, after the release (PR #98): five of the profile's six Google reviews, word for word, with the town and the job where the review names them (Banstead, Surbiton, Worcester Park & Ewell). A review written by someone from the business is not shown on the site. Checked on the live site: five cards on `/Reviews` and the home page, one on each of those three towns' pages, none on Cobham's, no review data.
 
 ## 3ei. "Leave a Google Review" in the Paid-in-Full Invoice Email (2026-11-12)
 
