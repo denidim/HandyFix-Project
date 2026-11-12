@@ -3967,6 +3967,27 @@ Until now online booking took only the postcode districts the area pages list, s
 
 ---
 
+## 3el. A Town's Page Shows Its Own Four Services, in Short (2026-11-12)
+
+The area pages were measured against each other: each shared 71% to 78% of its text with the rest. The town's own text was not the cause, it is two sentences and differs on every page. The cause was the block under it: every town showed the same four services (the first two plumbing and the first two handyman), each with its whole description, so the boiler's 240 words stood on every area page, close to half of it. No card led to a service's page either; the name was plain text and the button went to the booking.
+
+- **`AreaServices`** (in `Presentation`) picks a town's four from its slug: a number worked out from the slug's letters chooses two neighbours in the plumbing list and two in the handyman list. *Why worked out and not chosen in the admin panel:* a choice per town needs a new screen, a new table and somebody to keep it right; this way a town the owner adds gets its own four with no step at all. *What it costs:* the four are different for each town, not selected for it, and adding a service, switching one off or moving one in its category's order changes what several towns show. *Why not `string.GetHashCode()`:* .NET gives the same text a different number in every run, so each restart of the site would deal every town new services, and a search engine has to find the same page each time it comes.
+- **`Summaries`** cuts a description down for the card: the first sentence, and the second with it when the first is under 60 characters ("Not sure which service you need?" says nothing alone). *Why not a short-text field on the service:* the short texts are written when the service pages get their own text; a field added now would be filled twice.
+- **The card** (`_PricingCard`, `PricingCardViewModel.DetailsUrl`): on an area page the service's name is a link to its own page and the picture goes there too; the button books as before. The Pricing page and a service page's related cards pass no such address and are unchanged.
+- **The heading above the cards** is "Services in {Town}". "Popular Services" was a claim the pick cannot back.
+- **The title and the main heading** are "Plumber & Handyman in {Town}", where they were "Handyman & Plumbing in {Town}": "plumber" is the word people type, and no area title had it.
+- **The town's two texts are drawn in paragraphs** (`Paragraphs.Of`, as on a service page): a blank line in the admin's box starts a new one. Today's texts have none and look the same.
+- `WORKFLOW_SERVICE_AREAS.md` describes the cards and the paragraphs. *Not in this section:* the towns' texts themselves and the pages for the new towns, which come next.
+
+### Verified
+
+- **Build** 0 warnings, 0 errors; **tests** 1239/1239 (452 + 787). New: `AreaServicesTests` (a town's four are pinned for two slugs, so a pick that changed between runs would fail; no two of the 21 towns share a set; the short text for nine descriptions) and `AreaServiceCardsWebTests` (each card leads to its service's page; two towns differ; no area page carries a whole description or the boiler's third sentence; the title and heading; the Pricing page's cards as they were; a blank line gives a new paragraph).
+- **In the browser, on a local copy** (36 checks): Surbiton, Esher and Cobham each show their own four, two plumbing then two handyman, the same on a second visit; every name and picture leads to the service's page and a click opens it; Book Now still opens the booking with the service; the Pricing page keeps plain names; no sideways scroll at 1280 or 390 pixels.
+- **Measured**: five town pages shared 71% to 77% of their text with each other before (live) and 33% to 41% after (local), at 254 to 320 words where they were 522 to 578.
+- **Staging** was not looked at before the merge, on the developer's decision: the change is to what a page shows, with nothing new in the database or the forms, and the deploys to staging and to the live server each run the build and the full test suite first.
+
+---
+
 ## 4. Current Standing & Remaining Roadmap
 
 ### Code Quality Sprints — from the audit of 2026-11-06
