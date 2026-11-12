@@ -57,6 +57,13 @@
             Assert.Equal(60, boiler.EstimatedDurationMinutes);
             Assert.True(boiler.IsQuoteOnly);
             Assert.Equal(9, this.dbContext.Services.Count(s => s.IsQuoteOnly));
+
+            // Emergency plumbing is the one service taken by phone at any hour, at the emergency rate
+            // (PROJECT_STATE Section 3eg).
+            Service emergency = this.dbContext.Services.Single(s => s.IsEmergency);
+            Assert.Equal("emergency-plumbing", emergency.Slug);
+            Assert.Equal(150.00m, emergency.BasePrice);
+            Assert.False(emergency.IsQuoteOnly);
         }
 
         // An admin deleting a seeded service used to stop the site from starting. The delete is a

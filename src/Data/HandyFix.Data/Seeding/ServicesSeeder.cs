@@ -33,7 +33,7 @@
             var services = new[]
             {
                 // Plumbing Services
-                new { Slug = "emergency-plumbing", Name = "Emergency Plumbing", Description = "Urgent response for burst pipes, flooding, or critical plumbing failures across South London.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
+                new { Slug = "emergency-plumbing", Name = "Emergency Plumbing", Description = "Urgent response for burst pipes, flooding, or critical plumbing failures across South London.", Price = 150.00m, Duration = 60, CategoryId = plumbingCategory.Id },
                 new { Slug = "leak-repairs", Name = "Leak Repairs", Description = "Fixing leaking pipes, joints and fittings under sinks and around baths, toilets and radiators.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
                 new { Slug = "tap-repairs", Name = "Tap Repairs", Description = "Fixing dripping taps, replacing seals, cartridges, or installing brand new basin mixers.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
                 new { Slug = "toilet-repairs", Name = "Toilet Repairs", Description = "Repairing running toilets, faulty flush valves, fill mechanisms, or toilet leaks.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
@@ -110,6 +110,7 @@
                         IsPopular = popular.Contains(item.Slug),
                         IsGasSafeWork = gasSafeWork.Contains(item.Slug),
                         IsQuoteOnly = item.CategoryId == smallBuildingCategory.Id || gasSafeWork.Contains(item.Slug),
+                        IsEmergency = item.Slug == "emergency-plumbing",
                     });
                 }
 

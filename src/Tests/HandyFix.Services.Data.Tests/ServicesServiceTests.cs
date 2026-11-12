@@ -41,7 +41,7 @@
             await dbContext.SaveChangesAsync();
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.CreateAsync("Leaky Pipe Repair", "Repairing leaky pipes quickly", 60.00m, 45, category.Id, 7, true, true);
+            await service.CreateAsync("Leaky Pipe Repair", "Repairing leaky pipes quickly", 60.00m, 45, category.Id, 7, true, true, true);
 
             Assert.Equal(1, dbContext.Services.Count());
             var created = dbContext.Services.First();
@@ -52,6 +52,7 @@
             Assert.Equal(7, created.DisplayOrder);
             Assert.True(created.IsPopular);
             Assert.True(created.IsQuoteOnly);
+            Assert.True(created.IsEmergency);
         }
 
         [Fact]
@@ -402,7 +403,7 @@
             await dbContext.SaveChangesAsync();
 
             var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
-            await service.UpdateAsync(serviceEntity.Id, "Tap Replacement", "new description", 75m, 60, false, newCategory.Id, 5, true, true);
+            await service.UpdateAsync(serviceEntity.Id, "Tap Replacement", "new description", 75m, 60, false, newCategory.Id, 5, true, true, true);
 
             var updated = dbContext.Services.First(x => x.Id == serviceEntity.Id);
             Assert.Equal("Tap Replacement", updated.Name);
@@ -415,6 +416,33 @@
             Assert.Equal(5, updated.DisplayOrder);
             Assert.True(updated.IsPopular);
             Assert.True(updated.IsQuoteOnly);
+            Assert.True(updated.IsEmergency);
+        }
+
+        // The FAQ and the Terms quote the emergency rate from the emergency service, so the price
+        // lives in one place, the admin panel (PROJECT_STATE Section 3eg). A switched-off one is not
+        // offered, so its price is not quoted.
+        [Fact]
+        public async Task GetEmergencyRateAsyncShouldGiveThePriceOfTheActiveEmergencyService()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+            using var dbContext = new ApplicationDbContext(options);
+            using var repository = new EfDeletableEntityRepository<Service>(dbContext);
+            var category = new ServiceCategory { Id = Guid.NewGuid(), Name = "Plumbing", Description = "leak repairs", Slug = "plumbing" };
+            dbContext.ServiceCategories.Add(category);
+            dbContext.Services.Add(new Service { Id = Guid.NewGuid(), Name = "Tap Repairs", Description = "taps", Slug = "tap-repairs", BasePrice = 90, EstimatedDurationMinutes = 60, IsActive = true, CategoryId = category.Id });
+            var emergency = new Service { Id = Guid.NewGuid(), Name = "Emergency Plumbing", Description = "bursts", Slug = "emergency-plumbing", BasePrice = 150, EstimatedDurationMinutes = 60, IsActive = true, IsEmergency = true, CategoryId = category.Id };
+            dbContext.Services.Add(emergency);
+            await dbContext.SaveChangesAsync();
+
+            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            Assert.Equal(150m, await service.GetEmergencyRateAsync());
+
+            emergency.IsActive = false;
+            await dbContext.SaveChangesAsync();
+            Assert.Null(await service.GetEmergencyRateAsync());
         }
 
         // The Gas Safe mark is not on the admin form, so an edit there, a rename included, must

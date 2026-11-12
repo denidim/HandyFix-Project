@@ -243,6 +243,67 @@
             Assert.Equal("Boiler Installation & Servicing", redirect.RouteValues["service"]);
         }
 
+        // An emergency is taken by phone and WhatsApp at any hour, so a link to book it opens its
+        // own page, with the call and WhatsApp buttons (PROJECT_STATE Section 3eg).
+        [Fact]
+        public async Task IndexGetShouldSendAnEmergencyToItsOwnPage()
+        {
+            var controller = BuildController(out var servicesService, out _, out _, out _);
+            var emergencyId = Guid.NewGuid();
+            servicesService
+                .Setup(x => x.GetAllAsync<ServiceViewModel>(It.IsAny<bool>()))
+                .ReturnsAsync(new List<ServiceViewModel>
+                {
+                    new ServiceViewModel
+                    {
+                        Id = emergencyId,
+                        Name = "Emergency Plumbing",
+                        Slug = "emergency-plumbing",
+                        CategorySlug = "plumbing",
+                        IsEmergency = true,
+                    },
+                });
+
+            var result = await controller.Index(categorySlug: null, date: null, selectedServiceId: emergencyId);
+
+            var redirect = Assert.IsType<RedirectToRouteResult>(result);
+            Assert.Equal("ServiceDetails", redirect.RouteName);
+            Assert.Equal("plumbing", redirect.RouteValues["categorySlug"]);
+            Assert.Equal("emergency-plumbing", redirect.RouteValues["serviceSlug"]);
+        }
+
+        // The menu leaves these services out, but a form sent by hand can still name one. It must
+        // not become a 9 to 5 slot with a deposit (PROJECT_STATE Section 3eg).
+        [Theory]
+        [InlineData(true, false, "plumbing")]
+        [InlineData(false, true, "plumbing")]
+        [InlineData(false, false, "small-building-works")]
+        public async Task IndexPostShouldNotBookAServiceThatIsNotBookedOnline(bool isEmergency, bool isQuoteOnly, string categorySlug)
+        {
+            var controller = BuildController(out var servicesService, out _, out var bookingsService, out _);
+            var model = ValidModel();
+            servicesService
+                .Setup(x => x.GetByIdAsync<ServiceViewModel>(model.ServiceId))
+                .ReturnsAsync(new ServiceViewModel
+                {
+                    Id = model.ServiceId,
+                    Name = "Emergency Plumbing",
+                    CategorySlug = categorySlug,
+                    IsEmergency = isEmergency,
+                    IsQuoteOnly = isQuoteOnly,
+                });
+
+            var result = await controller.Index(model);
+
+            Assert.IsType<ViewResult>(result);
+            var error = SingleModelError(controller);
+            Assert.Contains("Emergency Plumbing is not booked online", error);
+            Assert.Contains(HandyFix.Common.GlobalConstants.BusinessPhone, error);
+            bookingsService.Verify(
+                x => x.CreateBookingAsync(It.IsAny<BookingInputModel>(), It.IsAny<IReadOnlyList<string>>()),
+                Times.Never);
+        }
+
         // A submission with a program's mark on it. The other forms answer one with their usual
         // thank-you; a booking's success is the payment page, which cannot be faked, so the form
         // comes back with a message that gives nothing away and still tells a person how to book

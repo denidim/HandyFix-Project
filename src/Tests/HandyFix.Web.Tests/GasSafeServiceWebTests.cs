@@ -52,7 +52,9 @@
         {
             string html = await this.GetAsync("/Services/plumbing/tap-repairs");
 
-            Assert.Contains("24/7 Available", html);
+            // Booked online, 9 to 5: only the emergency page says "24/7" (PROJECT_STATE Section 3eg).
+            Assert.Contains("Pick a Time That Suits You", html);
+            Assert.DoesNotContain("24/7", html);
             Assert.Contains("Leaks &amp; Burst Pipes", html);
             Assert.DoesNotContain(GasSafeLogo.Url, html);
         }

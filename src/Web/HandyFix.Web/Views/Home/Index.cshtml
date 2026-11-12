@@ -1,4 +1,5 @@
 @using HandyFix.Services
+@inject HandyFix.Web.Services.IBusinessRecord Business
 @model HandyFix.Web.ViewModels.Home.HomeIndexViewModel
 @{
     var categories = this.Model.Categories;
@@ -310,7 +311,7 @@
                             </div>
 
                             <span class="bento-action-pill">
-                                @(svcIsQuoteOnly ? "Request Quote" : "Book")
+                                @(svcIsQuoteOnly ? "Request Quote" : (svc.IsEmergency ? "24/7 by Phone" : "Book"))
                                 <span class="material-symbols-outlined">arrow_forward</span>
                             </span>
                         </div>
@@ -466,45 +467,10 @@
   </div>
 </section>
 
-<!-- Schema.org Local Business structured data -->
+<!-- The business as Google reads it: one record shared by every page (PROJECT_STATE Section 3eg).
+     It goes through Json.Serialize because a script block is never HTML-decoded. -->
 <script type="application/ld+json">
-    {
-      "@@context": "https://schema.org",
-      "@@type": "LocalBusiness",
-      "name": "Plumbing Handyman Surrey",
-      "legalName": @Json.Serialize(GlobalConstants.CompanyLegalName),
-      "foundingDate": @Json.Serialize(GlobalConstants.CompanyIncorporatedOn),
-      "@@id": "https://plumbing-handyman-surrey.co.uk",
-      "url": "https://plumbing-handyman-surrey.co.uk",
-      "telephone": @Json.Serialize(GlobalConstants.BusinessPhoneInternational),
-      "priceRange": "££",
-      "address": {
-        "@@type": "PostalAddress",
-        "streetAddress": @Json.Serialize(GlobalConstants.CompanyAddressStreet),
-        "addressLocality": @Json.Serialize(GlobalConstants.CompanyAddressTown),
-        "addressRegion": @Json.Serialize(GlobalConstants.CompanyAddressCounty),
-        "postalCode": @Json.Serialize(GlobalConstants.CompanyAddressPostcode),
-        "addressCountry": "GB"
-      },
-      "geo": {
-        "@@type": "GeoCoordinates",
-        "latitude": 51.3579,
-        "longitude": -0.2970
-      },
-      "openingHoursSpecification": {
-        "@@type": "OpeningHoursSpecification",
-        "dayOfWeek": [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday"
-        ],
-        "opens": "09:00",
-        "closes": "17:00"
-      }
-    }
+@Json.Serialize(Business.Build())
 </script>
 
 @section Scripts {

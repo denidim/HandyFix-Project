@@ -72,6 +72,15 @@
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<decimal?> GetEmergencyRateAsync()
+        {
+            return await this.servicesRepository.All()
+                .Where(x => x.IsActive && x.IsEmergency)
+                .OrderBy(x => x.DisplayOrder)
+                .Select(x => (decimal?)x.BasePrice)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<T> GetBySlugAsync<T>(string slug)
         {
             return await this.servicesRepository.All()
@@ -80,7 +89,7 @@
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false)
+        public async Task<Guid> CreateAsync(string name, string description, decimal basePrice, int estimatedDurationMinutes, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false, bool isEmergency = false)
         {
             var service = new Service
             {
@@ -93,6 +102,7 @@
                 DisplayOrder = displayOrder,
                 IsPopular = isPopular,
                 IsQuoteOnly = isQuoteOnly,
+                IsEmergency = isEmergency,
                 Slug = SlugGenerator.Slugify(name),
             };
 
@@ -102,7 +112,7 @@
             return service.Id;
         }
 
-        public async Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false)
+        public async Task UpdateAsync(Guid id, string name, string description, decimal basePrice, int estimatedDurationMinutes, bool isActive, Guid categoryId, int displayOrder, bool isPopular, bool isQuoteOnly = false, bool isEmergency = false)
         {
             Service service = await this.servicesRepository.All()
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -118,6 +128,7 @@
                 service.DisplayOrder = displayOrder;
                 service.IsPopular = isPopular;
                 service.IsQuoteOnly = isQuoteOnly;
+                service.IsEmergency = isEmergency;
 
                 // A new name gives the page a new address, and the picture stays where it is: its
                 // address is in the database and nothing renames it. A built-in picture keeps the

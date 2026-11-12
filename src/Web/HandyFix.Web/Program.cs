@@ -252,6 +252,10 @@
             services.AddTransient<IFormGuard, FormGuard>();
             services.AddRateLimiter(RateLimits.Configure);
 
+            // The one record of the business that the pages write for Google (PROJECT_STATE
+            // Section 3eg).
+            services.AddTransient<IBusinessRecord, BusinessRecord>();
+
             // The admin account: changing its password and login email, and resetting a forgotten
             // password by email (PROJECT_STATE Section 3cc).
             services.AddTransient<IAdminAccountService, AdminAccountService>();

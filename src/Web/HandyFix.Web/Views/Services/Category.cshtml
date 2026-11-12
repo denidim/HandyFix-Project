@@ -1,5 +1,6 @@
 @model HandyFix.Web.ViewModels.Services.CategoryViewModel
 @using System.Globalization
+@inject HandyFix.Web.Services.IBusinessRecord Business
 @using HandyFix.Services
 @* Anything written inside a script block below goes through Json.Serialize. Razor's own HTML
    encoding is wrong there: a script block is never HTML-decoded (PROJECT_STATE Section 3bv). *@
@@ -18,7 +19,9 @@
     var specBadgeText = isBuilding ? "Survey & Fixed Quote" : (isPlumbing ? "Licensed & Insured" : "Multi-Skill Pros");
     var specBadgeClass = isBuilding ? "category-hero-badge-building" : (isPlumbing ? "category-hero-badge-primary" : "category-hero-badge-tertiary");
     var specBadgeIcon = isBuilding ? "foundation" : (isPlumbing ? "verified" : "handyman");
-    var availabilityText = isBuilding ? "Planned & Quoted" : "24/7 Availability";
+    // Only plumbing has emergencies, taken by phone at any hour; handyman work is booked online,
+    // Monday to Saturday, 9 to 5 (PROJECT_STATE Section 3eg).
+    var availabilityText = isBuilding ? "Planned & Quoted" : (isPlumbing ? "Emergencies 24/7 by Phone" : "Mon–Sat, 9am–5pm");
 
     // The list below as search engines read it: each service with its own address, and the price
     // the card shows. The quote-only category shows none, so its entries carry none.
@@ -44,9 +47,6 @@
         return entry;
     }).ToList();
 
-    var areasServed = Model.LocalAreas
-        .Select(a => new Dictionary<string, object> { ["@type"] = "City", ["name"] = a.Name })
-        .ToList();
 }
 
 <div class="page-container services-page">
@@ -144,6 +144,16 @@
                                    asp-action="Contact"
                                    asp-route-service="@svc.Name"
                                    class="btn btn-primary service-card-btn">Request Quote</a>
+                            }
+                            else if (svc.IsEmergency)
+                            {
+                                @* Not booked online: the card goes to the page with the call and
+                                   WhatsApp buttons (PROJECT_STATE Section 3eg). *@
+                                <a asp-controller="Services"
+                                   asp-action="Details"
+                                   asp-route-categorySlug="@Model.Slug"
+                                   asp-route-serviceSlug="@svc.Slug"
+                                   class="btn btn-primary service-card-btn">24/7 by Phone</a>
                             }
                             else
                             {
@@ -255,21 +265,8 @@
   "name": @Json.Serialize($"{Model.Name} Services"),
   "description": @Json.Serialize(Model.Description),
   "url": @Json.Serialize(this.ViewData["Canonical"]),
-  "provider": {
-    "@@type": "LocalBusiness",
-    "name": "Plumbing Handyman Surrey",
-    "telephone": @Json.Serialize(GlobalConstants.BusinessPhoneInternational),
-    "priceRange": "££",
-    "address": {
-      "@@type": "PostalAddress",
-      "streetAddress": @Json.Serialize(GlobalConstants.CompanyAddressStreet),
-      "addressLocality": @Json.Serialize(GlobalConstants.CompanyAddressTown),
-      "addressRegion": @Json.Serialize(GlobalConstants.CompanyAddressCounty),
-      "postalCode": @Json.Serialize(GlobalConstants.CompanyAddressPostcode),
-      "addressCountry": "GB"
-    }
-  },
-  "areaServed": @Json.Serialize(areasServed),
+  "provider": @Json.Serialize(Business.BuildAsProvider()),
+  "areaServed": @Json.Serialize(Business.AreaServed()),
   "hasOfferCatalog": {
     "@@type": "OfferCatalog",
     "name": @Json.Serialize($"{Model.Name} Services"),

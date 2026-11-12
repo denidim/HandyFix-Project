@@ -170,6 +170,13 @@ and becomes a job with "Make this a job" (`WORKFLOW_ENQUIRIES.md`). A booking li
 sent to the same form (`BookingController.Index`). See `WORKFLOW_SERVICES.md`, "The Quote only
 tick".
 
+**Nor is an emergency.** A service with the Emergency tick (Emergency Plumbing) is taken by phone
+and WhatsApp at any hour, at the emergency rate. It is left out of the list too, a booking link
+naming it opens its own page with the Call and WhatsApp buttons, and on that page the phone's
+floating button reads **Call Now**. A form sent by hand for any service that is not booked online
+(emergency, quote-only or building) is refused before anything is saved, with a line giving the
+phone number. See `WORKFLOW_SERVICES.md`, "The Emergency tick" (`PROJECT_STATE.md` Section 3eg).
+
 1. `BookingsService.CreateBookingAsync` creates the `Booking` with status **`Pending`** and claims
    the slot — **both inside one transaction**. If the slot was taken in the meantime the whole
    thing rolls back and the customer is returned to the form with *"This slot was just taken by

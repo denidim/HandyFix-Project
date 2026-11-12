@@ -53,6 +53,7 @@
                     DisplayOrder = 3,
                     IsPopular = true,
                     IsQuoteOnly = true,
+                    IsEmergency = true,
                 });
 
             var result = await controller.Edit(id);
@@ -62,6 +63,7 @@
             Assert.Equal(3, model.DisplayOrder);
             Assert.True(model.IsPopular);
             Assert.True(model.IsQuoteOnly);
+            Assert.True(model.IsEmergency);
         }
 
         [Fact]
@@ -74,12 +76,13 @@
             model.DisplayOrder = 0;
             model.IsPopular = true;
             model.IsQuoteOnly = true;
+            model.IsEmergency = true;
 
             var result = await controller.Edit(model);
 
             AssertGoesBackToTheAdminList(result);
             servicesService.Verify(
-                x => x.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, false, model.CategoryId, 0, true, true),
+                x => x.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, false, model.CategoryId, 0, true, true, true),
                 Times.Once);
         }
 
@@ -91,12 +94,13 @@
             model.DisplayOrder = 12;
             model.IsPopular = true;
             model.IsQuoteOnly = true;
+            model.IsEmergency = true;
 
             var result = await controller.Create(model);
 
             AssertGoesBackToTheAdminList(result);
             servicesService.Verify(
-                x => x.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, 12, true, true),
+                x => x.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, 12, true, true, true),
                 Times.Once);
         }
 

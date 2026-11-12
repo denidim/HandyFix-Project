@@ -146,10 +146,12 @@
                                                          EstimatedDurationMinutes = svc.EstimatedDurationMinutes,
                                                          IsQuoteBased = isQuoteOnly,
                                                          DivisionClass = svc.CategorySlug == CategorySlugs.SmallBuildingWorks ? "pricing-card-building" : (svc.CategoryName == "Plumbing" ? "pricing-card-plumbing" : "pricing-card-handyman"),
-                                                         CtaText = isQuoteOnly ? "Request Quote" : "Book Now",
+                                                         CtaText = isQuoteOnly ? "Request Quote" : (svc.IsEmergency ? "24/7 by Phone" : "Book Now"),
                                                          CtaUrl = isQuoteOnly
                                                              ? this.Url.Action("Contact", "Home", new { service = svc.Name })
-                                                             : this.Url.Action("Index", "Booking", new { selectedServiceId = svc.Id, categorySlug = svc.CategorySlug }),
+                                                             : (svc.IsEmergency
+                                                                 ? this.Url.RouteUrl("ServiceDetails", new { categorySlug = svc.CategorySlug, serviceSlug = svc.Slug })
+                                                                 : this.Url.Action("Index", "Booking", new { selectedServiceId = svc.Id, categorySlug = svc.CategorySlug })),
                                                      })" />
             }
         </div>

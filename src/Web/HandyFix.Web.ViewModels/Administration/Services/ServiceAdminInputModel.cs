@@ -43,6 +43,9 @@
         [Display(Name = "Quote only (no hourly slot booking)")]
         public bool IsQuoteOnly { get; set; }
 
+        [Display(Name = "Emergency: phone and WhatsApp only, not booked online")]
+        public bool IsEmergency { get; set; }
+
         [Required(ErrorMessage = "Category is required.")]
         public Guid CategoryId { get; set; }
 

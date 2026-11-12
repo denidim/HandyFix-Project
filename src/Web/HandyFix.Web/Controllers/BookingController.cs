@@ -83,6 +83,13 @@
                     ServiceViewModel selected = services.FirstOrDefault(s => s.Id == selectedServiceId.Value);
                     if (selected != null)
                     {
+                        // An emergency is taken by phone and WhatsApp at any hour, so a link to
+                        // book it goes to its own page, where the call and WhatsApp buttons are.
+                        if (selected.IsEmergency)
+                        {
+                            return this.RedirectToRoute("ServiceDetails", new { categorySlug = selected.CategorySlug, serviceSlug = selected.Slug });
+                        }
+
                         if (selected.IsQuoteOnly)
                         {
                             return this.RedirectToAction("Contact", "Home", new { service = selected.Name });
@@ -162,6 +169,17 @@
             if (guard == FormGuardResult.ChallengeFailed)
             {
                 return await this.RedisplayBookingForm(model, FormNames.ChallengeFailedMessage);
+            }
+
+            // The booking menu offers only services booked as an hourly slot. A form sent by hand
+            // can still name an emergency, a quote-only or a building service, which must not be
+            // sold as a 9 to 5 slot with a deposit (PROJECT_STATE Section 3eg).
+            ServiceViewModel chosen = await this.servicesService.GetByIdAsync<ServiceViewModel>(model.ServiceId);
+            if (chosen != null && (chosen.IsEmergency || chosen.IsQuoteOnly || chosen.CategorySlug == QuoteOnlyCategorySlug))
+            {
+                return await this.RedisplayBookingForm(
+                    model,
+                    $"{chosen.Name} is not booked online. Please call us or message us on WhatsApp on {GlobalConstants.BusinessPhone}.");
             }
 
             // Before anything is saved or a deposit asked for: a postcode outside the districts

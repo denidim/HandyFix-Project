@@ -31,7 +31,7 @@ seeder.
 > The admin area is routed as `Administration`, not `Admin`. `/Admin/...` will 404.
 
 Standard Create / Edit / Delete via `ServicesController`. Fields: Name, Description, Base Price,
-Estimated Duration, Category, Display Order, the Popular tick, the Quote only tick, and an optional
+Estimated Duration, Category, Display Order, the Popular tick, the Quote only tick, the Emergency tick, and an optional
 hero image upload. The Edit form also has the Active tick.
 
 | Rule | Value |
@@ -101,12 +101,34 @@ Every service in Small Building & Refurbishments is quoted the same way whether 
 pages decide it by the category as well as by the tick. The seeder and the `AddIsQuoteOnlyToService`
 migration tick them anyway, so the badge in the admin list tells the truth.
 
+### The Emergency tick: phone and WhatsApp only
+
+"Emergency: phone and WhatsApp only, not booked online" is for work that cannot wait for the next
+free slot in the 9 to 5 calendar. The phone is answered at any hour, so such a job is taken by
+phone or WhatsApp, never booked online. A ticked service:
+
+- is left out of the booking page's list, and a booking link that names it
+  (`/Booking?selectedServiceId=...`) opens its own page instead; a booking form sent by hand for it
+  is refused with a line that gives the phone number (`BookingController.Index`);
+- has a page with the badge "24/7 by Phone & WhatsApp", "We Aim to Arrive In 60 to 90 Minutes",
+  "Emergency Rate £X per Hour", and a box with Call and WhatsApp buttons in place of Book a Slot,
+  under it a link to book online for anything that can wait; on a phone the floating button reads
+  "Call Now" and rings the business;
+- has cards (home, category, area and pricing pages) that read "24/7 by Phone" and open its page;
+- sets the emergency rate that the FAQ and the Terms quote: its Base Price, so the rate is changed
+  in one place (`IServicesService.GetEmergencyRateAsync`).
+
+The admin list shows an Emergency badge. Emergency Plumbing has it, at £150 an hour, set by the
+seeder on a new database and by the `AddIsEmergencyToService` migration on one that has services
+(`PROJECT_STATE.md` Section 3eg). Every other plumbing page says "Pick a Time That Suits You" where
+it used to say "24/7 Available"; "24/7" belongs to the emergency page alone.
+
 ### The Gas Safe mark: set by the site, not on the form
 
 Gas work (`Service.IsGasSafeWork`) is not a field on the admin form, so an admin edit or a rename
 keeps it. It is set for Boiler Installation & Servicing by the seeder on a new database and by the
 `AddBoilerInstallationServicing` migration on one that has services. A marked service shows the
-Gas Safe Register logo on its page (in place of "24/7 Available", and in a feature box of its own)
+Gas Safe Register logo on its page (in place of "Pick a Time That Suits You", and in a feature box of its own)
 and at the bottom right of its card in the category list; its quote box promises a "Gas Safe
 registered engineer".
 

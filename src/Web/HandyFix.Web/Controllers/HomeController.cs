@@ -304,12 +304,13 @@
         }
 
         [Route("FAQ")]
-        public IActionResult FAQ()
+        public async Task<IActionResult> FAQ()
         {
             this.SetPageMeta(
                 "Frequently Asked Questions",
                 "Answers to common questions about booking, pricing, and scheduling plumbing and handyman services with Plumbing Handyman Surrey.",
                 this.Url.Action("FAQ", "Home", null, this.Request.Scheme));
+            this.ViewData["EmergencyRate"] = await this.EmergencyRateTextAsync();
             return this.View();
         }
 
@@ -333,12 +334,13 @@
         }
 
         [Route("TermsAndConditions")]
-        public IActionResult Terms()
+        public async Task<IActionResult> Terms()
         {
             this.SetPageMeta(
                 "Terms & Conditions",
                 "The terms and conditions governing bookings and service delivery with Plumbing Handyman Surrey.",
                 this.Url.Action("Terms", "Home", null, this.Request.Scheme));
+            this.ViewData["EmergencyRate"] = await this.EmergencyRateTextAsync();
             return this.View();
         }
 
@@ -362,6 +364,17 @@
                 .Concat(services.Where(s => !s.IsPopular))
                 .Take(PopularServicesCount)
                 .ToList();
+        }
+
+        // The FAQ and the Terms quote the emergency rate from the emergency service, so the price
+        // is set in one place, the admin panel (PROJECT_STATE Section 3eg). Without such a service
+        // they name the rate without a number.
+        private async Task<string> EmergencyRateTextAsync()
+        {
+            decimal? rate = await this.servicesService.GetEmergencyRateAsync();
+            return rate.HasValue
+                ? string.Create(CultureInfo.InvariantCulture, $"£{rate.Value:F0} per hour")
+                : "our emergency hourly rate";
         }
 
         // The form shown again keeps the page's description and address. It used to lose both, and
