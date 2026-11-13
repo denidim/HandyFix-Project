@@ -165,14 +165,17 @@ not drawn at all, heading included.
   (`Summaries.Of`). Left empty, the card shows the description's first sentence.
 - **Worth doing in the same visit** is chosen in code with each page's text
   (`Presentation/SameVisitServices.cs`, by the service's address), and a page with a choice drops
-  "You Might Also Need", the three cards of its division at its foot. **Areas we cover** lists
-  every town page, so a new town appears by itself.
-- The written text of each page is in the database. Pages written so far reached it by a data
-  migration per batch that updates by the service's address (`AddServicePageTextsBatch1`, Section
-  3eq; `AddServicePageTextsBatch2`, Section 3er; `AddServicePageTextsBatch3`, Section 3es;
-  `AddServicePageTextsBatch4`, Section 3eu; `AddServicePageTextsBatch5`, Section 3ev;
-  `AddServicePageTextsBatch6`, Section 3ew; `AddServicePageTextsBatch7`, Section 3ex), and
-  `ServicePageTexts` holds the same text for the seeder.
+  "You Might Also Need", the three cards of its division at its foot. Every service that comes
+  with the site has a choice; one the admin adds later keeps the cards until it is given one there.
+  **Areas we cover** lists every town page, so a new town appears by itself.
+- The written text of each page is in the database. All 38 services that come with the site
+  reached it by a data migration per batch that updates by the service's address
+  (`AddServicePageTextsBatch1`, Section 3eq; `AddServicePageTextsBatch2`, Section 3er;
+  `AddServicePageTextsBatch3`, Section 3es; `AddServicePageTextsBatch4`, Section 3eu;
+  `AddServicePageTextsBatch5`, Section 3ev; `AddServicePageTextsBatch6`, Section 3ew;
+  `AddServicePageTextsBatch7`, Section 3ex; `AddServicePageTextsBatch8`, Section 3ey), and
+  `ServicePageTexts` holds the same text for the seeder. A service the admin adds has only its
+  description until its blocks are filled in on its Edit page.
 
 ### The service page's buttons
 
