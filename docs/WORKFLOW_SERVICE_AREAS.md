@@ -108,6 +108,14 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
   description is. Adding a service, switching one off or moving one in its category's order
   changes what several towns show. Until `PROJECT_STATE.md` Section 3el every town printed the
   same four in full.
+- **Every town's text ends with the same line**, which is in the page and not in the town's
+  text: the hourly rate for plumbing and for handyman work, then "Pick a time that suits you and
+  pay online" with the deposit. The rates are worked out as the Pricing page does (the lowest
+  price among the category's active services) and the deposit comes from `Deposit`, so the line
+  follows a price changed in the admin panel.
+- **A town that shares its name with a place elsewhere needs its districts typed.** With the
+  Postcode Districts box left empty the town is looked up by name, and "Richmond" alone finds a
+  Richmond in Yorkshire. Type `TW9, TW10` and the drive time and the diagram come out right.
 - **The business record's towns are not the area pages.** Every page writes one record of the
   business for Google (`IBusinessRecord`: type `Plumber`, open 24 hours, a link to the Google
   profile), and its `areaServed` is the fixed list in `HandyFix.Common/ServiceAreaTowns.cs`: the
@@ -141,11 +149,18 @@ For the same reason, `ServiceAreasService.CreateAsync` checks that the slug is f
 
 ### The seeder fills an empty table, once
 
-`ServiceAreasSeeder` adds its 15 areas and their questions **only when the ServiceAreas table is
+`ServiceAreasSeeder` adds its 21 areas and their questions **only when the ServiceAreas table is
 empty**. After that it does nothing: an area deleted here stays deleted, and an area whose
 questions were all removed stays without them. Editing the seeder's list has no effect on a
 database that already has areas; use this admin page. (Until `PROJECT_STATE.md` Section 3cb it
 added back any seeded area it could not find, at every start.)
+
+**A town added from code needs two places.** The six towns of `PROJECT_STATE.md` Section 3em
+(Twickenham, Richmond, Molesey, New Malden, Ashtead, Cheam) are in the seeder, for a new
+database, and in the `AddSixNewTownAreas` data migration, for a database that already has areas.
+The migration does nothing while the table is empty: on a new database migrations run before the
+seeder, and rows put in then would stop the seeder adding the other fifteen. It also replaces an
+area already at one of its addresses, so a town tried out by hand does not block it.
 
 ---
 
