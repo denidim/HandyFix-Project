@@ -187,6 +187,11 @@
         [InlineData("painting-touch-ups", "When a shelf comes down, a bracket moves", "[visibility] A patch that shows on a silk or satin wall.", 2, "Will a touch-up show?")]
         [InlineData("gutter-clearing", "We clear gutters by hand", "[water_drop] An outlet blocked solid.", 2, "How often should gutters be cleared?")]
         [InlineData("wall-floor-tiling", "Tiling starts with what the tiles go on", "[build] Floorboards that move underfoot.", 2, "Can tiles go straight onto floorboards?")]
+        [InlineData("flooring-installation", "Laminate, luxury vinyl tiles (LVT) and engineered wood", "[water_drop] A concrete floor that is still damp.", 3, "How long does new flooring need to sit in the room before it is laid?")]
+        [InlineData("external-brickwork-paving", "The brick and paving outside the house", "[build] Mortar worn back from the face of the brick.", 3, "Do I need planning permission to pave my front garden?")]
+        [InlineData("general-handyman-call-out", "An hour of a handyman's time", "[inventory_2] A part we do not carry.", 2, "Should I buy the materials before the visit?")]
+        [InlineData("minor-home-repairs", "Small faults build up in every house", "[refresh] A crack that opens and closes with the seasons.", 2, "Are cracks in a new house normal?")]
+        [InlineData("property-maintenance", "A longer visit, of about three hours", "[health_and_safety] A smoke alarm that stays silent.", 2, "Does this visit cover a landlord's gas and electrical safety checks?")]
         public async Task SeedAsyncShouldGiveTheWrittenPagesTheirText(string slug, string descriptionStart, string firstFinding, int questions, string firstQuestion)
         {
             await this.SeedAsync();
@@ -217,11 +222,11 @@
         {
             await this.SeedAsync();
 
-            Service maintenance = this.dbContext.Services.Include(s => s.Faqs).Single(s => s.Slug == "property-maintenance");
-            Assert.Null(maintenance.Summary);
-            Assert.Null(maintenance.CommonFindings);
-            Assert.Empty(maintenance.Faqs);
-            Assert.Equal(30, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
+            Service kitchen = this.dbContext.Services.Include(s => s.Faqs).Single(s => s.Slug == "kitchen-fitting-alterations");
+            Assert.Null(kitchen.Summary);
+            Assert.Null(kitchen.CommonFindings);
+            Assert.Empty(kitchen.Faqs);
+            Assert.Equal(35, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
         }
 
         // As the application does it: each seeder, then a save (ApplicationDbContextSeeder).

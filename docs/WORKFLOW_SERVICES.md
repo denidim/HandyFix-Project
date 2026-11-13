@@ -171,8 +171,8 @@ not drawn at all, heading included.
   migration per batch that updates by the service's address (`AddServicePageTextsBatch1`, Section
   3eq; `AddServicePageTextsBatch2`, Section 3er; `AddServicePageTextsBatch3`, Section 3es;
   `AddServicePageTextsBatch4`, Section 3eu; `AddServicePageTextsBatch5`, Section 3ev;
-  `AddServicePageTextsBatch6`, Section 3ew), and `ServicePageTexts` holds the same text for the
-  seeder.
+  `AddServicePageTextsBatch6`, Section 3ew; `AddServicePageTextsBatch7`, Section 3ex), and
+  `ServicePageTexts` holds the same text for the seeder.
 
 ### The service page's buttons
 

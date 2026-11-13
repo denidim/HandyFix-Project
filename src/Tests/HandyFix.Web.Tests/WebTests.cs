@@ -361,12 +361,12 @@
 
         // The service cards offer the middle copy beside the picture, on every page that has them.
         // A service page has them only while it has no "Worth doing in the same visit" of its own
-        // (Section 3ep): Property Maintenance is among the last to be written.
+        // (Section 3ep): Kitchen Fitting & Alterations is among the last to be written.
         [Theory]
         [InlineData("/", "<img src=\"/images/services/plumbing-category-hero\\.webp[^>]*>")]
         [InlineData("/Areas/cobham", "<img class=\"pricing-card-image\"[^>]*>")]
         [InlineData("/Pricing", "<img class=\"pricing-card-image\"[^>]*>")]
-        [InlineData("/Services/handyman/property-maintenance", "<img class=\"pricing-card-image\"[^>]*>")]
+        [InlineData("/Services/small-building-works/kitchen-fitting-alterations", "<img class=\"pricing-card-image\"[^>]*>")]
         public async Task ServiceCardsOfferThePicturesMiddleCopy(string path, string cardPattern)
         {
             var client = this.server.CreateClient();

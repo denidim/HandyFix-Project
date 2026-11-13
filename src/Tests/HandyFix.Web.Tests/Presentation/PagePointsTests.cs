@@ -77,7 +77,7 @@ namespace HandyFix.Web.Tests.Presentation
             Assert.Equal(
                 new[] { "toilet-repairs", "radiator-trv-replacement" },
                 SameVisitServices.For("tap-repairs", offered).Select(s => s.Slug));
-            Assert.Empty(SameVisitServices.For("property-maintenance", offered));
+            Assert.Empty(SameVisitServices.For("kitchen-fitting-alterations", offered));
             Assert.Empty(SameVisitServices.For(null, offered));
         }
 

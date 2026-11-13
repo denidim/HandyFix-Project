@@ -126,6 +126,36 @@ namespace HandyFix.Data.Seeding
                     ("Will my home insurance pay for the repair?", "That depends on your policy, so check it before anything else is spent, as Thames Water and WaterSafe both advise. Take photos of the damage, and keep the invoice we send for the repair."),
                 },
             },
+            ["external-brickwork-paving"] = new ServicePageText
+            {
+                Summary = "Repointing, garden wall repairs, patios relaid, outdoor steps rebuilt and shed bases laid, at a fixed price after a free survey.",
+                CommonFindings = "[build] Mortar worn back from the face of the brick. Shallow new mortar on top of it does not last, so LABC's guidance is to rake the old joints out at least 12mm deep, and no more than 19mm, before repointing.\n[warning] Brick faces crumbling round hard pointing. A cement mortar that is stronger and less permeable than the brick sends the wet out through the bricks instead of the joints, and the bricks decay while the mortar stands proud. LABC says the mortar should be slightly weaker and more permeable than the brick, so the new mix is chosen to suit it.\n[water_drop] Slabs that rock or hold puddles. They are lifted, set on a new bed and laid to a fall so the rain runs off. Marshalls' guide asks for a fall of at least 1 in 80, and next to a house the fall runs away from it.\n[search] A garden wall that leans, or has cracked through the bricks. Repointing will not hold it, so the stretch that has moved is taken down and rebuilt.",
+                VisitSteps = "At the survey we look at the wall, the joints or the paving, agree what is repaired and what is rebuilt, and give you the fixed quote.\nWe rake out the joints, take down the loose brickwork, or lift the slabs and clear the bed under them.\nWe repoint, rebuild or relay, with a mortar mixed to suit the brick.\nWe brush the new joints and clean the mortar off the faces of the bricks and slabs.\nWe cover fresh work when rain or frost is due.",
+                BeforeWeArrive = "[directions_car] Tell us at the survey how we reach the back garden: by a side gate, or only through the house.\n[home] If the wall is on the boundary with a neighbour, talk to them before the work starts.\n[visibility] Note where water stands on the patio after rain, and which way it runs.",
+                Included = "The survey at your home, with a fixed quote\nRaking out and repointing\nRebuilding a damaged stretch of garden wall\nLifting and relaying patio slabs on a new bed\nRebuilding outdoor steps\nConcrete bases for sheds",
+                NotIncluded = "Driveways\nRetaining walls, the walls that hold back soil",
+                Faqs = new[]
+                {
+                    ("Do I need planning permission to pave my front garden?", "Only for a hard surface that water cannot drain through, over more than five square metres, with no lawn or border for the rain to run to. Gravel and permeable block paving need no permission at any size. That is the Planning Portal's guidance for houses; flats and maisonettes have different rules."),
+                    ("How high can a garden wall be without planning permission?", "One metre next to a road or its pavement, and two metres anywhere else, measured from the ground. That is the Planning Portal's guidance. A listed building, or a planning condition or council direction for the area, can take that right away."),
+                    ("Can brickwork and paving be done in winter?", "On mild days. Marshalls' guide says paving is not laid when the temperature is below 5°C and falling, night-time included, and fresh mortar in brickwork needs the same care, so work in a cold spell waits for a milder day."),
+                },
+            },
+            ["flooring-installation"] = new ServicePageText
+            {
+                Summary = "Laminate, LVT and engineered wood laid on a firm, level, dry base, with the right underlay, beading and door trims, at a fixed price from a survey.",
+                CommonFindings = "[water_drop] A concrete floor that is still damp. New screed takes time to dry out, and an old slab may have no damp-proof membrane under it. Karndean's UK guide for its glue-down tiles asks for less than 75% relative humidity at the surface, so the concrete is tested first, and laminate goes down over a damp-proof membrane.\n[search] Boards that flex or dip. Old floorboards that move, or a floor that is out of level, show through a new floor as joints that click and open. Loose boards are screwed down and the low spots levelled before the underlay goes on.\n[home] A door that catches. The new boards and their underlay raise the floor, and a door that swung clear of the old carpet drags on them. We can trim it on the same visit.",
+                VisitSteps = "At the survey we measure the rooms, look at the floor under the old covering, agree the flooring and where the joins and trims go, and give you the fixed quote.\nWe take up the old floor covering, with its underlay and any carpet gripper.\nWe make the base ready: loose boards screwed down, dips levelled, a damp-proof membrane over concrete.\nWe lay the underlay and the floor, keeping the gap at each wall that lets it move.\nWe fit the beading along the skirting and a trim at each doorway, then check that every door swings clear.",
+                BeforeWeArrive = "[key] In a flat, read your lease before choosing a hard floor. Some leases ask for carpet, or for the landlord's consent and an acoustic underlay first.\n[add_a_photo] For the survey, have the name and maker of the flooring you like. The maker's instructions set the underlay and the gap at the walls.\n[home] The whole floor has to be clear on the day. Tell us at the survey about anything too heavy to move, such as a piano or a fitted wardrobe.",
+                Included = "A survey of the rooms and a fixed quote\nTaking up the old floor covering\nScrewing down loose boards and levelling dips\nA damp-proof membrane over concrete\nUnderlay suited to the flooring\nBeading along the skirting and trims at the doorways",
+                NotIncluded = "Carpet\nCeramic, porcelain and stone floors, which are Wall & Floor Tiling",
+                Faqs = new[]
+                {
+                    ("How long does new flooring need to sit in the room before it is laid?", "At least 48 hours for laminate, in its unopened packs laid flat: that is Wickes's laminate guide. Karndean asks for its glue-down vinyl tiles to come out of their packs at least 24 hours before fitting, in the room they are for."),
+                    ("Why does a laminate floor need a gap at the walls?", "Because laminate expands and contracts over time. Wickes's guide asks for a gap of 10 to 12mm all round the room, and warns that a floor laid without one can warp. The beading or the skirting covers it."),
+                    ("Can I walk on a new vinyl floor straight away?", "Not on glue-down vinyl tiles. Karndean asks for them to be kept free of traffic for 24 hours after fitting, or covered with board or sheeting."),
+                },
+            },
             ["full-bathroom-refurbishment"] = new ServicePageText
             {
                 Summary = "The old bathroom stripped out and a new one fitted: pipework, waterproofing, wall and floor tiles and sanitaryware, priced after a free survey at your home.",
@@ -152,6 +182,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("What happens if a part is missing?", "We find out at the start, when we check the parts. If the piece cannot be finished without it, we stop there and you pay for the time used, with the one-hour minimum."),
                     ("Will fixing a chest of drawers to the wall leave marks?", "Two small screw holes behind it. IKEA's advice for when you move the furniture is simply to fill them."),
+                },
+            },
+            ["general-handyman-call-out"] = new ServicePageText
+            {
+                Summary = "An hour of a handyman's time for a mix of small jobs, or one that is not on our list, with no call-out fee.",
+                CommonFindings = "[inventory_2] A part we do not carry. A handle to match the others, a hinge of an old size or a length of trim is priced and agreed with you before it is bought.\n[construction] A job bigger than a visit. A new floor, a rebuilt wall or a refitted bathroom is not done by the hour: it is priced at a free survey, with a fixed quote.",
+                VisitSteps = "We go through your list with you and agree the order, the job that matters most first.\nWe do the jobs one by one, and show you each one when it is done.\nWe tidy up, and tell you what, if anything, is left on the list.",
+                BeforeWeArrive = "[checklist] Write the jobs down, in the order they matter to you.\n[add_a_photo] Add a photo of each job to your booking: a close-up, and one from a step back that shows the wall or the room.\n[home] Clear a space round each job, so the work can start straight away.",
+                Included = "Several small jobs in the same booking\nJobs that are not on our list of services\nA price for any part needed, before it is bought",
+                NotIncluded = "Plumbing, which is booked under Plumbing\nGas work, which is for our Gas Safe registered engineer\nNew circuits and other notifiable electrical work\nEmergencies, which are taken by phone or WhatsApp",
+                Faqs = new[]
+                {
+                    ("Should I buy the materials before the visit?", "Yes, for anything you choose yourself: the shelf, the mirror, the handles, the curtain pole. Anything else the jobs need beyond what the technician carries is priced and agreed with you before it is bought."),
+                    ("What if the list takes more than the hour?", "We start with the job that matters most to you, and say before the hour is up how much is left. You decide whether we carry on, or book the rest for another day."),
                 },
             },
             ["general-plumbing-maintenance"] = new ServicePageText
@@ -238,6 +282,20 @@ namespace HandyFix.Data.Seeding
                     ("What alarms does a landlord have to fit?", "In England, a smoke alarm on every storey with a room lived in, and a carbon monoxide alarm in any room with a fixed appliance that burns fuel, such as a boiler or a wood burner, but not a gas cooker. The rules have applied since 1 October 2022, and a faulty alarm has to be repaired or replaced once the tenant reports it."),
                 },
             },
+            ["minor-home-repairs"] = new ServicePageText
+            {
+                Summary = "Plaster cracks filled, creaking floorboards screwed down, and loose handles, hinges, rails and skirting fixed firm, by the hour.",
+                CommonFindings = "[refresh] A crack that opens and closes with the seasons. NHBC, the new-home warranty body, says the materials of a house expand and shrink as the temperature and humidity change through the year, which leaves fine cracks where an outside wall meets a plasterboard one, along the joins of a plasterboard ceiling, and at the corners of skirting boards and architraves. A flexible filler suits these better than a hard one.\n[build] A floorboard that creaks. The board is moving against its nails or the board beside it. A screw down into the joist holds it still, once we have checked for pipes and cables under it.\n[handyman] A handle or a towel rail that keeps working loose. Its screws have worn their holes too big to grip, so the holes are plugged and drilled again, or the fixing is changed for one that suits the wall.\n[home] A cupboard door that hangs crooked or will not close. Most kitchen hinges have screws that adjust the door's height, depth and sideways position, and a few turns bring it square.",
+                VisitSteps = "We go round the repairs on your list with you, and look at each crack before it is filled.\nWe rake out each crack, fill it, and sand it flush once the filler has set.\nWe screw down creaking boards and fix back whatever is loose.\nWe tell you about anything that needs more than a repair, such as a crack to show a surveyor.",
+                BeforeWeArrive = "[checklist] List the repairs in your booking, with a photo of each.\n[visibility] Tell us how long each crack has been there, and whether it has grown.\n[home] Clear the floor over a creaking board: rugs and furniture off it.",
+                Included = "Filling cracks in plaster, ready for paint\nScrewing down creaking floorboards\nFixing back loose handles, hinges, towel rails and skirting\nAdjusting kitchen cupboard doors on their hinges",
+                NotIncluded = "Cracks wider than 5mm, or still growing, until a surveyor has seen them\nPainting over the repair, which is Painting Touch-Ups\nReplastering a wall or a ceiling, which is Plastering & Ceiling Repairs\nDripping taps and other plumbing, which are booked under Plumbing",
+                Faqs = new[]
+                {
+                    ("Are cracks in a new house normal?", "Fine ones, usually. NHBC says the plaster, mortar and concrete of a new home hold a lot of water and shrink as they dry out, which can leave minor cracks in walls and floors, often along a wall near the ceiling or the floor. Those cracks normally stay the same width and are less than 2mm wide."),
+                    ("When is a crack more than a repair?", "When it is wider than about 5mm, or getting wider. BRE, the Building Research Establishment, treats cracks up to 5mm wide, in general, as a matter of redecoration. It says whether a crack is getting wider can change that, and that a building professional should be consulted where the damage is significant."),
+                },
+            },
             ["outside-garden-tap-installation"] = new ServicePageText
             {
                 Summary = "A new tap on the outside wall, fed from the cold supply, with its backflow protection and a shut-off valve fitted indoors, out of the frost.",
@@ -292,6 +350,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("When can new plaster be painted?", "When it is thoroughly dry, which is what British Gypsum asks for its Thistle plasters. Until then it allows only a permeable paint, because that lets the plaster go on drying underneath."),
                     ("Can an Artex ceiling be plastered over?", "Usually, yes: once it is firm, it is skimmed over and the old coating stays in place underneath. If it may be from before 2000, a sample is tested for asbestos first, because sanding or scraping it would put any fibres into the air."),
+                },
+            },
+            ["property-maintenance"] = new ServicePageText
+            {
+                Summary = "About three hours of handyman repairs and checks round the whole home in one visit, from your list, with every alarm tested.",
+                CommonFindings = "[health_and_safety] A smoke alarm that stays silent. Every test button is pressed on the visit. For a landlord, the Smoke and Carbon Monoxide Alarm (England) Regulations 2015 ask for each alarm to be in proper working order on the day a new tenancy begins.\n[water_drop] Sealant round the bath or shower that has gone black or come away. Water gets behind it each time the bath or shower is used, so it is cut out and run again.\n[home] A door that sticks in winter and swings free in summer. NHBC says a house expands and shrinks with the temperature and humidity through the year, and doors can stick in their frames or swing open. The hinges and the catch are adjusted, or the door is eased where it binds.\n[build] A loose handrail on the stairs. It is fixed first, because it is the fitting people put their weight on.",
+                VisitSteps = "We walk round with your list and decide with you what comes first.\nWe work through it room by room, then outside.\nWe press the test button on every smoke and carbon monoxide alarm.\nWe tell you about anything that needs a quote, a survey or another trade.\nBefore we leave, we go through what was done and what is left.",
+                BeforeWeArrive = "[checklist] Walk round first and note the jobs room by room, then put the list and a photo of each in your booking.\n[key] If the home is let, give your tenants at least 24 hours' notice. GOV.UK's guidance for landlords asks for that before entering to inspect or carry out repairs.\n[inventory_2] Have the parts you have chosen there, such as new handles, a toilet seat or light bulbs.",
+                Included = "Your list of handyman repairs, inside and out\nA test of every smoke and carbon monoxide alarm\nResealing round baths, showers and sinks\nAdjusting doors that stick, and cupboard doors that hang crooked\nFixing back loose handrails, handles and rails",
+                NotIncluded = "Plumbing, which is General Plumbing Maintenance\nThe yearly gas safety check, which is for a Gas Safe registered engineer\nThe electrical safety report a landlord needs at least every five years, which is for a qualified electrician",
+                Faqs = new[]
+                {
+                    ("Does this visit cover a landlord's gas and electrical safety checks?", "No. The HSE says a landlord's gas appliances and flues must be checked by a Gas Safe registered engineer at least every 12 months, and the rules for rented homes ask for the electrics to be checked at least every 5 years by a properly qualified person. This visit is the handyman work around those checks."),
+                    ("How is this different from a General Handyman Call-Out?", "In time and in reach. A call-out is an hour for a few small jobs. Property Maintenance is about three hours for a whole list round the house, with the checks that go with it, such as testing every alarm."),
                 },
             },
             ["radiator-trv-replacement"] = new ServicePageText
