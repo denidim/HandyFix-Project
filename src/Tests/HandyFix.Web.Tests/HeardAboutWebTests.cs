@@ -9,7 +9,8 @@ namespace HandyFix.Web.Tests
     using Xunit;
 
     // "How did you hear about us?" on the website's two forms, optional on both, and the
-    // Dashboard's table of the answers (PROJECT_STATE.md Section 3ej).
+    // Dashboard's table of the answers, enquiries and jobs apart (PROJECT_STATE.md Sections 3ej
+    // and 3et).
     public class HeardAboutWebTests : IClassFixture<SqliteWebApplicationFactory>
     {
         private readonly SqliteWebApplicationFactory server;
@@ -50,9 +51,22 @@ namespace HandyFix.Web.Tests
 
             string html = WebUtility.HtmlDecode(await (await browser.GetAsync("/Administration/Dashboard")).Content.ReadAsStringAsync());
 
-            Assert.Contains("How Customers Heard About Us, Last 30 Days", html);
+            Assert.Contains("How Customers Heard About Us", html);
             Assert.Contains(">A friend or neighbour</td>", html);
             Assert.Contains(">Not said</td>", html);
+
+            // The enquiries and the jobs each have their column (Section 3et).
+            Assert.Matches(">Answer</th>\\s*<th[^>]*>Enquiries</th>\\s*<th[^>]*>Jobs</th>", html);
+
+            // The last 30 days unless "All time" is picked; the choice sends the page back to the table.
+            Assert.Contains("action=\"/Administration/Dashboard#dashboard-heard-about\"", html);
+            Assert.Contains("<option value=\"\">Last 30 days</option>", html);
+            Assert.Contains("<option value=\"all\">All time</option>", html);
+            Assert.Contains("Every enquiry and every job of the last 30 days", html);
+
+            string allTime = WebUtility.HtmlDecode(await (await browser.GetAsync("/Administration/Dashboard?heardAbout=all")).Content.ReadAsStringAsync());
+            Assert.Contains("<option value=\"all\" selected=\"selected\">All time</option>", allTime);
+            Assert.Contains("Every enquiry and every job so far", allTime);
         }
     }
 }

@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    using HandyFix.Data.Models;
     using HandyFix.Web.ViewModels.Administration.Enquiries;
     using HandyFix.Web.ViewModels.Home;
 
@@ -26,5 +27,10 @@
         Task DeleteAsync(Guid id);
 
         Task<int> GetTotalCountAsync();
+
+        // How many enquiries sent since then gave each answer to "How did you hear about us?";
+        // every enquiry kept when no day is given (PROJECT_STATE.md Section 3et). An answer no
+        // enquiry gave is not in it.
+        Task<IReadOnlyDictionary<HeardAbout, int>> GetHeardAboutCountsAsync(DateTime? since);
     }
 }

@@ -63,7 +63,7 @@ namespace HandyFix.Services.Data.Tests
         }
 
         [Fact]
-        public async Task TheDashboardCountsEveryAnswerOfTheJobsMadeSinceTheDayItIsGiven()
+        public async Task TheDashboardCountsTheAnswersOfTheJobsMadeSinceTheDayItIsGivenOrOfEveryJob()
         {
             using var world = new BookingWorld();
             await AddJobAsync(world, HeardAbout.GoogleMaps, daysAgo: 1);
@@ -71,13 +71,35 @@ namespace HandyFix.Services.Data.Tests
             await AddJobAsync(world, HeardAbout.GoogleMaps, daysAgo: 40);
             await AddJobAsync(world, HeardAbout.NotSaid, daysAgo: 2);
 
-            IReadOnlyList<HeardAboutCountViewModel> counts = await world.Bookings.GetHeardAboutCountsAsync(DateTime.UtcNow.AddDays(-30));
+            IReadOnlyDictionary<HeardAbout, int> lastMonth = await world.Bookings.GetHeardAboutCountsAsync(DateTime.UtcNow.AddDays(-30));
+            IReadOnlyDictionary<HeardAbout, int> allTime = await world.Bookings.GetHeardAboutCountsAsync(null);
 
-            Assert.Equal(HeardAboutText.Answers.Count + 1, counts.Count);
-            Assert.Equal(2, counts.Single(x => x.Label == "Google Maps").Count);
-            Assert.Equal(0, counts.Single(x => x.Label == "Facebook").Count);
-            Assert.Equal("Not said", counts.Last().Label);
-            Assert.Equal(1, counts.Last().Count);
+            Assert.Equal(2, lastMonth[HeardAbout.GoogleMaps]);
+            Assert.Equal(1, lastMonth[HeardAbout.NotSaid]);
+            Assert.False(lastMonth.ContainsKey(HeardAbout.Facebook));
+            Assert.Equal(3, allTime[HeardAbout.GoogleMaps]);
+        }
+
+        // The table has a line for every answer, a nought included, "Not said" last, and the
+        // enquiries and the jobs each in their own column: an enquiry made a job is in both, so
+        // the two are never added up (PROJECT_STATE.md Section 3et).
+        [Fact]
+        public void TheDashboardTableHasEveryAnswerWithItsEnquiriesAndItsJobsApart()
+        {
+            IReadOnlyList<HeardAboutCountViewModel> table = HeardAboutCountViewModel.Table(
+                new Dictionary<HeardAbout, int> { [HeardAbout.Facebook] = 1 },
+                new Dictionary<HeardAbout, int> { [HeardAbout.Facebook] = 1, [HeardAbout.NotSaid] = 2 });
+
+            Assert.Equal(HeardAboutText.Answers.Count + 1, table.Count);
+            HeardAboutCountViewModel facebook = table.Single(x => x.Label == "Facebook");
+            Assert.Equal(1, facebook.Enquiries);
+            Assert.Equal(1, facebook.Jobs);
+            HeardAboutCountViewModel googleMaps = table.Single(x => x.Label == "Google Maps");
+            Assert.Equal(0, googleMaps.Enquiries);
+            Assert.Equal(0, googleMaps.Jobs);
+            Assert.Equal("Not said", table.Last().Label);
+            Assert.Equal(0, table.Last().Enquiries);
+            Assert.Equal(2, table.Last().Jobs);
         }
 
         private static async Task AddJobAsync(BookingWorld world, HeardAbout answer, int daysAgo)

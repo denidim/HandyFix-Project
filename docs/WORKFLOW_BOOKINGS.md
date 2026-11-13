@@ -356,9 +356,11 @@ A box typed wrongly is put right afterwards with **Edit the Details** on the job
 **How customers heard about us.** Every job keeps its answer (`Booking.HeardAbout`), shown on the
 job's page under "Came From". *Not the same thing:* "Came from" is the way the job reached us (the
 website, the phone), "Heard about us from" is what made the customer look for us. The dashboard's
-table "How Customers Heard About Us, Last 30 Days" counts the answers of every job made in that
-time, cancelled ones too, each answer with its line, a nought included. An enquiry's answer is
-counted once it is made a job.
+table "How Customers Heard About Us" counts the answers of the enquiries and of the jobs (cancelled
+ones too) in two columns, each answer with its line, a nought included; its menu picks the last
+30 days (the default) or all time (`?heardAbout=all`). The two columns are counted apart: an
+enquiry that is made a job is in both, so they are never added up. Whatever came in before the
+question was first asked, on 12 Nov 2026, is "Not said".
 
 **Code:** `JobsService.CreateWrittenInJobAsync`, `JobInputModel`,
 `BookingsController.Create`, `Areas/Administration/Views/Bookings/Create.cshtml`.
