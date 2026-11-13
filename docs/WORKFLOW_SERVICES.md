@@ -32,12 +32,17 @@ seeder.
 
 Standard Create / Edit / Delete via `ServicesController`. Fields: Name, Description, Base Price,
 Estimated Duration, Category, Display Order, the Popular tick, the Quote only tick, the Emergency tick, and an optional
-hero image upload. The Edit form also has the Active tick.
+hero image upload. The Edit form also has the Active tick. Under the Description sits **The service page**: a short
+summary, five list boxes and the page's own questions (see "The service page's own blocks" below).
 
 | Rule | Value |
 | --- | --- |
 | Name | required, 3–100 chars, and not one another service has or a deleted one had |
 | Description | required, 20–3000 chars |
+| Short summary | optional, up to 200 chars |
+| What we usually find, The visit step by step | optional, up to 3000 chars each |
+| Before we arrive, What is included, What is not | optional, up to 2000 chars each |
+| A question / its answer | 5–300 / 5–1000 chars; a row left empty is dropped |
 | Base Price | 0.01–10,000.00 |
 | Duration | 15–1440 minutes |
 | Display Order | 0–999, starts at 100 (`Service.DefaultDisplayOrder`) |
@@ -138,6 +143,34 @@ The service page splits the Description at each blank line (`Presentation/Paragr
 long description reads as paragraphs. A one-hour service reads "1 Hour", not "1 Hours"
 (`Presentation/Durations.cs`).
 
+### The service page's own blocks
+
+`PROJECT_STATE.md` Section 3ep. Under the description the page draws, in this order: a line with
+the price (made from Base Price and the ticks, never typed), **What we usually find**, **The
+visit, step by step**, **Before we arrive**, **What is included** and **What is not**, the page's
+own **questions**, **Worth doing in the same visit** and **Areas we cover**. A box left empty is
+not drawn at all, heading included.
+
+- **One point per line** in the five list boxes. The steps are numbered by the page.
+- **An icon in square brackets** may start a line of "What we usually find" or "Before we arrive",
+  for example `[water_drop]`. The names allowed are listed under the box (`PagePoints.Icons`). A
+  name not on the list is refused when the form is saved: the icon font holds only the icons on
+  `tools/fonts/icon-names.txt`, and a missing one would show on the page as the word itself. A line
+  with no icon gets the box's own (`build` for findings, `info` for before we arrive).
+- **The first sentence** of each "What we usually find" line is drawn in bold.
+- **The questions** are only about this job. Deposits, cancelling and paying stay on `/FAQ`, which
+  the page links to under them. They are also the page's question record for search engines; a
+  page with none has no such record.
+- **The short summary** is not on the page itself: it is the service's card text on the town pages
+  (`Summaries.Of`). Left empty, the card shows the description's first sentence.
+- **Worth doing in the same visit** is chosen in code with each page's text
+  (`Presentation/SameVisitServices.cs`, by the service's address), and a page with a choice drops
+  "You Might Also Need", the three cards of its division at its foot. **Areas we cover** lists
+  every town page, so a new town appears by itself.
+- The written text of each page is in the database. Pages written so far reached it by a data
+  migration that updates by the service's address (`AddServicePageTextsBatch1`, Section 3eq), and
+  `ServicePageTexts` holds the same text for the seeder.
+
 ### The service page's buttons
 
 A bookable service's page leads with **Book a Slot** (the one filled, dark green button), which
@@ -163,6 +196,7 @@ restores a service. What an admin sets, renames or deletes survives every deploy
   duration and category were written over whatever an admin had set.
 - One part still runs at every start: a service with no `ServiceImage` row gets one, pointing at
   the path its picture would have (Step 3).
+- A service in `ServicePageTexts` is seeded with its page's own blocks and questions as well.
 
 ### The admin controller names its controller and area when it redirects
 
