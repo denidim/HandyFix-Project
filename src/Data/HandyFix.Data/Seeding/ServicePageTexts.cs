@@ -69,6 +69,20 @@ namespace HandyFix.Data.Seeding
                     ("What paperwork comes with a new boiler?", "The warranty papers, and a Building Regulations Compliance Certificate. The installation has to be notified to the local authority within 30 days, which we do through Gas Safe Register. The Register then posts the certificate to you, and you can check online that it was done."),
                 },
             },
+            ["curtain-and-blind-fitting"] = new ServicePageText
+            {
+                Summary = "Curtain poles, tracks and blinds put up level, on fixings chosen for the wall above the window, with each cord or chain held out of a child's reach.",
+                CommonFindings = "[warning] A steel lintel just above the window. A masonry bit will not drill it, so the brackets go into the brick above it, or the steel is drilled with a metal bit and the fixing chosen for steel.\n[build] A long pole that bows in the middle. Lined and interlined curtains are heavy, and a pole held only at its two ends sags between them, so a long pole gets a centre bracket as well.\n[home] A recess too shallow for the blind. A blind inside the recess needs room for its brackets and for the window handles to clear it. Where there is not enough, the blind goes on the wall above and overlaps the recess, which also keeps more light out.\n[health_and_safety] A cord or chain a child can reach. GOV.UK says the cleat that holds a blind's cord should be on a surface at least 1.5 metres from the floor, with the spare cord wound on in a figure of eight after each use.",
+                VisitSteps = "We look at what is above and beside each window, and scan for cables and pipes before drilling.\nFor a blind in the recess, we check it against the recess at the top, the middle and the bottom.\nWe mark the brackets level, drill and fix them.\nWe hang the curtains or the blind and fit its cleat or chain tensioner.\nWe run each blind up and down and draw each curtain, to check it moves freely.",
+                BeforeWeArrive = "[checklist] Say in your booking how many windows there are, and whether each has a pole, a track or a blind. Have them at home with all their brackets and screws.\n[home] Clear the window sills and move furniture away from the windows.\n[info] If an old pole or track is coming down, take the curtains off it if you can.",
+                Included = "Curtain poles and tracks\nRoller, Roman, Venetian and vertical blinds\nCleats and chain tensioners fitted out of children's reach\nTaking down the old pole, track or blind",
+                NotIncluded = "Electric blinds or tracks that have to be wired into the mains\nMaking or altering curtains and blinds",
+                Faqs = new[]
+                {
+                    ("Does a blind with a cord need a safety device?", "Yes. GOV.UK says new blinds with looped cords must have child safety devices fitted when they are made, or sold with the blind, and the cleat goes at least 1.5 metres from the floor. An older blind without one can have a cleat or a chain tensioner added."),
+                    ("Should a blind go inside the window recess or above it?", "Inside, if the recess is deep enough for the brackets and the window handles clear the blind: it looks neater and leaves the sill free. Above, overlapping the recess on each side, keeps out more light and suits a shallow recess."),
+                },
+            },
             ["door-repairs"] = new ServicePageText
             {
                 Summary = "Sticking, dropped and rattling doors put right at the hinges, the latch or the edge, with draught strips and door closers fitted or adjusted.",
@@ -154,6 +168,20 @@ namespace HandyFix.Data.Seeding
                     ("What time of year suits a check?", "Before the first frost. Thames Water asks for bare pipes in lofts, garages and outside to be lagged before a cold spell, and the check shows which of yours need it."),
                 },
             },
+            ["gutter-clearing"] = new ServicePageText
+            {
+                Summary = "Gutters and downpipes cleared by hand and tested with water, with leaking joints and loose brackets found while we are up there.",
+                CommonFindings = "[water_drop] An outlet blocked solid. Leaves and moss collect where the gutter drops into the downpipe, the water backs up behind them and spills over the front edge.\n[visibility] Stained brickwork under a joint. SPAB suggests looking at gutters and downpipes in heavy rain, when a leaking joint shows, or in dry weather for staining on the brick below it. A leaking joint gets a new seal or a new connector.\n[build] A gutter that falls the wrong way. SPAB's advice is to have gutters refixed if they slope the wrong way or pour water onto the wall. A loose or dropped bracket is reset so the gutter falls to its outlet.",
+                VisitSteps = "We look at the gutters from the ground and agree with you where the ladder goes.\nWe scoop out the leaves, moss and silt by hand and bag them.\nWe clear each outlet and downpipe.\nWe run water along every length and watch where it goes.\nWe tell you about any joint, bracket or downpipe that needs more than a repair on the day.",
+                BeforeWeArrive = "[directions_car] Move cars, bins and pots away from under the gutters, so the ladder can stand on firm ground.\n[info] Say in your booking how many storeys the house has, and whether a conservatory or an extension roof sits below any gutter.\n[visibility] If you have seen where water spills over in the rain, or birds going in and out under the roof, tell us.",
+                Included = "Gutters at the front and the back\nOutlets and downpipes cleared\nA water test along every length\nResetting a loose bracket",
+                NotIncluded = "Houses of more than two storeys\nDrains and gullies below the ground\nRoof repairs, such as slipped tiles or flashing",
+                Faqs = new[]
+                {
+                    ("How often should gutters be cleared?", "Every autumn, once the leaves are down, and in spring as well: that is SPAB's advice. A house under trees may need it more often."),
+                    ("Can you clear a gutter with birds nesting in it?", "Not the part with an active nest. The RSPB says an active nest must not be removed and the chicks must be allowed to leave first, so that stretch is cleared once the nest is empty. House sparrows and starlings are the birds it names as most likely to share a home."),
+                },
+            },
             ["kitchen-plumbing"] = new ServicePageText
             {
                 Summary = "A kitchen sink fitted or replaced, with its waste, trap, tap feeds and isolating valves, and every joint under it checked dry with the taps running.",
@@ -224,6 +252,20 @@ namespace HandyFix.Data.Seeding
                     ("Can I fill a pond or a hot tub from an outside tap?", "Not from one protected only by a double check valve. Water Regs UK classes a hose used to refill a pond, a swimming pool, a spa bath or a hot tub as fluid category 5, the highest risk, unless your water company assesses it otherwise, so ask your water company before you do."),
                 },
             },
+            ["painting-touch-ups"] = new ServicePageText
+            {
+                Summary = "Holes, dents and scuffs filled, sanded and painted on walls, ceilings and woodwork, and the whole wall painted where a patch would show.",
+                CommonFindings = "[visibility] A patch that shows on a silk or satin wall. Farrow & Ball says filled areas take up paint at a different rate from the wall round them, and that the difference shows far more on paints with a higher sheen. On a wall like that, the paint may need to go from corner to corner.\n[warning] Old paint that may contain lead. Cambridge City Council says a home built before the 1960s that still has its original coats of paint could have some lead in it, and HSE names dry sanding old paint and stripping it with blow lamps among the risky jobs. Old woodwork is rubbed down wet, never dry, and never burnt off.\n[build] An old wall plug left in its hole. Filled over, it shows through again, so it is pulled out, or set below the surface, before the hole is filled.\n[refresh] A crack that keeps coming back in a corner. Where a wall meets the ceiling or a door frame, the two move slightly apart and hard filler cracks again. A flexible decorator's caulk takes the movement.",
+                VisitSteps = "We look at the finish and the colour, and tell you whether patches will blend or the wall needs a full coat.\nWe fill each hole, dent and crack, let the filler dry and sand it smooth.\nWe prime the filled spots, so the paint does not sink into them.\nWe paint, with a second coat where the first does not cover.\nWe take up the dust sheets and clean up.",
+                BeforeWeArrive = "[inventory_2] If you have the tin the wall was painted with, leave it out: its label gives the paint and the colour. If not, tell us the brand and the colour's name if you know them.\n[checklist] Put a small piece of masking tape next to each mark you want done, so none is missed.\n[home] Move small furniture and pictures away from the walls being painted.",
+                Included = "Filling holes, dents and cracks\nSanding and priming the filler\nPainting walls, ceilings, doors, frames and skirting boards\nFlexible caulk in corners that keep cracking",
+                NotIncluded = "Plaster that has come away from the wall, or a ceiling damaged by water: that is Plastering & Ceiling Repairs",
+                Faqs = new[]
+                {
+                    ("Will a touch-up show?", "It can. Filled spots take up paint differently from the wall round them, and a silk or satin finish shows that most, which is why we may suggest painting the whole wall. On a flat matt wall a patch is harder to see, though a low light across the wall can still pick it out."),
+                    ("Can you paint over a damp patch?", "Not until the cause is mended. A stain left by a leak comes back through new emulsion, so the leak is fixed first, the patch is left to dry, and it is sealed with a stain-blocking primer before it is painted."),
+                },
+            },
             ["pipe-repairs"] = new ServicePageText
             {
                 Summary = "Damaged lengths of pipe cut out and replaced in copper or plastic: frost splits, nail holes, worn runs and old lead inside the house, tested under full mains pressure.",
@@ -236,6 +278,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("Who pays to replace a lead pipe?", "You pay for your part, and the water company for its own. Thames Water owns the pipe from its main to the outside stop valve, and for a house built before 1970 its scheme replaces that part free when the owner replaces their own lead supply pipe."),
                     ("What can I do until a lead pipe is replaced?", "Run the cold kitchen tap for two minutes in the morning, or after a few days away, and use only that tap for drinks and cooking. That is Thames Water's advice. It adds that boiling the water does not help, and that lowering lead matters most if you are pregnant or have young children."),
+                },
+            },
+            ["plastering-ceiling-repairs"] = new ServicePageText
+            {
+                Summary = "Cracks, holes and loose plaster repaired, walls and ceilings skimmed, and ceilings damaged by a leak boarded again, at a fixed price agreed after a free survey.",
+                CommonFindings = "[water_drop] A ceiling stained or bowed after a leak. Plasterboard that has been soaked loses its strength and can sag. Once the leak above is mended, the wet board comes down and new board goes up, taped and skimmed.\n[search] Plaster that sounds hollow when tapped. A blown patch has come away from the wall behind it. It is cut back to firm plaster and filled in layers.\n[home] An old lath and plaster ceiling that sags. In older houses the ceilings are lime plaster pressed through thin strips of timber. Where the plaster has let go of the strips, it is screwed back with plaster washers, or the ceiling is boarded over.\n[warning] A textured ceiling, such as Artex. HSE says to assume a building built or refurbished before 2000 contains asbestos, and textured coatings are among the materials it lists. A coating like that is sampled and tested before it is sanded, scraped or cut.",
+                VisitSteps = "At the survey we look at what caused the damage, and give you the fixed quote.\nWe cover the floor and the furniture, and take off the loose plaster or the damaged board.\nWe fix new board where it is needed, and treat the wall so the new plaster grips.\nWe plaster, and skim the whole wall or ceiling where a patch would show.\nWe tell you when the new plaster can be painted.",
+                BeforeWeArrive = "[emergency] If a ceiling is bulging with water, keep everyone out of the room under it and leave its light switched off. If water is still coming through, that is an emergency: call us or message us on WhatsApp.\n[home] Clear the room as far as you can. What has to stay is covered.\n[info] If a ceiling has a textured finish and you know when it went up, tell us at the survey.",
+                Included = "A free survey and a fixed quote\nPatching cracks, holes and loose plaster\nSkimming walls and ceilings\nNew plasterboard for a ceiling damaged by water\nCoving fitted, or a short length matched to the old",
+                NotIncluded = "Removing a textured coating that contains asbestos",
+                Faqs = new[]
+                {
+                    ("When can new plaster be painted?", "When it is thoroughly dry, which is what British Gypsum asks for its Thistle plasters. Until then it allows only a permeable paint, because that lets the plaster go on drying underneath."),
+                    ("Can an Artex ceiling be plastered over?", "Usually, yes: once it is firm, it is skimmed over and the old coating stays in place underneath. If it may be from before 2000, a sample is tested for asbestos first, because sanding or scraping it would put any fibres into the air."),
                 },
             },
             ["radiator-trv-replacement"] = new ServicePageText
@@ -336,6 +392,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("Can a TV go on a plasterboard wall?", "Yes, when the bracket is fixed to the timber studs inside the wall: that is RoSPA's advice for plasterboard walls. If there is no stud where you want the screen, we show you where the nearest ones allow it."),
                     ("My TV stays on its stand. Can it be made safe for small children?", "Yes, with an anti-tip strap, fixed to the back of the set and to a bracket on the wall, which is what RoSPA advises. RoSPA knows of eight babies and young children in the UK killed by a falling television since July 2008. We can fit a strap on the same visit."),
+                },
+            },
+            ["wall-floor-tiling"] = new ServicePageText
+            {
+                Summary = "Walls and floors tiled in ceramic, porcelain or stone, on a base made ready for the tile's weight, quoted after a free survey at your home.",
+                CommonFindings = "[build] Floorboards that move underfoot. A floor that flexes cracks the grout and then the tiles, so loose boards are screwed down firmly before the new base goes over them.\n[construction] Heavy tiles for a plastered wall. Instarmac, the adhesive maker, gives the most a wall can carry as 20kg a square metre on gypsum plaster and 32kg on plasterboard with no skim, adhesive and grout included. Large porcelain or stone can weigh more, so the wall is boarded to take it.\n[timer] New plaster that has not dried out. British Gypsum says tiles should not go on until the plaster and the wall behind it are dry.\n[search] A floor that is out of level. Long tiles show every dip as a lip at their edges, so the floor is levelled with a levelling compound first.",
+                VisitSteps = "At the survey we measure, look at the wall or floor the tiles will go on, agree the layout with you, and give you the fixed quote.\nWe take off the old tiles or floor covering where they have to come off, and prepare the base: boards, a membrane or a levelling compound.\nWe set the tiles out from the centre lines, so the cut tiles at the edges are even.\nWe fix the tiles, cutting round pipes, sockets and corners.\nWe grout, and seal with silicone where the tiles meet a bath, a shower tray or a worktop.",
+                BeforeWeArrive = "[add_a_photo] For the survey, have the tiles you like, or pictures of them, and their size.\n[inventory_2] Keep a few spare tiles from the same batch. The batch or shade number is on the box, and a later repair is easier with a tile that matches.\n[home] A tiled floor sits higher than carpet or vinyl, so a door that opens over it may need trimming. Tell us which doors.",
+                Included = "Measuring up and a fixed quote at the survey\nPreparing the wall or the floor\nA backer board or a membrane over timber floors\nLevelling an uneven floor\nCutting round pipes, sockets and corners\nGrouting, and silicone along baths, trays and worktops\nSealing natural stone",
+                NotIncluded = null,
+                Faqs = new[]
+                {
+                    ("Can tiles go straight onto floorboards?", "No. The Tile Association says that under BS 5385-3:2024, the British Standard for floor tiling, timber boards are no longer recommended for tiling directly, and a layer such as a tile backer board or an uncoupling membrane goes over them first."),
+                    ("Can new tiles go over old ones?", "Sometimes. Every old tile has to be firmly stuck, and the wall has to carry the weight of both layers. Where either is in doubt, the old tiles come off first."),
                 },
             },
             ["wall-mounting"] = new ServicePageText
