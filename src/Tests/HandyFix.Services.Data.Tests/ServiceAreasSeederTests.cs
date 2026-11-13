@@ -42,11 +42,40 @@
         {
             await this.SeedAsync();
 
-            Assert.Equal(15, this.dbContext.ServiceAreas.Count());
-            Assert.Equal(30, this.dbContext.ServiceAreaFaqs.Count());
+            // The first fifteen with two questions each; the six of Section 3em with one.
+            Assert.Equal(21, this.dbContext.ServiceAreas.Count());
+            Assert.Equal(36, this.dbContext.ServiceAreaFaqs.Count());
             Assert.All(
                 this.dbContext.ServiceAreas.Include(a => a.Faqs).ToList(),
-                area => Assert.Equal(new[] { 1, 2 }, area.Faqs.Select(f => f.DisplayOrder).OrderBy(o => o)));
+                area => Assert.Equal(Enumerable.Range(1, area.Faqs.Count), area.Faqs.Select(f => f.DisplayOrder).OrderBy(o => o)));
+        }
+
+        // The six towns added in November 2026 (PROJECT_STATE Section 3em) come with their
+        // districts, their drive time and their text in paragraphs. The AddSixNewTownAreas
+        // migration holds the same six for a database that already had areas.
+        [Theory]
+        [InlineData("twickenham", "Twickenham", "TW1, TW2", 25, "Montpelier Row")]
+        [InlineData("richmond", "Richmond", "TW9, TW10", 29, "Maids of Honour Row")]
+        [InlineData("molesey", "Molesey", "KT8", 13, "Howard Houses")]
+        [InlineData("new-malden", "New Malden", "KT3", 9, "the six Groves")]
+        [InlineData("ashtead", "Ashtead", "KT21", 14, "the spring line")]
+        [InlineData("cheam", "Cheam", "SM3, SM2", 15, "mock Tudor shops")]
+        public async Task SeedAsyncShouldAddTheSixNewTowns(string slug, string name, string districts, int minutes, string words)
+        {
+            await this.SeedAsync();
+
+            ServiceArea area = this.dbContext.ServiceAreas.Include(a => a.Faqs).Single(a => a.Slug == slug);
+            Assert.Equal(name, area.Name);
+            Assert.Equal(districts, area.PostcodeDistricts);
+            Assert.Equal(minutes, area.DriveTimeMinutes);
+            Assert.False(area.IsFeatured);
+            Assert.NotNull(area.DiagramBearing);
+            Assert.Contains(words, area.IntroCopy);
+
+            // A blank line between paragraphs, which the town's page draws as separate ones.
+            Assert.Contains("\n\n", area.IntroCopy);
+            Assert.Contains("\n\n", area.LocalNeighbourhoodsCopy);
+            Assert.Single(area.Faqs);
         }
 
         // Each area starts with the postcode districts it covers, which is what the booking form
@@ -94,7 +123,7 @@
 
             await this.SeedAsync();
 
-            Assert.Equal(14, this.dbContext.ServiceAreas.Count());
+            Assert.Equal(20, this.dbContext.ServiceAreas.Count());
             Assert.DoesNotContain(this.dbContext.ServiceAreas, a => a.Slug == "dorking");
         }
 
