@@ -168,8 +168,9 @@ not drawn at all, heading included.
   "You Might Also Need", the three cards of its division at its foot. **Areas we cover** lists
   every town page, so a new town appears by itself.
 - The written text of each page is in the database. Pages written so far reached it by a data
-  migration that updates by the service's address (`AddServicePageTextsBatch1`, Section 3eq), and
-  `ServicePageTexts` holds the same text for the seeder.
+  migration per batch that updates by the service's address (`AddServicePageTextsBatch1`, Section
+  3eq; `AddServicePageTextsBatch2`, Section 3er), and `ServicePageTexts` holds the same text for the
+  seeder.
 
 ### The service page's buttons
 
