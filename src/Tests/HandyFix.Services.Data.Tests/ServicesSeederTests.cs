@@ -154,8 +154,8 @@
         }
 
         // A new database gets the written pages' own text, as an existing one got it from the
-        // migration of its batch (AddServicePageTextsBatch1 to 4, PROJECT_STATE.md Sections 3eq, 3er,
-        // 3es and 3eu): the description, the blocks a point per line, and the questions in order.
+        // migration of its batch (AddServicePageTextsBatch1 to 8, PROJECT_STATE.md Sections 3eq to
+        // 3ey): the description, the blocks a point per line, and the questions in order.
         [Theory]
         [InlineData("tap-repairs", "A tap that drips", "[water_drop] A worn washer.", 3, "Is it worth repairing a tap, or should I replace it?")]
         [InlineData("toilet-repairs", "Running, slow to fill", "[water_drop] A flush valve that no longer seals.", 2, "Why does my toilet keep running?")]
@@ -192,6 +192,9 @@
         [InlineData("general-handyman-call-out", "An hour of a handyman's time", "[inventory_2] A part we do not carry.", 2, "Should I buy the materials before the visit?")]
         [InlineData("minor-home-repairs", "Small faults build up in every house", "[refresh] A crack that opens and closes with the seasons.", 2, "Are cracks in a new house normal?")]
         [InlineData("property-maintenance", "A longer visit, of about three hours", "[health_and_safety] A smoke alarm that stays silent.", 2, "Does this visit cover a landlord's gas and electrical safety checks?")]
+        [InlineData("kitchen-fitting-alterations", "A new kitchen fitted in place of the old one", "[water_drop] A wet or soft floor behind the old sink.", 3, "Can the sink move to another wall?")]
+        [InlineData("partition-walls-drylining", "We build new walls inside the house", "[warning] A new room you can only leave through another.", 2, "Does a stud wall need building regulations approval?")]
+        [InlineData("custom-carpentry-boxing-in", "Woodwork made for one place in the house", "[build] Two alcoves that do not match.", 2, "Can a stop valve be boxed in?")]
         public async Task SeedAsyncShouldGiveTheWrittenPagesTheirText(string slug, string descriptionStart, string firstFinding, int questions, string firstQuestion)
         {
             await this.SeedAsync();
@@ -217,16 +220,21 @@
             Assert.DoesNotContain("garbage", service.Description + service.Summary, StringComparison.OrdinalIgnoreCase);
         }
 
+        // Since batch 8 (PROJECT_STATE.md Section 3ey) every service that comes with the site has
+        // its own text: none is left with only the old description.
         [Fact]
-        public async Task SeedAsyncShouldLeaveTheOtherPagesBlocksEmpty()
+        public async Task SeedAsyncShouldGiveEveryServiceItsOwnText()
         {
             await this.SeedAsync();
 
-            Service kitchen = this.dbContext.Services.Include(s => s.Faqs).Single(s => s.Slug == "kitchen-fitting-alterations");
-            Assert.Null(kitchen.Summary);
-            Assert.Null(kitchen.CommonFindings);
-            Assert.Empty(kitchen.Faqs);
-            Assert.Equal(35, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
+            var services = this.dbContext.Services.Include(s => s.Faqs).ToList();
+            Assert.Equal(38, services.Count);
+            Assert.All(services, service =>
+            {
+                Assert.False(string.IsNullOrWhiteSpace(service.Summary), $"{service.Slug} has no summary");
+                Assert.False(string.IsNullOrWhiteSpace(service.CommonFindings), $"{service.Slug} has no findings");
+                Assert.NotEmpty(service.Faqs);
+            });
         }
 
         // As the application does it: each seeder, then a save (ApplicationDbContextSeeder).

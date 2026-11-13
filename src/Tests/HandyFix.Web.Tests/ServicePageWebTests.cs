@@ -21,6 +21,10 @@ namespace HandyFix.Web.Tests
     {
         private const string PipePage = "/Services/plumbing/pipe-repairs";
 
+        // Every service that comes with the site has its own text since batch 8 (Section 3ey); one
+        // the admin adds has none until it is written, so the tests add one.
+        private const string NewPage = "/Services/small-building-works/loft-boarding";
+
         private readonly SqliteWebApplicationFactory server;
 
         public ServicePageWebTests(SqliteWebApplicationFactory server)
@@ -66,12 +70,15 @@ namespace HandyFix.Web.Tests
             Assert.Equal("Yes, where a board lifts & the pipe can be reached.", question.GetProperty("acceptedAnswer").GetProperty("text").GetString());
         }
 
-        // A page with none of its own blocks yet: the opening and the price line, no empty
-        // headings, none of the old fixed text, and no questions for search engines.
+        // A page with none of its own blocks yet, as a service the admin has just added: the
+        // opening and the price line, no empty headings, none of the old fixed text, and no
+        // questions for search engines.
         [Fact]
         public async Task APageWithoutItsOwnBlocksShowsOnlyItsOpening()
         {
-            string html = WebUtility.HtmlDecode(await this.GetAsync("/Services/small-building-works/kitchen-fitting-alterations"));
+            await this.AddServiceWithoutTextAsync();
+
+            string html = WebUtility.HtmlDecode(await this.GetAsync(NewPage));
 
             Assert.Contains("Service Overview", html);
             Assert.Contains("Priced after a free survey at your home", html);
@@ -98,7 +105,8 @@ namespace HandyFix.Web.Tests
             Assert.Contains("<a href=\"/Services/handyman/silicone-mastic-resealing\">", html);
             Assert.DoesNotContain("You Might Also Need", html);
 
-            string other = WebUtility.HtmlDecode(await this.GetAsync("/Services/small-building-works/kitchen-fitting-alterations"));
+            await this.AddServiceWithoutTextAsync();
+            string other = WebUtility.HtmlDecode(await this.GetAsync(NewPage));
             Assert.DoesNotContain("Worth doing in the same visit", other);
             Assert.Contains("You Might Also Need", other);
         }
@@ -140,6 +148,30 @@ namespace HandyFix.Web.Tests
                 DisplayOrder = 1,
             });
 
+            await db.SaveChangesAsync();
+        }
+
+        // A small building service with only what the admin form asks for. The class shares one
+        // database, so it is added once.
+        private async Task AddServiceWithoutTextAsync()
+        {
+            using IServiceScope scope = this.server.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            if (await db.Services.AnyAsync(s => s.Slug == "loft-boarding"))
+            {
+                return;
+            }
+
+            ServiceCategory building = await db.ServiceCategories.SingleAsync(c => c.Slug == "small-building-works");
+            db.Services.Add(new Service
+            {
+                Name = "Loft Boarding",
+                Slug = "loft-boarding",
+                Description = "Boarding a loft floor for storage.",
+                BasePrice = 280.00m,
+                EstimatedDurationMinutes = 480,
+                CategoryId = building.Id,
+            });
             await db.SaveChangesAsync();
         }
 
