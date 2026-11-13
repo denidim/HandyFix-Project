@@ -43,7 +43,10 @@
 
             Assert.Contains("<p>We fit new boilers and service existing ones.", html);
             Assert.Contains("<p>A new boiler starts with a survey.", html);
-            Assert.Contains("<p>A yearly service keeps your boiler safe", html);
+            Assert.Contains("<p>A like-for-like swap usually takes a day.", html);
+
+            // The yearly service moved from the description to the page's own questions (Section 3eq).
+            Assert.Contains("How often should a boiler be serviced?", html);
         }
 
         [Fact]

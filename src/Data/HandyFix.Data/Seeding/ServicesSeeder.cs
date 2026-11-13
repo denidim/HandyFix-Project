@@ -13,10 +13,8 @@
     {
         private const string BoilerDescription =
             "We fit new boilers and service existing ones. All boiler work is carried out by a Gas Safe registered engineer, as UK law requires for any work on gas appliances.\n\n" +
-            "A new boiler starts with a survey. We look at how much heating and hot water your home needs, check the existing pipework and flue, and help you choose the right type of boiler: combi, system or conventional.\n\n" +
-            "On installation day we turn off the water, drain the system and remove the old boiler, along with any tanks or cylinders you no longer need. The new boiler is mounted level and secure, and the flue is fitted and sealed through the wall. We flush the system to clear out sludge, fit a magnetic filter, and connect the flow, return, gas and condensate pipes. Finally we test everything, carry out the gas safety checks, set up your controls, including smart thermostats, and hand over your compliance and warranty certificates.\n\n" +
-            "A like-for-like swap usually takes a day. Changing a regular boiler to a combi, or moving the boiler to a new place, takes 1.5 to 4 days. You get a clear quote with the price and timings before any work starts.\n\n" +
-            "A yearly service keeps your boiler safe and running efficiently, and most manufacturers need it to keep the warranty valid. We check that the boiler burns gas safely, test the flue and pressure, clean the key parts and give you a record of the service.";
+            "A new boiler starts with a survey. We look at how much heating and hot water your home needs, check the existing pipework and flue, and help you choose the right type of boiler: combi, system or conventional. You get a clear quote with the price and timings before any work starts.\n\n" +
+            "A like-for-like swap usually takes a day. Changing a regular boiler to a combi, or moving the boiler to a new place, takes 1.5 to 4 days.";
 
         public async Task SeedAsync(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
@@ -34,14 +32,14 @@
             {
                 // Plumbing Services
                 new { Slug = "emergency-plumbing", Name = "Emergency Plumbing", Description = "Urgent response for burst pipes, flooding, or critical plumbing failures across South London.", Price = 150.00m, Duration = 60, CategoryId = plumbingCategory.Id },
-                new { Slug = "leak-repairs", Name = "Leak Repairs", Description = "Fixing leaking pipes, joints and fittings under sinks and around baths, toilets and radiators.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
-                new { Slug = "tap-repairs", Name = "Tap Repairs", Description = "Fixing dripping taps, replacing seals, cartridges, or installing brand new basin mixers.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
-                new { Slug = "toilet-repairs", Name = "Toilet Repairs", Description = "Repairing running toilets, faulty flush valves, fill mechanisms, or toilet leaks.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
+                new { Slug = "leak-repairs", Name = "Leak Repairs", Description = "A leak we can see or reach: a drip from a joint under a sink, a valve weeping at a radiator, a pipe behind a bath panel, a stain spreading on the ceiling under a bathroom. We find where the water starts, stop it, and leave the repair dry under full pressure.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
+                new { Slug = "tap-repairs", Name = "Tap Repairs", Description = "A tap that drips, will not turn off fully or has gone stiff nearly always has one worn part inside it, and that part can be changed without changing the tap. Taps with separate hot and cold heads close on a rubber washer; quarter-turn and most mixer taps close on a ceramic cartridge.\n\nWe fit new basin, bath and kitchen taps too, when the old one is past repair or you want a different one.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
+                new { Slug = "toilet-repairs", Name = "Toilet Repairs", Description = "Running, slow to fill, a weak flush, water on the floor: most toilet faults come down to one part, either inside the cistern or behind the pan. It is the flush valve, the fill valve, the seal between cistern and pan, or the pan connector. We find which one has failed and change it, with the toilet left in place.\n\nA toilet that trickles into the pan all day is easy to miss and costly on a water meter: Waterwise puts the loss from a leaking toilet at 200 to 400 litres a day.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
                 new { Slug = "pipe-repairs", Name = "Pipe Repairs", Description = "Replacing damaged copper, plastic, or lead piping to restore secure water flow.", Price = 90.00m, Duration = 90, CategoryId = plumbingCategory.Id },
                 new { Slug = "shower-installation", Name = "Shower Installation", Description = "Full assembly and electrical/plumbing integration of power showers and mixers.", Price = 90.00m, Duration = 180, CategoryId = plumbingCategory.Id },
                 new { Slug = "bathroom-plumbing", Name = "Bathroom Plumbing", Description = "Installing baths, basins, bidets, or replacing complete bathroom sanitaryware.", Price = 90.00m, Duration = 120, CategoryId = plumbingCategory.Id },
                 new { Slug = "kitchen-plumbing", Name = "Kitchen Plumbing", Description = "Installing kitchen sinks, garbage disposals, and other kitchen plumbing fixtures and fittings.", Price = 90.00m, Duration = 120, CategoryId = plumbingCategory.Id },
-                new { Slug = "blocked-drains", Name = "Blocked Drains", Description = "Clearing blocked sinks, toilets, baths and showers inside the home. We do not clear outside drains.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
+                new { Slug = "blocked-drains", Name = "Blocked Drains", Description = "We clear blockages inside the house: sinks, basins, baths, showers and toilets that drain slowly or not at all. We take the trap off, clear it and the waste pipe behind it, and run water through to show it flows again.\n\nWe do not clear outside drains, gullies or manholes.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
                 new { Slug = "general-plumbing-maintenance", Name = "General Plumbing Maintenance", Description = "Routine plumbing checks, minor valve adjustments, and general system health checks.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
                 new { Slug = "washing-machine-dishwasher-install", Name = "Washing Machine & Dishwasher Install", Description = "Connecting new washing machines or dishwashers to the water supply and waste, including hose and valve checks.", Price = 90.00m, Duration = 60, CategoryId = plumbingCategory.Id },
                 new { Slug = "radiator-trv-replacement", Name = "Radiator & TRV Replacement", Description = "Replacing an old radiator or upgrading manual valves to thermostatic radiator valves (TRVs) for better heating control.", Price = 90.00m, Duration = 90, CategoryId = plumbingCategory.Id },
@@ -97,7 +95,7 @@
 
                 foreach (var item in services)
                 {
-                    await dbContext.Services.AddAsync(new Service
+                    var service = new Service
                     {
                         Slug = item.Slug,
                         Name = item.Name,
@@ -111,7 +109,25 @@
                         IsGasSafeWork = gasSafeWork.Contains(item.Slug),
                         IsQuoteOnly = item.CategoryId == smallBuildingCategory.Id || gasSafeWork.Contains(item.Slug),
                         IsEmergency = item.Slug == "emergency-plumbing",
-                    });
+                    };
+
+                    // The page's own blocks and questions, for the services that have them so far
+                    // (PROJECT_STATE.md Section 3eq).
+                    if (ServicePageTexts.BySlug.TryGetValue(item.Slug, out ServicePageText page))
+                    {
+                        service.Summary = page.Summary;
+                        service.CommonFindings = page.CommonFindings;
+                        service.VisitSteps = page.VisitSteps;
+                        service.BeforeWeArrive = page.BeforeWeArrive;
+                        service.Included = page.Included;
+                        service.NotIncluded = page.NotIncluded;
+                        for (var i = 0; i < page.Faqs.Count; i++)
+                        {
+                            service.Faqs.Add(new ServiceFaq { Question = page.Faqs[i].Question, Answer = page.Faqs[i].Answer, DisplayOrder = i + 1 });
+                        }
+                    }
+
+                    await dbContext.Services.AddAsync(service);
                 }
 
                 // One save for the whole list: a start that fails part-way must not leave a
