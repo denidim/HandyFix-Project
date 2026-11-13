@@ -105,6 +105,43 @@
             Assert.Equal(2, area.Faqs.Count);
         }
 
+        // The other ten of the first fifteen followed the same day (PROJECT_STATE Section 3eo), in
+        // the same way; the AddLocalTextToTenTownAreas migration holds their text. Four old
+        // phrases came out, and the last four rows are those towns: a seeder that still said them
+        // would not match the migration.
+        [Theory]
+        [InlineData("epsom", "one of our busiest areas for years", "Kenneth Bland", null)]
+        [InlineData("sutton", "busy high-street flats", "Stagecoaches made Sutton before trains did.", null)]
+        [InlineData("wimbledon", "plumbing and carpentry teams", "John Innes", null)]
+        [InlineData("walton-on-thames-weybridge", "a reliable local handyman matters", "Ashley Park", null)]
+        [InlineData("reigate", "keen to build a stronger presence", "the Great Sale of Reigate", null)]
+        [InlineData("dorking", "Dorking's market-town character", "the London docks in 1805", null)]
+        [InlineData("guildford", "the largest town in our Surrey coverage", "Charlotteville", null)]
+        [InlineData("banstead", "the leafy roads around Banstead Downs", "Longcroft Avenue", "executive homes")]
+        [InlineData("leatherhead", "our route down the A243", "Gimcrack Hill", "A24,")]
+        [InlineData("cobham", "larger family homes along Fairmile,", "Tartar Hill", "without a second visit")]
+        [InlineData("cobham", "a premium finish never means a surprise on the invoice", "Street Cobham", "Fairmile and Downside")]
+        public async Task SeedAsyncShouldGiveTheOtherTenTheirLocalText(string slug, string kept, string added, string gone)
+        {
+            await this.SeedAsync();
+
+            ServiceArea area = this.dbContext.ServiceAreas.Include(a => a.Faqs).Single(a => a.Slug == slug);
+            string text = area.IntroCopy + "\n\n" + area.LocalNeighbourhoodsCopy;
+            Assert.Contains(kept, text);
+            Assert.Contains(added, text);
+            if (gone != null)
+            {
+                Assert.DoesNotContain(gone, text);
+            }
+
+            // A blank line between paragraphs, and each field within its column.
+            Assert.Contains("\n\n", area.IntroCopy);
+            Assert.Contains("\n\n", area.LocalNeighbourhoodsCopy);
+            Assert.InRange(area.IntroCopy.Length, 20, 2000);
+            Assert.InRange(area.LocalNeighbourhoodsCopy.Length, 20, 2000);
+            Assert.Equal(2, area.Faqs.Count);
+        }
+
         // Each area starts with the postcode districts it covers, which is what the booking form
         // checks a postcode against.
         [Fact]
