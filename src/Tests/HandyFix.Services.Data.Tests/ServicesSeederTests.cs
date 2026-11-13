@@ -153,16 +153,21 @@
                 this.dbContext.ServiceImages.Single(i => i.ServiceId == added.Id).ImageUrl);
         }
 
-        // A new database gets the first five pages' own text, as an existing one got it from the
-        // AddServicePageTextsBatch1 migration (PROJECT_STATE.md Section 3eq): the description,
-        // the blocks a point per line, and the questions in order.
+        // A new database gets the written pages' own text, as an existing one got it from the
+        // migration of its batch (AddServicePageTextsBatch1 and 2, PROJECT_STATE.md Sections 3eq and
+        // 3er): the description, the blocks a point per line, and the questions in order.
         [Theory]
         [InlineData("tap-repairs", "A tap that drips", "[water_drop] A worn washer.", 3, "Is it worth repairing a tap, or should I replace it?")]
         [InlineData("toilet-repairs", "Running, slow to fill", "[water_drop] A flush valve that no longer seals.", 2, "Why does my toilet keep running?")]
         [InlineData("leak-repairs", "A leak we can see or reach", "[build] A loose or worn compression joint.", 2, "How can I tell if there is a leak I cannot see?")]
         [InlineData("blocked-drains", "We clear blockages inside the house", "[water_drop] Fat in a kitchen waste.", 3, "Who clears a blocked drain outside my house?")]
         [InlineData("boiler-installation-servicing", "We fit new boilers and service existing ones.", "[warning] Low pressure.", 3, "How often should a boiler be serviced?")]
-        public async Task SeedAsyncShouldGiveTheFirstFiveTheirPageText(string slug, string descriptionStart, string firstFinding, int questions, string firstQuestion)
+        [InlineData("radiator-trv-replacement", "A thermostatic radiator valve, or TRV,", "[refresh] A stuck TRV pin.", 3, "Can a TRV be changed without draining the heating?")]
+        [InlineData("tv-mounting", "We fix a flat-screen TV to the wall", "[search] A plasterboard wall.", 2, "Can a TV go on a plasterboard wall?")]
+        [InlineData("furniture-assembly", "Wardrobes, beds, chests of drawers", "[checklist] A part missing or damaged in the box.", 2, "What happens if a part is missing?")]
+        [InlineData("shelf-installation", "The wall decides how a shelf is fixed", "[warning] Plasterboard stuck to brick.", 2, "How much weight can a floating shelf hold?")]
+        [InlineData("full-bathroom-refurbishment", "A new bathroom from bare walls", "[water_drop] Soft floorboards under the old bath or toilet.", 2, "Does a bathroom refit need building regulations approval?")]
+        public async Task SeedAsyncShouldGiveTheWrittenPagesTheirText(string slug, string descriptionStart, string firstFinding, int questions, string firstQuestion)
         {
             await this.SeedAsync();
 
@@ -180,6 +185,9 @@
 
             // The words of things we do not do stay off the pages (master plan decision 10).
             Assert.DoesNotContain("thermal", service.Description + service.CommonFindings + service.NotIncluded, StringComparison.OrdinalIgnoreCase);
+
+            // Nor American trade words (master plan R5: TV Mounting said "drywall").
+            Assert.DoesNotContain("drywall", service.Description + service.Summary, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -191,7 +199,7 @@
             Assert.Null(gutters.Summary);
             Assert.Null(gutters.CommonFindings);
             Assert.Empty(gutters.Faqs);
-            Assert.Equal(5, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
+            Assert.Equal(10, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
         }
 
         // As the application does it: each seeder, then a save (ApplicationDbContextSeeder).
