@@ -82,6 +82,16 @@
         {
             <p>@paragraph</p>
         }
+
+        @* The same line on every town's page, in the company's own words: the rates as the Pricing
+           page works them out, and the deposit from Deposit (PROJECT_STATE Section 3em). *@
+        <p class="area-booking-line">
+            @if (Model.PlumbingRate.HasValue && Model.HandymanRate.HasValue)
+            {
+                <text>Plumbing is £@Model.PlumbingRate.Value.ToString("F0") an hour and handyman work £@Model.HandymanRate.Value.ToString("F0"), with a one-hour minimum.</text>
+            }
+            Pick a time that suits you and pay online: a £@Deposit.Pounds deposit secures your slot and comes off the final bill.
+        </p>
     </section>
 
     <!-- Related Services -->

@@ -70,6 +70,7 @@
         [InlineData("/Booking", false)]
         [InlineData("/FAQ", false)]
         [InlineData("/Services/plumbing/tap-repairs", false)]
+        [InlineData("/Areas/cobham", false)]
         [InlineData("/TermsAndConditions", true)]
         [InlineData("/Payment/Cancel", true)]
         public async Task APageThatNamesTheDepositShowsTheAmountFromOnePlace(string url, bool withPence)
