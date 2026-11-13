@@ -70,6 +70,7 @@
         [InlineData("/Booking", false)]
         [InlineData("/FAQ", false)]
         [InlineData("/Services/plumbing/tap-repairs", false)]
+        [InlineData("/Areas/cobham", false)]
         [InlineData("/TermsAndConditions", true)]
         [InlineData("/Payment/Cancel", true)]
         public async Task APageThatNamesTheDepositShowsTheAmountFromOnePlace(string url, bool withPence)
@@ -438,11 +439,12 @@
         public async Task CoverageDiagramDrawsEveryTownFromItsStoredPlace()
         {
             // The places came out of the view and into the database (PROJECT_STATE Section 3dm);
-            // a fresh database must still draw all 14 towns, with their short names.
+            // a fresh database must still draw every town but the centre, with their short names:
+            // the first 14 and the six of Section 3em.
             var client = this.server.CreateClient();
             var responseContent = await client.GetStringAsync("/Areas");
 
-            Assert.Equal(14, Regex.Matches(responseContent, "class=\"coverage-label\"").Count);
+            Assert.Equal(20, Regex.Matches(responseContent, "class=\"coverage-label\"").Count);
             Assert.Contains(">Kingston</text>", responseContent);
             Assert.Contains(">Walton &amp; Weybridge</text>", responseContent);
         }

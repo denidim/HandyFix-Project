@@ -6,6 +6,7 @@ namespace HandyFix.Web.Tests
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Data;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -102,6 +103,37 @@ namespace HandyFix.Web.Tests
             {
                 await this.SetNeighbourhoodsCopyAsync(slug, before);
             }
+        }
+
+        // A new town's page (Section 3em): its own text in paragraphs, then the one line every
+        // town's page ends its text with, the rates and the deposit read from where the site
+        // keeps them.
+        [Fact]
+        public async Task ANewTownsPageShowsItsTextAndTheBookingLine()
+        {
+            string html = WebUtility.HtmlDecode(await this.GetAsync("/Areas/twickenham"));
+
+            Assert.Contains("<p>Twickenham's streets were built in very different periods", html);
+            Assert.Contains("<p>Tell us which of these yours is when you book", html);
+            Assert.Contains("<p>Parking is worth a minute before we come.", html);
+            Assert.Contains("Can you park outside my house in Twickenham on an event day?", html);
+
+            string line = Regex.Replace(Regex.Match(html, "<p class=\"area-booking-line\">(.*?)</p>", RegexOptions.Singleline).Groups[1].Value, "\\s+", " ").Trim();
+            Assert.Equal(
+                "Plumbing is £90 an hour and handyman work £60, with a one-hour minimum. Pick a time that suits you and pay online: a £"
+                    + Deposit.Pounds + " deposit secures your slot and comes off the final bill.",
+                line);
+        }
+
+        [Theory]
+        [InlineData("/Areas/richmond", "Maids of Honour Row")]
+        [InlineData("/Areas/molesey", "Howard Houses")]
+        [InlineData("/Areas/new-malden", "the six Groves")]
+        [InlineData("/Areas/ashtead", "the spring line")]
+        [InlineData("/Areas/cheam", "mock Tudor shops")]
+        public async Task EachNewTownHasItsPage(string url, string words)
+        {
+            Assert.Contains(words, WebUtility.HtmlDecode(await this.GetAsync(url)));
         }
 
         private async Task<IReadOnlyList<string>> CardLinksAsync(string url)

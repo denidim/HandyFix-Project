@@ -66,13 +66,13 @@
             // isn't done via a custom Mapster collection mapping.
             area.Faqs = area.Faqs.OrderBy(x => x.DisplayOrder).ToList();
 
-            IEnumerable<ServiceViewModel> plumbingServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Plumbing");
-            IEnumerable<ServiceViewModel> handymanServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman");
+            List<ServiceViewModel> plumbingServices = (await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Plumbing")).ToList();
+            List<ServiceViewModel> handymanServices = (await this.servicesService.GetByCategoryAsync<ServiceViewModel>("Handyman")).ToList();
 
             // The town's own two plumbing and two handyman services, picked from its slug as the
             // database holds it, not as the address was typed (Section 3el). Every town showed
             // the first two of each until then, so the area pages carried the same four cards.
-            var relatedServices = AreaServices.For(area.Slug, plumbingServices.ToList(), handymanServices.ToList());
+            var relatedServices = AreaServices.For(area.Slug, plumbingServices, handymanServices);
 
             // Only the reviews from this town (Section 3eh): the same three on every area page
             // would be the same text on 25 pages, and a review from the town is the proof its
@@ -85,6 +85,11 @@
                 Area = area,
                 RelatedServices = relatedServices.WithMediumCopies(this.imageStorage),
                 Reviews = reviews,
+
+                // The two hourly rates the line under the town's text quotes, worked out as the
+                // Pricing page does: the lowest price among the category's active services.
+                PlumbingRate = plumbingServices.Count == 0 ? null : plumbingServices.Min(s => s.BasePrice),
+                HandymanRate = handymanServices.Count == 0 ? null : handymanServices.Min(s => s.BasePrice),
                 Picture = picture,
                 PhonePicture = PictureLookups.AreaPhonePictureOf(this.environment, this.imageStorage, area.Slug, area.HeroImageUrl),
             };
