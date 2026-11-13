@@ -11,6 +11,7 @@
 
     using HandyFix.Common;
     using HandyFix.Data;
+    using HandyFix.Web.Presentation;
     using HandyFix.Web.Settings;
 
     using Microsoft.AspNetCore.Hosting;
@@ -359,11 +360,13 @@
         }
 
         // The service cards offer the middle copy beside the picture, on every page that has them.
+        // A service page has them only while it has no "Worth doing in the same visit" of its own
+        // (Section 3ep): Gutter Clearing is among the last to be written.
         [Theory]
         [InlineData("/", "<img src=\"/images/services/plumbing-category-hero\\.webp[^>]*>")]
         [InlineData("/Areas/cobham", "<img class=\"pricing-card-image\"[^>]*>")]
         [InlineData("/Pricing", "<img class=\"pricing-card-image\"[^>]*>")]
-        [InlineData("/Services/plumbing/tap-repairs", "<img class=\"pricing-card-image\"[^>]*>")]
+        [InlineData("/Services/handyman/gutter-clearing", "<img class=\"pricing-card-image\"[^>]*>")]
         public async Task ServiceCardsOfferThePicturesMiddleCopy(string path, string cardPattern)
         {
             var client = this.server.CreateClient();
@@ -674,27 +677,20 @@
             }
         }
 
-        // The answer to "Do you cover my location?" is built from the same twenty towns, on the
-        // page and in its FAQ schema, and no longer names Guildford.
+        // The business record on a service page names the twenty towns of the profile, not
+        // Guildford (Section 3eg). Its page is still linked, in the footer and under "Areas we
+        // cover" (Section 3ep), but it is not a place the record says is served.
         [Fact]
-        public async Task ServicePageCoverageAnswerNamesTheTownsOfTheProfile()
+        public async Task ServicePageRecordNamesNoGuildford()
         {
             var page = await this.server.CreateClient().GetStringAsync("/Services/plumbing/tap-repairs");
-            var answer = "We cover " + ServiceAreaTowns.AsSentenceList() + ", across Surrey and South West London.";
 
-            Assert.Contains(answer, WebUtility.HtmlDecode(page));
-            Assert.Contains("Twickenham", answer);
-
-            // Guildford can still be a link in the page's footer; it must not be a place served.
-            Assert.DoesNotContain("Guildford", answer);
             Assert.DoesNotContain(
                 JsonLdElements(page),
                 block => block.GetRawText().Contains("Guildford"));
-
-            var faq = Assert.Single(JsonLdElements(page), b => b.GetProperty("@type").GetString() == "FAQPage");
-            var coverage = faq.GetProperty("mainEntity").EnumerateArray()
-                .Single(question => question.GetProperty("name").GetString() == "Do you cover my location?");
-            Assert.Equal(answer, coverage.GetProperty("acceptedAnswer").GetProperty("text").GetString());
+            Assert.Contains(
+                JsonLdElements(page),
+                block => block.GetRawText().Contains("Twickenham"));
         }
 
         // The list of services had no description, so search engines made one up from whatever
@@ -739,8 +735,7 @@
 
         [Theory]
         [InlineData("/Services/plumbing/radiator-trv-replacement", "Radiator & TRV Replacement")]
-        [InlineData("/Services/plumbing/radiator-trv-replacement", "How much does Radiator & TRV Replacement cost?")]
-        [InlineData("/Services/plumbing/radiator-trv-replacement", "starts from £")]
+        [InlineData("/Services/plumbing/radiator-trv-replacement", "90.00")]
         [InlineData("/Areas/worcester-park-ewell", "Worcester Park & Ewell")]
         [InlineData("/Services/small-building-works", "Small Building & Refurbishments")]
         public async Task StructuredDataHoldsNamesAndPricesAsTheyAreTyped(string url, string expected)
@@ -1241,6 +1236,20 @@
             Assert.True(
                 missing.Count == 0,
                 $"Not in the icon font: {string.Join(", ", missing)}. Add them to tools/fonts/icon-names.txt and run fetch-fonts.mjs there.");
+        }
+
+        // A line of a service page's lists may name its icon in square brackets, from a list kept
+        // in code, which the test above cannot read (Section 3ep).
+        [Fact]
+        public void EveryIconAServicePageLineMayNameIsInTheIconFont()
+        {
+            var contentRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
+            var inFont = File.ReadAllLines(Path.Combine(contentRoot, "..", "..", "..", "tools", "fonts", "icon-names.txt"))
+                .Select(line => line.Trim())
+                .ToHashSet(StringComparer.Ordinal);
+
+            var names = PagePoints.Icons.Append(PagePoints.FindingIcon).Append(PagePoints.BeforeIcon);
+            Assert.All(names, name => Assert.Contains(name, inFont));
         }
 
         // A page's scripts are files of their own (PROJECT_STATE.md Section 3dj). What may stay in

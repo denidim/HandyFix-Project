@@ -153,6 +153,47 @@
                 this.dbContext.ServiceImages.Single(i => i.ServiceId == added.Id).ImageUrl);
         }
 
+        // A new database gets the first five pages' own text, as an existing one got it from the
+        // AddServicePageTextsBatch1 migration (PROJECT_STATE.md Section 3eq): the description,
+        // the blocks a point per line, and the questions in order.
+        [Theory]
+        [InlineData("tap-repairs", "A tap that drips", "[water_drop] A worn washer.", 3, "Is it worth repairing a tap, or should I replace it?")]
+        [InlineData("toilet-repairs", "Running, slow to fill", "[water_drop] A flush valve that no longer seals.", 2, "Why does my toilet keep running?")]
+        [InlineData("leak-repairs", "A leak we can see or reach", "[build] A loose or worn compression joint.", 2, "How can I tell if there is a leak I cannot see?")]
+        [InlineData("blocked-drains", "We clear blockages inside the house", "[water_drop] Fat in a kitchen waste.", 3, "Who clears a blocked drain outside my house?")]
+        [InlineData("boiler-installation-servicing", "We fit new boilers and service existing ones.", "[warning] Low pressure.", 3, "How often should a boiler be serviced?")]
+        public async Task SeedAsyncShouldGiveTheFirstFiveTheirPageText(string slug, string descriptionStart, string firstFinding, int questions, string firstQuestion)
+        {
+            await this.SeedAsync();
+
+            Service service = this.dbContext.Services.Include(s => s.Faqs).Single(s => s.Slug == slug);
+            Assert.StartsWith(descriptionStart, service.Description);
+            Assert.StartsWith(firstFinding, service.CommonFindings);
+            Assert.False(string.IsNullOrWhiteSpace(service.Summary));
+            Assert.True(service.Summary.Length <= 200);
+            Assert.Contains("\n", service.VisitSteps);
+            Assert.DoesNotContain("\r", service.VisitSteps);
+            Assert.False(string.IsNullOrWhiteSpace(service.BeforeWeArrive));
+            Assert.False(string.IsNullOrWhiteSpace(service.Included));
+            Assert.Equal(questions, service.Faqs.Count);
+            Assert.Equal(firstQuestion, service.Faqs.OrderBy(f => f.DisplayOrder).First().Question);
+
+            // The words of things we do not do stay off the pages (master plan decision 10).
+            Assert.DoesNotContain("thermal", service.Description + service.CommonFindings + service.NotIncluded, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task SeedAsyncShouldLeaveTheOtherPagesBlocksEmpty()
+        {
+            await this.SeedAsync();
+
+            Service gutters = this.dbContext.Services.Include(s => s.Faqs).Single(s => s.Slug == "gutter-clearing");
+            Assert.Null(gutters.Summary);
+            Assert.Null(gutters.CommonFindings);
+            Assert.Empty(gutters.Faqs);
+            Assert.Equal(5, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
+        }
+
         // As the application does it: each seeder, then a save (ApplicationDbContextSeeder).
         private async Task SeedAsync()
         {

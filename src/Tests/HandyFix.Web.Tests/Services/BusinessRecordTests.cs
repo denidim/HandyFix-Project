@@ -81,16 +81,6 @@
             Assert.False(record.ContainsKey("sameAs"));
         }
 
-        [Fact]
-        public void TheTownsAreListedWithAnAndBeforeTheLast()
-        {
-            var sentence = ServiceAreaTowns.AsSentenceList();
-
-            Assert.StartsWith("Chessington, Surbiton, Kingston upon Thames, ", sentence);
-            Assert.EndsWith(", Twickenham and Richmond", sentence);
-            Assert.DoesNotContain("Guildford", sentence);
-        }
-
         private static BusinessRecord Create(string googleReviewsUrl)
         {
             return new BusinessRecord(Options.Create(new BusinessOptions { GoogleReviewsUrl = googleReviewsUrl }));

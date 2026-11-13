@@ -19,6 +19,7 @@
             this.Id = Guid.NewGuid();
             this.Images = new HashSet<ServiceImage>();
             this.BookingServices = new HashSet<BookingService>();
+            this.Faqs = new HashSet<ServiceFaq>();
         }
 
         [Required(ErrorMessage = "The {0} field is required.")]
@@ -35,6 +36,34 @@
         [MinLength(20, ErrorMessage = "The {0} field must be at least 20 characters long.")]
         [MaxLength(3000, ErrorMessage = "The {0} field cannot exceed 3000 characters.")]
         public string Description { get; set; } = null!;
+
+        // The service page's own blocks (PROJECT_STATE.md Section 3ep). Each may stay empty, and
+        // an empty one is left off the page. The lists hold one point per line; a line of
+        // CommonFindings or BeforeWeArrive may start with an icon name in square brackets.
+
+        // One or two sentences for the service's card on a town page.
+        [MaxLength(200, ErrorMessage = "The {0} field cannot exceed 200 characters.")]
+        public string Summary { get; set; }
+
+        // "What we usually find".
+        [MaxLength(3000, ErrorMessage = "The {0} field cannot exceed 3000 characters.")]
+        public string CommonFindings { get; set; }
+
+        // "The visit, step by step".
+        [MaxLength(3000, ErrorMessage = "The {0} field cannot exceed 3000 characters.")]
+        public string VisitSteps { get; set; }
+
+        // "Before we arrive".
+        [MaxLength(2000, ErrorMessage = "The {0} field cannot exceed 2000 characters.")]
+        public string BeforeWeArrive { get; set; }
+
+        // "What is included".
+        [MaxLength(2000, ErrorMessage = "The {0} field cannot exceed 2000 characters.")]
+        public string Included { get; set; }
+
+        // "What is not".
+        [MaxLength(2000, ErrorMessage = "The {0} field cannot exceed 2000 characters.")]
+        public string NotIncluded { get; set; }
 
         [Range(0.01, 10000, ErrorMessage = "The {0} must be between 0.01 and 10000.")]
         public decimal BasePrice { get; set; }
@@ -74,5 +103,7 @@
         public virtual ICollection<ServiceImage> Images { get; set; }
 
         public virtual ICollection<BookingService> BookingServices { get; set; }
+
+        public virtual ICollection<ServiceFaq> Faqs { get; set; }
     }
 }

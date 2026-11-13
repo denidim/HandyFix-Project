@@ -8,6 +8,8 @@
   /* The green behind white text: --success there gave a contrast of 2.5, where 4.5 is the
      least for text this size; this one gives 5.5 (PROJECT_STATE Section 3co). */
   --success-strong: #047857;
+  /* The "What is not" mark on a service page (Section 3ep): amber, a limit rather than an error. */
+  --warning-strong: #b45309;
   --background: #f8fafc;
   --text-main: #334155;
   --text-dark: #0f172a;

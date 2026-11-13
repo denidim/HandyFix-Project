@@ -48,6 +48,8 @@
                 <span asp-validation-for="Description" class="text-danger small"></span>
             </div>
 
+            <partial name="_ServicePageFields" />
+
             <div class="row gy-4">
                 <!-- Base Price -->
                 <div class="col-md-6 form-group">
@@ -142,3 +144,9 @@
         </form>
     </div>
 </div>
+
+<partial name="_FaqTemplate" />
+
+@section Scripts {
+    <script src="~/js/admin-faq-builder.js" asp-append-version="true"></script>
+}

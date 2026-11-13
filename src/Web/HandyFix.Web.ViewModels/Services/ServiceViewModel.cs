@@ -18,6 +18,9 @@
 
         public string Description { get; set; }
 
+        // The service's card text on a town page, when it has one (PROJECT_STATE.md Section 3ep).
+        public string Summary { get; set; }
+
         public decimal BasePrice { get; set; }
 
         public int EstimatedDurationMinutes { get; set; }

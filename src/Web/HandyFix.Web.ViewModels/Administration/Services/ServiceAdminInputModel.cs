@@ -25,6 +25,35 @@
         [MaxLength(3000, ErrorMessage = "Description cannot exceed 3000 characters.")]
         public string Description { get; set; }
 
+        // The service page's own blocks (PROJECT_STATE.md Section 3ep). Every one may stay empty.
+        [Display(Name = "Short summary")]
+        [MaxLength(200, ErrorMessage = "The short summary cannot exceed 200 characters.")]
+        public string Summary { get; set; }
+
+        [Display(Name = "What we usually find")]
+        [MaxLength(3000, ErrorMessage = "\"What we usually find\" cannot exceed 3000 characters.")]
+        public string CommonFindings { get; set; }
+
+        [Display(Name = "The visit, step by step")]
+        [MaxLength(3000, ErrorMessage = "\"The visit, step by step\" cannot exceed 3000 characters.")]
+        public string VisitSteps { get; set; }
+
+        [Display(Name = "Before we arrive")]
+        [MaxLength(2000, ErrorMessage = "\"Before we arrive\" cannot exceed 2000 characters.")]
+        public string BeforeWeArrive { get; set; }
+
+        [Display(Name = "What is included")]
+        [MaxLength(2000, ErrorMessage = "\"What is included\" cannot exceed 2000 characters.")]
+        public string Included { get; set; }
+
+        [Display(Name = "What is not")]
+        [MaxLength(2000, ErrorMessage = "\"What is not\" cannot exceed 2000 characters.")]
+        public string NotIncluded { get; set; }
+
+        // Rows carry no annotations, for the reason ServiceAreaFaqInputModel gives: a blank row is
+        // dropped before the rest are checked (ServicesService.PruneAndValidateFaqs).
+        public List<ServiceFaqInputModel> Faqs { get; set; } = new List<ServiceFaqInputModel>();
+
         [Range(0.01, 10000.00, ErrorMessage = "Price must be between 0.01 and 10000.00.")]
         public decimal BasePrice { get; set; }
 

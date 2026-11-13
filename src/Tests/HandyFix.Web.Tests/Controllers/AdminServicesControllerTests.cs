@@ -104,6 +104,110 @@
                 Times.Once);
         }
 
+        // The page's own blocks and questions open in the form as saved, the questions in their
+        // order (PROJECT_STATE.md Section 3ep).
+        [Fact]
+        public async Task EditGetOpensThePagesBlocksAndQuestionsInOrder()
+        {
+            var controller = BuildController(out var servicesService, out _);
+            var id = Guid.NewGuid();
+            servicesService
+                .Setup(x => x.GetByIdAsync<ServiceDetailsViewModel>(id))
+                .ReturnsAsync(new ServiceDetailsViewModel
+                {
+                    Id = id,
+                    Name = "Tap Repairs",
+                    CategoryName = "Plumbing",
+                    Summary = "A short text.",
+                    CommonFindings = "[water_drop] A worn washer.",
+                    VisitSteps = "We turn the water off.",
+                    BeforeWeArrive = "Find your stop tap.",
+                    Included = "New washers",
+                    NotIncluded = "Thermal imaging",
+                    Faqs = new[]
+                    {
+                        new ServiceFaqViewModel { Question = "Second?", Answer = "Two.", DisplayOrder = 2 },
+                        new ServiceFaqViewModel { Question = "First?", Answer = "One.", DisplayOrder = 1 },
+                    },
+                });
+
+            var model = Assert.IsType<ServiceAdminInputModel>(Assert.IsType<ViewResult>(await controller.Edit(id)).Model);
+
+            Assert.Equal("A short text.", model.Summary);
+            Assert.Equal("[water_drop] A worn washer.", model.CommonFindings);
+            Assert.Equal("We turn the water off.", model.VisitSteps);
+            Assert.Equal("Find your stop tap.", model.BeforeWeArrive);
+            Assert.Equal("New washers", model.Included);
+            Assert.Equal("Thermal imaging", model.NotIncluded);
+            Assert.Equal(new[] { "First?", "Second?" }, model.Faqs.Select(f => f.Question));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task SavingPassesOnThePagesBlocks(bool editing)
+        {
+            var controller = BuildController(out var servicesService, out _);
+            var newId = Guid.NewGuid();
+            servicesService
+                .Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
+                .ReturnsAsync(newId);
+            var model = ValidService();
+            model.CommonFindings = "[water_drop] A worn washer.\nA line with no icon.";
+            if (editing)
+            {
+                model.Id = Guid.NewGuid();
+            }
+
+            var result = editing ? await controller.Edit(model) : await controller.Create(model);
+
+            AssertGoesBackToTheAdminList(result);
+            servicesService.Verify(x => x.SavePageAsync(editing ? model.Id.Value : newId, model), Times.Once);
+        }
+
+        // A name in square brackets that the icon font lacks would show on the page as the word
+        // itself, so the form refuses it and saves nothing.
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AnIconTheSiteDoesNotHaveIsRefused(bool editing)
+        {
+            var controller = BuildController(out var servicesService, out _);
+            var model = ValidService();
+            model.BeforeWeArrive = "[stopcock] Find your stop tap.";
+            if (editing)
+            {
+                model.Id = Guid.NewGuid();
+            }
+
+            var result = editing ? await controller.Edit(model) : await controller.Create(model);
+
+            Assert.IsType<ViewResult>(result);
+            var error = Assert.Single(controller.ModelState[nameof(model.BeforeWeArrive)].Errors);
+            Assert.StartsWith("[stopcock] is not one of the icons", error.ErrorMessage);
+            servicesService.Verify(x => x.SavePageAsync(It.IsAny<Guid>(), It.IsAny<ServiceAdminInputModel>()), Times.Never);
+            servicesService.Verify(x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+        }
+
+        // The question rows are checked by the service, as a town's are; its errors go under
+        // the rows they name.
+        [Fact]
+        public async Task AQuestionRowThatFailsItsCheckKeepsTheFormOpen()
+        {
+            var controller = BuildController(out var servicesService, out _);
+            servicesService
+                .Setup(x => x.PruneAndValidateFaqs(It.IsAny<ServiceAdminInputModel>()))
+                .Returns(new[] { new KeyValuePair<string, string>("Faqs[0].Answer", "Answer is required.") });
+            var model = ValidService();
+            model.Id = Guid.NewGuid();
+
+            var result = await controller.Edit(model);
+
+            Assert.IsType<ViewResult>(result);
+            Assert.Equal("Answer is required.", Assert.Single(controller.ModelState["Faqs[0].Answer"].Errors).ErrorMessage);
+            servicesService.Verify(x => x.SavePageAsync(It.IsAny<Guid>(), It.IsAny<ServiceAdminInputModel>()), Times.Never);
+        }
+
         [Fact]
         public async Task CreateShouldRefuseANameAlreadyInUseWithAMessage()
         {

@@ -9,10 +9,6 @@
     this.Layout = "_Layout";
     this.ViewData["Title"] = Model.Name;
 
-    // The answer to "Do you cover my location?", on the page and in its FAQ schema, from the
-    // same list of towns as the business record (PROJECT_STATE Section 3eg).
-    var coverAnswer = $"We cover {ServiceAreaTowns.AsSentenceList()}, across Surrey and South West London.";
-
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == CategorySlugs.SmallBuildingWorks;
     var isQuoteOnly = isBuilding || Model.IsQuoteOnly;
@@ -37,34 +33,29 @@
     // Dynamic Image path
     var serviceImage = Model.ImageUrl;
 
-    // Feature dynamic data
-    var feat1Icon = isBuilding ? "foundation" : (isPlumbing ? "faucet" : "shelves");
-    var feat1Title = isBuilding ? "Site Survey & Planning" : (isPlumbing ? "Tap & Fixture Fitting" : "Furniture Assembly");
-    var feat1Desc = isBuilding
-        ? "Detailed on-site assessment, material specification, and transparent written quotation before work starts."
-        : (isPlumbing 
-            ? "We fit new taps, mixer taps and showerheads, then check every joint for drips."
-            : "Flat-pack furniture assembly, shelf mounting, and cabinets put together securely and efficiently.");
-
-    var feat2Icon = isBuilding ? "construction" : (isPlumbing ? "plumbing" : "build");
-    var feat2Title = isBuilding ? "Multi-Trade Execution" : (isPlumbing ? "Leaks & Burst Pipes" : "Home Repairs");
-    var feat2Desc = isBuilding
-        ? "Complete trade coverage including plastering, tiling, carpentry, and plumbing done to British building standards."
-        : (isPlumbing 
-            ? "Leaking pipe, dripping tap or burst pipe? We repair or replace the part and check it stays dry."
-            : "TV wall mounting, mirror hanging, door trimming, and general odd jobs handled by experts.");
-
-    // Gas work has two boxes of its own: taps and leaking pipes are not what a boiler visit
-    // is. The second box shows the Gas Safe logo where the others show an icon.
+    // Gas work shows its Gas Safe registration in the hero and the sidebar.
     var isGasSafe = Model.IsGasSafeWork;
-    if (isGasSafe)
-    {
-        feat1Icon = "request_quote";
-        feat1Title = "Survey & Planning";
-        feat1Desc = "We check your heating needs, pipework and flue, and help you choose the right boiler before any work starts.";
-        feat2Title = "Gas Safe Registered";
-        feat2Desc = "Every installation and service is carried out by a Gas Safe registered engineer, with gas safety checks and certificates.";
-    }
+
+    // The line under the description: the price and how to get the work done, from the price in
+    // the admin. The two fixed boxes and the "mobile crews" sentence that stood here were the
+    // same on every page of a division (Section 3ep).
+    var priceLine = isQuoteOnly
+        ? "Priced after a free survey at your home: you get a fixed quote before any work starts, and there is no obligation to go ahead."
+        : isEmergency
+            ? $"£{Model.BasePrice:F0} an hour at any time of day or night, with a one-hour minimum and no separate call-out fee; parts are extra. Call us or message us on WhatsApp."
+            : $"We charge £{Model.BasePrice:F0} an hour for this work, with a one-hour minimum; after the first hour, time is billed in 30-minute blocks. Pick a time that suits you online: a £{Deposit.Pounds} deposit secures your slot and comes off the final bill.";
+
+    // The page's own blocks; an empty one is left off.
+    var findings = PagePoints.Of(Model.CommonFindings, PagePoints.FindingIcon);
+    var steps = PagePoints.LinesOf(Model.VisitSteps);
+    var before = PagePoints.Of(Model.BeforeWeArrive, PagePoints.BeforeIcon);
+    var included = PagePoints.LinesOf(Model.Included);
+    var notIncluded = PagePoints.LinesOf(Model.NotIncluded);
+    var faqs = Model.Faqs?.ToList() ?? new List<ServiceFaqViewModel>();
+    var faqJsonEntries = faqs.Count > 0
+        ? string.Join(",", faqs.Select(f =>
+            $"{{ \"@type\": \"Question\", \"name\": {System.Text.Json.JsonSerializer.Serialize(f.Question)}, \"acceptedAnswer\": {{ \"@type\": \"Answer\", \"text\": {System.Text.Json.JsonSerializer.Serialize(f.Answer)} }} }}"))
+        : null;
 
     // Local Expert: the business's real co-founder on every service page. Only the role
     // adapts per category - the bio is his own supplied wording, not written per trade.
@@ -167,91 +158,140 @@
                 </div>
             </div>
 
-            <!-- Detailed Description -->
+            <!-- The opening: the description, then the price and how to book (Section 3ep) -->
             <section class="details-prose">
                 <h2 class="details-section-title">Service Overview</h2>
                 @foreach (var paragraph in Paragraphs.Of(Model.Description))
                 {
                     <p>@paragraph</p>
                 }
-                <p>At <strong>Plumbing Handyman Surrey</strong>, our mobile crews are specialized in @Model.Name operations. We come equipped with professional-grade tools, quality replacement components, and follow strict building codes to ensure a lasting repair or installation. All our work is fully insured for your peace of mind.</p>
-
-                <div class="details-features-grid">
-                    <div class="details-feature-item">
-                        <div class="feature-item-icon-box">
-                            <span class="material-symbols-outlined">@feat1Icon</span>
-                        </div>
-                        <div>
-                            <h3 class="feature-item-title">@feat1Title</h3>
-                            <p class="feature-item-desc">@feat1Desc</p>
-                        </div>
-                    </div>
-                    <div class="details-feature-item">
-                        @if (isGasSafe)
-                        {
-                            <div class="feature-item-icon-box feature-item-logo-box">
-                                <img class="gas-safe-logo-feature" src="@GasSafeLogo.Url" asp-append-version="true" alt="" loading="lazy">
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="feature-item-icon-box">
-                                <span class="material-symbols-outlined">@feat2Icon</span>
-                            </div>
-                        }
-                        <div>
-                            <h3 class="feature-item-title">@feat2Title</h3>
-                            <p class="feature-item-desc">@feat2Desc</p>
-                        </div>
-                    </div>
-                </div>
+                <p>@priceLine</p>
             </section>
 
-            <!-- FAQ Accordion -->
-            <section class="faq-accordion-group">
-                <h2 class="details-section-title">Frequently Asked Questions</h2>
-                
-                <details class="faq-accordion" open>
-                    <summary class="faq-accordion-summary">
-                        <span class="faq-accordion-title">How much does @Model.Name cost?</span>
-                        <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
-                    </summary>
-                    <div class="faq-accordion-content">
-                        @if (isQuoteOnly)
+            @if (findings.Count > 0)
+            {
+                <section class="details-prose service-block">
+                    <h2 class="details-section-title">What we usually find</h2>
+                    <ul class="service-points">
+                        @foreach (var point in findings)
                         {
-                            <text>@Model.Name is quoted individually after a free on-site survey, so we can account for the scope, materials, and finish you want before agreeing a fixed price. There's no obligation to book once you have your quote.</text>
+                            <li>
+                                <span class="material-symbols-outlined" aria-hidden="true">@point.Icon</span>
+                                <div><strong>@point.Lead</strong> @point.Rest</div>
+                            </li>
                         }
-                        else if (isEmergency)
-                        {
-                            <text>Our emergency rate is £@Model.BasePrice.ToString("F0") per hour, day or night, with a one-hour minimum, plus any parts required. There's no separate call-out fee, and we always tell you the price before we start.</text>
-                        }
-                        else
-                        {
-                            <text>Our base rate for @Model.Name starts from £@Model.BasePrice.ToString("F2"). The final cost depends on the complexity of the task and any additional materials or parts required. We always present transparent quotes before starting.</text>
-                        }
-                    </div>
-                </details>
+                    </ul>
+                </section>
+            }
 
-                <details class="faq-accordion">
-                    <summary class="faq-accordion-summary">
-                        <span class="faq-accordion-title">Do you cover my location?</span>
-                        <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
-                    </summary>
-                    <div class="faq-accordion-content">
-                        @coverAnswer
-                    </div>
-                </details>
+            @if (steps.Count > 0)
+            {
+                <section class="details-prose service-block">
+                    <h2 class="details-section-title">The visit, step by step</h2>
+                    <ol class="service-steps">
+                        @foreach (var step in steps)
+                        {
+                            <li><div>@step</div></li>
+                        }
+                    </ol>
+                </section>
+            }
 
-                <details class="faq-accordion">
-                    <summary class="faq-accordion-summary">
-                        <span class="faq-accordion-title">Is your @Model.Name service insured?</span>
-                        <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
-                    </summary>
-                    <div class="faq-accordion-content">
-                        Yes, absolutely. All our services, including @Model.Name, are fully backed by our comprehensive public liability insurance and 100% satisfaction guarantee.
-                    </div>
-                </details>
+            @if (before.Count > 0)
+            {
+                <section class="details-prose service-block">
+                    <h2 class="details-section-title">Before we arrive</h2>
+                    <ul class="service-points">
+                        @foreach (var point in before)
+                        {
+                            <li>
+                                <span class="material-symbols-outlined" aria-hidden="true">@point.Icon</span>
+                                <div>@point.Lead @point.Rest</div>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+
+            @if (included.Count > 0 || notIncluded.Count > 0)
+            {
+                <section class="service-block service-scope">
+                    @if (included.Count > 0)
+                    {
+                        <div class="service-scope-box service-scope-yes">
+                            <h3><span class="material-symbols-outlined" aria-hidden="true">check_circle</span>What is included</h3>
+                            <ul>
+                                @foreach (var line in included)
+                                {
+                                    <li>@line</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    @if (notIncluded.Count > 0)
+                    {
+                        <div class="service-scope-box service-scope-no">
+                            <h3><span class="material-symbols-outlined" aria-hidden="true">cancel</span>What is not</h3>
+                            <ul>
+                                @foreach (var line in notIncluded)
+                                {
+                                    <li>@line</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </section>
+            }
+
+            <!-- Questions about this job only; the general ones are on the FAQ page -->
+            <section class="faq-accordion-group service-block">
+                @if (faqs.Count > 0)
+                {
+                    <h2 class="details-section-title">Questions about @Model.Name.ToLower()</h2>
+                    @for (var i = 0; i < faqs.Count; i++)
+                    {
+                        <details class="faq-accordion" open="@(i == 0)">
+                            <summary class="faq-accordion-summary">
+                                <span class="faq-accordion-title">@faqs[i].Question</span>
+                                <span class="material-symbols-outlined faq-accordion-icon">expand_more</span>
+                            </summary>
+                            <div class="faq-accordion-content">@faqs[i].Answer</div>
+                        </details>
+                    }
+                }
+                <p class="service-faq-link">Deposits, cancelling and paying are on our <a asp-area="" asp-controller="Home" asp-action="FAQ">FAQ page</a>.</p>
             </section>
+
+            @if (Model.SameVisitServices != null && Model.SameVisitServices.Any())
+            {
+                <section class="details-prose service-block">
+                    <h2 class="details-section-title">Worth doing in the same visit</h2>
+                    <div class="service-same-visit">
+                        @foreach (var other in Model.SameVisitServices)
+                        {
+                            var otherPrice = other.CategorySlug == CategorySlugs.SmallBuildingWorks || other.IsQuoteOnly
+                                ? "free quote"
+                                : other.IsEmergency ? $"£{other.BasePrice:F0} an hour" : $"from £{other.BasePrice:F0}";
+                            <a asp-route="ServiceDetails" asp-route-categorySlug="@other.CategorySlug" asp-route-serviceSlug="@other.Slug">
+                                @other.Name <span class="service-same-visit-price">@otherPrice</span>
+                            </a>
+                        }
+                    </div>
+                </section>
+            }
+
+            @if (Model.Towns != null && Model.Towns.Any())
+            {
+                <section class="details-prose service-block">
+                    <h2 class="details-section-title">Areas we cover</h2>
+                    <div class="service-towns">
+                        @foreach (var town in Model.Towns)
+                        {
+                            <a asp-route="AreaDetails" asp-route-areaSlug="@town.Slug">@town.Name</a>
+                        }
+                    </div>
+                </section>
+            }
 
             <!-- Local Expert Block -->
             <section class="local-expert-block">
@@ -287,7 +327,7 @@
                         </div>
                         <div class="sidebar-booking-feature-item">
                             <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
-                            <span>@(isGasSafe ? "Gas Safe registered engineer" : (isBuilding ? "Fully insured multi-trade team" : "Certified master technicians"))</span>
+                            <span>@(isGasSafe ? "Gas Safe registered engineer" : (isBuilding ? "Fully insured multi-trade team" : "Local, insured technicians"))</span>
                         </div>
                     </div>
 
@@ -351,7 +391,7 @@
                         </div>
                         <div class="sidebar-booking-feature-item">
                             <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
-                            <span>Certified master technicians</span>
+                            <span>Local, insured technicians</span>
                         </div>
                         <div class="sidebar-booking-feature-item">
                             <span class="material-symbols-outlined sidebar-booking-feature-icon">check_circle</span>
@@ -452,31 +492,17 @@
 }
 </script>
 
-<!-- FAQ Schema -->
-<script type="application/ld+json">
+@if (faqJsonEntries != null)
 {
-  "@@context": "https://schema.org",
-  "@@type": "FAQPage",
-  "mainEntity": [
+    <!-- FAQ Schema: the page's own questions -->
+    <script type="application/ld+json">
     {
-      "@@type": "Question",
-      "name": @Json.Serialize($"How much does {Model.Name} cost?"),
-      "acceptedAnswer": {
-        "@@type": "Answer",
-        "text": @Json.Serialize(isQuoteOnly ? $"{Model.Name} is quoted individually after a free on-site survey, so pricing depends on the scope and finish you want." : (isEmergency ? $"Our emergency rate is £{Model.BasePrice:F0} per hour, day or night, with a one-hour minimum, plus any parts required." : $"Our base rate for {Model.Name} starts from £{Model.BasePrice:F2}."))
-      }
-    },
-    {
-      "@@type": "Question",
-      "name": "Do you cover my location?",
-      "acceptedAnswer": {
-        "@@type": "Answer",
-        "text": @Json.Serialize(coverAnswer)
-      }
+      "@@context": "https://schema.org",
+      "@@type": "FAQPage",
+      "mainEntity": [ @Html.Raw(faqJsonEntries) ]
     }
-  ]
+    </script>
 }
-</script>
 
 <!-- JSON-LD: BreadcrumbList -->
 <script type="application/ld+json">

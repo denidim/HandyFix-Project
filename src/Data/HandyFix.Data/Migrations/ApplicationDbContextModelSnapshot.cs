@@ -722,8 +722,16 @@ namespace HandyFix.Data.Migrations
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("BeforeWeArrive")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CommonFindings")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
@@ -741,6 +749,10 @@ namespace HandyFix.Data.Migrations
 
                     b.Property<int>("EstimatedDurationMinutes")
                         .HasColumnType("int");
+
+                    b.Property<string>("Included")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -768,10 +780,22 @@ namespace HandyFix.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NotIncluded")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("VisitSteps")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.HasKey("Id");
 
@@ -940,6 +964,49 @@ namespace HandyFix.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ServiceCategories");
+                });
+
+            modelBuilder.Entity("HandyFix.Data.Models.ServiceFaq", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("ServiceFaqs");
                 });
 
             modelBuilder.Entity("HandyFix.Data.Models.ServiceImage", b =>
@@ -1313,6 +1380,17 @@ namespace HandyFix.Data.Migrations
                     b.Navigation("ServiceArea");
                 });
 
+            modelBuilder.Entity("HandyFix.Data.Models.ServiceFaq", b =>
+                {
+                    b.HasOne("HandyFix.Data.Models.Service", "Service")
+                        .WithMany("Faqs")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+                });
+
             modelBuilder.Entity("HandyFix.Data.Models.ServiceImage", b =>
                 {
                     b.HasOne("HandyFix.Data.Models.Service", "Service")
@@ -1423,6 +1501,8 @@ namespace HandyFix.Data.Migrations
             modelBuilder.Entity("HandyFix.Data.Models.Service", b =>
                 {
                     b.Navigation("BookingServices");
+
+                    b.Navigation("Faqs");
 
                     b.Navigation("Images");
                 });
