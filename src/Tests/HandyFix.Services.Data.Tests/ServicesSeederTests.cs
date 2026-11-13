@@ -154,8 +154,8 @@
         }
 
         // A new database gets the written pages' own text, as an existing one got it from the
-        // migration of its batch (AddServicePageTextsBatch1 and 2, PROJECT_STATE.md Sections 3eq and
-        // 3er): the description, the blocks a point per line, and the questions in order.
+        // migration of its batch (AddServicePageTextsBatch1 to 3, PROJECT_STATE.md Sections 3eq, 3er
+        // and 3es): the description, the blocks a point per line, and the questions in order.
         [Theory]
         [InlineData("tap-repairs", "A tap that drips", "[water_drop] A worn washer.", 3, "Is it worth repairing a tap, or should I replace it?")]
         [InlineData("toilet-repairs", "Running, slow to fill", "[water_drop] A flush valve that no longer seals.", 2, "Why does my toilet keep running?")]
@@ -167,6 +167,11 @@
         [InlineData("furniture-assembly", "Wardrobes, beds, chests of drawers", "[checklist] A part missing or damaged in the box.", 2, "What happens if a part is missing?")]
         [InlineData("shelf-installation", "The wall decides how a shelf is fixed", "[warning] Plasterboard stuck to brick.", 2, "How much weight can a floating shelf hold?")]
         [InlineData("full-bathroom-refurbishment", "A new bathroom from bare walls", "[water_drop] Soft floorboards under the old bath or toilet.", 2, "Does a bathroom refit need building regulations approval?")]
+        [InlineData("emergency-plumbing", "This is the one job we take at any hour", "[warning] A pipe split by frost.", 3, "Who is responsible for a leak between the street and my house?")]
+        [InlineData("shower-installation", "Which shower a home can take", "[construction] A valve built into the wall, or one on its face.", 2, "Can I have a power shower with a combi boiler?")]
+        [InlineData("kitchen-plumbing", "The plumbing at the kitchen sink", "[build] A trap that drips.", 2, "Does the kitchen cold tap have to come from the mains?")]
+        [InlineData("washing-machine-dishwasher-install", "A new washing machine, washer-dryer or dishwasher", "[warning] Transit bolts still in.", 2, "Does a washing machine need a hot water connection?")]
+        [InlineData("outside-garden-tap-installation", "We fit a tap to an outside wall", "[warning] An old tap with no backflow protection.", 2, "Should I turn my outside tap off in winter?")]
         public async Task SeedAsyncShouldGiveTheWrittenPagesTheirText(string slug, string descriptionStart, string firstFinding, int questions, string firstQuestion)
         {
             await this.SeedAsync();
@@ -186,8 +191,10 @@
             // The words of things we do not do stay off the pages (master plan decision 10).
             Assert.DoesNotContain("thermal", service.Description + service.CommonFindings + service.NotIncluded, StringComparison.OrdinalIgnoreCase);
 
-            // Nor American trade words (master plan R5: TV Mounting said "drywall").
+            // Nor American trade words (master plan R5: TV Mounting said "drywall", Kitchen Plumbing
+            // "garbage disposals").
             Assert.DoesNotContain("drywall", service.Description + service.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("garbage", service.Description + service.Summary, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -199,7 +206,7 @@
             Assert.Null(gutters.Summary);
             Assert.Null(gutters.CommonFindings);
             Assert.Empty(gutters.Faqs);
-            Assert.Equal(10, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
+            Assert.Equal(15, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
         }
 
         // As the application does it: each seeder, then a save (ApplicationDbContextSeeder).

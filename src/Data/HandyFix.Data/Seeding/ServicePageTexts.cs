@@ -41,6 +41,21 @@ namespace HandyFix.Data.Seeding
                     ("What paperwork comes with a new boiler?", "The warranty papers, and a Building Regulations Compliance Certificate. The installation has to be notified to the local authority within 30 days, which we do through Gas Safe Register. The Register then posts the certificate to you, and you can check online that it was done."),
                 },
             },
+            ["emergency-plumbing"] = new ServicePageText
+            {
+                Summary = "Burst pipes, water through a ceiling and leaks that will not stop, taken by phone or WhatsApp at any hour. We aim to be with you within 60 to 90 minutes.",
+                CommonFindings = "[warning] A pipe split by frost. Pipes freeze in a loft, a garage or an outside wall, and Thames Water warns that the leak often shows only when the weather turns milder and the ice thaws.\n[water_drop] A burst hose under a sink or behind a machine. A braided tap connector or a washing machine's fill hose gives way at full mains pressure, and the cupboard or the kitchen floor floods before anyone notices.\n[home] A tank or cistern that will not stop filling. The float valve in a loft tank or a toilet cistern sticks open, and what the overflow cannot carry away comes through the ceiling below.\n[plumbing] A stop valve that will not close. A stopcock left untouched for years can seize, or turn round and round without shutting anything off.",
+                VisitSteps = "We make it safe first: the supply off at the stop valve, or at a valve nearer the leak so the rest of the house is not cut off.\nWhere water has reached a ceiling, a light or a socket, we check the electricity is off in that part of the house before we touch anything.\nWe find the burst or the failed fitting, opening boxing or lifting a floorboard where the pipe runs.\nWe cut out and replace the split length of pipe, remake the joint, or change the hose or valve that failed.\nWhen the full repair needs a part we do not carry, we cap or isolate that pipe so the supply can go back on to the rest of the house, and agree the part and its price with you.\nOnce the supply is back on, we check the repair at full pressure before we leave.",
+                BeforeWeArrive = "[plumbing] Turn the water off at the inside stop valve. It is often under the kitchen sink, but WaterSafe notes it can be in a cupboard, a garage or a cellar. Turn it clockwise.\n[bolt] If water has reached the electrics, switch the electricity off at the mains, as Thames Water and WaterSafe both advise. Do not touch a switch, a socket or a fuse box that is wet.\n[timer] Turn the heating off, then open the hot and cold taps to drain what is left in the pipes.\n[inventory_2] Move what you can out of the way. Soak up the spill with towels, or catch the drips in a bucket.\n[emergency] If you smell gas, that is not a plumbing emergency. Call the National Gas Emergency Service on 0800 111 999, open the windows and doors, and do not touch any electrical switch.",
+                Included = "Shutting off the supply and stopping the leak\nFinding the burst, opening boxing or lifting a floorboard where the pipe runs\nRepairing split pipes, failed joints, hoses and valves\nCapping or isolating a pipe until a part is fitted, so the rest of the house has water\nChecking the repair at full pressure",
+                NotIncluded = "A leak in the road or the pavement: Thames Water's guidance is that the main and the pipe linking it to your supply pipe are the water company's, and it asks for leaks there to be reported to it\nA blocked or overflowing drain outside the house: we clear blockages indoors only\nA ceiling brought down by water: that is Plastering & Ceiling Repairs, priced after a survey",
+                Faqs = new[]
+                {
+                    ("Who is responsible for a leak between the street and my house?", "You are, from the boundary of your property inwards. Thames Water's guidance is that the main and the communication pipe linking it to your supply pipe are the water company's, while the supply pipe under your garden or drive is the owner's, as is every pipe and fitting inside. If you rent, your landlord is responsible for fixing leaks."),
+                    ("A pipe has frozen. What should I do?", "Turn the supply off at the stop valve and open the taps on that pipe, then thaw it slowly with a hot water bottle or warm towels wrapped round it, as Thames Water advises. Before turning the supply back on, run a dry cloth along the pipe: if it comes away wet, leave it off and call or WhatsApp us."),
+                    ("Will my home insurance pay for the repair?", "That depends on your policy, so check it before anything else is spent, as Thames Water and WaterSafe both advise. Take photos of the damage, and keep the invoice we send for the repair."),
+                },
+            },
             ["full-bathroom-refurbishment"] = new ServicePageText
             {
                 Summary = "The old bathroom stripped out and a new one fitted: pipework, waterproofing, wall and floor tiles and sanitaryware, priced after a free survey at your home.",
@@ -69,6 +84,20 @@ namespace HandyFix.Data.Seeding
                     ("Will fixing a chest of drawers to the wall leave marks?", "Two small screw holes behind it. IKEA's advice for when you move the furniture is simply to fill them."),
                 },
             },
+            ["kitchen-plumbing"] = new ServicePageText
+            {
+                Summary = "A kitchen sink fitted or replaced, with its waste, trap, tap feeds and isolating valves, and every joint under it checked dry with the taps running.",
+                CommonFindings = "[build] A trap that drips. The nut on a plastic trap works loose, or its washer perishes, and a slow drip collects at the back of the cupboard.\n[warning] A swollen cupboard base. A slow leak goes unseen for months, until the chipboard base of the unit swells and comes apart.\n[water_drop] A failed seal between sink and worktop. Water from the draining board runs under the rim and into the cupboard, while every pipe is dry.\n[plumbing] A waste pipe with too little fall. When the pipe to the outside runs level, or rises anywhere along its length, water and scraps sit in it and the bowl drains slowly.",
+                VisitSteps = "First the supply goes off, at the valves under the sink or at the stop valve where there are none.\nWe disconnect and take out the old sink or fittings, and look at the pipes and the cupboard behind them for signs of old leaks.\nWe fit the new sink, its waste and trap, and connect the tap feeds with an isolating valve on each.\nWe seal the rim to the worktop, turn the supply back on, fill and empty the bowl, and check every joint below it is dry.",
+                BeforeWeArrive = "[inventory_2] Empty the cupboard under the sink.\n[add_a_photo] Photograph the pipes. Add the picture to your booking, with one of the new sink or tap if you have bought them.\n[search] If the new sink is a different size or shape, measure the old one and the new one, and say so in your booking.",
+                Included = "Fitting a new or replacement kitchen sink, with its waste and trap\nConnecting the hot and cold feeds to the kitchen tap\nAn isolating valve on each feed\nSealing the sink to the worktop\nChecking every joint with the taps running",
+                NotIncluded = "A blocked drain or gully outside the house: we clear blockages indoors only\nNew kitchen units or worktops: that is Kitchen Fitting & Alterations, priced after a survey",
+                Faqs = new[]
+                {
+                    ("Does the kitchen cold tap have to come from the mains?", "In nearly every home, yes. The Water Fittings Regulations require at least one tap for drinking water, fed from the supply pipe or from a cistern that holds wholesome water, and the kitchen cold tap is the one used for it."),
+                    ("Do I need valves under my kitchen sink?", "Yes, one on each tap feed. The Water Fittings Regulations ask for enough servicing valves to keep the water lost to a minimum when a fitting is repaired or replaced, and with them a tap can be changed while the rest of the house stays on."),
+                },
+            },
             ["leak-repairs"] = new ServicePageText
             {
                 Summary = "Dripping joints, weeping valves and leaking pipes we can see or reach, under sinks, behind bath panels and at radiators, found, fixed and left dry under pressure.",
@@ -81,6 +110,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("How can I tell if there is a leak I cannot see?", "Thames Water lists the signs: less water from the cold kitchen tap than usual, damp patches in the garden in dry weather, pipes that are noisy when nothing is running, and a metered bill higher than it should be."),
                     ("Can you find a leak inside a wall or under a floor?", "Only when it shows itself where we can reach it: a joint behind a panel, or a damp patch we can follow back. We find leaks by eye and by testing, so one that cannot be traced that way needs a specialist to find it first."),
+                },
+            },
+            ["outside-garden-tap-installation"] = new ServicePageText
+            {
+                Summary = "A new tap on the outside wall, fed from the cold supply, with its backflow protection and a shut-off valve fitted indoors, out of the frost.",
+                CommonFindings = "[warning] An old tap with no backflow protection. Water Regs UK lists the ways to add it: a double check valve indoors on the tap's feed, a tap with one built in, or a device screwed onto the outlet.\n[water_drop] A tap or pipe split by frost. Water left standing in the tap and in the pipe through the wall freezes and expands, and WaterSafe warns that this can crack and burst them.\n[search] A cracked valve inside the tap. Some garden taps carry their check valve in the tap body, where Water Regs UK notes it is prone to freezing and failing.\n[plumbing] No way to shut the tap off on its own. Without a valve indoors, draining it for winter means turning off the water to the whole house.",
+                VisitSteps = "We find the nearest cold pipe to where the tap will go, and check the wall for cables and pipes before drilling.\nWe drill through the wall and run the pipe through, sealing round it on both sides.\nWe fit the shut-off valve and the double check valve indoors, and the tap on a wall plate outside.\nWith the water back on, we run the tap, check every joint inside and out, and insulate the pipe where it is exposed.",
+                BeforeWeArrive = "[home] Choose where on the wall you want the tap. A spot close to the kitchen keeps the pipe inside short.\n[inventory_2] Clear the cupboard under the sink, and anything against the wall on both sides.\n[add_a_photo] Show us the wall. A photo of the outside wall and one of the pipes under the sink, added to your booking, show us the route the pipe will take.",
+                Included = "A new outside tap connected to the cold supply\nDrilling the wall and sealing round the pipe\nBackflow protection and a shut-off valve, fitted indoors\nInsulating the exposed pipe\nAdding backflow protection to an existing tap that has none",
+                NotIncluded = null,
+                Faqs = new[]
+                {
+                    ("Should I turn my outside tap off in winter?", "Yes. WaterSafe's advice is to disconnect the hose, shut off the outside supply if you can and drain the tap, and fit an insulating cover. The shut-off valve we fit indoors is there for this: close it, then open the tap outside to let the water out."),
+                    ("Can I fill a pond or a hot tub from an outside tap?", "Not from one protected only by a double check valve. Water Regs UK classes a hose used to refill a pond, a swimming pool, a spa bath or a hot tub as fluid category 5, the highest risk, unless your water company assesses it otherwise, so ask your water company before you do."),
                 },
             },
             ["radiator-trv-replacement"] = new ServicePageText
@@ -110,6 +153,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("How much weight can a floating shelf hold?", "No more than its maker's figure, and that only when it is fixed into brick, block or studs. On plasterboard alone it holds far less, which is why we ask in the booking what will go on it."),
                     ("Can you put shelves on a plasterboard wall?", "Yes. Light ones can hang on cavity fixings in the board. Heavy ones need timber behind the board, as Siniat, a plasterboard maker, advises, so they go onto the studs."),
+                },
+            },
+            ["shower-installation"] = new ServicePageText
+            {
+                Summary = "Mixer, power and electric showers fitted, chosen to suit your boiler or cylinder, with the pipework connected and tested, and any wiring done by a registered electrician we bring in.",
+                CommonFindings = "[construction] A valve built into the wall, or one on its face. A concealed valve needs the wall opened for its pipes and then retiled. A bar mixer sits on the tiles and takes its pipes through them, so the tiling can stay.\n[warning] A handset that can reach the toilet. Water Regs UK treats a shower hose that can reach into a toilet or bidet as the highest risk to drinking water. A clip that holds the hose back, a shorter hose or a fixed head removes the risk.\n[water_drop] A shower head that can lie in the bath water. The handset has to stay a set gap above the rim of the bath or the tray, or the supplies need double check valves, so that used water cannot be drawn back into the pipes.\n[plumbing] Hot and cold that can cross. Water Regs UK asks for check valves on both supplies to a shower valve, so that under a fault cold water at mains pressure cannot push into the hot, or hot water into the cold mains.",
+                VisitSteps = "We look at the boiler or cylinder, and check the shower you have chosen suits it before anything is cut.\nWith the water off, we run the pipes to where the valve will go, with a check valve and an isolating valve on each supply.\nWe fix the valve, the rail or the fixed head, and the hose, set so the handset cannot reach the toilet or lie in the water.\nOnce the supply is back on, we run the shower at full heat and full cold, and check every joint for leaks.",
+                BeforeWeArrive = "[add_a_photo] Show us the boiler. A photo of it, of the cylinder and loft tank if you have them, and of the wall where the shower will go, added to your booking, tells us which showers will work.\n[inventory_2] If you have bought the shower, keep it in its box with the instructions, so every part can be checked before we start.\n[home] Clear the bath or the tray and the floor round it.",
+                Included = "Checking the shower suits your boiler or cylinder\nRunning the pipework to the valve and connecting it\nA check valve and an isolating valve on each supply\nFitting the valve, the rail or fixed head, and the hose\nA hose clip where the handset could otherwise reach the toilet\nThe wiring for an electric shower or a pump, by a registered electrician we bring in, who certifies it\nTesting every joint for leaks",
+                NotIncluded = "Tiling round a new valve built into the wall: that is Wall & Floor Tiling, priced after a survey",
+                Faqs = new[]
+                {
+                    ("Can I have a power shower with a combi boiler?", "Not as a rule, and you do not need one. A combi already delivers mains pressure, which suits a mains-pressure mixer shower, while Worcester Bosch describes the pump-assisted kind as made for low-pressure systems fed from a tank."),
+                    ("Will a new shower give me more pressure?", "Only as much as your system has. A mixer gives the pressure its supplies already have. On a tank-fed system that depends on how far the loft tank sits above the shower head, which is why a power shower adds a pump there."),
                 },
             },
             ["tap-repairs"] = new ServicePageText
@@ -153,6 +210,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("Can a TV go on a plasterboard wall?", "Yes, when the bracket is fixed to the timber studs inside the wall: that is RoSPA's advice for plasterboard walls. If there is no stud where you want the screen, we show you where the nearest ones allow it."),
                     ("My TV stays on its stand. Can it be made safe for small children?", "Yes, with an anti-tip strap, fixed to the back of the set and to a bracket on the wall, which is what RoSPA advises. RoSPA knows of eight babies and young children in the UK killed by a falling television since July 2008. We can fit a strap on the same visit."),
+                },
+            },
+            ["washing-machine-dishwasher-install"] = new ServicePageText
+            {
+                Summary = "A washing machine or dishwasher connected to the water and the waste, set up as its maker says, and run to check for leaks. A new valve or waste added where there is none.",
+                CommonFindings = "[warning] Transit bolts still in. They lock a washing machine's drum for delivery, and a machine run with them in shakes hard on its first spin.\n[search] A machine that empties while it fills. When the waste hose is pushed too far down the standpipe, or the standpipe is too low, the water siphons out as fast as it goes in. The maker's instructions give the height the waste should reach.\n[water_drop] A hose kinked against the wall. Pushing an appliance back into its space can fold the fill or waste hose behind it, which slows the water or splits the hose in time.\n[inventory_2] A dishwasher that cannot be pulled out. Bosch's installation guide asks for the plug and hoses to reach at least 60 cm, so the dishwasher comes out of its housing for maintenance without being disconnected.",
+                VisitSteps = "We turn off the valve and disconnect the old appliance, if there is one, and check the valve and waste it used.\nOn a new washing machine, we take out the transit bolts and fit the blanks.\nWe connect the fill hose to the cold valve and the waste to the trap under the sink or to the standpipe, with no kinks in either.\nWe level a freestanding machine, or fix an integrated dishwasher into its housing with the bracket supplied.\nWe run it and watch every joint and the waste while it fills and empties.",
+                BeforeWeArrive = "[inventory_2] Have the new appliance in the kitchen, and clear the space and the cupboard under the sink.\n[bolt] Check there is a socket the plug can reach. Bosch's instructions plug a machine into an ordinary socket.\n[add_a_photo] Send the model number. Add it to your booking, with a photo of the space and of the valves and pipes there now.",
+                Included = "Connecting a washing machine, washer-dryer or dishwasher to the water and the waste\nTaking out the transit bolts and levelling a freestanding machine\nA new valve or waste connection where there is none\nFixing an integrated dishwasher into its housing\nA test run with every joint checked",
+                NotIncluded = "A new socket for the appliance: that is Minor Electrical Tasks, at the handyman rate\nNew kitchen units, or cutting a space for the appliance: that is Kitchen Fitting & Alterations, priced after a survey",
+                Faqs = new[]
+                {
+                    ("Does a washing machine need a hot water connection?", "Usually not, but check its instructions. Bosch's steps connect the fill hose to the cold supply only, and a machine with one inlet heats its own water."),
+                    ("Can a washing machine and a dishwasher share the sink waste?", "Yes. A sink trap with two connections on its side takes both waste hoses, and each hose is looped up high under the worktop so water from the sink cannot run back into the appliance."),
                 },
             },
         };
