@@ -41,6 +41,11 @@ namespace HandyFix.Web.Presentation
             ["lock-handle-replacement"] = new[] { "door-repairs", "minor-electrical-tasks" },
             ["bath-shower-screen-fitting"] = new[] { "silicone-mastic-resealing", "shower-installation", "wall-mounting" },
             ["minor-electrical-tasks"] = new[] { "tv-mounting", "plastering-ceiling-repairs", "wall-mounting" },
+            ["curtain-and-blind-fitting"] = new[] { "wall-mounting", "painting-touch-ups", "shelf-installation" },
+            ["plastering-ceiling-repairs"] = new[] { "leak-repairs", "painting-touch-ups", "minor-electrical-tasks" },
+            ["painting-touch-ups"] = new[] { "plastering-ceiling-repairs", "door-repairs", "curtain-and-blind-fitting" },
+            ["gutter-clearing"] = new[] { "outside-garden-tap-installation", "external-brickwork-paving" },
+            ["wall-floor-tiling"] = new[] { "door-trimming-shaving", "silicone-mastic-resealing", "bath-shower-screen-fitting" },
         };
 
         /// <summary>
