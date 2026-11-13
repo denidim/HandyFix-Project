@@ -175,6 +175,32 @@
             Assert.Equal(HeardAbout.NotSaid, dbContext.Inquiries.Single(x => x.Name == "John Doe").HeardAbout);
         }
 
+        // The Dashboard counts the enquiries' answers beside the jobs': those of the last 30 days,
+        // or every enquiry when no day is given (PROJECT_STATE.md Section 3et).
+        [Fact]
+        public async Task GetHeardAboutCountsAsyncShouldCountTheEnquiriesSentSinceTheDayOrAllOfThem()
+        {
+            using ApplicationDbContext dbContext = InMemoryContext();
+            InquiriesService service = BuildService(dbContext);
+            foreach (var (name, answer) in new[] { ("Jane Doe", HeardAbout.Facebook), ("John Doe", HeardAbout.Facebook), ("Ann Doe", HeardAbout.NotSaid) })
+            {
+                await service.CreateInquiryAsync(
+                    new ContactInputModel { Name = name, Email = "someone@example.com", PhoneNumber = "07123456789", Message = "Kitchen tap is dripping.", HeardAbout = answer },
+                    new List<string>());
+            }
+
+            dbContext.Inquiries.Single(x => x.Name == "John Doe").CreatedOn = DateTime.UtcNow.AddDays(-40);
+            await dbContext.SaveChangesAsync();
+
+            IReadOnlyDictionary<HeardAbout, int> lastMonth = await service.GetHeardAboutCountsAsync(DateTime.UtcNow.AddDays(-30));
+            IReadOnlyDictionary<HeardAbout, int> allTime = await service.GetHeardAboutCountsAsync(null);
+
+            Assert.Equal(1, lastMonth[HeardAbout.Facebook]);
+            Assert.Equal(1, lastMonth[HeardAbout.NotSaid]);
+            Assert.Equal(2, allTime[HeardAbout.Facebook]);
+            Assert.False(allTime.ContainsKey(HeardAbout.GoogleMaps));
+        }
+
         // A deleted enquiry is gone: sending the same words again after it was deleted is new.
         [Fact]
         public async Task IsRecentDuplicateAsyncShouldNotCountADeletedEnquiry()

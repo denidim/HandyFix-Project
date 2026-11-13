@@ -110,22 +110,39 @@
     </a>
 </div>
 
-<!-- What made customers look for us: the answers to "How did you hear about us?" on the jobs of
-     the last 30 days (PROJECT_STATE.md Section 3ej). The live database cannot be read from
-     outside, so this table is where the channels are compared. -->
+<!-- What made customers look for us: the answers to "How did you hear about us?" on the enquiries
+     and on the jobs, the last 30 days or all time (PROJECT_STATE.md Sections 3ej and 3et). The
+     live database cannot be read from outside, so this table is where the channels are compared.
+     The two columns are counted apart: an enquiry that is made a job is in both. -->
 <section class="glass-card p-4 rounded-xl admin-card mb-5" id="dashboard-heard-about">
-    <h3 class="font-headline-sm text-primary mb-1 d-flex align-items-center gap-2">
-        <span class="material-symbols-outlined">analytics</span>
-        <span>How Customers Heard About Us, Last @IndexViewModel.HeardAboutDays Days</span>
-    </h3>
-    <p class="font-label-sm text-on-surface-variant mb-3">Every job made in that time, cancelled ones too. An enquiry's answer is counted once it is made a job.</p>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-1">
+        <h3 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">analytics</span>
+            <span>How Customers Heard About Us</span>
+        </h3>
+        <form method="get" asp-area="Administration" asp-controller="Dashboard" asp-action="Index" asp-fragment="dashboard-heard-about" class="m-0">
+            <select name="heardAbout" class="admin-status-filter font-body-md" data-submit-on-change aria-label="Count the answers of">
+                <option value="">Last @IndexViewModel.HeardAboutDays days</option>
+                <option value="@IndexViewModel.HeardAboutAllTime" selected="@Model.HeardAboutIsAllTime">All time</option>
+            </select>
+        </form>
+    </div>
+    <p class="font-label-sm text-on-surface-variant mb-3">Every enquiry and every job @(Model.HeardAboutIsAllTime ? "so far" : "of the last " + IndexViewModel.HeardAboutDays + " days"), cancelled jobs too. An enquiry that is made a job is in both columns. The question was first asked on 12 Nov 2026: what came in before then is "Not said".</p>
     <table class="table mb-0 dashboard-heard-about-table">
+        <thead>
+            <tr>
+                <th scope="col" class="font-label-sm text-on-surface-variant">Answer</th>
+                <th scope="col" class="font-label-sm text-on-surface-variant text-end">Enquiries</th>
+                <th scope="col" class="font-label-sm text-on-surface-variant text-end">Jobs</th>
+            </tr>
+        </thead>
         <tbody>
             @foreach (var line in Model.HeardAbout)
             {
                 <tr>
                     <td class="font-body-md text-on-surface">@line.Label</td>
-                    <td class="font-body-md text-primary text-end fw-bold">@line.Count</td>
+                    <td class="font-body-md text-primary text-end fw-bold">@line.Enquiries</td>
+                    <td class="font-body-md text-primary text-end fw-bold">@line.Jobs</td>
                 </tr>
             }
         </tbody>

@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    using HandyFix.Web.ViewModels.Administration.Dashboard;
+    using HandyFix.Data.Models;
     using HandyFix.Web.ViewModels.Booking;
 
     public interface IBookingsService
@@ -47,8 +47,9 @@
         Task<int> GetTotalCountAsync();
 
         // How many jobs made since then gave each answer to "How did you hear about us?",
-        // cancelled ones too (PROJECT_STATE.md Section 3ej).
-        Task<IReadOnlyList<HeardAboutCountViewModel>> GetHeardAboutCountsAsync(DateTime since);
+        // cancelled ones too; every job ever made when no day is given (PROJECT_STATE.md
+        // Sections 3ej and 3et). An answer no job gave is not in it.
+        Task<IReadOnlyDictionary<HeardAbout, int>> GetHeardAboutCountsAsync(DateTime? since);
 
         Task<int> GetPendingCountAsync();
 

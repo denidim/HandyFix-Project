@@ -168,6 +168,20 @@
             return await this.inquiryRepository.All().CountAsync();
         }
 
+        public async Task<IReadOnlyDictionary<HeardAbout, int>> GetHeardAboutCountsAsync(DateTime? since)
+        {
+            IQueryable<Inquiry> enquiries = this.inquiryRepository.All();
+            if (since.HasValue)
+            {
+                enquiries = enquiries.Where(x => x.CreatedOn >= since.Value);
+            }
+
+            return await enquiries
+                .GroupBy(x => x.HeardAbout)
+                .Select(x => new { Answer = x.Key, Count = x.Count() })
+                .ToDictionaryAsync(x => x.Answer, x => x.Count);
+        }
+
         // The Contact form sends its category as a separate field, validated separately from the
         // visitor's own text; it's stored as a prefix so the admin Enquiries list reads the same
         // as it always has. Join Our Team sends no category.

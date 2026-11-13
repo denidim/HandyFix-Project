@@ -13,7 +13,6 @@
     using HandyFix.Services.Data.Common;
     using HandyFix.Services.Data.Payments;
     using HandyFix.Services.Mapping;
-    using HandyFix.Web.ViewModels.Administration.Dashboard;
     using HandyFix.Web.ViewModels.Booking;
     using HandyFix.Web.ViewModels.Validation;
 
@@ -332,24 +331,18 @@
             return await this.bookingRepository.All().CountAsync(x => x.Status.Name == BookingStatusNames.Pending);
         }
 
-        public async Task<IReadOnlyList<HeardAboutCountViewModel>> GetHeardAboutCountsAsync(DateTime since)
+        public async Task<IReadOnlyDictionary<HeardAbout, int>> GetHeardAboutCountsAsync(DateTime? since)
         {
-            var counts = await this.bookingRepository.All()
-                .Where(x => x.CreatedOn >= since)
+            IQueryable<Booking> jobs = this.bookingRepository.All();
+            if (since.HasValue)
+            {
+                jobs = jobs.Where(x => x.CreatedOn >= since.Value);
+            }
+
+            return await jobs
                 .GroupBy(x => x.HeardAbout)
                 .Select(x => new { Answer = x.Key, Count = x.Count() })
-                .ToListAsync();
-
-            // Every answer has its line, a nought included: a channel that brings nobody is worth
-            // seeing too. "Not said" comes last.
-            return HeardAboutText.Answers
-                .Append(HeardAbout.NotSaid)
-                .Select(answer => new HeardAboutCountViewModel
-                {
-                    Label = HeardAboutText.Label(answer),
-                    Count = counts.Where(x => x.Answer == answer).Sum(x => x.Count),
-                })
-                .ToList();
+                .ToDictionaryAsync(x => x.Answer, x => x.Count);
         }
 
         public BookingSummaryStats GetSummaryStats(IEnumerable<BookingDetailsViewModel> bookings)
