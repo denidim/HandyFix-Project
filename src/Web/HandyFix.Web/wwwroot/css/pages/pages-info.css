@@ -149,8 +149,8 @@
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-/* FAQ Accordion */
-.faq-accordion {
+/* The list of questions on the FAQ and Pricing pages. Not .faq-accordion, which is one question on a service or town page. */
+.faq-list {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
