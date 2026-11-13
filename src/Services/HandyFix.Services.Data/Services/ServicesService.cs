@@ -11,6 +11,7 @@
     using HandyFix.Services;
     using HandyFix.Services.Data.Common;
     using HandyFix.Services.Mapping;
+    using HandyFix.Web.ViewModels.Administration.Services;
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.EntityFrameworkCore;
@@ -19,15 +20,18 @@
     {
         private readonly IDeletableEntityRepository<Service> servicesRepository;
         private readonly IDeletableEntityRepository<ServiceImage> serviceImageRepository;
+        private readonly IDeletableEntityRepository<ServiceFaq> faqsRepository;
         private readonly IImageStorageService imageStorageService;
 
         public ServicesService(
             IDeletableEntityRepository<Service> servicesRepository,
             IDeletableEntityRepository<ServiceImage> serviceImageRepository,
+            IDeletableEntityRepository<ServiceFaq> faqsRepository,
             IImageStorageService imageStorageService)
         {
             this.servicesRepository = servicesRepository;
             this.serviceImageRepository = serviceImageRepository;
+            this.faqsRepository = faqsRepository;
             this.imageStorageService = imageStorageService;
         }
 
@@ -137,6 +141,90 @@
 
                 await this.servicesRepository.SaveChangesAsync();
             }
+        }
+
+        public async Task SavePageAsync(Guid id, ServiceAdminInputModel model)
+        {
+            Service service = await this.servicesRepository.All()
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (service == null)
+            {
+                return;
+            }
+
+            service.Summary = OneLine(model.Summary);
+            service.CommonFindings = Lines(model.CommonFindings);
+            service.VisitSteps = Lines(model.VisitSteps);
+            service.BeforeWeArrive = Lines(model.BeforeWeArrive);
+            service.Included = Lines(model.Included);
+            service.NotIncluded = Lines(model.NotIncluded);
+
+            // Replaced, not matched up row by row, as a town's questions are: they are only text
+            // in an order, and hard-deleting the old rows stops deleted ones piling up.
+            List<ServiceFaq> existing = await this.faqsRepository.AllWithDeleted()
+                .Where(x => x.ServiceId == id)
+                .ToListAsync();
+
+            foreach (ServiceFaq faq in existing)
+            {
+                this.faqsRepository.HardDelete(faq);
+            }
+
+            var displayOrder = 1;
+            foreach (ServiceFaqInputModel faq in model.Faqs ?? Enumerable.Empty<ServiceFaqInputModel>())
+            {
+                if (string.IsNullOrWhiteSpace(faq?.Question) || string.IsNullOrWhiteSpace(faq.Answer))
+                {
+                    continue;
+                }
+
+                await this.faqsRepository.AddAsync(new ServiceFaq
+                {
+                    ServiceId = id,
+                    Question = faq.Question.Trim(),
+                    Answer = faq.Answer.Trim(),
+                    DisplayOrder = displayOrder++,
+                });
+            }
+
+            await this.servicesRepository.SaveChangesAsync();
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> PruneAndValidateFaqs(ServiceAdminInputModel model)
+        {
+            model.Faqs = (model.Faqs ?? new List<ServiceFaqInputModel>())
+                .Where(f => !string.IsNullOrWhiteSpace(f?.Question) || !string.IsNullOrWhiteSpace(f?.Answer))
+                .ToList();
+
+            var errors = new List<KeyValuePair<string, string>>();
+
+            // The limits are ServiceFaq's, so a row that passes here cannot fail at SaveChanges.
+            for (var i = 0; i < model.Faqs.Count; i++)
+            {
+                var question = model.Faqs[i].Question?.Trim();
+                var answer = model.Faqs[i].Answer?.Trim();
+
+                if (string.IsNullOrWhiteSpace(question))
+                {
+                    errors.Add(new($"Faqs[{i}].Question", "Question is required."));
+                }
+                else if (question.Length < 5 || question.Length > 300)
+                {
+                    errors.Add(new($"Faqs[{i}].Question", "Question must be between 5 and 300 characters."));
+                }
+
+                if (string.IsNullOrWhiteSpace(answer))
+                {
+                    errors.Add(new($"Faqs[{i}].Answer", "Answer is required."));
+                }
+                else if (answer.Length < 5 || answer.Length > 1000)
+                {
+                    errors.Add(new($"Faqs[{i}].Answer", "Answer must be between 5 and 1000 characters."));
+                }
+            }
+
+            return errors;
         }
 
         // A service's slug is made from its name, and the unique index on Slug covers deleted rows
@@ -260,5 +348,25 @@
                 await this.imageStorageService.DeleteServiceImageAsync(previous);
             }
         }
+
+        // A block as the page reads it: one point per line, each trimmed, no empty lines, and
+        // null when nothing is left, so an empty block is left off the page.
+        private static string Lines(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return null;
+            }
+
+            var lines = text.Split('\n')
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0)
+                .ToList();
+
+            return lines.Count > 0 ? string.Join("\n", lines) : null;
+        }
+
+        private static string OneLine(string text) =>
+            string.IsNullOrWhiteSpace(text) ? null : string.Join(" ", text.Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
     }
 }

@@ -111,7 +111,7 @@
                                                              IconName = svc.CategorySlug == CategorySlugs.SmallBuildingWorks ? "foundation" : (svc.CategoryName == "Plumbing" ? "water_drop" : "handyman"),
                                                              ImageUrl = svc.ImageUrl,
                                                              MediumCopyUrl = svc.MediumCopyUrl,
-                                                             Description = Summaries.Of(svc.Description),
+                                                             Description = Summaries.Of(svc.Summary, svc.Description),
                                                              DetailsUrl = this.Url.RouteUrl("ServiceDetails", new { categorySlug = svc.CategorySlug, serviceSlug = svc.Slug }),
                                                              BasePrice = svc.BasePrice,
                                                              EstimatedDurationMinutes = svc.EstimatedDurationMinutes,

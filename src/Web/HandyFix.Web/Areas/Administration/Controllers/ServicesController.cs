@@ -8,6 +8,7 @@
     using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Web.Presentation;
     using HandyFix.Web.ViewModels.Administration.Services;
     using HandyFix.Web.ViewModels.Services;
 
@@ -63,6 +64,8 @@
         [HttpPost]
         public async Task<IActionResult> Create(ServiceAdminInputModel model)
         {
+            this.CheckPageFields(model);
+
             if (this.ModelState.IsValid && await this.servicesService.NameIsTakenAsync(model.Name))
             {
                 this.ModelState.AddModelError(nameof(model.Name), NameTakenMessage);
@@ -76,6 +79,7 @@
             }
 
             Guid serviceId = await this.servicesService.CreateAsync(model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.CategoryId, model.DisplayOrder, model.IsPopular, model.IsQuoteOnly, model.IsEmergency);
+            await this.servicesService.SavePageAsync(serviceId, model);
 
             try
             {
@@ -124,6 +128,16 @@
                 IsQuoteOnly = service.IsQuoteOnly,
                 IsEmergency = service.IsEmergency,
                 CurrentImageUrl = service.ImageUrl,
+                Summary = service.Summary,
+                CommonFindings = service.CommonFindings,
+                VisitSteps = service.VisitSteps,
+                BeforeWeArrive = service.BeforeWeArrive,
+                Included = service.Included,
+                NotIncluded = service.NotIncluded,
+                Faqs = (service.Faqs ?? Enumerable.Empty<ServiceFaqViewModel>())
+                    .OrderBy(f => f.DisplayOrder)
+                    .Select(f => new ServiceFaqInputModel { Question = f.Question, Answer = f.Answer })
+                    .ToList(),
             };
 
             IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
@@ -147,6 +161,8 @@
         [HttpPost]
         public async Task<IActionResult> Edit(ServiceAdminInputModel model)
         {
+            this.CheckPageFields(model);
+
             if (this.ModelState.IsValid && await this.servicesService.NameIsTakenAsync(model.Name, model.Id))
             {
                 this.ModelState.AddModelError(nameof(model.Name), NameTakenMessage);
@@ -160,6 +176,7 @@
             }
 
             await this.servicesService.UpdateAsync(model.Id.Value, model.Name, model.Description, model.BasePrice, model.EstimatedDurationMinutes, model.IsActive, model.CategoryId, model.DisplayOrder, model.IsPopular, model.IsQuoteOnly, model.IsEmergency);
+            await this.servicesService.SavePageAsync(model.Id.Value, model);
 
             // A rename no longer touches the picture; only a new upload does (PROJECT_STATE.md
             // Section 3cq).
@@ -197,6 +214,28 @@
             }
 
             return this.RedirectToList();
+        }
+
+        // The page's question rows and its icon names, which the annotations cannot check
+        // (Section 3ep). A row left blank is dropped first, as on a town's form. A name in square
+        // brackets that the icon font lacks would show on the page as the word itself.
+        private void CheckPageFields(ServiceAdminInputModel model)
+        {
+            foreach (KeyValuePair<string, string> error in this.servicesService.PruneAndValidateFaqs(model))
+            {
+                this.ModelState.AddModelError(error.Key, error.Value);
+            }
+
+            this.CheckIcons(nameof(model.CommonFindings), model.CommonFindings);
+            this.CheckIcons(nameof(model.BeforeWeArrive), model.BeforeWeArrive);
+        }
+
+        private void CheckIcons(string field, string text)
+        {
+            foreach (var name in PagePoints.UnknownIcons(text))
+            {
+                this.ModelState.AddModelError(field, $"[{name}] is not one of the icons listed under this box. Use one of those names, or leave the brackets out.");
+            }
         }
 
         // Each save above leaves a line on the list saying what it did, as service areas and

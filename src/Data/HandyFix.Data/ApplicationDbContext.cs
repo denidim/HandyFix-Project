@@ -59,6 +59,8 @@
 
         public DbSet<ServiceAreaFaq> ServiceAreaFaqs { get; set; }
 
+        public DbSet<ServiceFaq> ServiceFaqs { get; set; }
+
         public DbSet<ServiceCategory> ServiceCategories { get; set; }
 
         public DbSet<ServiceImage> ServiceImages { get; set; }

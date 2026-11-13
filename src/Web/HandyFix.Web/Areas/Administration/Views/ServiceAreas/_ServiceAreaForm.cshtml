@@ -172,18 +172,5 @@
     </form>
 </div>
 
-<template id="faq-template">
-    <div class="p-3 rounded-lg faq-row" data-faq-row>
-        <div class="d-flex align-items-start justify-content-between gap-3 mb-2">
-            <span class="font-label-sm text-on-surface-variant faq-row-number">FAQ</span>
-            <button type="button" class="p-1 text-danger rounded-lg d-flex align-items-center justify-content-center remove-faq" title="Remove this FAQ">
-                <span class="material-symbols-outlined fs-20">close</span>
-            </button>
-        </div>
-        <input type="text" name="__PREFIX__.Question" class="form-control py-2 admin-form-control form-pad-standard mb-2" placeholder="Question" maxlength="300" />
-        <span class="text-danger small d-block mb-2"></span>
-        <textarea name="__PREFIX__.Answer" class="form-control admin-form-control form-pad-standard resize-none" rows="2" placeholder="Answer" maxlength="1000"></textarea>
-        <span class="text-danger small"></span>
-    </div>
-</template>
+<partial name="_FaqTemplate" />
 

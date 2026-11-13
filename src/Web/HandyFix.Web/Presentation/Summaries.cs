@@ -18,6 +18,11 @@ namespace HandyFix.Web.Presentation
         // has no space after its dot and stays whole.
         private static readonly Regex SentenceEnd = new(@"(?<=[.!?])\s+", RegexOptions.None, TimeSpan.FromSeconds(1));
 
+        // A service's own short summary when it has one (PROJECT_STATE.md Section 3ep), and
+        // otherwise the start of its description, as before.
+        public static string Of(string summary, string description) =>
+            string.IsNullOrWhiteSpace(summary) ? Of(description) : summary.Trim();
+
         public static string Of(string description)
         {
             if (string.IsNullOrWhiteSpace(description))

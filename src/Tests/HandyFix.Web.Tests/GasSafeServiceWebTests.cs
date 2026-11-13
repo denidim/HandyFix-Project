@@ -27,13 +27,12 @@
 
             Assert.Contains("Boiler Installation &amp; Servicing Specialists", html);
             Assert.Contains("class=\"gas-safe-logo-pill\" src=\"" + GasSafeLogo.Url, html);
-            Assert.Contains("class=\"gas-safe-logo-feature\" src=\"" + GasSafeLogo.Url, html);
             Assert.DoesNotContain("24/7 Available", html);
 
-            // The two boxes that fit a boiler visit, not taps and leaking pipes.
-            Assert.Contains("Survey &amp; Planning", html);
+            // The registration in the badge and in the booking box beside the text. The two
+            // fixed boxes under the description, one of them with the logo, went with Section 3ep.
             Assert.Contains("Gas Safe Registered", html);
-            Assert.DoesNotContain("Leaks &amp; Burst Pipes", html);
+            Assert.Contains("Gas Safe registered engineer", html);
         }
 
         // The description is written in paragraphs, and the page draws each one as its own.
@@ -55,7 +54,7 @@
             // Booked online, 9 to 5: only the emergency page says "24/7" (PROJECT_STATE Section 3eg).
             Assert.Contains("Pick a Time That Suits You", html);
             Assert.DoesNotContain("24/7", html);
-            Assert.Contains("Leaks &amp; Burst Pipes", html);
+            Assert.Contains("Local, insured technicians", html);
             Assert.DoesNotContain(GasSafeLogo.Url, html);
         }
 

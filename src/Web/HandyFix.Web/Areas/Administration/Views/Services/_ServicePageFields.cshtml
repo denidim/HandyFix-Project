@@ -1,0 +1,90 @@
+@model HandyFix.Web.ViewModels.Administration.Services.ServiceAdminInputModel
+@* The service page's own blocks, on the Add and Edit forms (PROJECT_STATE.md Section 3ep). Each
+   may stay empty: an empty block is left off the page. "Worth doing in the same visit" is chosen
+   in code with the page's text (SameVisitServices) and "Areas we cover" lists every town page by
+   itself, so neither has a box here. *@
+
+<div class="service-page-fields">
+    <h3 class="service-page-fields-title">The service page</h3>
+    <span class="font-label-sm text-on-surface-variant d-block fs-11 mb-3">Every box may stay empty: an empty one is not shown on the page. In the list boxes, each line is one point.</span>
+
+    <div class="form-group">
+        <label asp-for="Summary" class="form-label font-label-sm text-on-surface-variant mb-2">Short summary (the card on a town page)</label>
+        <textarea asp-for="Summary" class="form-control admin-form-control form-pad-standard" rows="2" maxlength="200"></textarea>
+        <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">One or two sentences, up to 200 characters. Shown on this service's card on the town pages, not on its own page. Left empty, the card shows the description's first sentence.</span>
+        <span asp-validation-for="Summary" class="text-danger small"></span>
+    </div>
+
+    <div class="form-group mt-4">
+        <label asp-for="CommonFindings" class="form-label font-label-sm text-on-surface-variant mb-2">What we usually find</label>
+        <textarea asp-for="CommonFindings" class="form-control admin-form-control form-pad-standard" rows="8" maxlength="3000"></textarea>
+        <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">One point per line. Start a line with an icon name in square brackets, for example [water_drop]; without one the line gets the @PagePoints.FindingIcon icon. The first sentence of each line is shown in bold.</span>
+        <div class="page-icon-list" aria-label="Icons a line can name">
+            @foreach (var icon in PagePoints.Icons)
+            {
+                <span><span class="material-symbols-outlined" aria-hidden="true">@icon</span>@icon</span>
+            }
+        </div>
+        <span asp-validation-for="CommonFindings" class="text-danger small"></span>
+    </div>
+
+    <div class="form-group mt-4">
+        <label asp-for="VisitSteps" class="form-label font-label-sm text-on-surface-variant mb-2">The visit, step by step</label>
+        <textarea asp-for="VisitSteps" class="form-control admin-form-control form-pad-standard" rows="5" maxlength="3000"></textarea>
+        <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">One step per line. The page numbers them by itself.</span>
+        <span asp-validation-for="VisitSteps" class="text-danger small"></span>
+    </div>
+
+    <div class="form-group mt-4">
+        <label asp-for="BeforeWeArrive" class="form-label font-label-sm text-on-surface-variant mb-2">Before we arrive</label>
+        <textarea asp-for="BeforeWeArrive" class="form-control admin-form-control form-pad-standard" rows="4" maxlength="2000"></textarea>
+        <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">One point per line, with an icon in square brackets as above; without one the line gets the @PagePoints.BeforeIcon icon.</span>
+        <span asp-validation-for="BeforeWeArrive" class="text-danger small"></span>
+    </div>
+
+    <div class="row gy-4 mt-0">
+        <div class="col-md-6 form-group">
+            <label asp-for="Included" class="form-label font-label-sm text-on-surface-variant mb-2">What is included</label>
+            <textarea asp-for="Included" class="form-control admin-form-control form-pad-standard" rows="4" maxlength="2000"></textarea>
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">One point per line.</span>
+            <span asp-validation-for="Included" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6 form-group">
+            <label asp-for="NotIncluded" class="form-label font-label-sm text-on-surface-variant mb-2">What is not</label>
+            <textarea asp-for="NotIncluded" class="form-control admin-form-control form-pad-standard" rows="4" maxlength="2000"></textarea>
+            <span class="font-label-sm text-on-surface-variant mt-1 d-block fs-11">One point per line.</span>
+            <span asp-validation-for="NotIncluded" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="form-group mt-4">
+        <div class="d-flex align-items-center justify-content-between mb-3 gap-3">
+            <div>
+                <label class="form-label font-label-sm text-on-surface-variant mb-0">Questions about this service</label>
+                <span class="font-label-sm text-on-surface-variant d-block fs-11">Two to four, only about this job. Deposits, cancelling and paying stay on the FAQ page, which the page links to. A row left empty is dropped.</span>
+            </div>
+            <button type="button" id="add-faq" class="btn btn-outline d-flex align-items-center gap-2 admin-btn-compact admin-btn-outline">
+                <span class="material-symbols-outlined fs-18">add</span>
+                <span>Add FAQ</span>
+            </button>
+        </div>
+
+        <div id="faq-rows" class="d-flex flex-column gap-3">
+            @for (var i = 0; i < Model.Faqs.Count; i++)
+            {
+                <div class="p-3 rounded-lg faq-row" data-faq-row>
+                    <div class="d-flex align-items-start justify-content-between gap-3 mb-2">
+                        <span class="font-label-sm text-on-surface-variant faq-row-number">FAQ @(i + 1)</span>
+                        <button type="button" class="p-1 text-danger rounded-lg d-flex align-items-center justify-content-center remove-faq" title="Remove this FAQ">
+                            <span class="material-symbols-outlined fs-20">close</span>
+                        </button>
+                    </div>
+                    <input asp-for="@Model.Faqs[i].Question" class="form-control py-2 admin-form-control form-pad-standard mb-2" placeholder="Question" maxlength="300" />
+                    <span asp-validation-for="@Model.Faqs[i].Question" class="text-danger small d-block mb-2"></span>
+                    <textarea asp-for="@Model.Faqs[i].Answer" class="form-control admin-form-control form-pad-standard resize-none" rows="2" placeholder="Answer" maxlength="1000"></textarea>
+                    <span asp-validation-for="@Model.Faqs[i].Answer" class="text-danger small"></span>
+                </div>
+            }
+        </div>
+    </div>
+</div>

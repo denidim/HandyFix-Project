@@ -125,17 +125,42 @@
                 return this.NotFound();
             }
 
-            IEnumerable<ServiceViewModel> categoryServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(service.CategoryName);
-            service.RelatedServices = categoryServices
-                .Where(s => !s.Slug.Equals(service.Slug, StringComparison.OrdinalIgnoreCase))
-                .Take(3)
-                .WithMediumCopies(this.imageStorage);
+            // The page's own questions, in the order the admin put them (Section 3ep).
+            service.Faqs = (service.Faqs ?? Enumerable.Empty<ServiceFaqViewModel>())
+                .OrderBy(f => f.DisplayOrder)
+                .ToList();
+
+            // "Worth doing in the same visit", where the page's text chose some. Those take the
+            // place of the three cards of the same division at the foot of the page, so the page
+            // does not offer two lists of other services.
+            IEnumerable<ServiceViewModel> activeServices = await this.servicesService.GetAllAsync<ServiceViewModel>() ?? Enumerable.Empty<ServiceViewModel>();
+            service.SameVisitServices = SameVisitServices.For(service.Slug, activeServices.Where(s => s.Id != service.Id));
+            if (service.SameVisitServices.Any())
+            {
+                service.RelatedServices = Enumerable.Empty<ServiceViewModel>();
+            }
+            else
+            {
+                IEnumerable<ServiceViewModel> categoryServices = await this.servicesService.GetByCategoryAsync<ServiceViewModel>(service.CategoryName);
+                service.RelatedServices = categoryServices
+                    .Where(s => !s.Slug.Equals(service.Slug, StringComparison.OrdinalIgnoreCase))
+                    .Take(3)
+                    .WithMediumCopies(this.imageStorage);
+            }
+
+            // "Areas we cover": every town page, by name.
+            IEnumerable<ServiceAreaViewModel> towns = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>() ?? Enumerable.Empty<ServiceAreaViewModel>();
+            service.Towns = towns.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase).ToList();
 
             var isQuoteOnly = service.CategorySlug == CategorySlugs.SmallBuildingWorks || service.IsQuoteOnly;
 
+            // "Certified" promised more than the business has on record: only the Gas Safe
+            // registration is (Section 3ep, the master plan's R3).
             var description = isQuoteOnly
                 ? $"Need {service.Name.ToLower()} in Surrey or South London? Free on-site survey and a fixed quote before any work begins. Request your quote today."
-                : $"Need {service.Name.ToLower()} in Surrey or South London? Certified plumbers and handymen, transparent pricing starting from £{service.BasePrice}. Book a slot now.";
+                : service.IsEmergency
+                    ? $"Need {service.Name.ToLower()} in Surrey or South London? Call or WhatsApp at any hour: £{service.BasePrice:F0} an hour, no separate call-out fee."
+                    : $"Need {service.Name.ToLower()} in Surrey or South London? Local plumbers and handymen, pick a time that suits you, from £{service.BasePrice:F0}. Book a slot now.";
             this.SetPageMeta(
                 service.Name,
                 description,

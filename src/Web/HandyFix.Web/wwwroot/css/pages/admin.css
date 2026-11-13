@@ -865,7 +865,7 @@
   flex-shrink: 0;
 }
 
-/* Dynamic FAQ builder on the Service Area form */
+/* Dynamic FAQ builder on the Service Area and Service forms */
 .faq-row {
   border: 1px solid var(--border-subtle);
   background-color: var(--surface-container-lowest);
@@ -881,6 +881,39 @@
 
 .faq-row .remove-faq:hover {
   color: var(--error);
+}
+
+/* The service page's own blocks on the Service form (PROJECT_STATE.md Section 3ep) */
+.service-page-fields {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--spacing-6);
+}
+
+.service-page-fields-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 var(--spacing-1);
+}
+
+.page-icon-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: var(--spacing-2);
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.page-icon-list > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-icon-list .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--secondary);
 }
 
 .checkbox-lg {

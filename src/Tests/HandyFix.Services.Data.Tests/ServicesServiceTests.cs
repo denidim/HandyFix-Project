@@ -40,7 +40,7 @@
             dbContext.ServiceCategories.Add(category);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             await service.CreateAsync("Leaky Pipe Repair", "Repairing leaky pipes quickly", 60.00m, 45, category.Id, 7, true, true, true);
 
             Assert.Equal(1, dbContext.Services.Count());
@@ -79,7 +79,7 @@
             dbContext.Services.Add(serviceEntity);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             Assert.True(await service.DeleteAsync(serviceEntity.Id));
 
             var inDb = dbContext.Services.IgnoreQueryFilters().FirstOrDefault(x => x.Id == serviceEntity.Id);
@@ -113,7 +113,7 @@
             dbContext.BookingServices.Add(new BookingService { BookingId = booking.Id, ServiceId = takenOffAJob.Id, PriceAtBooking = 90, IsDeleted = true, DeletedOn = DateTime.UtcNow });
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
 
             Assert.False(await service.DeleteAsync(onAJob.Id));
             Assert.False(dbContext.Services.IgnoreQueryFilters().Single(x => x.Id == onAJob.Id).IsDeleted);
@@ -159,7 +159,7 @@
                     dbContext.Services.IgnoreQueryFilters().Any(x => x.Id == serviceEntity.Id && x.IsDeleted))
                 .Returns(Task.CompletedTask);
 
-            var service = new ServicesService(repository, null, imageStorageServiceMock.Object);
+            var service = new ServicesService(repository, null, null, imageStorageServiceMock.Object);
             await service.DeleteAsync(serviceEntity.Id);
 
             imageStorageServiceMock.Verify(x => x.DeleteServiceImageAsync(UploadedPicture), Times.Once);
@@ -179,7 +179,7 @@
             using var repository = new EfDeletableEntityRepository<Service>(dbContext);
 
             var imageStorageServiceMock = new Mock<IImageStorageService>();
-            var service = new ServicesService(repository, null, imageStorageServiceMock.Object);
+            var service = new ServicesService(repository, null, null, imageStorageServiceMock.Object);
 
             await service.DeleteAsync(Guid.NewGuid());
 
@@ -199,7 +199,7 @@
             dbContext.ServiceCategories.Add(category);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             await service.CreateAsync("Walton-on-Thames & Weybridge Repairs", "A test service", 60.00m, 45, category.Id, Service.DefaultDisplayOrder, false);
 
             var created = dbContext.Services.First();
@@ -222,7 +222,7 @@
             dbContext.Services.Add(new Service { Name = "Inactive Service", Description = "d", Slug = "inactive-service", BasePrice = 50, CategoryId = category.Id, IsActive = false });
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             var results = (await service.GetAllAsync<ServiceViewModel>()).ToList();
 
             Assert.Single(results);
@@ -244,7 +244,7 @@
             dbContext.Services.Add(new Service { Name = "Inactive Service", Description = "d", Slug = "inactive-service", BasePrice = 50, CategoryId = category.Id, IsActive = false });
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             var results = (await service.GetAllAsync<ServiceViewModel>(activeOnly: false)).ToList();
 
             Assert.Equal(2, results.Count);
@@ -264,7 +264,7 @@
             dbContext.Services.Add(new Service { Name = "Tap Repair", Description = "d", Slug = "tap-repair", BasePrice = 50, CategoryId = category.Id, IsActive = true });
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             var results = (await service.GetByCategoryAsync<ServiceViewModel>("PLUMBING")).ToList();
 
             Assert.Single(results);
@@ -286,7 +286,7 @@
             dbContext.Services.Add(new Service { Name = "Inactive Service", Description = "d", Slug = "inactive-service", BasePrice = 50, CategoryId = category.Id, IsActive = false });
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             var results = (await service.GetByCategoryAsync<ServiceViewModel>("Plumbing")).ToList();
 
             Assert.Single(results);
@@ -312,7 +312,7 @@
             dbContext.Services.Add(new Service { Name = "Alpha", Description = "d", Slug = "alpha", BasePrice = 50, CategoryId = category.Id, IsPopular = true });
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             var all = (await service.GetAllAsync<ServiceViewModel>()).ToList();
             var byCategory = (await service.GetByCategoryAsync<ServiceViewModel>("Handyman")).ToList();
 
@@ -344,7 +344,7 @@
             dbContext.Services.AddRange(live, deleted);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
 
             Assert.True(await service.NameIsTakenAsync("Gutter Clearing"));
             Assert.True(await service.NameIsTakenAsync("gutter clearing"));
@@ -363,7 +363,7 @@
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<Service>(dbContext);
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             var result = await service.GetByIdAsync<ServiceViewModel>(Guid.NewGuid());
 
             Assert.Null(result);
@@ -378,7 +378,7 @@
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<Service>(dbContext);
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             var result = await service.GetBySlugAsync<ServiceViewModel>("does-not-exist");
 
             Assert.Null(result);
@@ -402,7 +402,7 @@
             dbContext.Services.Add(serviceEntity);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             await service.UpdateAsync(serviceEntity.Id, "Tap Replacement", "new description", 75m, 60, false, newCategory.Id, 5, true, true, true);
 
             var updated = dbContext.Services.First(x => x.Id == serviceEntity.Id);
@@ -437,7 +437,7 @@
             dbContext.Services.Add(emergency);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             Assert.Equal(150m, await service.GetEmergencyRateAsync());
 
             emergency.IsActive = false;
@@ -462,7 +462,7 @@
             dbContext.Services.Add(boiler);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             await service.UpdateAsync(boiler.Id, "Boiler Fitting & Servicing", "boilers", 95m, 60, true, plumbing.Id, Service.DefaultDisplayOrder, false);
 
             var updated = dbContext.Services.First(x => x.Id == boiler.Id);
@@ -479,7 +479,7 @@
             using var dbContext = new ApplicationDbContext(options);
             using var repository = new EfDeletableEntityRepository<Service>(dbContext);
 
-            var service = new ServicesService(repository, null, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, null, null, new Mock<IImageStorageService>().Object);
             await service.UpdateAsync(Guid.NewGuid(), "Name", "Description", 10m, 10, true, Guid.NewGuid(), Service.DefaultDisplayOrder, false);
 
             Assert.Equal(0, dbContext.Services.Count());
@@ -501,7 +501,7 @@
             dbContext.Services.Add(serviceEntity);
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, imageRepository, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, imageRepository, null, new Mock<IImageStorageService>().Object);
             await service.AddOrUpdateServiceImageAsync(serviceEntity.Id, "/images/services/tap-repair-hero.webp");
 
             Assert.Equal(1, dbContext.ServiceImages.Count());
@@ -525,7 +525,7 @@
             dbContext.ServiceImages.Add(new ServiceImage { ServiceId = serviceEntity.Id, ImageUrl = "/images/services/tap-repair-hero.webp" });
             await dbContext.SaveChangesAsync();
 
-            var service = new ServicesService(repository, imageRepository, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, imageRepository, null, new Mock<IImageStorageService>().Object);
             await service.AddOrUpdateServiceImageAsync(serviceEntity.Id, "/images/services/tap-repair-hero-v2.webp");
 
             Assert.Equal(1, dbContext.ServiceImages.Count());
@@ -542,7 +542,7 @@
             using var repository = new EfDeletableEntityRepository<Service>(dbContext);
             using var imageRepository = new EfDeletableEntityRepository<ServiceImage>(dbContext);
 
-            var service = new ServicesService(repository, imageRepository, new Mock<IImageStorageService>().Object);
+            var service = new ServicesService(repository, imageRepository, null, new Mock<IImageStorageService>().Object);
             await service.AddOrUpdateServiceImageAsync(Guid.NewGuid(), string.Empty);
 
             Assert.Equal(0, dbContext.ServiceImages.Count());
@@ -562,7 +562,7 @@
             var emptyFileMock = new Mock<IFormFile>();
             emptyFileMock.Setup(x => x.Length).Returns(0);
 
-            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
+            var service = new ServicesService(repository, imageRepository, null, imageStorageServiceMock.Object);
             await service.SetServiceImageAsync(Guid.NewGuid(), null);
             await service.SetServiceImageAsync(Guid.NewGuid(), emptyFileMock.Object);
 
@@ -585,7 +585,7 @@
             var fileMock = new Mock<IFormFile>();
             fileMock.Setup(x => x.Length).Returns(10);
 
-            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
+            var service = new ServicesService(repository, imageRepository, null, imageStorageServiceMock.Object);
             await service.SetServiceImageAsync(Guid.NewGuid(), fileMock.Object);
 
             imageStorageServiceMock.Verify(
@@ -620,7 +620,7 @@
             fileMock.Setup(x => x.ContentType).Returns("image/jpeg");
             fileMock.Setup(x => x.OpenReadStream()).Returns(new MemoryStream(new byte[10]));
 
-            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
+            var service = new ServicesService(repository, imageRepository, null, imageStorageServiceMock.Object);
             await service.SetServiceImageAsync(serviceEntity.Id, fileMock.Object);
 
             Assert.Equal(1, dbContext.ServiceImages.Count());
@@ -659,7 +659,7 @@
                 .Callback(() => linkedWhenTheOldOneWent = dbContext.ServiceImages.Single().ImageUrl)
                 .Returns(Task.CompletedTask);
 
-            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
+            var service = new ServicesService(repository, imageRepository, null, imageStorageServiceMock.Object);
             await service.SetServiceImageAsync(serviceEntity.Id, Upload());
 
             Assert.Equal(NextUploadedPicture, dbContext.ServiceImages.Single().ImageUrl);
@@ -690,7 +690,7 @@
             await dbContext.SaveChangesAsync();
 
             var imageStorageServiceMock = new Mock<IImageStorageService>();
-            var service = new ServicesService(repository, imageRepository, imageStorageServiceMock.Object);
+            var service = new ServicesService(repository, imageRepository, null, imageStorageServiceMock.Object);
 
             await service.UpdateAsync(serviceEntity.Id, "Tap Fixing", "some description", 50m, 60, true, category.Id, Service.DefaultDisplayOrder, false);
             await service.SetServiceImageAsync(serviceEntity.Id, null);

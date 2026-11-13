@@ -174,73 +174,191 @@
   margin: 0 0 var(--spacing-6) 0;
 }
 
-.details-features-grid {
+/* The service page's own blocks (PROJECT_STATE.md Section 3ep), in the look the developer chose
+   from the item 6 mockup: a card per point with its icon, numbered steps, and two boxes for what
+   is and is not included. An empty block is not drawn at all. */
+.service-block {
+  margin-top: var(--spacing-12);
+}
+
+.service-points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-8);
-  margin: var(--spacing-8) 0;
+  gap: 14px;
 }
 
-@media (min-width: 768px) {
-  .details-features-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.details-feature-item {
+.service-points li {
   display: flex;
-  gap: var(--spacing-4);
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
 }
 
-.feature-item-icon-box {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-lg);
-  background-color: var(--secondary-fixed);
-  color: var(--on-secondary-container);
+.service-points li .material-symbols-outlined {
+  color: var(--secondary);
+  flex: none;
+}
+
+.service-points li strong {
+  color: var(--primary);
+}
+
+.service-steps {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.service-steps li {
+  counter-increment: step;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.service-steps li::before {
+  content: counter(step);
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
-/* The Gas Safe logo on a gas service's page (PROJECT_STATE Section 3do): in the box where the
-   other services show an icon, and in the badge at the top. Only the height is set: the logo
-   must never be stretched (Gas Safe's rule), so a wider file makes a wider box. */
-.feature-item-logo-box {
-  width: auto;
-  min-width: 48px;
-  background-color: transparent;
+.service-steps li > div {
+  padding-top: 6px;
 }
 
-.gas-safe-logo-feature {
-  height: 48px;
-  width: auto;
+.service-scope {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 701px) {
+  .service-scope {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.service-scope-box {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+}
+
+.service-scope-box h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.service-scope-box ul {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+
+.service-scope-yes h3 .material-symbols-outlined {
+  color: var(--success-strong);
+}
+
+.service-scope-no h3 .material-symbols-outlined {
+  color: var(--warning-strong);
+}
+
+.service-faq-link {
+  margin: 0;
+  color: var(--on-surface-variant);
+}
+
+.service-faq-link a {
+  color: var(--secondary);
+  font-weight: 600;
+}
+
+.service-same-visit {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 701px) {
+  .service-same-visit {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.service-same-visit a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.service-same-visit a:hover {
+  border-color: var(--secondary);
+}
+
+.service-same-visit-price {
+  color: var(--secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.service-towns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.service-towns a {
+  background: var(--secondary-fixed);
+  color: var(--on-secondary-container);
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.service-towns a:hover {
+  text-decoration: underline;
 }
 
 /* The badge is not a flex box (its "flex" class does nothing here), so the logo is made an
-   inline picture, or the site's block images would put it on a line of its own. */
+   inline picture, or the site's block images would put it on a line of its own. Only the height
+   is set: the Gas Safe logo must never be stretched (Gas Safe's rule; Section 3do). */
 .gas-safe-logo-pill {
   display: inline-block;
   vertical-align: middle;
   height: 28px;
   width: auto;
-}
-
-.feature-item-icon-box .material-symbols-outlined {
-  font-size: 24px;
-}
-
-.feature-item-title {
-  font-size: var(--fs-headline-sm);
-  color: var(--primary);
-  margin: 0 0 var(--spacing-2) 0;
-}
-
-.feature-item-desc {
-  color: var(--on-surface-variant);
-  margin: 0;
-  line-height: 1.5;
 }
 
 /* Accordion Details Styling */
