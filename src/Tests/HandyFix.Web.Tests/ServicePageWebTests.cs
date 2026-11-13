@@ -128,16 +128,17 @@ namespace HandyFix.Web.Tests
             pipe.BeforeWeArrive = "Find your stop tap.";
             pipe.Included = "New fittings";
             pipe.NotIncluded = null;
-            if (!await db.ServiceFaqs.AnyAsync(f => f.ServiceId == pipe.Id))
+
+            // The page's own questions are replaced by the test's one: since batch 4 (Section 3eu)
+            // the seeder gives Pipe Repairs questions of its own.
+            db.ServiceFaqs.RemoveRange(db.ServiceFaqs.Where(f => f.ServiceId == pipe.Id));
+            db.ServiceFaqs.Add(new ServiceFaq
             {
-                db.ServiceFaqs.Add(new ServiceFaq
-                {
-                    ServiceId = pipe.Id,
-                    Question = "Can you fix a pipe under the floor?",
-                    Answer = "Yes, where a board lifts & the pipe can be reached.",
-                    DisplayOrder = 1,
-                });
-            }
+                ServiceId = pipe.Id,
+                Question = "Can you fix a pipe under the floor?",
+                Answer = "Yes, where a board lifts & the pipe can be reached.",
+                DisplayOrder = 1,
+            });
 
             await db.SaveChangesAsync();
         }

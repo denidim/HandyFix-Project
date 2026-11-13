@@ -154,8 +154,8 @@
         }
 
         // A new database gets the written pages' own text, as an existing one got it from the
-        // migration of its batch (AddServicePageTextsBatch1 to 3, PROJECT_STATE.md Sections 3eq, 3er
-        // and 3es): the description, the blocks a point per line, and the questions in order.
+        // migration of its batch (AddServicePageTextsBatch1 to 4, PROJECT_STATE.md Sections 3eq, 3er,
+        // 3es and 3eu): the description, the blocks a point per line, and the questions in order.
         [Theory]
         [InlineData("tap-repairs", "A tap that drips", "[water_drop] A worn washer.", 3, "Is it worth repairing a tap, or should I replace it?")]
         [InlineData("toilet-repairs", "Running, slow to fill", "[water_drop] A flush valve that no longer seals.", 2, "Why does my toilet keep running?")]
@@ -172,6 +172,11 @@
         [InlineData("kitchen-plumbing", "The plumbing at the kitchen sink", "[build] A trap that drips.", 2, "Does the kitchen cold tap have to come from the mains?")]
         [InlineData("washing-machine-dishwasher-install", "A new washing machine, washer-dryer or dishwasher", "[warning] Transit bolts still in.", 2, "Does a washing machine need a hot water connection?")]
         [InlineData("outside-garden-tap-installation", "We fit a tap to an outside wall", "[warning] An old tap with no backflow protection.", 2, "Should I turn my outside tap off in winter?")]
+        [InlineData("pipe-repairs", "Pipes split in a frost", "[warning] A split left by frost.", 2, "Who pays to replace a lead pipe?")]
+        [InlineData("bathroom-plumbing", "A new basin, bath, bidet or toilet", "[construction] A wall-hung basin on a stud wall.", 2, "Do I need to tell the water company about a new bath?")]
+        [InlineData("general-plumbing-maintenance", "An hour spent going round the plumbing", "[plumbing] A stop valve that will not turn, or will not shut.", 2, "What happens if the stop valve is seized?")]
+        [InlineData("door-trimming-shaving", "New carpet, laminate or tiles raise the floor", "[home] A door that drags across its whole width.", 2, "How much can you take off a door?")]
+        [InlineData("door-repairs", "When a door sticks in its frame", "[build] Loose hinge screws.", 2, "Why does my door stick only in winter?")]
         public async Task SeedAsyncShouldGiveTheWrittenPagesTheirText(string slug, string descriptionStart, string firstFinding, int questions, string firstQuestion)
         {
             await this.SeedAsync();
@@ -206,7 +211,7 @@
             Assert.Null(gutters.Summary);
             Assert.Null(gutters.CommonFindings);
             Assert.Empty(gutters.Faqs);
-            Assert.Equal(15, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
+            Assert.Equal(20, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
         }
 
         // As the application does it: each seeder, then a save (ApplicationDbContextSeeder).
