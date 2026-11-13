@@ -177,6 +177,11 @@
         [InlineData("general-plumbing-maintenance", "An hour spent going round the plumbing", "[plumbing] A stop valve that will not turn, or will not shut.", 2, "What happens if the stop valve is seized?")]
         [InlineData("door-trimming-shaving", "New carpet, laminate or tiles raise the floor", "[home] A door that drags across its whole width.", 2, "How much can you take off a door?")]
         [InlineData("door-repairs", "When a door sticks in its frame", "[build] Loose hinge screws.", 2, "Why does my door stick only in winter?")]
+        [InlineData("silicone-mastic-resealing", "When the sealant round a bath", "[water_drop] Black mould inside the bead.", 2, "How long before I can use the bath or shower?")]
+        [InlineData("wall-mounting", "Pictures, heavy mirrors, whiteboards", "[warning] A mirror that is heavier than it looks.", 2, "How heavy a mirror can go on plasterboard?")]
+        [InlineData("lock-handle-replacement", "We replace door locks, latches and handles", "[lock] A euro cylinder that can be snapped.", 2, "What lock does my home insurance need?")]
+        [InlineData("bath-shower-screen-fitting", "You buy the glass bath screen or shower screen", "[water_drop] A screen sealed on the wrong side.", 2, "Which side of a bath screen should be sealed?")]
+        [InlineData("minor-electrical-tasks", "This is the small electrical work a handyman visit covers", "[bolt] A metal light fitting and no earth wire at the ceiling.", 2, "Do I need an electrician to change a light fitting?")]
         public async Task SeedAsyncShouldGiveTheWrittenPagesTheirText(string slug, string descriptionStart, string firstFinding, int questions, string firstQuestion)
         {
             await this.SeedAsync();
@@ -211,7 +216,7 @@
             Assert.Null(gutters.Summary);
             Assert.Null(gutters.CommonFindings);
             Assert.Empty(gutters.Faqs);
-            Assert.Equal(20, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
+            Assert.Equal(25, this.dbContext.ServiceFaqs.Select(f => f.ServiceId).Distinct().Count());
         }
 
         // As the application does it: each seeder, then a save (ApplicationDbContextSeeder).
