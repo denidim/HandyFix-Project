@@ -11,6 +11,20 @@ namespace HandyFix.Data.Seeding
     {
         public static readonly IReadOnlyDictionary<string, ServicePageText> BySlug = new Dictionary<string, ServicePageText>(StringComparer.Ordinal)
         {
+            ["bath-shower-screen-fitting"] = new ServicePageText
+            {
+                Summary = "A glass bath or shower screen fixed through the tiles into the wall, hung upright, and sealed to its maker's instructions.",
+                CommonFindings = "[water_drop] A screen sealed on the wrong side. Makers do not agree. Several UK makers say to seal the wall profile on the outside only, so water that gets behind it runs back into the bath; others ask for the inside, or both. We follow the screen's own instructions, since one maker warns that sealing against them ends the warranty.\n[construction] Tiles that crack when drilled. Glazed and porcelain tiles are drilled with a tile or diamond bit and the hammer action off, slowly, so the glaze does not chip round the hole.\n[search] A bath that is not level. Screen instructions ask for the bath to be level before the profile is sealed, or water collects at one end. We check it with a level first, and adjust a bath on feet.\n[warning] A chip on the edge of the glass. Toughened glass is strong across its face, but damage to an edge weakens the whole panel, so a chipped one is not fitted.",
+                VisitSteps = "We take down the old screen, if there is one, and cut out its sealant.\nWe check the bath or tray is level, then hold the wall profile upright and mark its holes.\nWe drill the tiles, fix the profile, hang the glass and set it upright.\nWe seal the joints the instructions name and tell you how long to leave it before the bath or shower is used.",
+                BeforeWeArrive = "[inventory_2] Unpack the screen when it arrives and check the glass edges and the parts against the list. Suppliers usually want damage reported before anything is fitted.\n[checklist] Say in your booking which screen it is, with the maker and the model, or add a photo of the box label.\n[home] Clear the bath or tray, its edge and the floor beside it.",
+                Included = "Taking down an old screen and its sealant\nFixing the wall profile through the tiles\nHanging and setting fixed and hinged screens\nSealing to the screen's instructions",
+                NotIncluded = "Retiling round the bath or shower: that is Wall & Floor Tiling\nSupplying the screen",
+                Faqs = new[]
+                {
+                    ("Which side of a bath screen should be sealed?", "The side its maker's instructions say. Several UK makers say outside only, so water that gets behind the profile drains back into the bath, but others ask for the inside or both. Sealing against the instructions can void the screen's warranty."),
+                    ("Will any screen fit my bath?", "No. A straight screen needs a straight bath edge. A shaped shower bath, wider at the shower end, takes the screen made for that bath and for its hand, left or right."),
+                },
+            },
             ["bathroom-plumbing"] = new ServicePageText
             {
                 Summary = "A basin, bath, bidet or toilet swapped for a new one in the same place, its taps and waste connected and every joint tested dry.",
@@ -168,6 +182,34 @@ namespace HandyFix.Data.Seeding
                     ("Can you find a leak inside a wall or under a floor?", "Only when it shows itself where we can reach it: a joint behind a panel, or a damp patch we can follow back. We find leaks by eye and by testing, so one that cannot be traced that way needs a specialist to find it first."),
                 },
             },
+            ["lock-handle-replacement"] = new ServicePageText
+            {
+                Summary = "Euro cylinders, mortice locks, night latches and handles replaced, anti-snap cylinders and BS 3621 deadlocks included, so old keys no longer open the door.",
+                CommonFindings = "[lock] A euro cylinder that can be snapped. An ordinary cylinder in a uPVC or composite door can be broken at its weak middle. Police guidance names a TS 007 3-star cylinder, or one approved to Sold Secure Diamond (SS312), both tested against snapping.\n[key] A timber door with only a night latch. For a solid timber door, police guidance asks for a five-lever mortice deadlock to BS 3621:2017. A night latch alone can be slipped or forced.\n[warning] A uPVC handle that is stiff to lift, or a key that will not turn. This is often the door that has dropped, so the locking points bind on their keeps. We check how the door sits before blaming the lock, since a new one would bind the same way.\n[refresh] A handle that droops. The spring inside the handle has worn, and the handle is replaced with one that matches the spindle and the screw holes already in the door.",
+                VisitSteps = "We look at the door and the lock it has, and measure it: a euro cylinder from the fixing screw on the edge of the door to each end.\nWe check the door closes and the bolts meet their keeps without force.\nWe fit the new lock or handle, using the cut-outs already in the door where the new one matches them.\nWe test every key from both sides, with the door open and then closed.",
+                BeforeWeArrive = "[info] Read what your home insurance policy says about locks. It may name the standard it needs.\n[add_a_photo] Add a photo of the lock and of the edge of the door to your booking. The plate on the edge often shows the maker and the standard.\n[key] Count the keys you have, and tell us if any are missing.",
+                Included = "Euro cylinders in uPVC and composite doors, anti-snap ones included\nMortice locks and night latches in timber doors\nDoor handles and latches, inside and out\nA new set of keys with every new lock or cylinder",
+                NotIncluded = "Getting in when you are locked out: that is for a locksmith\nLocks on a fire door, which in a block of flats includes the front door of each flat",
+                Faqs = new[]
+                {
+                    ("What lock does my home insurance need?", "The one your policy names, so check its wording first. BS 3621 is the British Standard for a lock such as a mortice deadlock on a timber door, and police guidance asks for one to BS 3621:2017."),
+                    ("How can I tell if my cylinder is anti-snap?", "Look at its face, beside the keyhole. A TS 007 cylinder carries the Kitemark and its stars. Three stars means the cylinder is rated on its own, without special handles. A Sold Secure Diamond one carries Sold Secure's mark. A cylinder with no mark at all is not one you can count on."),
+                },
+            },
+            ["minor-electrical-tasks"] = new ServicePageText
+            {
+                Summary = "Switches, dimmers, sockets and light fittings replaced on your existing wiring, and smoke alarms fitted, with the circuit tested dead before work starts.",
+                CommonFindings = "[bolt] A metal light fitting and no earth wire at the ceiling. Older lighting circuits often have no earth. A metal fitting needs one, unless it is double insulated: Class II, marked with a square inside a square. Where there is no earth, only a Class II fitting goes up.\n[info] LED bulbs that flicker on a dimmer. Many older dimmers were made for filament bulbs and have a minimum load the LEDs do not reach. A dimmer made for LEDs, with bulbs marked dimmable, stops it.\n[warning] A socket or switch with brown scorch marks, or one that crackles or smells hot. That is heat at the terminals. It is switched off and replaced, and if the cable behind it is damaged too, that is a job for an electrician.\n[timer] A smoke alarm past its date. Surrey Fire and Rescue Service says to replace a smoke alarm after 10 years, and to test it once a week. The date is usually on the back or the side.",
+                VisitSteps = "We switch the circuit off at the consumer unit and test that it is dead before anything is touched.\nWe note how the old one is wired, then connect the new one to the same cables, with the earth where there is one.\nWe check every terminal is tight and the faceplate or fitting sits flat.\nWe switch back on and test it: the light, the socket with a socket tester, the alarm with its test button.",
+                BeforeWeArrive = "[warning] If a socket or switch is hot, scorched or crackling, switch that circuit off at the consumer unit and do not use it until it is replaced.\n[home] Know where your consumer unit (fuse box) is, and keep the way to it clear.\n[inventory_2] If you have bought the new fitting, keep it in its box with its instructions, and say in your booking if it is heavy.",
+                Included = "Replacing light switches and dimmer switches\nReplacing sockets, USB sockets included\nReplacing ceiling and wall light fittings\nFitting smoke alarms, and battery carbon monoxide alarms\nTesting each one after it is fitted",
+                NotIncluded = "New circuits, a new consumer unit, and new wiring or additions in a bathroom: these are notified under Part P, and done by a registered electrician we bring in\nFinding a fault that keeps tripping a circuit\nA check of the whole installation (an Electrical Installation Condition Report)",
+                Faqs = new[]
+                {
+                    ("Do I need an electrician to change a light fitting?", "Not by law in England, if the new fitting goes on the existing wiring. Part P does not ask for that to be notified. It still has to be done safely, which is why the circuit is tested dead before it is touched, and tested again when it is back on."),
+                    ("What alarms does a landlord have to fit?", "In England, a smoke alarm on every storey with a room lived in, and a carbon monoxide alarm in any room with a fixed appliance that burns fuel, such as a boiler or a wood burner, but not a gas cooker. The rules have applied since 1 October 2022, and a faulty alarm has to be repaired or replaced once the tenant reports it."),
+                },
+            },
             ["outside-garden-tap-installation"] = new ServicePageText
             {
                 Summary = "A new tap on the outside wall, fed from the cold supply, with its backflow protection and a shut-off valve fitted indoors, out of the frost.",
@@ -239,6 +281,20 @@ namespace HandyFix.Data.Seeding
                     ("Will a new shower give me more pressure?", "Only as much as your system has. A mixer gives the pressure its supplies already have. On a tank-fed system that depends on how far the loft tank sits above the shower head, which is why a power shower adds a pump there."),
                 },
             },
+            ["silicone-mastic-resealing"] = new ServicePageText
+            {
+                Summary = "Split, lifted or mouldy sealant cut out round baths, showers, basins and sinks, and a new bead of sanitary silicone run on a clean, dry joint.",
+                CommonFindings = "[water_drop] Black mould inside the bead. Once mould has grown into the silicone, a cleaner only reaches the surface. UniBond's own advice is that sealant in that state has to come out and be replaced.\n[warning] A seal that splits along the length of the bath. A bath drops a little under the weight of water and a person, so a bead run on an empty bath is stretched every time it is filled. We fill the bath before sealing and leave it full while the bead cures.\n[build] A bath or tray that moves when you stand in it. If its feet or frame are loose, the bead tears again within weeks. We check them and tighten or adjust them first.\n[refresh] New sealant over old. Fresh silicone does not stick to old silicone or to the film it leaves behind, so the new bead peels away at the edges. Every trace of the old one is cut and cleaned off.",
+                VisitSteps = "We cut out the old sealant, clean off what is left of it, and let the joint dry.\nWe fill the bath with water, so it sits as it will when in use.\nWe mask the edges of a wide joint and run one continuous bead, smoothed into the corner.\nWe leave the bath full and tell you how long the sealant needs before the bath or shower is used.",
+                BeforeWeArrive = "[inventory_2] Clear bottles and soap from the bath edge, the shelves and round the sink.\n[timer] If you can, leave the shower unused for a few hours before we come, so the joint is dry when we seal it.\n[warning] If there is a stain on the ceiling under the bathroom, say so in your booking. The leak may be the seal, or it may be the waste or a pipe under the bath.",
+                Included = "Cutting out the old sealant and cleaning the joint\nBaths, shower trays, basins and kitchen sinks\nTightening or adjusting the feet of a bath that moves\nFilling the bath before it is sealed\nSanitary silicone with a mould inhibitor",
+                NotIncluded = "Regrouting or replacing tiles: that is Wall & Floor Tiling\nA leak from the waste or a pipe under the bath: that is Leak Repairs",
+                Faqs = new[]
+                {
+                    ("How long before I can use the bath or shower?", "Usually about a day. Sanitary silicone cures from the outside in, and the time on the tube is the one to follow. Bostik's data sheet, for example, gives about 24 hours for each 2mm of depth, so a deep joint takes longer."),
+                    ("Why does new silicone go black again?", "Because mould grows where water stays. Silicone with a mould inhibitor holds it off for longer, but a bathroom that is aired after every bath or shower, with the bead wiped dry, keeps it clean longest."),
+                },
+            },
             ["tap-repairs"] = new ServicePageText
             {
                 Summary = "A dripping tap, a stiff handle or water round the base, fixed by changing the worn washer, cartridge or O-ring rather than the whole tap. New taps fitted too.",
@@ -280,6 +336,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("Can a TV go on a plasterboard wall?", "Yes, when the bracket is fixed to the timber studs inside the wall: that is RoSPA's advice for plasterboard walls. If there is no stud where you want the screen, we show you where the nearest ones allow it."),
                     ("My TV stays on its stand. Can it be made safe for small children?", "Yes, with an anti-tip strap, fixed to the back of the set and to a bracket on the wall, which is what RoSPA advises. RoSPA knows of eight babies and young children in the UK killed by a falling television since July 2008. We can fit a strap on the same visit."),
+                },
+            },
+            ["wall-mounting"] = new ServicePageText
+            {
+                Summary = "Pictures, heavy mirrors, whiteboards and gallery walls hung level, on fixings chosen for the wall and for what each piece weighs.",
+                CommonFindings = "[warning] A mirror that is heavier than it looks. Glass 4mm thick weighs about 10kg a square metre before the frame is counted, so a large mirror goes on two fixings rated for it, or on a split batten, not on one hook.\n[build] Plasterboard with no stud where the piece has to go. A cavity fixing such as a spring toggle opens out behind the board. Rawlplug's figures for its spring toggle in 12.5mm board come to roughly 12 to 16kg a fixing, so a heavy piece is spread over several of them.\n[info] One wire across the back of a heavy frame. The wire and its two screw eyes then carry all the weight, and the frame leans forward off the wall. Two D-rings on two fixings hold it flat and keep it level.",
+                VisitSteps = "We find out what the wall is made of and scan each spot for pipes and cables before drilling.\nFor a gallery wall, we set the frames out on the floor, then tape paper outlines of them to the wall so you can see the layout first.\nWe mark, drill and fix, and hang each piece level.\nWe check every piece is firm on its fixings before we leave.",
+                BeforeWeArrive = "[checklist] Say in your booking what is going up, how many pieces, and the weight of anything heavy. A mirror's weight is usually on its box or its listing.\n[key] If you rent, check your tenancy agreement, or ask your landlord, before holes go in the walls.\n[home] Clear the wall and the floor in front of it.",
+                Included = "Pictures and frames, one at a time or as a gallery wall\nMirrors, heavy ones included\nWhiteboards and noticeboards\nFixings chosen for the wall and the weight",
+                NotIncluded = "TVs: that is TV Mounting\nShelves: that is Shelf Installation\nA mirror with a light or a demister pad that has to be wired in",
+                Faqs = new[]
+                {
+                    ("How heavy a mirror can go on plasterboard?", "It depends on the fixings, not the board alone. Each cavity fixing has a load its maker gives, so a heavy mirror is spread over several of them, or fixed into the timber studs. Tell us its weight when you book."),
+                    ("Can pictures go up without drilling holes?", "Yes, if the room has a picture rail. Pictures hang from it on hooks and cord, once we have checked the rail itself is firmly fixed. Mirrors and anything heavy are fixed into the wall."),
                 },
             },
             ["washing-machine-dishwasher-install"] = new ServicePageText

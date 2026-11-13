@@ -36,6 +36,11 @@ namespace HandyFix.Web.Presentation
             ["general-plumbing-maintenance"] = new[] { "tap-repairs", "toilet-repairs", "pipe-repairs" },
             ["door-trimming-shaving"] = new[] { "door-repairs", "lock-handle-replacement", "flooring-installation" },
             ["door-repairs"] = new[] { "door-trimming-shaving", "lock-handle-replacement", "painting-touch-ups" },
+            ["silicone-mastic-resealing"] = new[] { "bath-shower-screen-fitting", "tap-repairs", "wall-floor-tiling" },
+            ["wall-mounting"] = new[] { "shelf-installation", "tv-mounting", "curtain-and-blind-fitting" },
+            ["lock-handle-replacement"] = new[] { "door-repairs", "minor-electrical-tasks" },
+            ["bath-shower-screen-fitting"] = new[] { "silicone-mastic-resealing", "shower-installation", "wall-mounting" },
+            ["minor-electrical-tasks"] = new[] { "tv-mounting", "plastering-ceiling-repairs", "wall-mounting" },
         };
 
         /// <summary>
