@@ -78,6 +78,33 @@
             Assert.Single(area.Faqs);
         }
 
+        // Five of the first fifteen towns got more local text in November 2026 (PROJECT_STATE
+        // Section 3en): what the page said before stays, and the town's facts follow in
+        // paragraphs. The AddLocalTextToFiveTownAreas migration holds the same text for a database
+        // that already had the areas. Their two questions are not touched.
+        [Theory]
+        [InlineData("chessington", "our technicians are dispatched from right here", "Moorfield Road")]
+        [InlineData("surbiton", "Victorian conservation-area streets", "Thomas Pooley")]
+        [InlineData("kingston-upon-thames", "One call books the right person for the job.", "Canbury")]
+        [InlineData("esher", "around the High Street and Esher Green", "Blair Imrie")]
+        [InlineData("worcester-park-ewell", "well-kept 1930s semis", "Longfellow Road")]
+        public async Task SeedAsyncShouldGiveFiveOfTheFirstTownsTheirLocalText(string slug, string kept, string added)
+        {
+            await this.SeedAsync();
+
+            ServiceArea area = this.dbContext.ServiceAreas.Include(a => a.Faqs).Single(a => a.Slug == slug);
+            string text = area.IntroCopy + "\n\n" + area.LocalNeighbourhoodsCopy;
+            Assert.Contains(kept, text);
+            Assert.Contains(added, text);
+
+            // A blank line between paragraphs, and each field within its column.
+            Assert.Contains("\n\n", area.IntroCopy);
+            Assert.Contains("\n\n", area.LocalNeighbourhoodsCopy);
+            Assert.InRange(area.IntroCopy.Length, 20, 2000);
+            Assert.InRange(area.LocalNeighbourhoodsCopy.Length, 20, 2000);
+            Assert.Equal(2, area.Faqs.Count);
+        }
+
         // Each area starts with the postcode districts it covers, which is what the booking form
         // checks a postcode against.
         [Fact]
