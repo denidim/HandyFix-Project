@@ -71,10 +71,10 @@ namespace HandyFix.Web.Tests
         [Fact]
         public async Task APageWithoutItsOwnBlocksShowsOnlyItsOpening()
         {
-            string html = WebUtility.HtmlDecode(await this.GetAsync("/Services/handyman/property-maintenance"));
+            string html = WebUtility.HtmlDecode(await this.GetAsync("/Services/small-building-works/kitchen-fitting-alterations"));
 
             Assert.Contains("Service Overview", html);
-            Assert.Contains("We charge £", html);
+            Assert.Contains("Priced after a free survey at your home", html);
             Assert.DoesNotContain("What we usually find", html);
             Assert.DoesNotContain("The visit, step by step", html);
             Assert.DoesNotContain("Before we arrive", html);
@@ -98,7 +98,7 @@ namespace HandyFix.Web.Tests
             Assert.Contains("<a href=\"/Services/handyman/silicone-mastic-resealing\">", html);
             Assert.DoesNotContain("You Might Also Need", html);
 
-            string other = WebUtility.HtmlDecode(await this.GetAsync("/Services/handyman/property-maintenance"));
+            string other = WebUtility.HtmlDecode(await this.GetAsync("/Services/small-building-works/kitchen-fitting-alterations"));
             Assert.DoesNotContain("Worth doing in the same visit", other);
             Assert.Contains("You Might Also Need", other);
         }
