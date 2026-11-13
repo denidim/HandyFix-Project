@@ -169,8 +169,9 @@ not drawn at all, heading included.
   every town page, so a new town appears by itself.
 - The written text of each page is in the database. Pages written so far reached it by a data
   migration per batch that updates by the service's address (`AddServicePageTextsBatch1`, Section
-  3eq; `AddServicePageTextsBatch2`, Section 3er; `AddServicePageTextsBatch3`, Section 3es), and
-  `ServicePageTexts` holds the same text for the seeder.
+  3eq; `AddServicePageTextsBatch2`, Section 3er; `AddServicePageTextsBatch3`, Section 3es;
+  `AddServicePageTextsBatch4`, Section 3eu), and `ServicePageTexts` holds the same text for the
+  seeder.
 
 ### The service page's buttons
 
