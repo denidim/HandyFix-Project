@@ -11,6 +11,20 @@ namespace HandyFix.Data.Seeding
     {
         public static readonly IReadOnlyDictionary<string, ServicePageText> BySlug = new Dictionary<string, ServicePageText>(StringComparer.Ordinal)
         {
+            ["bathroom-plumbing"] = new ServicePageText
+            {
+                Summary = "A basin, bath, bidet or toilet swapped for a new one in the same place, its taps and waste connected and every joint tested dry.",
+                CommonFindings = "[construction] A wall-hung basin on a stud wall. Plasterboard alone will not hold a basin and the weight of someone leaning on it, so it needs timber behind the board or a fixing frame.\n[build] Tap holes that do not match. A basin or bath with one tap hole takes a mixer, and one with two takes a pair of pillar taps, so the taps are chosen with the new piece.\n[plumbing] An outlet in a different place. A new toilet's outlet has to meet the old soil pipe, and a new basin's waste the old waste pipe, or the pipe behind is extended or moved.\n[info] A large bath. A bath that holds more than 230 litres, measured to the centre of its overflow, needs the water company's consent before it is fitted.",
+                VisitSteps = "We turn off the water and isolate the supplies, and take the old piece out with its taps and waste.\nWe check the floor or wall where the new one goes, and fix its support, frame or legs.\nWe fit the new piece, its taps and its trap, with an isolating valve on each supply.\nWith the water back on, we fill and drain it, and check every joint until it stays dry.",
+                BeforeWeArrive = "[checklist] Before you buy a new toilet, measure from the wall behind it to the middle of the old pan's outlet. The new one has to reach the same soil pipe.\n[inventory_2] Keep the new piece and its taps in their boxes, with the fitting instructions, so every part can be checked before the old one comes out.\n[home] Clear the bathroom floor and the shelves round the basin or bath.\n[add_a_photo] Add photos of the old piece and of the pipes under it to your booking.",
+                Included = "Taking out the old basin, bath, bidet or toilet\nFitting the new one with its support, frame or legs\nConnecting the taps, waste and trap\nAn isolating valve on each supply\nTesting every joint dry with the water running",
+                NotIncluded = "Moving a bath, basin or toilet to a new place, or retiling: that is Full Bathroom Refurbishment, priced after a survey",
+                Faqs = new[]
+                {
+                    ("Do I need to tell the water company about a new bath?", "Only for a large one. The Water Fittings Regulations ask for notice and the water company's consent before fitting a bath that holds more than 230 litres, measured to the centre of the overflow. The capacity is in the bath's specification. If the company has not answered within ten working days, consent is taken as given."),
+                    ("Can you fit a basin or toilet I have bought myself?", "Yes. Send us its name or a photo of the box when you book, so we can check its outlet and fixings suit the pipes and the wall it is going on."),
+                },
+            },
             ["blocked-drains"] = new ServicePageText
             {
                 Summary = "Slow and blocked sinks, basins, baths, showers and toilets inside the house: the trap and waste pipe cleared and water run through. Outside drains are not included.",
@@ -39,6 +53,34 @@ namespace HandyFix.Data.Seeding
                     ("How often should a boiler be serviced?", "Once a year. Gas Safe Register advises a yearly service to keep gas appliances safe and working well, and most manufacturers need one to keep the warranty valid. We check that the boiler burns gas safely, test the flue and the pressure, clean the key parts and give you a record of the service."),
                     ("How do I check that an engineer is Gas Safe registered?", "Ask for the engineer's ID card and read both sides. The front has their photo and licence number; the back lists the work they are qualified for, which for a boiler should include gas boilers. The licence number can be checked on the Register's website."),
                     ("What paperwork comes with a new boiler?", "The warranty papers, and a Building Regulations Compliance Certificate. The installation has to be notified to the local authority within 30 days, which we do through Gas Safe Register. The Register then posts the certificate to you, and you can check online that it was done."),
+                },
+            },
+            ["door-repairs"] = new ServicePageText
+            {
+                Summary = "Sticking, dropped and rattling doors put right at the hinges, the latch or the edge, with draught strips and door closers fitted or adjusted.",
+                CommonFindings = "[build] Loose hinge screws. The top hinge carries most of the door's weight, and when its screws work loose the door drops and rubs the frame at the top of the latch side.\n[lock] A latch that misses its keep. When the door has moved, the latch no longer meets the plate in the frame, so the door will not stay shut or it rattles. The keep is moved or adjusted to meet it.\n[water_drop] A door that sticks in damp weather. Bare or worn timber at the edges takes up moisture and swells. It is eased with a plane and the edge sealed again.\n[refresh] A closer that slams the door, or will not shut it. An overhead closer has valves that set how fast it swings and how hard it shuts.",
+                VisitSteps = "We open and close the door, and look at where it rubs, how it hangs and how the latch meets the keep.\nWe tighten or refix the hinges first, since a door that has dropped needs no planing once they hold.\nWe plane an edge that still rubs, or move the keep, and seal any bare wood we have cut.\nWe check the door opens, closes and latches without force before we leave.",
+                BeforeWeArrive = "[home] If it is your flat's front door, ask the building's managing agent first. In most blocks it is a fire door, and the government's guidance asks residents to report its faults and not to tamper with its closer.\n[add_a_photo] Add a photo of where the door rubs, or of the gap round it, to your booking.\n[inventory_2] If you have bought draught strips or a closer, keep them in their packets with the instructions.",
+                Included = "Tightening, refixing or replacing hinges\nEasing a door that sticks, and sealing the planed edge\nMoving or adjusting the latch keep\nFitting draught strips and brush seals\nFitting or adjusting a door closer",
+                NotIncluded = "Work on a fire door, including most flats' front doors: its seals, gaps and fittings are for a fire door specialist\nNew locks and handles: that is Lock & Handle Replacement",
+                Faqs = new[]
+                {
+                    ("Why does my door stick only in winter?", "Because the timber takes up moisture in damp weather and swells, then shrinks back when it dries. Easing the edge and sealing it again keeps the damp out of the timber. We plane off only what it needs, or the door will have a gap in summer."),
+                    ("How can I check that my flat's front door closes properly?", "The government's guidance gives a simple test: open the door fully and let it go, then open it to about 15 degrees and let it go. Both times it should close fully into the frame and latch without help."),
+                },
+            },
+            ["door-trimming-shaving"] = new ServicePageText
+            {
+                Summary = "Doors that catch on new carpet, laminate or tiles taken off, trimmed to clear the floor, the cut edge sealed, and hung back.",
+                CommonFindings = "[home] A door that drags across its whole width. The floor has risen under it, and the bottom edge needs trimming.\n[build] A door that catches at one corner only. It has usually dropped on a loose top hinge, and tightening the hinge cures it without a cut. That is a door repair.\n[warning] A hollow door. It has a solid timber frame round a hollow core, and its maker sets how much can come off. A cut past that opens the core.\n[info] A fire door. Fire doors are tested at their exact size, and the government's guidance asks a flat's front door to close by itself against any friction with the floor, so a new floor can stop one doing its job.",
+                VisitSteps = "We measure from the floor with the door shut, and mark where the bottom edge has to come to.\nWe take the door off its hinges and cut the bottom edge against a straight guide, so the cut stays clean.\nWe seal the bare wood of the cut edge, so the door does not take up damp through it.\nWe hang the door back and check it swings over the new floor and closes on its latch.",
+                BeforeWeArrive = "[timer] Wait until the new floor is down. A door trimmed for the underlay before the carpet goes on ends up being cut twice.\n[checklist] Count the doors that catch and put the number in your booking, so we can plan the time for all of them.\n[home] Clear the floor on both sides of each door.",
+                Included = "Measuring each door from the finished floor\nTaking the door off and trimming the bottom edge\nSealing the cut edge\nHanging the door back and checking it closes",
+                NotIncluded = "Trimming a fire door, including most flats' front doors: the gaps round it are set by its certificate\nTrimming a door by more than its maker allows: a door cut that far needs replacing",
+                Faqs = new[]
+                {
+                    ("How much can you take off a door?", "As much as its maker allows, and that differs from door to door. A solid timber door can lose more than a hollow one, whose core opens once the cut goes past its frame. If the new floor needs more than the door can give, we tell you before we cut."),
+                    ("Does a door need a gap underneath?", "Yes, so that air can move between rooms. Approved Document F, the government's ventilation guidance for new homes, gives 10mm above the floor finish for internal doors, or 20mm above the bare floor where the finish is still to go down."),
                 },
             },
             ["emergency-plumbing"] = new ServicePageText
@@ -84,6 +126,20 @@ namespace HandyFix.Data.Seeding
                     ("Will fixing a chest of drawers to the wall leave marks?", "Two small screw holes behind it. IKEA's advice for when you move the furniture is simply to fill them."),
                 },
             },
+            ["general-plumbing-maintenance"] = new ServicePageText
+            {
+                Summary = "A visit to check the stop valve, the isolating valves, the loft tank and the pipes most likely to freeze, with small faults put right on the same visit.",
+                CommonFindings = "[plumbing] A stop valve that will not turn, or will not shut. Left untouched for years it can seize, and the day it is needed is the day of a leak.\n[water_drop] A pipe dripping from the wall outside. It is a warning pipe from a toilet cistern or a loft tank, and it means the valve that fills it is not shutting off.\n[home] A loft tank without a proper lid. The Water Fittings Regulations ask for a storage tank to have a cover that keeps out light and insects, insulation against frost, and an overflow with a screen.\n[warning] Bare pipes in a cold place. Thames Water names pipes in unheated lofts, garages and utility rooms, along cold outside walls and to outside taps as the ones most likely to freeze.",
+                VisitSteps = "We find the inside stop valve, turn it off and on again, and check the water stops.\nWe try each isolating valve under the sinks, toilets and appliances, and look at the joints and hoses round them.\nIn the loft, we look at the tank's lid, insulation and overflow, and the pipes up there.\nWe put right what can be done in the time booked, and tell you what is left and what it would cost.",
+                BeforeWeArrive = "[key] Make sure we can get into the loft, the cupboard under the stairs and any utility room or garage with pipes in it.\n[search] If you do not know where your stop valve is, Thames Water says it is usually under the kitchen sink. We will find it if it is not.\n[checklist] Write down anything you have noticed: a tap that drips, a toilet that runs, a noise in the pipes, a damp patch.",
+                Included = "Finding the inside stop valve and checking it shuts the water off\nTrying the isolating valves under sinks, toilets and appliances\nLooking at the hoses and joints round them\nChecking the loft tank's lid, insulation and overflow\nSmall fixes on the same visit, such as a washer or a valve\nA list of anything left, with what it would cost",
+                NotIncluded = "A boiler service or any gas check: those are for our Gas Safe registered engineer, on the boiler page",
+                Faqs = new[]
+                {
+                    ("What happens if the stop valve is seized?", "We do not force it, because a stop valve forced after years can start to leak at the spindle. We tell you, and a stop valve that does not shut is worth replacing: until it is, a burst cannot be stopped inside the house."),
+                    ("What time of year suits a check?", "Before the first frost. Thames Water asks for bare pipes in lofts, garages and outside to be lagged before a cold spell, and the check shows which of yours need it."),
+                },
+            },
             ["kitchen-plumbing"] = new ServicePageText
             {
                 Summary = "A kitchen sink fitted or replaced, with its waste, trap, tap feeds and isolating valves, and every joint under it checked dry with the taps running.",
@@ -124,6 +180,20 @@ namespace HandyFix.Data.Seeding
                 {
                     ("Should I turn my outside tap off in winter?", "Yes. WaterSafe's advice is to disconnect the hose, shut off the outside supply if you can and drain the tap, and fit an insulating cover. The shut-off valve we fit indoors is there for this: close it, then open the tap outside to let the water out."),
                     ("Can I fill a pond or a hot tub from an outside tap?", "Not from one protected only by a double check valve. Water Regs UK classes a hose used to refill a pond, a swimming pool, a spa bath or a hot tub as fluid category 5, the highest risk, unless your water company assesses it otherwise, so ask your water company before you do."),
+                },
+            },
+            ["pipe-repairs"] = new ServicePageText
+            {
+                Summary = "Damaged lengths of pipe cut out and replaced in copper or plastic: frost splits, nail holes, worn runs and old lead inside the house, tested under full mains pressure.",
+                CommonFindings = "[warning] A split left by frost. Pipes in a loft, a garage or along an outside wall freeze in a cold spell. A split pipe needs a new section, and a clamp put on in an emergency is only a stopgap.\n[build] A nail or screw through a pipe. New flooring, a shelf or a picture rail fixed over a hidden pipe. The water often shows only when the fixing is pulled out or works loose.\n[search] Lead pipe. Thames Water's signs: dull grey when unpainted, rounded swollen joints, and shiny silver metal where it is gently scratched.\n[plumbing] Pipes that knock or bang. Usually a pipe that has come loose from its clips, so it moves when a tap or a valve shuts.",
+                VisitSteps = "We find the damaged length, and turn off the water at the nearest valve that covers it.\nWe open boxing or lift a floorboard where the pipe runs, and drain the pipe down.\nWe cut out the bad section and join in new pipe, clipped so it cannot move.\nOnce the water is back on, we check every new joint under full pressure, then put the boxing or floorboard back.",
+                BeforeWeArrive = "[home] Clear the way to the pipe: the cupboard under the sink, the loft hatch, or the furniture over the floorboards where it runs.\n[add_a_photo] Add a photo of the damage, and of the inside stop valve, to your booking.\n[emergency] Water spraying, or coming through a ceiling, cannot wait for a slot. Turn the water off at the stop valve and call or WhatsApp us.",
+                Included = "Finding the damaged length and draining it down\nOpening boxing or lifting floorboards where the pipe runs\nCutting out the damaged section and joining in new copper or plastic pipe\nLead pipe inside the house, as far as the inside stop valve\nClipping loose runs that knock\nTesting every new joint under full pressure",
+                NotIncluded = "The underground supply pipe between the outside stop valve and the house, which has to be dug up and relaid\nThe water company's own pipe, up to the outside stop valve: the water company repairs that",
+                Faqs = new[]
+                {
+                    ("Who pays to replace a lead pipe?", "You pay for your part, and the water company for its own. Thames Water owns the pipe from its main to the outside stop valve, and for a house built before 1970 its scheme replaces that part free when the owner replaces their own lead supply pipe."),
+                    ("What can I do until a lead pipe is replaced?", "Run the cold kitchen tap for two minutes in the morning, or after a few days away, and use only that tap for drinks and cooking. That is Thames Water's advice. It adds that boiling the water does not help, and that lowering lead matters most if you are pregnant or have young children."),
                 },
             },
             ["radiator-trv-replacement"] = new ServicePageText
