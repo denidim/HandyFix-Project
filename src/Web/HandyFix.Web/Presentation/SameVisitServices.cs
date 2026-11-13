@@ -51,6 +51,9 @@ namespace HandyFix.Web.Presentation
             ["general-handyman-call-out"] = new[] { "minor-home-repairs", "wall-mounting", "furniture-assembly" },
             ["minor-home-repairs"] = new[] { "painting-touch-ups", "door-repairs", "silicone-mastic-resealing" },
             ["property-maintenance"] = new[] { "general-plumbing-maintenance", "gutter-clearing", "minor-electrical-tasks" },
+            ["kitchen-fitting-alterations"] = new[] { "wall-floor-tiling", "plastering-ceiling-repairs", "minor-electrical-tasks" },
+            ["partition-walls-drylining"] = new[] { "plastering-ceiling-repairs", "tv-mounting", "shelf-installation" },
+            ["custom-carpentry-boxing-in"] = new[] { "shelf-installation", "pipe-repairs", "wall-floor-tiling" },
         };
 
         /// <summary>

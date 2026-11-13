@@ -77,7 +77,9 @@ namespace HandyFix.Web.Tests.Presentation
             Assert.Equal(
                 new[] { "toilet-repairs", "radiator-trv-replacement" },
                 SameVisitServices.For("tap-repairs", offered).Select(s => s.Slug));
-            Assert.Empty(SameVisitServices.For("kitchen-fitting-alterations", offered));
+
+            // A service the admin adds later has no choice of its own, and keeps the old cards.
+            Assert.Empty(SameVisitServices.For("fence-repairs", offered));
             Assert.Empty(SameVisitServices.For(null, offered));
         }
 

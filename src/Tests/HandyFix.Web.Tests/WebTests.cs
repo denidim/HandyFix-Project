@@ -360,13 +360,13 @@
         }
 
         // The service cards offer the middle copy beside the picture, on every page that has them.
-        // A service page has them only while it has no "Worth doing in the same visit" of its own
-        // (Section 3ep): Kitchen Fitting & Alterations is among the last to be written.
+        // Since batch 8 (Section 3ey) no service page that comes with the site has the old cards:
+        // each has its own "Worth doing in the same visit". The cards it would show are the same
+        // _PricingCard as on the area and pricing pages, checked here.
         [Theory]
         [InlineData("/", "<img src=\"/images/services/plumbing-category-hero\\.webp[^>]*>")]
         [InlineData("/Areas/cobham", "<img class=\"pricing-card-image\"[^>]*>")]
         [InlineData("/Pricing", "<img class=\"pricing-card-image\"[^>]*>")]
-        [InlineData("/Services/small-building-works/kitchen-fitting-alterations", "<img class=\"pricing-card-image\"[^>]*>")]
         public async Task ServiceCardsOfferThePicturesMiddleCopy(string path, string cardPattern)
         {
             var client = this.server.CreateClient();
