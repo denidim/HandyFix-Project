@@ -162,14 +162,14 @@ The migration does nothing while the table is empty: on a new database migration
 seeder, and rows put in then would stop the seeder adding the other fifteen. It also replaces an
 area already at one of its addresses, so a town tried out by hand does not block it.
 
-**A town's text changed from code needs the same two places.** Five of the first fifteen towns
-(Chessington, Surbiton, Kingston, Esher, Worcester Park & Ewell) got more local text in
-`PROJECT_STATE.md` Section 3en: the new text is in the seeder, for a new database, and in the
-`AddLocalTextToFiveTownAreas` data migration, which updates *About the Town* and *Local Streets
-and Landmarks* by the town's address for a database that already has it. It needs no guard for an
-empty table: an update that finds no row does nothing. It does overwrite whatever those two
-fields held, so a text changed on this admin page first is replaced; the town's questions are
-left alone.
+**A town's text changed from code needs the same two places.** The first fifteen towns got more
+local text in `PROJECT_STATE.md` Sections 3en (Chessington, Surbiton, Kingston, Esher, Worcester
+Park & Ewell) and 3eo (the other ten): the new text is in the seeder, for a new database, and in
+a data migration, `AddLocalTextToFiveTownAreas` and `AddLocalTextToTenTownAreas`, which updates
+*About the Town* and *Local Streets and Landmarks* by the town's address for a database that
+already has it. It needs no guard for an empty table: an update that finds no row does nothing.
+It does overwrite whatever those two fields held, so a text changed on this admin page first is
+replaced; the town's questions are left alone.
 
 ---
 
