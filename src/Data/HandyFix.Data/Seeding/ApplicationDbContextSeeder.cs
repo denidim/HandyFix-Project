@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Data.Seeding
+namespace HandyFix.Data.Seeding
 {
     using System;
     using System.Collections.Generic;
@@ -34,6 +34,7 @@
                               new ServiceAreasSeeder(),
                               new TechniciansSeeder(),
                               new SettingsSeeder(),
+                              new GallerySeeder(),
                           };
 
             foreach (ISeeder seeder in seeders)

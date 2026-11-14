@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Data
+namespace HandyFix.Data
 {
     using System;
     using System.Collections.Generic;
@@ -42,6 +42,8 @@
         public DbSet<BookingStatus> BookingStatuses { get; set; }
 
         public DbSet<EmailNotSent> EmailsNotSent { get; set; }
+
+        public DbSet<GalleryPhoto> GalleryPhotos { get; set; }
 
         public DbSet<Inquiry> Inquiries { get; set; }
 
