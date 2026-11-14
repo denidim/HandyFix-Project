@@ -85,9 +85,9 @@ namespace HandyFix.Services.Data.Gallery
             string caption = (input.Caption ?? string.Empty).Trim();
             string badge = NormalizeBadge(input.StageBadge);
 
-            int nextOrder = (await this.galleryRepository.AllAsNoTracking()
-                .Select(p => (int?)p.DisplayOrder)
-                .MaxAsync() ?? 0) + 1;
+            // New photos go first, in the order they were picked: the newest work is what a visitor
+            // should see first, and a starred one is among the home strip's first six at once.
+            int nextOrder = 1;
 
             var uploadedUrls = new List<string>(files.Count);
 
@@ -120,6 +120,14 @@ namespace HandyFix.Services.Data.Gallery
 
                         await this.galleryRepository.AddAsync(entity);
                     }
+                }
+
+                // Every photo already there moves down behind the new ones, keeping its own order;
+                // saved with them, in one go.
+                List<GalleryPhoto> existing = await this.galleryRepository.All().ToListAsync();
+                foreach (GalleryPhoto photo in existing)
+                {
+                    photo.DisplayOrder += uploadedUrls.Count;
                 }
 
                 await this.galleryRepository.SaveChangesAsync();
