@@ -22,11 +22,18 @@ namespace HandyFix.Services.Data.Tests
 
     public class GalleryServiceTests
     {
+        // New photos go first, in the order they were picked, and the ones already there move down
+        // behind them in their own order. They used to go last, so a new photo needed 30 clicks on
+        // "Move up" to be seen first (PROJECT_STATE.md Section 3fd).
         [Fact]
-        public async Task CreateBatchAsyncShouldUploadPhotosTrimCaptionAndIncrementDisplayOrder()
+        public async Task CreateBatchAsyncShouldUploadPhotosTrimCaptionAndPutThemFirst()
         {
             using ApplicationDbContext dbContext = NewContext();
             using var repository = new EfRepository<GalleryPhoto>(dbContext);
+            dbContext.GalleryPhotos.AddRange(
+                new GalleryPhoto { ImageUrl = "/images/gallery/job-01.webp", Caption = "Old first", DisplayOrder = 1 },
+                new GalleryPhoto { ImageUrl = "/images/gallery/job-02.webp", Caption = "Old second", DisplayOrder = 2 });
+            await dbContext.SaveChangesAsync();
             var storage = new Mock<IImageStorageService>();
             int call = 0;
             storage
@@ -49,13 +56,14 @@ namespace HandyFix.Services.Data.Tests
             int saved = await service.CreateBatchAsync(input);
 
             Assert.Equal(2, saved);
-            List<GalleryPhoto> rows = await dbContext.GalleryPhotos.OrderBy(p => p.DisplayOrder).ToListAsync();
-            Assert.Equal(2, rows.Count);
+            List<GalleryPhoto> rows = await dbContext.GalleryPhotos.AsNoTracking().OrderBy(p => p.DisplayOrder).ToListAsync();
+            Assert.Equal(4, rows.Count);
             Assert.Equal("Boiler pressure gauge replaced", rows[0].Caption);
             Assert.Equal("After", rows[0].StageBadge);
             Assert.True(rows[0].ShowOnHomePage);
-            Assert.Equal(1, rows[0].DisplayOrder);
-            Assert.Equal(2, rows[1].DisplayOrder);
+            Assert.Equal(
+                new[] { (1, $"https://photos.example/gallery/{1:d32}.webp"), (2, $"https://photos.example/gallery/{2:d32}.webp"), (3, "/images/gallery/job-01.webp"), (4, "/images/gallery/job-02.webp") },
+                rows.Select(r => (r.DisplayOrder, r.ImageUrl)));
         }
 
         [Fact]
