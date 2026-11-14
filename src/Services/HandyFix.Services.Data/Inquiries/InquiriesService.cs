@@ -182,6 +182,17 @@
                 .ToDictionaryAsync(x => x.Answer, x => x.Count);
         }
 
+        public async Task<int> GetCountSinceAsync(DateTime? since)
+        {
+            IQueryable<Inquiry> enquiries = this.inquiryRepository.All();
+            if (since.HasValue)
+            {
+                enquiries = enquiries.Where(x => x.CreatedOn >= since.Value);
+            }
+
+            return await enquiries.CountAsync();
+        }
+
         // The Contact form sends its category as a separate field, validated separately from the
         // visitor's own text; it's stored as a prefix so the admin Enquiries list reads the same
         // as it always has. Join Our Team sends no category.

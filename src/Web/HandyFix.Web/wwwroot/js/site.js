@@ -57,6 +57,83 @@ if (autoDownload) {
     }, false);
 })();
 
+// The site's count of what its visitors do (CountController, PROJECT_STATE.md Section 3fa): a
+// visit, the booking page opened, a time picked, Call or WhatsApp tapped. Each is one word sent
+// to the site itself, once for each page shown. Nothing is written to the visitor's browser and
+// nothing kept there is read, and the word says nothing about who they are.
+//
+// A visit and an opened booking page are sent only after the first scroll, tap, key or mouse
+// move: a program that reads pages does none of those. A visit is a page reached from outside
+// the site, so the pages a visitor goes on to are not counted again, and neither is a page shown
+// again by Reload or Back. Coming back from the payment page is not a visit either.
+(function () {
+    const path = location.pathname.toLowerCase();
+    if (path.startsWith('/administration') || path.startsWith('/identity')) return;
+
+    const sent = new Set();
+    function count(what) {
+        if (sent.has(what)) return;
+        sent.add(what);
+        try {
+            const body = new URLSearchParams({ what: what });
+            if (!navigator.sendBeacon || !navigator.sendBeacon('/count', body)) {
+                fetch('/count', { method: 'POST', body: body, keepalive: true }).catch(function () { });
+            }
+        } catch (error) {
+            // The count is the site's business and never the visitor's problem.
+        }
+    }
+
+    // The page before this one, when it was a page of this site.
+    function ownPageBefore() {
+        if (!document.referrer) return null;
+        try {
+            const before = new URL(document.referrer);
+            return before.host === location.host ? before.pathname.toLowerCase() : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    const navigation = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+    const shownAfresh = !navigation || navigation.type === 'navigate';
+    const before = ownPageBefore();
+    const afterPayment = path.startsWith('/payment') || path.startsWith('/booking/confirmed');
+
+    // The booking form shown again with a message is the same opening, not a second one.
+    const isVisit = shownAfresh && before === null && !afterPayment;
+    const isBookingOpened = shownAfresh && path === '/booking' && before !== '/booking';
+
+    const signsOfLife = ['scroll', 'pointerdown', 'keydown', 'touchstart', 'mousemove'];
+    function onSignOfLife() {
+        signsOfLife.forEach(function (sign) {
+            window.removeEventListener(sign, onSignOfLife, true);
+        });
+        if (isVisit) count('visit');
+        if (isBookingOpened) count('booking');
+    }
+
+    if (isVisit || isBookingOpened) {
+        signsOfLife.forEach(function (sign) {
+            window.addEventListener(sign, onSignOfLife, { capture: true, passive: true });
+        });
+    }
+
+    // Call and WhatsApp are known by where their links go, so every such link on every page is
+    // counted with nothing added to the pages. A free time is one of the booking page's buttons.
+    document.addEventListener('click', function (event) {
+        if (!(event.target instanceof Element)) return;
+        const link = event.target.closest('a[href]');
+        if (link) {
+            const address = link.getAttribute('href');
+            if (address.startsWith('tel:')) count('call');
+            else if (address.indexOf('wa.me/') !== -1) count('whatsapp');
+        } else if (event.target.closest('.slot-selection-btn.slot-available')) {
+            count('time');
+        }
+    }, true);
+})();
+
 // A picture drawn as a background has no onerror of its own (the service page's hero), so it is
 // tried as an image; if it does not load, the background becomes data-bg-fallback.
 document.querySelectorAll('[data-bg-fallback]').forEach(function (el) {

@@ -16,6 +16,12 @@
         // The value of the table's "All time" choice in the address (?heardAbout=all).
         public const string HeardAboutAllTime = "all";
 
+        // The same two choices for the table of what visitors did on the website
+        // (?counts=all), which has its own (Section 3fa).
+        public const int SiteCountsDays = 30;
+
+        public const string SiteCountsAllTime = "all";
+
         public IEnumerable<EmailNotSentViewModel> EmailsNotSent { get; set; } = new List<EmailNotSentViewModel>();
 
         public int TotalBookingsCount { get; set; }
@@ -32,5 +38,7 @@
 
         // Whether the table counts every enquiry and job ever made rather than the last 30 days.
         public bool HeardAboutIsAllTime { get; set; }
+
+        public SiteCountsViewModel SiteCounts { get; set; } = new SiteCountsViewModel();
     }
 }

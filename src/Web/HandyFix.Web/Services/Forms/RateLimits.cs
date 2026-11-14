@@ -30,11 +30,17 @@
         // somebody's guesses at the password do not use each other's up.
         public const string AccountPolicy = "account";
 
+        // The pages' script saying a visit was made or a button tapped (PROJECT_STATE.md
+        // Section 3fa). A page sends five at the most.
+        public const string CountsPolicy = "counts";
+
         public const string FormPostsKey = "RateLimiting:FormPostsPerWindow";
 
         public const string FormWindowMinutesKey = "RateLimiting:FormWindowMinutes";
 
         public const string SlotLookupsKey = "RateLimiting:SlotLookupsPerMinute";
+
+        public const string CountsKey = "RateLimiting:CountsPerMinute";
 
         // Ten, not fewer: a submission the form's own rules refuse counts too, and a mobile
         // network can put many customers behind one address.
@@ -44,12 +50,15 @@
 
         private const int DefaultSlotLookupsPerMinute = 60;
 
+        private const int DefaultCountsPerMinute = 60;
+
         public static void Configure(RateLimiterOptions options)
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.AddPolicy(FormsPolicy, ForForms);
             options.AddPolicy(SlotLookupsPolicy, ForSlotLookups);
             options.AddPolicy(AccountPolicy, ForAccount);
+            options.AddPolicy(CountsPolicy, ForCounts);
             options.OnRejected = OnRejectedAsync;
         }
 
@@ -113,11 +122,21 @@
 
         private static RateLimitPartition<string> ForSlotLookups(HttpContext httpContext)
         {
+            return PerMinute(httpContext, SlotLookupsPolicy, SlotLookupsKey, DefaultSlotLookupsPerMinute);
+        }
+
+        private static RateLimitPartition<string> ForCounts(HttpContext httpContext)
+        {
+            return PerMinute(httpContext, CountsPolicy, CountsKey, DefaultCountsPerMinute);
+        }
+
+        private static RateLimitPartition<string> PerMinute(HttpContext httpContext, string policy, string key, int fallback)
+        {
             IConfiguration configuration = httpContext.RequestServices.GetRequiredService<IConfiguration>();
-            var permits = Read(configuration, SlotLookupsKey, DefaultSlotLookupsPerMinute);
+            var permits = Read(configuration, key, fallback);
 
             return RateLimitPartition.GetFixedWindowLimiter(
-                SlotLookupsPolicy + ":" + ClientKey(httpContext.Connection.RemoteIpAddress),
+                policy + ":" + ClientKey(httpContext.Connection.RemoteIpAddress),
                 _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = permits,
