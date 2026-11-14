@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services
+namespace HandyFix.Services
 {
     using System;
     using System.IO;
@@ -58,11 +58,19 @@
         /// </summary>
         public const int AreaPhoneWidth = 928;
 
+        public const int GalleryMaxDimension = 1600;
+
+        public const int GalleryCardWidth = 640;
+
+        public const int GalleryCardHeight = 480;
+
         private const string BuiltInFolder = "/images/services/";
         private const string BuiltInSuffix = "-hero.webp";
         private const string UploadFolder = "services";
         private const string AreaFolder = "areas";
         private const string AreaPhoneSuffix = "-phone.webp";
+        private const string GalleryFolder = "gallery";
+        private const string GalleryCardSuffix = "-640.webp";
 
         // The end of an address this service gave an upload: the folder, 32 hex characters, the
         // slug's letters, digits and dashes.
@@ -70,6 +78,12 @@
 
         // The same for an area's picture.
         private static readonly Regex UploadedAreaName = new Regex("/" + AreaFolder + "/[0-9a-f]{32}_[a-z0-9-]+\\.webp$", RegexOptions.CultureInvariant);
+
+        // The same for a gallery photo.
+        private static readonly Regex UploadedGalleryName = new Regex("/" + GalleryFolder + "/[0-9a-f]{32}\\.webp$", RegexOptions.CultureInvariant);
+
+        // Built-in gallery photos live in wwwroot/images/gallery with a -640 card copy beside each.
+        private static readonly Regex BuiltInGalleryName = new Regex("^/images/gallery/job-[0-9]{2}\\.webp$", RegexOptions.CultureInvariant);
 
         // How a picture is made smaller. SkiaSharp 4 dropped the "high quality" setting used until
         // then. When shrinking, SkiaSharp 2 quietly drew a high-quality picture from its mipmaps
@@ -192,6 +206,50 @@
             return IsUpload(imageUrl) ? null : this.BuiltInCopy(imageUrl, MediumCopyWidth);
         }
 
+        public async Task<string> SaveGalleryImageAsync(Stream stream, string fileName, string contentType)
+        {
+            if (stream == null || stream.Length == 0)
+            {
+                return null;
+            }
+
+            this.CheckFileType(fileName, contentType);
+
+            byte[] picture;
+            byte[] cardCopy;
+            try
+            {
+                (picture, cardCopy) = await EncodeGalleryAsync(stream);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Failed to process gallery image using SkiaSharp: {FileName}", fileName);
+                throw;
+            }
+
+            var name = $"{GalleryFolder}/{Guid.NewGuid():N}";
+
+            return await this.PutWithCopyAsync(picture, name + ".webp", cardCopy, name + GalleryCardSuffix, "gallery");
+        }
+
+        public async Task DeleteGalleryImageAsync(string imageUrl)
+        {
+            if (!IsGalleryUpload(imageUrl))
+            {
+                return;
+            }
+
+            await this.DeleteQuietlyAsync(imageUrl);
+            await this.DeleteQuietlyAsync(AppendCopySuffix(imageUrl, GalleryCardSuffix));
+        }
+
+        public string GetGalleryCardCopyPublicUrl(string imageUrl)
+        {
+            return IsGalleryUpload(imageUrl) || IsBuiltInGallery(imageUrl)
+                ? AppendCopySuffix(imageUrl, GalleryCardSuffix)
+                : null;
+        }
+
         private static bool IsUpload(string imageUrl)
         {
             return imageUrl != null && UploadedName.IsMatch(imageUrl);
@@ -199,7 +257,7 @@
 
         private static string SmallCopyOf(string uploadUrl)
         {
-            return uploadUrl.Substring(0, uploadUrl.Length - ".webp".Length) + $"-{SmallCopyWidth}.webp";
+            return AppendCopySuffix(uploadUrl, $"-{SmallCopyWidth}.webp");
         }
 
         private static bool IsAreaUpload(string imageUrl)
@@ -209,7 +267,22 @@
 
         private static string AreaPhoneCopyOf(string uploadUrl)
         {
-            return uploadUrl.Substring(0, uploadUrl.Length - ".webp".Length) + AreaPhoneSuffix;
+            return AppendCopySuffix(uploadUrl, AreaPhoneSuffix);
+        }
+
+        private static bool IsGalleryUpload(string imageUrl)
+        {
+            return imageUrl != null && UploadedGalleryName.IsMatch(imageUrl);
+        }
+
+        private static bool IsBuiltInGallery(string imageUrl)
+        {
+            return imageUrl != null && BuiltInGalleryName.IsMatch(imageUrl);
+        }
+
+        private static string AppendCopySuffix(string uploadUrl, string suffix)
+        {
+            return uploadUrl.Substring(0, uploadUrl.Length - ".webp".Length) + suffix;
         }
 
         // The slug is in the name only so that the bucket reads sensibly. Kept to what a web address
@@ -309,10 +382,140 @@
             }
         }
 
-        private static byte[] ToWebp(SKBitmap bitmap)
+        // A gallery photo: a full copy at most 1600px on its longest side (keeping its aspect ratio
+        // for the lightbox) and a 640 x 480 card copy cut from its middle. Re-encoding strips EXIF
+        // metadata (such as GPS location), while respecting the camera's orientation tag first.
+        private static async Task<(byte[] Picture, byte[] CardCopy)> EncodeGalleryAsync(Stream stream)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                await stream.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                using (SKBitmap original = DecodeWithOrientation(memoryStream))
+                {
+                    SKBitmap fullBitmap = original;
+                    bool fullResized = false;
+
+                    int longestSide = Math.Max(original.Width, original.Height);
+                    if (longestSide > GalleryMaxDimension)
+                    {
+                        double fullScale = (double)GalleryMaxDimension / longestSide;
+                        int targetWidth = Math.Max(1, (int)Math.Round(original.Width * fullScale));
+                        int targetHeight = Math.Max(1, (int)Math.Round(original.Height * fullScale));
+                        fullBitmap = original.Resize(new SKImageInfo(targetWidth, targetHeight), ResizeQuality);
+                        fullResized = true;
+                    }
+
+                    try
+                    {
+                        double cardScale = Math.Max((double)GalleryCardWidth / original.Width, (double)GalleryCardHeight / original.Height);
+                        float sourceWidth = (float)(GalleryCardWidth / cardScale);
+                        float sourceHeight = (float)(GalleryCardHeight / cardScale);
+                        SKRect source = SKRect.Create((original.Width - sourceWidth) / 2f, (original.Height - sourceHeight) / 2f, sourceWidth, sourceHeight);
+
+                        using (var cardBitmap = new SKBitmap(GalleryCardWidth, GalleryCardHeight))
+                        {
+                            using (var image = SKImage.FromBitmap(original))
+                            using (var canvas = new SKCanvas(cardBitmap))
+                            {
+                                canvas.DrawImage(image, source, SKRect.Create(GalleryCardWidth, GalleryCardHeight), ResizeQuality);
+                            }
+
+                            return (ToWebp(fullBitmap, 82), ToWebp(cardBitmap, 80));
+                        }
+                    }
+                    finally
+                    {
+                        if (fullResized)
+                        {
+                            fullBitmap.Dispose();
+                        }
+                    }
+                }
+            }
+        }
+
+        private static SKBitmap DecodeWithOrientation(MemoryStream memoryStream)
+        {
+            memoryStream.Position = 0;
+            using (var codec = SKCodec.Create(memoryStream))
+            {
+                if (codec == null)
+                {
+                    throw new ImageUploadValidationException("Failed to decode uploaded image.");
+                }
+
+                SKBitmap bitmap = SKBitmap.Decode(codec);
+                if (bitmap == null || bitmap.Width <= 0 || bitmap.Height <= 0)
+                {
+                    bitmap?.Dispose();
+                    throw new ImageUploadValidationException("Failed to decode uploaded image.");
+                }
+
+                SKEncodedOrigin origin = codec.EncodedOrigin;
+                if (origin == SKEncodedOrigin.TopLeft || origin == SKEncodedOrigin.Default)
+                {
+                    return bitmap;
+                }
+
+                bool swapDimensions = origin == SKEncodedOrigin.LeftTop
+                    || origin == SKEncodedOrigin.RightTop
+                    || origin == SKEncodedOrigin.RightBottom
+                    || origin == SKEncodedOrigin.LeftBottom;
+
+                int width = swapDimensions ? bitmap.Height : bitmap.Width;
+                int height = swapDimensions ? bitmap.Width : bitmap.Height;
+                var rotated = new SKBitmap(width, height, bitmap.ColorType, bitmap.AlphaType);
+
+                using (var canvas = new SKCanvas(rotated))
+                {
+                    switch (origin)
+                    {
+                        case SKEncodedOrigin.TopRight:
+                            canvas.Scale(-1, 1, width / 2f, height / 2f);
+                            break;
+                        case SKEncodedOrigin.BottomRight:
+                            canvas.RotateDegrees(180, width / 2f, height / 2f);
+                            break;
+                        case SKEncodedOrigin.BottomLeft:
+                            canvas.Scale(1, -1, width / 2f, height / 2f);
+                            break;
+                        case SKEncodedOrigin.LeftTop:
+                            canvas.RotateDegrees(90);
+                            canvas.Scale(1, -1);
+                            break;
+                        case SKEncodedOrigin.RightTop:
+                            canvas.Translate(width, 0);
+                            canvas.RotateDegrees(90);
+                            break;
+                        case SKEncodedOrigin.RightBottom:
+                            canvas.Translate(width, height);
+                            canvas.RotateDegrees(-90);
+                            canvas.Scale(1, -1);
+                            break;
+                        case SKEncodedOrigin.LeftBottom:
+                            canvas.Translate(0, height);
+                            canvas.RotateDegrees(-90);
+                            break;
+                    }
+
+                    using (var image = SKImage.FromBitmap(bitmap))
+                    {
+                        var bounds = SKRect.Create(bitmap.Width, bitmap.Height);
+                        canvas.DrawImage(image, bounds, bounds, ResizeQuality);
+                    }
+                }
+
+                bitmap.Dispose();
+                return rotated;
+            }
+        }
+
+        private static byte[] ToWebp(SKBitmap bitmap, int quality = 80)
         {
             using (var image = SKImage.FromBitmap(bitmap))
-            using (SKData data = image.Encode(SKEncodedImageFormat.Webp, 80))
+            using (SKData data = image.Encode(SKEncodedImageFormat.Webp, quality))
             {
                 return data.ToArray();
             }

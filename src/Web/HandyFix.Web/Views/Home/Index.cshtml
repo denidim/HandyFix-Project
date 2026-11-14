@@ -234,6 +234,47 @@
   </div>
 </section>
 
+@if (Model.HomeGalleryPhotos != null && Model.HomeGalleryPhotos.Count >= 6)
+{
+    var homeStripPool = Model.HomeGalleryPhotos
+        .Select(p => new { src = p.CardImageUrl ?? p.ImageUrl, alt = p.Caption })
+        .ToList();
+
+<section class="home-gallery-strip" data-home-photos="@System.Text.Json.JsonSerializer.Serialize(homeStripPool)">
+  <h2 class="visually-hidden">Recent Work Gallery</h2>
+  <div class="page-container">
+    <div class="home-gallery-strip-layout">
+      @for (int i = 0; i < 3; i++)
+      {
+          var photo = Model.HomeGalleryPhotos[i];
+          <a asp-controller="Gallery" asp-action="Index" class="home-gallery-crystal-frame">
+            <div class="home-gallery-thumb-box">
+              <img class="home-gallery-img" src="@(photo.CardImageUrl ?? photo.ImageUrl)" alt="@photo.Caption" width="640" height="480" loading="lazy" />
+            </div>
+          </a>
+      }
+
+      <div class="home-gallery-cta-wrap">
+        <a asp-controller="Gallery" asp-action="Index" class="home-gallery-cta-btn">
+          <span>View Gallery</span>
+          <span class="material-symbols-outlined fs-18" aria-hidden="true">arrow_forward</span>
+        </a>
+      </div>
+
+      @for (int i = 3; i < 6; i++)
+      {
+          var photo = Model.HomeGalleryPhotos[i];
+          <a asp-controller="Gallery" asp-action="Index" class="home-gallery-crystal-frame">
+            <div class="home-gallery-thumb-box">
+              <img class="home-gallery-img" src="@(photo.CardImageUrl ?? photo.ImageUrl)" alt="@photo.Caption" width="640" height="480" loading="lazy" />
+            </div>
+          </a>
+      }
+    </div>
+  </div>
+</section>
+}
+
 <!-- Popular Services Bento Grid -->
 
 <section class="section bg-surface popular-services-section">

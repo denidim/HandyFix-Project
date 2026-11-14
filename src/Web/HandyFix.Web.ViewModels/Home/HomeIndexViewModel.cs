@@ -1,8 +1,9 @@
-﻿namespace HandyFix.Web.ViewModels.Home
+namespace HandyFix.Web.ViewModels.Home
 {
     using System;
     using System.Collections.Generic;
 
+    using HandyFix.Web.ViewModels.Gallery;
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.Services;
 
@@ -15,6 +16,8 @@
         public IEnumerable<CategoryViewModel> Categories { get; set; }
 
         public IEnumerable<ReviewViewModel> SliderReviews { get; set; }
+
+        public IReadOnlyList<GalleryPhotoViewModel> HomeGalleryPhotos { get; set; } = Array.Empty<GalleryPhotoViewModel>();
 
         /// <summary>
         /// Each card picture on the page with the address of its middle copy, or null when it has

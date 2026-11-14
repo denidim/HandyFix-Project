@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Tests
+namespace HandyFix.Web.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -39,6 +39,7 @@
         {
             "/",
             "/About",
+            "/Gallery",
             "/Contact",
             "/FAQ",
             "/Reviews",
@@ -245,6 +246,7 @@
         // the footer's titles on every page (PROJECT_STATE Section 3co).
         [Theory]
         [InlineData("/")]
+        [InlineData("/Gallery")]
         [InlineData("/Booking")]
         [InlineData("/Services/plumbing")]
         public async Task HeadingsNeverSkipALevel(string url)
@@ -357,6 +359,28 @@
             var pictures = Directory.GetFiles(Path.Combine(webRoot, "images", "services"), "*-hero.webp");
             Assert.NotEmpty(pictures);
             Assert.All(pictures, picture => Assert.True(File.Exists(picture[..^".webp".Length] + "-640.webp"), $"{Path.GetFileName(picture)} has no middle copy"));
+        }
+
+        [Fact]
+        public async Task EveryBuiltInGalleryPictureHasItsCardCopy()
+        {
+            var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+            var galleryDir = Path.Combine(webRoot, "images", "gallery");
+
+            for (var i = 1; i <= 30; i++)
+            {
+                var full = Path.Combine(galleryDir, $"job-{i:00}.webp");
+                var card = Path.Combine(galleryDir, $"job-{i:00}-640.webp");
+                Assert.True(File.Exists(full), $"Missing {Path.GetFileName(full)}");
+                Assert.True(File.Exists(card), $"Missing {Path.GetFileName(card)}");
+            }
+
+            var client = this.server.CreateClient();
+            var homeHtml = await client.GetStringAsync("/");
+            Assert.Matches("class=\"[^\"]*\\bhome-gallery-strip\\b", homeHtml);
+
+            var galleryHtml = await client.GetStringAsync("/Gallery");
+            Assert.Equal(30, Regex.Matches(galleryHtml, "class=\"[^\"]*\\bgallery-polaroid-card\\b").Count);
         }
 
         // The service cards offer the middle copy beside the picture, on every page that has them.
@@ -547,8 +571,8 @@
             var content = await (await browser.GetAsync("/Administration/Dashboard")).Content.ReadAsStringAsync();
             MatchCollection links = Regex.Matches(content, "<a class=\"admin-nav-link\"[^>]*>.*?</a>", RegexOptions.Singleline);
 
-            // Ten since Reviews came back (Section 3eh).
-            Assert.Equal(10, links.Count);
+            // Eleven since Gallery joined the sidebar.
+            Assert.Equal(11, links.Count);
             foreach (Match link in links)
             {
                 var title = Regex.Match(link.Value, "title=\"([^\"]+)\"").Groups[1].Value;

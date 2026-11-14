@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Tests.Controllers
+namespace HandyFix.Web.Tests.Controllers
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -6,6 +6,7 @@
 
     using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.Gallery;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.ServiceAreas;
@@ -123,6 +124,7 @@
                 servicesService.Object,
                 categoriesService.Object,
                 new Mock<IServiceAreasService>().Object,
+                new Mock<IGalleryService>().Object,
                 new Mock<IImageService>().Object,
                 new Mock<IImageStorageService>().Object,
                 new Mock<IFormGuard>().Object,

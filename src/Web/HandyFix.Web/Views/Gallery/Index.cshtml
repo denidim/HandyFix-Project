@@ -1,0 +1,143 @@
+@model HandyFix.Web.ViewModels.Gallery.GalleryListViewModel
+
+<div class="page-container services-page">
+    <section class="services-header">
+        <nav class="breadcrumb-nav" aria-label="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">Gallery</span>
+        </nav>
+
+        <div class="services-header-content text-center">
+            <span class="about-hero-tag">Recent Work Across Surrey &amp; South London</span>
+            <h1 class="services-hero-title">Recent Plumbing &amp; Handyman Work in <span>Surrey.</span></h1>
+            <p class="services-subtitle">
+                Photos of real plumbing, handyman and small building jobs we completed across Surrey and South London. Click any photo to inspect the finish up close.
+            </p>
+            <div class="d-flex flex-wrap justify-content-center gap-3 mt-6">
+                <a asp-controller="Booking" asp-action="Index" class="btn btn-primary px-4 py-3 rounded-lg fw-semibold d-inline-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined fs-18" aria-hidden="true">calendar_month</span>
+                    <span>Book a Slot Online</span>
+                </a>
+                <a asp-controller="Home" asp-action="Contact" class="btn btn-outline px-4 py-3 rounded-lg fw-semibold info-print-btn d-inline-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined fs-18" aria-hidden="true">mail</span>
+                    <span>Request a Quote</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="gallery-section">
+        <h2 class="visually-hidden">Completed jobs</h2>
+
+        @if (Model.Photos != null && Model.Photos.Count > 0)
+        {
+            <div class="gallery-grid">
+                @for (int i = 0; i < Model.Photos.Count; i++)
+                {
+                    var photo = Model.Photos[i];
+                    var frameClass = $"gallery-frame-{i % 3}";
+
+                    <button type="button"
+                            class="gallery-polaroid-card @frameClass"
+                            data-gallery-item
+                            data-full-src="@photo.ImageUrl"
+                            data-caption="@photo.Caption"
+                            data-badge="@(photo.StageBadge ?? string.Empty)">
+                        <div class="gallery-photo-box">
+                            <img class="gallery-photo-img"
+                                 src="@(photo.CardImageUrl ?? photo.ImageUrl)"
+                                 alt="@photo.Caption"
+                                 width="640"
+                                 height="480"
+                                 loading="lazy" />
+
+                            @if (!string.IsNullOrWhiteSpace(photo.StageBadge))
+                            {
+                                <span class="gallery-stage-badge @(photo.StageBadge == "After" ? "gallery-stage-badge-after" : string.Empty)">@photo.StageBadge</span>
+                            }
+
+                            <span class="gallery-zoom-hint" aria-hidden="true">
+                                <span class="material-symbols-outlined fs-18">visibility</span>
+                            </span>
+                        </div>
+
+                        <div class="gallery-caption-plate">
+                            <p class="gallery-caption-text">@photo.Caption</p>
+                        </div>
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="glass-card rounded-xl p-5 gallery-empty-card">
+                <span class="material-symbols-outlined text-secondary fs-36 mb-2" aria-hidden="true">image</span>
+                <h3 class="font-headline-md text-primary mb-2">Photos Coming Soon</h3>
+                <p class="text-on-surface-variant mb-4">We are adding photos of our recent plumbing, handyman and refurbishment projects across Surrey and South London.</p>
+                <a asp-controller="Booking" asp-action="Index" class="btn btn-primary rounded-lg px-4 py-3 fw-semibold">Book a Slot Online</a>
+            </div>
+        }
+    </section>
+
+    <section class="about-cta-section mt-6">
+        <div class="about-cta-card">
+            <div class="about-cta-card-pattern"></div>
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 position-relative z-1">
+                <div>
+                    <h2 class="font-headline-lg text-primary mb-2">Need Similar Work Done?</h2>
+                    <p class="font-body-lg text-on-surface-variant mb-0">
+                        Pick a time that suits you online for plumbing and handyman work, or ask us for a fixed quote on a larger refurbishment.
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-controller="Booking" asp-action="Index" class="btn btn-secondary px-4 py-3 d-flex align-items-center gap-2 shadow-sm rounded-lg fs-15 fw-semibold text-white">
+                        <span class="material-symbols-outlined fs-18" aria-hidden="true">calendar_month</span>
+                        <span>Book a Slot</span>
+                    </a>
+                    <a asp-controller="Home" asp-action="Contact" class="btn btn-outline px-4 py-3 d-flex align-items-center gap-2 rounded-lg fs-15 fw-semibold info-print-btn">
+                        <span class="material-symbols-outlined fs-18" aria-hidden="true">mail</span>
+                        <span>Request a Quote</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="gallery-lightbox"
+     class="gallery-lightbox"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="gallery-lightbox-title"
+     hidden>
+    <div class="gallery-lightbox-backdrop" data-gallery-close></div>
+    <div class="gallery-lightbox-dialog">
+        <h2 id="gallery-lightbox-title" class="visually-hidden">Enlarged job photo</h2>
+        <button type="button" id="gallery-lightbox-close" class="gallery-lightbox-close" aria-label="Close photo preview">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+
+        <div class="gallery-lightbox-stage">
+            <button type="button" id="gallery-lightbox-prev" class="gallery-lightbox-nav gallery-lightbox-prev" aria-label="Previous photo">
+                <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+            </button>
+
+            <img id="gallery-lightbox-img" class="gallery-lightbox-img" src="" alt="" />
+
+            <button type="button" id="gallery-lightbox-next" class="gallery-lightbox-nav gallery-lightbox-next" aria-label="Next photo">
+                <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+            </button>
+        </div>
+
+        <div class="gallery-lightbox-meta">
+            <span id="gallery-lightbox-badge" class="gallery-lightbox-badge" hidden></span>
+            <p id="gallery-lightbox-caption" class="gallery-lightbox-caption"></p>
+            <span id="gallery-lightbox-counter" class="gallery-lightbox-counter"></span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/gallery.js" asp-append-version="true"></script>
+}
