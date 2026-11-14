@@ -232,6 +232,7 @@ An optional setting, `Invoice:PaymentDetails` (`INVOICE_PAYMENT_DETAILS` in the 
 ## 📄 Documentation
 
 - **[PROJECT_STATE.md](PROJECT_STATE.md)** — architectural memory: what the system is, what's been built and verified, what's left, and the decisions worth remembering. Start here.
+- **[docs/history/](docs/history/)** — the full record of each finished piece of work, one file per month: what shipped, how it was verified, and what was deliberately left out. `PROJECT_STATE.md` holds the index.
 - **[DESIGN.md](DESIGN.md)** — design tokens, utility classes, page-shell templates, and the admin/card/area component families.
 - **[docs/WORKFLOW_BOOKINGS.md](docs/WORKFLOW_BOOKINGS.md)** — every job end to end, booked on the website or written in by the admin: capacity → the booking and its deposit, or the job written in → the technician → done, with the final price → the PDF invoice, online or manual payment, and the `PAID IN FULL` receipt; plus cancelling, moving, notes and the job's history.
 - **[docs/WORKFLOW_SERVICE_AREAS.md](docs/WORKFLOW_SERVICE_AREAS.md)** — how a service area is created, seeded and published.
