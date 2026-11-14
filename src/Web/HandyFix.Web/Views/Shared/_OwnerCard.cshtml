@@ -1,0 +1,15 @@
+@model string
+@* The owner's card, one piece for every service page and for the About page, so both show the
+   same picture and the same words. The model is the card's heading: on a service page his role
+   follows the kind of work, on About he is "the owner". The bio is his own supplied wording,
+   word for word; it is not rewritten per page. *@
+<section class="local-expert-block">
+    <div class="local-expert-avatar-wrapper">
+        <img class="local-expert-avatar" alt="Zapryan, the owner" src="~/images/expert-zap.webp" asp-append-version="true" width="96" height="96" loading="lazy">
+    </div>
+    <div>
+        <span class="local-expert-meta">Your Local Expert</span>
+        <h3 class="local-expert-name">@Model</h3>
+        <p class="local-expert-bio">I've been in the construction industry since 2004, and I believe the secret to stress-free renovations is simple: turn up on time, manage the trades properly, and do the job right the first time. I personally survey every project and work alongside our teams on-site until the final checklist is complete. You'll always have a direct line to me, and my personal guarantee that the work is finished to perfection.</p>
+    </div>
+</section>

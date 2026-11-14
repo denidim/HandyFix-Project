@@ -11,12 +11,14 @@
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Services.Forms;
     using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Reviews;
+    using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Authorization;
@@ -47,6 +49,7 @@
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
+        private readonly IServiceAreasService serviceAreasService;
         private readonly IImageService imageService;
         private readonly IImageStorageService imageStorage;
         private readonly IFormGuard formGuard;
@@ -58,6 +61,7 @@
             IInquiriesService inquiriesService,
             IServicesService servicesService,
             ICategoriesService categoriesService,
+            IServiceAreasService serviceAreasService,
             IImageService imageService,
             IImageStorageService imageStorage,
             IFormGuard formGuard,
@@ -68,6 +72,7 @@
             this.inquiriesService = inquiriesService;
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
+            this.serviceAreasService = serviceAreasService;
             this.imageService = imageService;
             this.imageStorage = imageStorage;
             this.formGuard = formGuard;
@@ -293,13 +298,25 @@
         }
 
         [Route("About")]
-        public IActionResult About()
+        public async Task<IActionResult> About()
         {
+            // The two hourly rates and every town with a page, read from the database. The page
+            // used to carry both typed by hand, and neither followed a change in the admin.
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            IEnumerable<ServiceAreaViewModel> towns = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>(featuredFirst: false);
+
+            var model = new AboutViewModel
+            {
+                Rates = HourlyRates.Of(categories),
+                Towns = (towns ?? Enumerable.Empty<ServiceAreaViewModel>()).ToList(),
+            };
+
             this.SetPageMeta(
-                "About Us",
-                "Learn about Plumbing Handyman Surrey, the dedicated plumbing, handyman and refurbishment specialists serving Surrey and South London from Chessington.",
-                this.Url.Action("About", "Home", null, this.Request.Scheme));
-            return this.View();
+                "About Us: Chessington Plumbers & Handymen",
+                "A plumbing and handyman firm based in Chessington, working within 15 miles across Surrey and South London. Meet the owner and see what you can check about us.",
+                this.Url.Action("About", "Home", null, this.Request.Scheme),
+                PageTitle.BookOnline);
+            return this.View(model);
         }
 
         [Route("FAQ")]

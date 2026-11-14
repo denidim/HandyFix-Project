@@ -1,182 +1,225 @@
+@model HandyFix.Web.ViewModels.Home.AboutViewModel
+@* Who we are and what a visitor can check about us (the SEO master plan's item 7). Until then
+   this was a second services page, with promises nobody had confirmed and with the rates and
+   ten towns typed in by hand. Every line here is one the site already makes elsewhere; the
+   rates are the admin's prices and the towns are the database's, so neither goes stale. *@
 @{
-    this.ViewData["Title"] = "About Us";
+    var plumbingRate = Model.Rates.Plumbing.ToString("F0");
+    var handymanRate = Model.Rates.Handyman.ToString("F0");
 }
 
 <div class="page-container services-page">
-    <!-- Header & Breadcrumbs -->
+    <!-- Who we are -->
     <section class="services-header">
         <nav class="breadcrumb-nav" aria-label="breadcrumb">
             <a asp-controller="Home" asp-action="Index">Home</a>
             <span class="material-symbols-outlined breadcrumb-separator">chevron_right</span>
             <span class="breadcrumb-current">About Us</span>
         </nav>
-        <div class="services-header-content">
-            <span class="about-hero-tag">Complete Property Solutions in Surrey</span>
-            <h1 class="services-hero-title">From a Leaking Tap <br><span>To a Full Refurbishment.</span></h1>
-            <p class="services-subtitle">
-                Plumbing Handyman Surrey bridges the gap between everyday property repairs and comprehensive renovations. One trusted team, three dedicated trades, zero middleman fuss.
-            </p>
-            <div class="d-flex flex-wrap gap-3">
-                <a href="#three-pillars" class="btn btn-primary px-4 py-3 rounded-lg fw-semibold">Explore Our Divisions</a>
-                <a asp-controller="Areas" asp-action="Index" class="btn btn-outline px-4 py-3 rounded-lg fw-semibold info-print-btn">Coverage Areas</a>
+        <div class="row align-items-center g-4 g-lg-5">
+            <div class="col-lg-7">
+                <div class="services-header-content">
+                    <span class="about-hero-tag">Based in Chessington</span>
+                    <h1 class="services-hero-title">About <span>Plumbing Handyman Surrey</span></h1>
+                    <p class="services-subtitle">
+                        We are a plumbing and handyman firm based in Chessington, working within 15 miles of it across Surrey and South London. We do three kinds of work: plumbing, handyman jobs, and small building and refurbishment.
+                    </p>
+                    <p class="services-subtitle">
+                        For plumbing and handyman work you pick a time that suits you online. For building work we come to see the job first and give you a fixed quote.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3 mt-4">
+                        <a asp-controller="Booking" asp-action="Index" class="btn btn-primary px-4 py-3 rounded-lg fw-semibold">Book a Slot</a>
+                        <a asp-route="Areas" class="btn btn-outline px-4 py-3 rounded-lg fw-semibold info-print-btn">Areas We Cover</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                @* A real job of ours, the same photo as the Google profile's cover. *@
+                <div class="narrative-image-wrapper about-job-photo">
+                    <img src="~/images/about-job.webp" alt="A technician in a high-visibility jacket checks a metal wall frame with a spirit level." asp-append-version="true" width="1200" height="900" />
+                </div>
             </div>
         </div>
+
+        <partial name="_OwnerCard" model="@("Hi, I'm Zapryan, the owner")" />
     </section>
 
-    <!-- The Three Service Pillars -->
-    <section id="three-pillars" class="mb-5">
+    <!-- What we do -->
+    <section class="my-5">
         <div class="max-w-7xl mx-auto text-center mb-5">
-            <span class="text-secondary fw-semibold fs-14 text-uppercase tracking-wide d-block mb-1">Full-Service Trade Depth</span>
-            <h2 class="font-headline-lg text-primary mb-2">Three Core <span class="text-secondary">Divisions</span></h2>
-            <p class="font-body-md text-on-surface-variant max-w-xl mx-auto mb-0">Whatever the scale of your property needs, we have the specialized trade competence to handle it.</p>
+            <h2 class="font-headline-lg text-primary mb-0">What We <span class="text-secondary">Do</span></h2>
         </div>
 
         <div class="row g-4">
-            <!-- Pillar 1: Plumbing -->
             <div class="col-lg-4 col-md-6">
                 <div class="hub-pillar-card pillar-plumbing h-100 d-flex flex-column">
                     <div class="hub-pillar-icon plumbing-icon mb-3">
                         <span class="material-symbols-outlined">plumbing</span>
                     </div>
-                    <div class="hub-badge mb-2">Fixed Rate &bull; £90/hr</div>
-                    <h3 class="fs-20 fw-bold text-primary mb-2">Precision Plumbing</h3>
+                    <div class="hub-badge mb-2">£@plumbingRate an hour</div>
+                    <h3 class="fs-20 fw-bold text-primary mb-2">Plumbing</h3>
                     <p class="text-on-surface-variant fs-14 mb-4 flex-grow-1">
-                        Fast diagnostics and permanent repairs for burst pipes, leaking cisterns, failed stopcocks, tap replacements, and radiator valves.
+                        Taps, toilets, leaks, radiators and showers, repaired or fitted. A burst pipe or a flood is taken by phone or WhatsApp at any hour.
                     </p>
                     <ul class="hub-feature-list mb-4">
-                        <li><span class="material-symbols-outlined fs-16">check</span> Leaking pipe &amp; burst pipe repairs</li>
-                        <li><span class="material-symbols-outlined fs-16">check</span> Tap & waste trap replacement</li>
-                        <li><span class="material-symbols-outlined fs-16">check</span> Radiator valves & balancing</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Tap and toilet repairs</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Leak and pipe repairs</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Radiators and valves</li>
                     </ul>
-                    <a asp-controller="Services" asp-action="Category" asp-route-categorySlug="@CategorySlugs.Plumbing" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
-                        Explore Plumbing
+                    <a asp-route="ServiceCategory" asp-route-categorySlug="@CategorySlugs.Plumbing" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
+                        See Plumbing Services
                     </a>
                 </div>
             </div>
 
-            <!-- Pillar 2: Handyman -->
             <div class="col-lg-4 col-md-6">
                 <div class="hub-pillar-card pillar-handyman h-100 d-flex flex-column">
                     <div class="hub-pillar-icon handyman-icon mb-3">
                         <span class="material-symbols-outlined">handyman</span>
                     </div>
-                    <div class="hub-badge mb-2">Fixed Rate &bull; £60/hr</div>
-                    <h3 class="fs-20 fw-bold text-primary mb-2">Handyman & Maintenance</h3>
+                    <div class="hub-badge mb-2">£@handymanRate an hour</div>
+                    <h3 class="fs-20 fw-bold text-primary mb-2">Handyman</h3>
                     <p class="text-on-surface-variant fs-14 mb-4 flex-grow-1">
-                        Meticulous household fixes, precision silicone sealing, lock adjustments, TV mounting, and bespoke carpentry repairs.
+                        Shelves, TVs and furniture put up, doors and locks put right, and baths and showers resealed.
                     </p>
                     <ul class="hub-feature-list mb-4">
-                        <li><span class="material-symbols-outlined fs-16">check</span> Sanitary bath & shower resealing</li>
-                        <li><span class="material-symbols-outlined fs-16">check</span> TV wall mounting & shelving</li>
-                        <li><span class="material-symbols-outlined fs-16">check</span> Door hinges & lock alignment</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> TV and shelf mounting</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Door and lock repairs</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Bath and shower resealing</li>
                     </ul>
-                    <a asp-controller="Services" asp-action="Category" asp-route-categorySlug="@CategorySlugs.Handyman" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
-                        Explore Handyman
+                    <a asp-route="ServiceCategory" asp-route-categorySlug="@CategorySlugs.Handyman" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
+                        See Handyman Services
                     </a>
                 </div>
             </div>
 
-            <!-- Pillar 3: Small Building Works -->
             <div class="col-lg-4 col-md-12">
-                <div class="hub-pillar-card pillar-building h-100 d-flex flex-column featured-pillar">
+                <div class="hub-pillar-card pillar-building h-100 d-flex flex-column">
                     <div class="hub-pillar-icon building-icon mb-3">
                         <span class="material-symbols-outlined">construction</span>
                     </div>
-                    <div class="hub-badge building-badge mb-2">Bespoke Estimate</div>
-                    <h3 class="fs-20 fw-bold text-primary mb-2">Small Building & Refurbs</h3>
+                    <div class="hub-badge building-badge mb-2">Fixed quote after a free survey</div>
+                    <h3 class="fs-20 fw-bold text-primary mb-2">Small Building &amp; Refurbishment</h3>
                     <p class="text-on-surface-variant fs-14 mb-4 flex-grow-1">
-                        Turnkey domestic transformations including full bathroom renovations, kitchen installs, partition walls, plastering, and floor tiling.
+                        Bathrooms and kitchens fitted, walls plastered and tiled, floors laid and partition walls built. We come to see the job first, free of charge, and give you a fixed quote before any work starts.
                     </p>
                     <ul class="hub-feature-list mb-4">
-                        <li><span class="material-symbols-outlined fs-16">check</span> Bathroom suite refurbishments</li>
-                        <li><span class="material-symbols-outlined fs-16">check</span> Plastering, drywall & stud walls</li>
-                        <li><span class="material-symbols-outlined fs-16">check</span> Wall & floor tiling installations</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Bathroom refurbishment</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Kitchen fitting</li>
+                        <li><span class="material-symbols-outlined fs-16">check</span> Tiling and plastering</li>
                     </ul>
-                    <a asp-controller="Services" asp-action="Category" asp-route-categorySlug="@CategorySlugs.SmallBuildingWorks" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
-                        Explore Refurbishments
+                    <a asp-route="ServiceCategory" asp-route-categorySlug="@CategorySlugs.SmallBuildingWorks" class="btn btn-secondary text-white rounded-lg py-2 fs-14 fw-semibold mt-auto">
+                        See Building Services
                     </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Who We Serve Section -->
+    <!-- What you can check -->
+    @* Only in the words the site already uses: no registration number and no insured sum is
+       shown, and nothing is said about reviews beyond where to read them. *@
     <section class="guarantees-section mb-5">
         <div class="max-w-7xl mx-auto text-center mb-5">
-            <span class="text-secondary fw-semibold fs-14 text-uppercase tracking-wide d-block mb-1">Tailored Care</span>
-            <h2 class="font-headline-lg text-primary mb-2">Who We <span class="text-secondary">Work With</span></h2>
-            <p class="font-body-md text-on-surface-variant max-w-xl mx-auto mb-0">Providing dependable, hassle-free property support across all sectors.</p>
+            <h2 class="font-headline-lg text-primary mb-0">What You Can <span class="text-secondary">Check</span></h2>
         </div>
 
         <div class="row g-4">
-            <div class="col-md-4">
+            <div class="col-lg-4 col-md-6">
                 <div class="guarantee-card h-100">
-                    <div class="guarantee-icon-box guarantee-icon-homeowner">
-                        <span class="material-symbols-outlined">cottage</span>
+                    <div class="guarantee-icon-box">
+                        <span class="material-symbols-outlined">verified</span>
                     </div>
-                    <h3 class="fs-18 fw-bold text-primary mb-2">Private Homeowners</h3>
+                    <h3 class="fs-18 fw-bold text-primary mb-2">Gas work</h3>
                     <p class="font-body-md text-on-surface-variant fs-14 mb-0">
-                        Polite, insured, and tidy professionals who respect your living space, protect your floors, and solve annoying household problems for good.
+                        All boiler work is carried out by a Gas Safe registered engineer.
                     </p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-lg-4 col-md-6">
                 <div class="guarantee-card h-100">
-                    <div class="guarantee-icon-box guarantee-icon-landlord">
-                        <span class="material-symbols-outlined">key</span>
+                    <div class="guarantee-icon-box">
+                        <span class="material-symbols-outlined">verified_user</span>
                     </div>
-                    <h3 class="fs-18 fw-bold text-primary mb-2">Landlords & Buy-to-Let</h3>
+                    <h3 class="fs-18 fw-bold text-primary mb-2">Insurance</h3>
                     <p class="font-body-md text-on-surface-variant fs-14 mb-0">
-                        Rapid turnarounds between tenant check-ins, fixing plumbing snags, fresh silicone seals, and itemized receipts for tax and accounting records.
+                        We carry public liability insurance.
                     </p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-lg-4 col-md-6">
                 <div class="guarantee-card h-100">
-                    <div class="guarantee-icon-box guarantee-icon-manager">
+                    <div class="guarantee-icon-box">
                         <span class="material-symbols-outlined">apartment</span>
                     </div>
-                    <h3 class="fs-18 fw-bold text-primary mb-2">Property Managers</h3>
+                    <h3 class="fs-18 fw-bold text-primary mb-2">The company</h3>
                     <p class="font-body-md text-on-surface-variant fs-14 mb-0">
-                        A single reliable contact across building, plumbing, and maintenance, saving you the headache of managing five separate contractors.
+                        @GlobalConstants.SystemName is a trading name of @GlobalConstants.CompanyLegalName, company number @GlobalConstants.CompanyNumber, registered in England and Wales.
                     </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="guarantee-card h-100">
+                    <div class="guarantee-icon-box">
+                        <span class="material-symbols-outlined">payments</span>
+                    </div>
+                    <h3 class="fs-18 fw-bold text-primary mb-2">Prices in the open</h3>
+                    <p class="font-body-md text-on-surface-variant fs-14 mb-3">
+                        Plumbing is £@plumbingRate an hour and handyman work £@handymanRate, with a one-hour minimum, no call-out fee and no VAT on top.
+                    </p>
+                    <a asp-route="Pricing" class="text-secondary fw-semibold fs-14 d-inline-flex align-items-center gap-1">
+                        <span>See our prices</span>
+                        <span class="material-symbols-outlined fs-16">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="guarantee-card h-100">
+                    <div class="guarantee-icon-box">
+                        <span class="material-symbols-outlined">do_not_disturb_on</span>
+                    </div>
+                    <h3 class="fs-18 fw-bold text-primary mb-2">What we do not do</h3>
+                    <p class="font-body-md text-on-surface-variant fs-14 mb-0">
+                        Every service page lists what is not included. For example: drains outside the house, carpets, driveways, and walls that hold up a floor or the roof.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="guarantee-card h-100">
+                    <div class="guarantee-icon-box">
+                        <span class="material-symbols-outlined">rate_review</span>
+                    </div>
+                    <h3 class="fs-18 fw-bold text-primary mb-2">Reviews</h3>
+                    <p class="font-body-md text-on-surface-variant fs-14 mb-3">
+                        The reviews our customers left on Google are on our Reviews page.
+                    </p>
+                    <a asp-controller="Home" asp-action="Reviews" class="text-secondary fw-semibold fs-14 d-inline-flex align-items-center gap-1">
+                        <span>Read the reviews</span>
+                        <span class="material-symbols-outlined fs-16">arrow_forward</span>
+                    </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Chessington Hub & Surrey Areas -->
+    <!-- Where we work -->
     <section class="about-areas-preview mb-5 p-4 p-md-5 rounded-xl border">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-6">
-                <span class="text-secondary fw-semibold fs-14 text-uppercase tracking-wide d-block mb-1">Local Geographic Base</span>
-                <h2 class="fs-24 fw-bold text-primary mb-3">Based in Chessington, Covering Surrey and South West London</h2>
-                <p class="text-on-surface-variant fs-14 mb-4">
-                    Our central base in Chessington allows prompt dispatch across North Surrey and South West London without excessive travel charges.
-                </p>
-                <div class="d-flex flex-wrap gap-2 mb-4">
-                    <span class="badge bg-light text-dark border p-2 fs-14">Chessington</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Kingston upon Thames</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Surbiton</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Esher</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Cobham</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Epsom</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Weybridge</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Leatherhead</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Guildford</span>
-                    <span class="badge bg-light text-dark border p-2 fs-14">Wimbledon</span>
-                </div>
-                <a asp-controller="Areas" asp-action="Index" class="text-secondary fw-semibold fs-14 d-inline-flex align-items-center gap-1">
-                    <span>View all coverage areas and travel times</span>
-                    <span class="material-symbols-outlined fs-16">arrow_forward</span>
-                </a>
-            </div>
-            <div class="col-lg-6">
-                <div class="narrative-image-wrapper">
-                    <img src="~/images/hero.webp" alt="Plumbing Handyman Surrey dispatching across Chessington" asp-append-version="true" width="1920" height="1072" loading="lazy" />
-                </div>
-            </div>
+        <span class="text-secondary fw-semibold fs-14 text-uppercase tracking-wide d-block mb-1">Where We Work</span>
+        <h2 class="fs-24 fw-bold text-primary mb-3">Based in Chessington</h2>
+        <p class="text-on-surface-variant mb-4">
+            We work within 15 miles of Chessington, and there is no travel charge within our standard service area. Each town below has its own page, with the postcodes we cover there.
+        </p>
+        @* Every town that has a page, nearest first: a town added in the admin shows here by itself. *@
+        <div class="service-towns mb-4">
+            @foreach (var town in Model.Towns)
+            {
+                <a asp-route="AreaDetails" asp-route-areaSlug="@town.Slug">@town.Name</a>
+            }
         </div>
+        <a asp-route="Areas" class="text-secondary fw-semibold fs-14 d-inline-flex align-items-center gap-1">
+            <span>View all areas</span>
+            <span class="material-symbols-outlined fs-16">arrow_forward</span>
+        </a>
     </section>
 
     <!-- Dual Action CTA -->
@@ -187,13 +230,13 @@
                 <div>
                     <h2 class="font-headline-lg text-primary mb-2">Ready to Get Started?</h2>
                     <p class="font-body-lg text-on-surface-variant mb-0">
-                        Choose instant online booking for standard repairs or contact us for building projects.
+                        Pick a time that suits you online for plumbing and handyman work, or ask us for a quote for building work.
                     </p>
                 </div>
                 <div class="d-flex flex-wrap gap-3">
                     <a asp-controller="Booking" asp-action="Index" class="btn btn-secondary px-4 py-3 d-flex align-items-center gap-2 shadow-sm rounded-lg fs-15 fw-semibold text-white">
                         <span class="material-symbols-outlined fs-18">calendar_month</span>
-                        <span>Book Hourly Slot</span>
+                        <span>Book a Slot</span>
                     </a>
                     <a asp-controller="Home" asp-action="Contact" class="btn btn-outline px-4 py-3 d-flex align-items-center gap-2 rounded-lg fs-15 fw-semibold">
                         <span class="material-symbols-outlined fs-18">mail</span>

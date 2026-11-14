@@ -8,6 +8,7 @@
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
     using HandyFix.Web.Services.Forms;
@@ -121,6 +122,7 @@
                 new Mock<IInquiriesService>().Object,
                 servicesService.Object,
                 categoriesService.Object,
+                new Mock<IServiceAreasService>().Object,
                 new Mock<IImageService>().Object,
                 new Mock<IImageStorageService>().Object,
                 new Mock<IFormGuard>().Object,
