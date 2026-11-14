@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services.Data.Tests
+namespace HandyFix.Services.Data.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -315,6 +315,71 @@
 
             Assert.Equal("Unsupported file type. Only JPEG, PNG, and WEBP images are allowed.", refusal.Message);
             Assert.Empty(this.bucket.Objects);
+        }
+
+        [Fact]
+        public async Task AGalleryUploadStoresA1600MaxCopyAndA640By480CardCopy()
+        {
+            using var bitmap = new SKBitmap(2400, 1800);
+            bitmap.Erase(SKColors.Lime);
+            using var image = SKImage.FromBitmap(bitmap);
+            using SKData png = image.Encode(SKEncodedImageFormat.Png, 100);
+            using var stream = new MemoryStream(png.ToArray());
+
+            string url = await this.storage.SaveGalleryImageAsync(stream, "boiler.png", "image/png");
+
+            Assert.Matches("^https://photos\\.example/gallery/[0-9a-f]{32}\\.webp$", url);
+            string key = url.Substring(FakeBucket.PublicUrl.Length + 1);
+            string cardKey = key.Replace(".webp", "-640.webp");
+            Assert.Equal(new[] { key, cardKey }, this.bucket.Objects.Keys.OrderBy(x => x.Length));
+            Assert.Equal($"{FakeBucket.PublicUrl}/{cardKey}", this.storage.GetGalleryCardCopyPublicUrl(url));
+
+            using SKBitmap full = SKBitmap.Decode(this.bucket.Objects[key]);
+            Assert.Equal((1600, 1200), (full.Width, full.Height));
+
+            using SKBitmap card = SKBitmap.Decode(this.bucket.Objects[cardKey]);
+            Assert.Equal((640, 480), (card.Width, card.Height));
+            AssertGreen(card.GetPixel(10, 10));
+        }
+
+        [Fact]
+        public async Task DeletingAGalleryUploadDeletesItsCardCopy()
+        {
+            using var bitmap = new SKBitmap(1200, 900);
+            bitmap.Erase(SKColors.Lime);
+            using var image = SKImage.FromBitmap(bitmap);
+            using SKData png = image.Encode(SKEncodedImageFormat.Png, 100);
+            using var stream = new MemoryStream(png.ToArray());
+            string url = await this.storage.SaveGalleryImageAsync(stream, "pipe.png", "image/png");
+
+            await this.storage.DeleteGalleryImageAsync(url);
+
+            Assert.Empty(this.bucket.Objects);
+        }
+
+        [Theory]
+        [InlineData("/images/hero.webp")]
+        [InlineData("https://photos.example/services/0123456789abcdef0123456789abcdef_tap.webp")]
+        [InlineData("https://photos.example/areas/0123456789abcdef0123456789abcdef_cobham.webp")]
+        [InlineData(null)]
+        public async Task AnAddressThatIsNotAGalleryUploadIsNeverDeletedAsOne(string imageUrl)
+        {
+            await this.storage.DeleteGalleryImageAsync(imageUrl);
+
+            Assert.Empty(this.bucket.Deleted);
+            Assert.Null(this.storage.GetGalleryCardCopyPublicUrl(imageUrl));
+        }
+
+        [Fact]
+        public async Task BuiltInGalleryPhotoHasACardCopyButIsNeverDeletedFromR2()
+        {
+            const string builtInUrl = "/images/gallery/job-01.webp";
+
+            Assert.Equal("/images/gallery/job-01-640.webp", this.storage.GetGalleryCardCopyPublicUrl(builtInUrl));
+
+            await this.storage.DeleteGalleryImageAsync(builtInUrl);
+
+            Assert.Empty(this.bucket.Deleted);
         }
 
         public void Dispose()

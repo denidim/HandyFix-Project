@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web
+namespace HandyFix.Web
 {
     using System;
     using System.IO;
@@ -17,6 +17,7 @@
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Emails;
     using HandyFix.Services.Data.EmailsNotSent;
+    using HandyFix.Services.Data.Gallery;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Invoices;
     using HandyFix.Services.Data.Payments;
@@ -221,6 +222,7 @@
             services.AddTransient<IServicesService, ServicesService>();
             services.AddTransient<IServiceAreasService, ServiceAreasService>();
             services.AddTransient<IReviewsService, ReviewsService>();
+            services.AddTransient<IGalleryService, GalleryService>();
             services.AddTransient<IInquiriesService, InquiriesService>();
             services.AddTransient<IAvailabilityService, AvailabilityService>();
             services.AddTransient<IBookingsService, BookingsService>();

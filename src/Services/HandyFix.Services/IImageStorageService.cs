@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Services
+namespace HandyFix.Services
 {
     using System.IO;
     using System.Threading.Tasks;
@@ -47,5 +47,24 @@
         /// The address of an uploaded area picture's phone copy; null for any other address.
         /// </summary>
         string GetAreaPhoneCopyPublicUrl(string imageUrl);
+
+        /// <summary>
+        /// Makes an uploaded gallery photo: a full copy no larger than 1600px on its longest side
+        /// (with metadata stripped) and a 640 x 480 card copy cut from its middle. Both go to the
+        /// photo bucket under a new name, and the full picture's address is returned.
+        /// </summary>
+        Task<string> SaveGalleryImageAsync(Stream stream, string fileName, string contentType);
+
+        /// <summary>
+        /// Takes an uploaded gallery photo and its card copy out of the bucket. Any other address
+        /// is left alone, and a delete that fails is logged, not thrown.
+        /// </summary>
+        Task DeleteGalleryImageAsync(string imageUrl);
+
+        /// <summary>
+        /// The address of a gallery photo's 640 x 480 card copy (uploaded or built-in); null for
+        /// any other address.
+        /// </summary>
+        string GetGalleryCardCopyPublicUrl(string imageUrl);
     }
 }
