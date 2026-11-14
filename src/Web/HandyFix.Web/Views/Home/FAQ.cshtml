@@ -51,8 +51,20 @@
                     <span class="font-headline-sm text-primary fs-16 fw-bold">How is my time charged?</span>
                     <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
                 </button>
+                @* Short on purpose: the Pricing page answers the price questions in full, and the
+                   same text on two pages helps neither (the SEO master plan's item 7). *@
                 <div class="accordion-content">
-                    <strong>Plumbing and Handyman</strong> jobs start with a one-hour minimum at the hourly rate for the service. After the first hour, additional time is billed in 30-minute blocks at the same hourly rate. <strong>Small Building &amp; Refurbishment</strong> work is quoted as a fixed price after a free on-site survey.
+                    By the hour, with a one-hour minimum, then in 30-minute blocks at the same rate. Small building work is priced by a fixed quote after a free survey. The rates are on the <a asp-route="Pricing">Pricing page</a>.
+                </div>
+            </div>
+
+            <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
+                    <span class="font-headline-sm text-primary fs-16 fw-bold">How and when do I pay?</span>
+                    <span class="material-symbols-outlined arrow-icon transition-transform fs-20">expand_more</span>
+                </button>
+                <div class="accordion-content">
+                    A £@Deposit.Pounds deposit is paid online when you book, and it comes off the final bill. The rest is due when the work is done: by card through a payment link (Apple Pay and Google Pay work too), by bank transfer or in cash.
                 </div>
             </div>
         </div>

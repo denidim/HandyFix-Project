@@ -1,5 +1,6 @@
 namespace HandyFix.Web.Tests
 {
+    using System.Linq;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
@@ -66,6 +67,46 @@ namespace HandyFix.Web.Tests
             string html = await this.GetAsync("/Areas/surbiton");
 
             Assert.Matches("location_on</span>\\s*Covering KT5, KT6, KT7\\s*</span>", html);
+        }
+
+        // Five price questions at most, none of them asked on the FAQ page too, with the rates
+        // read from the admin's prices.
+        [Fact]
+        public async Task ThePricingPageAnswersThePriceQuestions()
+        {
+            string html = WebUtility.HtmlDecode(await this.GetAsync("/Pricing"));
+
+            string[] questions = Regex.Matches(html, "<span class=\"font-headline-sm text-primary\">([^<]+)</span>")
+                .Select(m => m.Groups[1].Value)
+                .ToArray();
+            Assert.Equal(
+                new[]
+                {
+                    "How much does a plumber charge per hour?",
+                    "How much does a handyman charge per hour?",
+                    "Is there a minimum charge?",
+                    "Do you charge a call-out fee or for travel?",
+                    "Can I book several jobs in one visit?",
+                },
+                questions);
+
+            Assert.Matches("£90 an hour, with a one-hour minimum\\. After the first hour, time is billed in 30-minute blocks", html);
+            Assert.Matches("£60 an hour, on the same terms", html);
+            Assert.Contains("<span>No VAT is added to our prices</span>", html);
+            Assert.Contains("<span>Payment is due at the end of each visit by card, bank transfer or cash</span>", html);
+        }
+
+        // The FAQ sends the price questions to the Pricing page and says how the bill is paid.
+        [Fact]
+        public async Task TheFaqLeavesThePricesToThePricingPageAndSaysHowToPay()
+        {
+            string html = WebUtility.HtmlDecode(await this.GetAsync("/FAQ"));
+
+            Assert.Contains("The rates are on the <a href=\"/Pricing\">Pricing page</a>.", html);
+            Assert.DoesNotContain("jobs start with a one-hour minimum at the hourly rate for the service", html);
+            Assert.Contains("How and when do I pay?", html);
+            Assert.Contains("A £50 deposit is paid online when you book, and it comes off the final bill.", html);
+            Assert.Contains("by bank transfer or in cash", html);
         }
 
         private static string Decoded(string html, string pattern)

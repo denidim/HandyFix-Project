@@ -78,6 +78,7 @@
             var model = new PricingViewModel
             {
                 Categories = categories,
+                Rates = rates,
                 TypicalJobs = typicalJobs.WithMediumCopies(this.imageStorage),
                 LocalAreas = localAreas.Take(12),
             };
