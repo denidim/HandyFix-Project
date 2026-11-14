@@ -1077,6 +1077,22 @@ namespace HandyFix.Data.Migrations
                     b.ToTable("Settings");
                 });
 
+            modelBuilder.Entity("HandyFix.Data.Models.SiteCount", b =>
+                {
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.HasKey("Day", "Kind");
+
+                    b.ToTable("SiteCounts");
+                });
+
             modelBuilder.Entity("HandyFix.Data.Models.Technician", b =>
                 {
                     b.Property<Guid>("Id")

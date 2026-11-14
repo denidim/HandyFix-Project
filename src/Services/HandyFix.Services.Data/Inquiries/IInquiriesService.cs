@@ -32,5 +32,9 @@
         // every enquiry kept when no day is given (PROJECT_STATE.md Section 3et). An answer no
         // enquiry gave is not in it.
         Task<IReadOnlyDictionary<HeardAbout, int>> GetHeardAboutCountsAsync(DateTime? since);
+
+        // How many enquiries were sent since then and are still kept; every one kept when no
+        // day is given (PROJECT_STATE.md Section 3fa).
+        Task<int> GetCountSinceAsync(DateTime? since);
     }
 }

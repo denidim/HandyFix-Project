@@ -51,6 +51,12 @@
         // Sections 3ej and 3et). An answer no job gave is not in it.
         Task<IReadOnlyDictionary<HeardAbout, int>> GetHeardAboutCountsAsync(DateTime? since);
 
+        // The bookings made on the website since then, and how many of them had the deposit
+        // paid; every one ever made when no day is given. A booking given up before paying is
+        // among those made, and a deposit refunded later was still paid (PROJECT_STATE.md
+        // Section 3fa).
+        Task<WebsiteBookingCounts> GetWebsiteBookingCountsAsync(DateTime? since);
+
         Task<int> GetPendingCountAsync();
 
         BookingSummaryStats GetSummaryStats(IEnumerable<BookingDetailsViewModel> bookings);

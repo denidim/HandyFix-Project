@@ -345,6 +345,22 @@
                 .ToDictionaryAsync(x => x.Answer, x => x.Count);
         }
 
+        public async Task<WebsiteBookingCounts> GetWebsiteBookingCountsAsync(DateTime? since)
+        {
+            IQueryable<Booking> booked = this.bookingRepository.All().Where(x => x.Source == BookingSource.Website);
+            if (since.HasValue)
+            {
+                booked = booked.Where(x => x.CreatedOn >= since.Value);
+            }
+
+            return new WebsiteBookingCounts
+            {
+                Sent = await booked.CountAsync(),
+                DepositPaid = await booked.CountAsync(x => x.Payments.Any(p =>
+                    p.Status.Name == PaymentStatusNames.DepositPaid || p.Status.Name == PaymentStatusNames.Refunded)),
+            };
+        }
+
         public BookingSummaryStats GetSummaryStats(IEnumerable<BookingDetailsViewModel> bookings)
         {
             // Deliberately takes the list rather than fetching it: the caller decides whether it

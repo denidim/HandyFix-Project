@@ -65,6 +65,8 @@
 
         public DbSet<ServiceImage> ServiceImages { get; set; }
 
+        public DbSet<SiteCount> SiteCounts { get; set; }
+
         public DbSet<Technician> Technicians { get; set; }
 
         public override int SaveChanges() => this.SaveChanges(true);

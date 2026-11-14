@@ -199,6 +199,11 @@
             Assert.Equal(1, lastMonth[HeardAbout.NotSaid]);
             Assert.Equal(2, allTime[HeardAbout.Facebook]);
             Assert.False(allTime.ContainsKey(HeardAbout.GoogleMaps));
+
+            // The same enquiries as one figure, for the Dashboard's table of what visitors did
+            // (PROJECT_STATE.md Section 3fa).
+            Assert.Equal(2, await service.GetCountSinceAsync(DateTime.UtcNow.AddDays(-30)));
+            Assert.Equal(3, await service.GetCountSinceAsync(null));
         }
 
         // A deleted enquiry is gone: sending the same words again after it was deleted is new.

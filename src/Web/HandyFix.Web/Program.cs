@@ -23,6 +23,7 @@
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
+    using HandyFix.Services.Data.SiteCounts;
     using HandyFix.Services.Data.Technicians;
     using HandyFix.Services.Mapping;
     using HandyFix.Services.Messaging;
@@ -231,6 +232,7 @@
             services.AddTransient<IEnquiryEmails, EnquiryEmails>();
             services.AddTransient<IAccountEmails, AccountEmails>();
             services.AddTransient<IEmailsNotSentService, EmailsNotSentService>();
+            services.AddTransient<ISiteCountsService, SiteCountsService>();
             services.AddSingleton<IStripeGateway, StripeGateway>();
             services.AddTransient<ICloudflareR2Service, CloudflareR2Service>();
             services.AddTransient<IImageService, ImageService>();
