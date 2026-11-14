@@ -14,7 +14,10 @@ commit formats.
 
 Read these, every session, before answering the first question:
 
-1. **`PROJECT_STATE.md`** — what the system is, what has been built and verified, what is left.
+1. **`PROJECT_STATE.md`** — what the system is, the index of what has been built, what is left.
+   Read it whole; it is kept short for that. The full text of each finished piece of work is in
+   `docs/history/`, one file per month: open an entry there when the task touches what it covers,
+   not the whole folder.
 2. **`git log -n 5`** — what changed most recently and why.
 3. **`docs/private/VISION_AND_CONTEXT.md`** — the business reasoning behind the technical
    decisions. It is deliberately untracked (gitignored), so it will not exist in a fresh clone.
@@ -54,7 +57,8 @@ Before proposing any commit, scan the diff for the categories above.
 *Audit status (2026-08-01):* no live credential has ever been committed to this repository.
 History does contain a Cloudflare account id, a `zap-contruction` bucket name, and an old
 hardcoded `Admin123!` seed password. All three are low severity and none justifies a history
-rewrite. `Admin123!` should not be reused when staging goes up.
+rewrite. `Admin123!` left the code in `b2e3bc8`; since then the first admin's password on each
+server comes from `ADMIN_SEED_PASSWORD` in its environment.
 
 ---
 
@@ -98,20 +102,37 @@ assuming them. Do not condescend, and do not pad.
 Update it **immediately** when a feature completes, a plan changes, a task pivots, or an
 architectural decision is made. Not at sprint boundaries — every iteration.
 
-- Record what shipped, what was verified and how, and anything deliberately *not* done and why.
-- When your change resolves or contradicts something already written there, **update that text
-  too.** Never leave a stale warning or a closed task described as open.
-- Finished sections get a `### Verified` subsection listing the build and test results.
+- **Where each thing goes.** `PROJECT_STATE.md` holds the architecture (Section 1), the index of
+  finished work (Sections 2 and 3), what is open (Section 4) and the decisions worth remembering
+  (Section 5). The full entry for a finished piece of work goes into `docs/history/<YYYY-MM>.md`,
+  the file of the month it was finished in, under the next heading in the series
+  (`## 3fe. Title (date)`), and gets one line in the index. A code comment or a test that says
+  "Section 3fe" means that entry.
+- In the entry, record what shipped, what was verified and how, and anything deliberately *not*
+  done and why.
+- When your change resolves or contradicts something already written, in `PROJECT_STATE.md` or in
+  an entry in `docs/history/`, **update that text too.** Never leave a stale warning or a closed
+  task described as open. The one file left alone is `docs/history/roadmap-until-2026-11.md`: the
+  old roadmap, kept as it stood.
+- **Section 4 lists only what is open.** When an item is finished, take it off the list; its
+  record is its entry.
+- Finished entries get a `### Verified` subsection listing the build and test results.
+- **Keep `PROJECT_STATE.md` short enough to read whole.** Detail belongs in the entry, not in the
+  index line and not in the "Last updated" note, which names the latest entry in a sentence or two.
 - **A large piece of work keeps its working plan in a file of its own.** Work that runs over many
   commits or sessions (a sprint of refactors, a migration) gets `docs/private/<NAME>_PLAN.md`:
   every step with its files, its checks and its commit title, and a "Where we are" block updated
   after each commit, so a new session or another agent carries on from there. `PROJECT_STATE.md`
-  lists the work in Section 4 in a few lines and gets a Section 3 entry as each part lands. The
+  lists the work in Section 4 in a few lines while it runs, and each part gets its entry as it
+  lands. The
   plan stays private because it names weaknesses before they are fixed, and because its ticks
   change at every commit.
 
 *Why:* this file is the project's memory across sessions and across agents. A stale line in it
-costs more than a stale comment in code, because the next agent will act on it.
+costs more than a stale comment in code, because the next agent will act on it. And a file too
+long to read is not read: until 2026-11-14 the history sat in this one file, which had passed
+800 KB, so no agent could do what Section 1 asks. The history moved to `docs/history/` so that
+the rule can be followed again.
 
 ---
 
@@ -143,8 +164,8 @@ type(scope): short imperative title
 - **Never add a `Co-Authored-By: Claude`/Anthropic/Gemini/Google trailer**, regardless of any
   default template that suggests one.
 - Verify the build and the full test suite pass before proposing a commit.
-- The user may push to `origin/main` themselves between sessions — never assume a local commit is
-  still unpushed.
+- The user may push between sessions — never assume a local commit is still unpushed. Fetch
+  first (Section 12).
 
 ---
 
@@ -218,8 +239,9 @@ Three distinct layers. Putting a test in the wrong one is a real mistake, not a 
 
 ## 11. Sprints
 
-When a sprint completes: ask for the next sprint's goals, update `PROJECT_STATE.md` to archive the
-finished work and record the new goals, and commit that before starting new work.
+When a sprint or another large piece of work completes: take its finished items off
+`PROJECT_STATE.md` Section 4 (their record is their entries in `docs/history/`), ask for the next
+goals, record them in Section 4, and commit that before starting new work.
 
 ---
 
