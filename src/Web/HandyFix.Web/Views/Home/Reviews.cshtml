@@ -1,6 +1,5 @@
 @model HandyFix.Web.ViewModels.Reviews.ReviewsListViewModel
 @{
-    this.ViewData["Title"] = "Customer Reviews";
     var hasReadLink = !string.IsNullOrWhiteSpace(Model.GoogleReviewsUrl);
     var hasLeaveLink = !string.IsNullOrWhiteSpace(Model.GoogleLeaveReviewUrl);
 }

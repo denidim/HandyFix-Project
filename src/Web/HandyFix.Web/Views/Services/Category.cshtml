@@ -6,7 +6,6 @@
    encoding is wrong there: a script block is never HTML-decoded (PROJECT_STATE Section 3bv). *@
 @{
     this.Layout = "_Layout";
-    this.ViewData["Title"] = $"{Model.Name} Services";
 
     var isPlumbing = Model.Slug == CategorySlugs.Plumbing || Model.Name == "Plumbing";
     var isBuilding = Model.Slug == CategorySlugs.SmallBuildingWorks;

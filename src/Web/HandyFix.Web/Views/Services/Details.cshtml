@@ -7,7 +7,6 @@
    as "&amp;" and "£" as "&#xA3;" (PROJECT_STATE Section 3bv). *@
 @{
     this.Layout = "_Layout";
-    this.ViewData["Title"] = Model.Name;
 
     var isPlumbing = Model.CategoryName == "Plumbing";
     var isBuilding = Model.CategorySlug == CategorySlugs.SmallBuildingWorks;

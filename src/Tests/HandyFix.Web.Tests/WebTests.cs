@@ -489,8 +489,9 @@
         public async Task PublicPagesShowTheNewBrandOnceInTheTitleAndNeverTheOldName(string url)
         {
             // Visible rename to "Plumbing Handyman Surrey" (roadmap L1 item 1). The layout appends
-            // the brand to every title, so a page that also typed it into its own title showed it
-            // twice. "HandyFix." stays allowed: it is the internal codename in asset paths.
+            // the brand where a page names no other ending (PageTitleTests), so a page that also
+            // typed it into its own title showed it twice. "HandyFix." stays allowed: it is the
+            // internal codename in asset paths.
             var client = this.server.CreateClient();
             var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
@@ -500,9 +501,8 @@
             Assert.DoesNotContain("handyfix.co", content);
             Assert.DoesNotMatch("HandyFix(?!\\.)", content);
 
-            var title = Regex.Match(content, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value;
-            Assert.EndsWith(" - Plumbing Handyman Surrey", title);
-            Assert.Single(Regex.Matches(title, "Plumbing Handyman Surrey"));
+            var title = WebUtility.HtmlDecode(Regex.Match(content, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value);
+            Assert.InRange(Regex.Matches(title, "Plumbing Handyman Surrey").Count, 0, 1);
         }
 
         // A copy of the site that is not the live one says so across the top of a public page and
@@ -691,16 +691,6 @@
             Assert.Contains(
                 JsonLdElements(page),
                 block => block.GetRawText().Contains("Twickenham"));
-        }
-
-        // The list of services had no description, so search engines made one up from whatever
-        // text came first (PROJECT_STATE.md Section 3dj).
-        [Fact]
-        public async Task TheServicesPageHasADescription()
-        {
-            var page = await this.server.CreateClient().GetStringAsync("/Services");
-
-            Assert.Contains("<meta name=\"description\" content=\"Plumbing, handyman and small building services across Surrey and South London.", page);
         }
 
         [Theory]

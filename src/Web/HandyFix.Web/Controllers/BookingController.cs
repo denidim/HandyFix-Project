@@ -288,15 +288,16 @@
             return page;
         }
 
-        // The title is the view's own. The address is without the link's category, date and
-        // service: every one of those links shows the same page, and this is the address the
-        // sitemap gives for it.
+        // The address is without the link's category, date and service: every one of those links
+        // shows the same page, and this is the address the sitemap gives for it. The title says
+        // "Book ... Online" itself, so nothing follows it.
         private void SetBookingPageMeta()
         {
             this.SetPageMeta(
-                null,
-                "Book a plumbing or handyman appointment online across Surrey and South London. Pick a service, choose an available slot, and secure it with a deposit.",
-                this.Url.Action("Index", "Booking", null, this.Request.Scheme));
+                "Book a Plumber or Handyman Online in Surrey",
+                $"Pick the job, a day and a free time, Monday to Saturday, 9am to 5pm. A £{Deposit.Pounds} deposit paid online secures your slot and comes off the final bill.",
+                this.Url.Action("Index", "Booking", null, this.Request.Scheme),
+                PageTitle.NoEnding);
         }
 
         private async Task<IActionResult> RedisplayBookingForm(BookingInputModel model, string errorMessage = null)

@@ -12,6 +12,7 @@
     using HandyFix.Web.ViewModels.Reviews;
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
+    using HandyFix.Web.ViewModels.Validation;
 
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Hosting;
@@ -47,8 +48,9 @@
 
             this.SetPageMeta(
                 "Areas We Cover in Surrey & South London",
-                "See every town and village Plumbing Handyman Surrey covers across South London and Surrey, from Chessington and Kingston out to Guildford and Cobham. Find your area and book online.",
-                this.Url.RouteUrl("Areas", null, this.Request.Scheme));
+                "We work within 15 miles of Chessington, across Surrey and South London. Find your town to see the postcodes we cover there, then book a slot online.",
+                this.Url.RouteUrl("Areas", null, this.Request.Scheme),
+                PageTitle.BookOnline);
 
             return this.View(areas);
         }
@@ -96,8 +98,9 @@
 
             this.SetPageMeta(
                 $"Plumber & Handyman in {area.Name}",
-                $"Local handyman and plumbing services in {area.Name}. Transparent hourly pricing, no call-out fee, usually available within days. Book online today.",
-                this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme));
+                TownDescription(area, model.PlumbingRate, model.HandymanRate),
+                this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme),
+                PageTitle.BookOnline);
 
             // An upload's address is already a full one; a picture that came with the site is
             // named on this site; an area with neither shares the site's own picture.
@@ -107,6 +110,22 @@
             }
 
             return this.View(model);
+        }
+
+        // A town's description for search engines, made from its own record: its name, its
+        // postcode districts and the two hourly rates the page quotes. No text is written per
+        // town and the admin has no field for it, so a new town gets a true one by itself (the
+        // SEO master plan's item 7). The one before promised "usually available within days",
+        // which nobody had confirmed. A part the record lacks is left out.
+        private static string TownDescription(ServiceAreaDetailsViewModel area, decimal? plumbingRate, decimal? handymanRate)
+        {
+            var districts = UkPostcode.ParseDistricts(area.PostcodeDistricts);
+            var town = districts.Count == 0 ? area.Name : $"{area.Name} ({string.Join(", ", districts)})";
+            var rates = plumbingRate.HasValue && handymanRate.HasValue
+                ? $"Plumbing £{plumbingRate:F0} an hour, handyman £{handymanRate:F0}, no call-out fee. "
+                : string.Empty;
+
+            return $"Plumber and handyman in {town}. {rates}Pick a time that suits you and book online.";
         }
     }
 }
