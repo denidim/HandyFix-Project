@@ -1,3 +1,4 @@
+@using HandyFix.Services.Data.Gallery
 @model HandyFix.Web.ViewModels.Gallery.GalleryAdminIndexViewModel
 @{
     this.ViewData["Title"] = "Manage Gallery";
@@ -64,8 +65,9 @@
                        type="file"
                        multiple
                        accept="image/jpeg,image/png,image/webp"
-                       data-max-files="20"
-                       data-max-size-mb="15"
+                       data-max-files="@GalleryService.MaxBatchUploadCount"
+                       data-max-size-mb="@(GalleryService.MaxFileSizeBytes / (1024 * 1024))"
+                       data-max-total-mb="@(GalleryService.MaxBatchBytes / (1024 * 1024))"
                        data-preview-grid="#gallery-upload-previews" />
             </div>
             <div id="gallery-upload-previews" class="image-preview-grid mt-3"></div>

@@ -33,7 +33,10 @@ namespace HandyFix.Web.Areas.Administration.Controllers
             return this.View(model);
         }
 
+        // A batch of phone photos is larger than the server's default limit of about 28 MB per
+        // request, which refused it with a blank page (Section 3fd).
         [HttpPost]
+        [RequestSizeLimit(GalleryService.MaxUploadRequestBytes)]
         public async Task<IActionResult> Upload(GalleryBatchUploadInputModel upload)
         {
             upload ??= new GalleryBatchUploadInputModel();

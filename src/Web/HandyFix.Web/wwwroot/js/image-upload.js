@@ -8,6 +8,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const maxFiles = parseInt(input.dataset.maxFiles || "5", 10);
         const maxSizeMb = parseFloat(input.dataset.maxSizeMb || "15");
         const maxSizeBytes = maxSizeMb * 1024 * 1024;
+        // The most the picked photos may weigh together, where the page sets it (the admin's gallery).
+        const maxTotalMb = parseFloat(input.dataset.maxTotalMb || "0");
+        // How many picks are still being made smaller.
+        let pending = 0;
         
         // Find container to render previews (either specified by ID or dynamically created)
         let previewGrid = document.querySelector(input.dataset.previewGrid);
@@ -78,24 +82,50 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            for (const file of validFiles) {
-                if (file.size > maxSizeBytes) {
-                    alert(`File "${file.name}" exceeds the maximum allowed size of ${maxSizeMb}MB.`);
-                    continue;
-                }
+            pending++;
+            try {
+                for (const file of validFiles) {
+                    if (file.size > maxSizeBytes) {
+                        alert(`File "${file.name}" exceeds the maximum allowed size of ${maxSizeMb}MB.`);
+                        continue;
+                    }
 
-                try {
-                    const compressedFile = await compressImage(file);
-                    activeDataTransfer.items.add(compressedFile);
-                } catch (err) {
-                    console.error("Compression failed for file:", file.name, err);
-                    // Fallback to original file if compression failed
-                    activeDataTransfer.items.add(file);
+                    try {
+                        const compressedFile = await compressImage(file);
+                        activeDataTransfer.items.add(compressedFile);
+                    } catch (err) {
+                        console.error("Compression failed for file:", file.name, err);
+                        // Fallback to original file if compression failed
+                        activeDataTransfer.items.add(file);
+                    }
                 }
+            } finally {
+                pending--;
             }
 
             updateInputAndPreviews();
         };
+
+        // The form is not sent while the picked photos are still being made smaller: it would
+        // send the full-size originals, and a few phone photos are more than the server takes in
+        // one request, which answered with a blank page (PROJECT_STATE Section 3fd). Nor is it
+        // sent when the photos are heavier together than the page allows. This runs on the form,
+        // before the one-click lock in site.js, which leaves a cancelled form alone.
+        if (input.form) {
+            input.form.addEventListener("submit", (e) => {
+                if (pending > 0) {
+                    e.preventDefault();
+                    alert("Your photos are still being prepared. Please press the button again in a moment.");
+                    return;
+                }
+
+                const totalBytes = Array.from(input.files).reduce((sum, f) => sum + f.size, 0);
+                if (maxTotalMb > 0 && totalBytes > maxTotalMb * 1024 * 1024) {
+                    e.preventDefault();
+                    alert(`These photos are ${Math.ceil(totalBytes / 1048576)}MB together, more than the ${maxTotalMb}MB that can be sent at once. Please remove some and upload them in a second batch.`);
+                }
+            });
+        }
 
         input.addEventListener("change", function (e) {
             if (this.files.length > 0) {

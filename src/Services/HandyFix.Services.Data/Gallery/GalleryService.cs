@@ -20,6 +20,13 @@ namespace HandyFix.Services.Data.Gallery
         public const int MaxBatchUploadCount = 20;
         public const long MaxFileSizeBytes = 15L * 1024 * 1024;
 
+        // The photos of one batch together. The live site is behind Cloudflare, which lets at most
+        // 100 MB through in one request; the upload action allows this plus room for the form's
+        // other fields, and the admin page refuses more before anything is sent.
+        public const long MaxBatchBytes = 90L * 1024 * 1024;
+
+        public const long MaxUploadRequestBytes = MaxBatchBytes + (1024 * 1024);
+
         private readonly IRepository<GalleryPhoto> galleryRepository;
         private readonly IImageStorageService imageStorageService;
 
