@@ -110,51 +110,12 @@
     </a>
 </div>
 
-<!-- What made customers look for us: the answers to "How did you hear about us?" on the enquiries
-     and on the jobs, the last 30 days or all time (PROJECT_STATE.md Sections 3ej and 3et). The
-     live database cannot be read from outside, so this table is where the channels are compared.
-     The two columns are counted apart: an enquiry that is made a job is in both. -->
-<section class="glass-card p-4 rounded-xl admin-card mb-5" id="dashboard-heard-about">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-1">
-        <h3 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
-            <span class="material-symbols-outlined">analytics</span>
-            <span>How Customers Heard About Us</span>
-        </h3>
-        <form method="get" asp-area="Administration" asp-controller="Dashboard" asp-action="Index" asp-fragment="dashboard-heard-about" class="m-0">
-            <select name="heardAbout" class="admin-status-filter font-body-md" data-submit-on-change aria-label="Count the answers of">
-                <option value="">Last @IndexViewModel.HeardAboutDays days</option>
-                <option value="@IndexViewModel.HeardAboutAllTime" selected="@Model.HeardAboutIsAllTime">All time</option>
-            </select>
-        </form>
-    </div>
-    <p class="font-label-sm text-on-surface-variant mb-3">Every enquiry and every job @(Model.HeardAboutIsAllTime ? "so far" : "of the last " + IndexViewModel.HeardAboutDays + " days"), cancelled jobs too. An enquiry that is made a job is in both columns. The question was first asked on 12 Nov 2026: what came in before then is "Not said".</p>
-    <table class="table mb-0 dashboard-heard-about-table">
-        <thead>
-            <tr>
-                <th scope="col" class="font-label-sm text-on-surface-variant">Answer</th>
-                <th scope="col" class="font-label-sm text-on-surface-variant text-end">Enquiries</th>
-                <th scope="col" class="font-label-sm text-on-surface-variant text-end">Jobs</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var line in Model.HeardAbout)
-            {
-                <tr>
-                    <td class="font-body-md text-on-surface">@line.Label</td>
-                    <td class="font-body-md text-primary text-end fw-bold">@line.Enquiries</td>
-                    <td class="font-body-md text-primary text-end fw-bold">@line.Jobs</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</section>
-
 <h3 class="font-headline-sm text-primary mb-4 d-flex align-items-center gap-2">
     <span class="material-symbols-outlined">bolt</span>
     <span>Quick Actions</span>
 </h3>
 
-<div class="quick-actions-grid" id="dashboard-actions">
+<div class="quick-actions-grid mb-5" id="dashboard-actions">
     <a asp-area="Administration" asp-controller="Bookings" asp-action="Create" class="action-btn-card">
         <div class="action-btn-circle">
             <span class="material-symbols-outlined">add</span>
@@ -186,3 +147,142 @@
         <span class="font-button-text text-primary">Manage Services</span>
     </a>
 </div>
+
+<!-- What visitors did on the website: the sums the pages' script sends in, and beside them the
+     bookings, deposits and enquiries kept in the panel (PROJECT_STATE.md Section 3fa). The site
+     has no analytics service, so this table is how "nobody comes" is told from "they come and do
+     not book". It keeps sums only, nothing about any one visitor. -->
+@{
+    var counts = Model.SiteCounts;
+}
+<section class="glass-card p-4 rounded-xl admin-card mb-5" id="dashboard-site-counts">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-1">
+        <h3 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">groups</span>
+            <span>What Visitors Did on the Website</span>
+        </h3>
+        <form method="get" asp-area="Administration" asp-controller="Dashboard" asp-action="Index" asp-fragment="dashboard-site-counts" class="m-0">
+            @* The other table keeps its own choice when this one is changed. *@
+            @if (Model.HeardAboutIsAllTime)
+            {
+                <input type="hidden" name="heardAbout" value="@IndexViewModel.HeardAboutAllTime" />
+            }
+            <select name="counts" class="admin-status-filter font-body-md" data-submit-on-change aria-label="Count what visitors did in">
+                <option value="">Last @IndexViewModel.SiteCountsDays days</option>
+                <option value="@IndexViewModel.SiteCountsAllTime" selected="@counts.IsAllTime">Since the count began</option>
+            </select>
+        </form>
+    </div>
+    <p class="font-label-sm text-on-surface-variant mb-3">
+        What happened on the website @(counts.IsAllTime ? "since the count began" : "in the last " + IndexViewModel.SiteCountsDays + " days"). A visit is someone arriving from outside the site who then scrolls or taps: the same person coming twice is two visits, and our own browsers are left out. The bookings, deposits and enquiries are the ones kept in this panel.
+        @if (counts.CountingSince.HasValue)
+        {
+            <text>The count began on @counts.CountingSince.Value.ToString("d MMM yyyy"): nothing before then is in this table.</text>
+        }
+        else
+        {
+            <text>Nothing has been counted yet.</text>
+        }
+    </p>
+    <table class="table mb-0 dashboard-heard-about-table">
+        <thead>
+            <tr>
+                <th scope="col" class="font-label-sm text-on-surface-variant">What happened</th>
+                <th scope="col" class="font-label-sm text-on-surface-variant text-end">Times</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="font-body-md text-on-surface">
+                    Visits to the site
+                    <span class="d-block font-label-sm text-on-surface-variant">@counts.VisitsOnPhone on a phone, @counts.VisitsOnComputer on a computer</span>
+                </td>
+                <td class="font-body-md text-primary text-end fw-bold" data-count="visits">@counts.Visits</td>
+            </tr>
+            <tr>
+                <td class="font-body-md text-on-surface">Opened the booking page</td>
+                <td class="font-body-md text-primary text-end fw-bold" data-count="booking-opened">@counts.BookingOpened</td>
+            </tr>
+            <tr>
+                <td class="font-body-md text-on-surface">Picked a time</td>
+                <td class="font-body-md text-primary text-end fw-bold" data-count="time-picked">@counts.TimePicked</td>
+            </tr>
+            <tr>
+                <td class="font-body-md text-on-surface">Sent the booking</td>
+                <td class="font-body-md text-primary text-end fw-bold" data-count="bookings-sent">@counts.BookingsSent</td>
+            </tr>
+            <tr>
+                <td class="font-body-md text-on-surface">Paid the deposit</td>
+                <td class="font-body-md text-primary text-end fw-bold" data-count="deposits-paid">@counts.DepositsPaid</td>
+            </tr>
+            <tr>
+                <td class="font-body-md text-on-surface">Tapped Call</td>
+                <td class="font-body-md text-primary text-end fw-bold" data-count="call-tapped">@counts.CallTapped</td>
+            </tr>
+            <tr>
+                <td class="font-body-md text-on-surface">Tapped WhatsApp</td>
+                <td class="font-body-md text-primary text-end fw-bold" data-count="whatsapp-tapped">@counts.WhatsAppTapped</td>
+            </tr>
+            <tr>
+                <td class="font-body-md text-on-surface">Sent an enquiry</td>
+                <td class="font-body-md text-primary text-end fw-bold" data-count="enquiries-sent">@counts.EnquiriesSent</td>
+            </tr>
+        </tbody>
+    </table>
+
+    @* A browser that has opened this panel is one of ours, and its looks at the public site are
+       left out of the table (AdministrationController). The button puts it back, or out again. *@
+    <form method="post" asp-area="Administration" asp-controller="Dashboard" asp-action="CountThisBrowser" class="d-flex align-items-center flex-wrap gap-3 mt-4" id="dashboard-count-this-browser">
+        <input type="hidden" name="count" value="@(counts.ThisBrowserIsCounted ? "false" : "true")" />
+        <span class="font-label-sm text-on-surface-variant">
+            @(counts.ThisBrowserIsCounted
+                ? "This browser is counted like any visitor's when it looks at the site signed out."
+                : "This browser is not counted: it has opened this panel, so its looks at the site are ours.")
+        </span>
+        <button type="submit" class="btn btn-secondary font-button-text admin-btn-compact">@(counts.ThisBrowserIsCounted ? "Don't count this browser" : "Count this browser")</button>
+    </form>
+</section>
+
+<!-- What made customers look for us: the answers to "How did you hear about us?" on the enquiries
+     and on the jobs, the last 30 days or all time (PROJECT_STATE.md Sections 3ej and 3et). The
+     live database cannot be read from outside, so this table is where the channels are compared.
+     The two columns are counted apart: an enquiry that is made a job is in both. -->
+<section class="glass-card p-4 rounded-xl admin-card mb-5" id="dashboard-heard-about">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-1">
+        <h3 class="font-headline-sm text-primary mb-0 d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">analytics</span>
+            <span>How Customers Heard About Us</span>
+        </h3>
+        <form method="get" asp-area="Administration" asp-controller="Dashboard" asp-action="Index" asp-fragment="dashboard-heard-about" class="m-0">
+            @* The other table keeps its own choice when this one is changed. *@
+            @if (counts.IsAllTime)
+            {
+                <input type="hidden" name="counts" value="@IndexViewModel.SiteCountsAllTime" />
+            }
+            <select name="heardAbout" class="admin-status-filter font-body-md" data-submit-on-change aria-label="Count the answers of">
+                <option value="">Last @IndexViewModel.HeardAboutDays days</option>
+                <option value="@IndexViewModel.HeardAboutAllTime" selected="@Model.HeardAboutIsAllTime">All time</option>
+            </select>
+        </form>
+    </div>
+    <p class="font-label-sm text-on-surface-variant mb-3">Every enquiry and every job @(Model.HeardAboutIsAllTime ? "so far" : "of the last " + IndexViewModel.HeardAboutDays + " days"), cancelled jobs too. An enquiry that is made a job is in both columns. The question was first asked on 12 Nov 2026: what came in before then is "Not said".</p>
+    <table class="table mb-0 dashboard-heard-about-table">
+        <thead>
+            <tr>
+                <th scope="col" class="font-label-sm text-on-surface-variant">Answer</th>
+                <th scope="col" class="font-label-sm text-on-surface-variant text-end">Enquiries</th>
+                <th scope="col" class="font-label-sm text-on-surface-variant text-end">Jobs</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in Model.HeardAbout)
+            {
+                <tr>
+                    <td class="font-body-md text-on-surface">@line.Label</td>
+                    <td class="font-body-md text-primary text-end fw-bold">@line.Enquiries</td>
+                    <td class="font-body-md text-primary text-end fw-bold">@line.Jobs</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
