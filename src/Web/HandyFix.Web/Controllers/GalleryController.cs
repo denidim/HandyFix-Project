@@ -19,7 +19,10 @@ namespace HandyFix.Web.Controllers
             this.galleryService = galleryService;
         }
 
-        [HttpGet("/Gallery")]
+        // Reached by the conventional route, as /Gallery, like the Services page. An address of its
+        // own here would win over the admin's Gallery page whenever that page sends the browser back
+        // to its Index, and every admin action ended on this page (Section 3fd).
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             this.SetPageMeta(
