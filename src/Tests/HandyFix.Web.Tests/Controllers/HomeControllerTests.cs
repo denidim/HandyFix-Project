@@ -5,15 +5,18 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Controllers;
     using HandyFix.Web.Services.Forms;
     using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels.Home;
+    using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Http;
@@ -28,15 +31,39 @@
 
     public class HomeControllerTests
     {
+        // The About page quotes the two hourly rates and links every town's page. Both come from
+        // the database: typed into the page, neither followed a change in the admin (the SEO
+        // master plan's item 7).
         [Fact]
-        public void AboutShouldReturnViewWithExpectedTitleAndMetaDescription()
+        public async Task AboutShouldTakeItsRatesAndItsTownsFromTheDatabase()
         {
-            var controller = BuildController();
+            var categoriesService = new Mock<ICategoriesService>();
+            categoriesService
+                .Setup(s => s.GetAllAsync<CategoryViewModel>())
+                .ReturnsAsync(new List<CategoryViewModel>
+                {
+                    new CategoryViewModel { Slug = CategorySlugs.Plumbing, BasePrice = 95 },
+                    new CategoryViewModel { Slug = CategorySlugs.Handyman, BasePrice = 65 },
+                    new CategoryViewModel { Slug = CategorySlugs.SmallBuildingWorks, BasePrice = 0 },
+                });
+            var serviceAreasService = new Mock<IServiceAreasService>();
+            serviceAreasService
+                .Setup(s => s.GetAllAsync<ServiceAreaViewModel>(false))
+                .ReturnsAsync(new List<ServiceAreaViewModel>
+                {
+                    new ServiceAreaViewModel { Name = "Chessington", Slug = "chessington" },
+                    new ServiceAreaViewModel { Name = "A Town Added In The Admin", Slug = "a-new-town" },
+                });
+            var controller = BuildController(categoriesService: categoriesService, serviceAreasService: serviceAreasService);
 
-            var result = controller.About();
+            var result = await controller.About();
 
-            var viewResult = Assert.IsType<ViewResult>(result);
-            Assert.Equal("About Us", controller.ViewData["Title"]);
+            var model = Assert.IsType<AboutViewModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal(95, model.Rates.Plumbing);
+            Assert.Equal(65, model.Rates.Handyman);
+            Assert.Equal(new[] { "chessington", "a-new-town" }, model.Towns.Select(t => t.Slug));
+            Assert.Equal("About Us: Chessington Plumbers & Handymen", controller.ViewData["Title"]);
+            Assert.Equal(PageTitle.BookOnline, controller.ViewData["TitleEnding"]);
             Assert.NotNull(controller.ViewData["MetaDescription"]);
         }
 
@@ -526,7 +553,8 @@
             Mock<IServicesService> servicesService = null,
             Mock<ICategoriesService> categoriesService = null,
             Mock<IImageService> imageService = null,
-            Mock<IFormGuard> formGuard = null)
+            Mock<IFormGuard> formGuard = null,
+            Mock<IServiceAreasService> serviceAreasService = null)
         {
             var reviewsService = new Mock<IReviewsService>();
 
@@ -535,6 +563,7 @@
                 (inquiriesService ?? new Mock<IInquiriesService>()).Object,
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
+                (serviceAreasService ?? new Mock<IServiceAreasService>()).Object,
                 (imageService ?? ImageServiceReturning()).Object,
                 new Mock<IImageStorageService>().Object,
                 (formGuard ?? new Mock<IFormGuard>()).Object,

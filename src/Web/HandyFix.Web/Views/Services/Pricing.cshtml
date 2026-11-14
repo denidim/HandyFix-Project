@@ -90,6 +90,10 @@
                     </li>
                     <li>
                         <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+                        <span>No VAT is added to our prices</span>
+                    </li>
+                    <li>
+                        <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
                         <span>One-hour minimum charge, thereafter billed at the same hourly rate</span>
                     </li>
                     <li>
@@ -98,7 +102,7 @@
                     </li>
                     <li>
                         <span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
-                        <span>Payment is due at the end of each visit by card or bank transfer</span>
+                        <span>Payment is due at the end of each visit by card, bank transfer or cash</span>
                     </li>
                 </ul>
             </div>
@@ -177,25 +181,55 @@
     </section>
 
     <!-- Pricing FAQs -->
+    @* The price questions people type into Google, five at most, and none that the FAQ page
+       also answers (the SEO master plan's item 7). The rates are the page's own, read from
+       the admin's prices. *@
     <section class="pricing-faq-section" data-accordion>
         <h2 class="font-headline-lg text-primary text-center pricing-section-title">Pricing FAQs</h2>
         <div class="faq-list">
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
                 <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
-                    <span class="font-headline-sm text-primary">Do you charge for travel?</span>
+                    <span class="font-headline-sm text-primary">How much does a plumber charge per hour?</span>
                     <span class="material-symbols-outlined arrow-icon">expand_more</span>
                 </button>
                 <div class="accordion-content">
-                    There are no travel charges within our standard service area.
+                    £@Model.Rates.Plumbing.ToString("F0") an hour, with a one-hour minimum. After the first hour, time is billed in 30-minute blocks at the same rate. There is no call-out fee and no VAT on top.
                 </div>
             </div>
             <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
                 <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
-                    <span class="font-headline-sm text-primary">Can I book multiple jobs in one visit?</span>
+                    <span class="font-headline-sm text-primary">How much does a handyman charge per hour?</span>
                     <span class="material-symbols-outlined arrow-icon">expand_more</span>
                 </button>
                 <div class="accordion-content">
-                    Yes. Many customers prepare a list of small jobs to make the most of the booking. After the first hour, additional time is billed in 30-minute blocks at the same hourly rate.
+                    £@Model.Rates.Handyman.ToString("F0") an hour, on the same terms: a one-hour minimum, then 30-minute blocks, with no call-out fee and no VAT on top.
+                </div>
+            </div>
+            <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
+                    <span class="font-headline-sm text-primary">Is there a minimum charge?</span>
+                    <span class="material-symbols-outlined arrow-icon">expand_more</span>
+                </button>
+                <div class="accordion-content">
+                    Yes, one hour. A job that takes twenty minutes is charged as one hour, so it is worth keeping a list of small jobs for the same visit.
+                </div>
+            </div>
+            <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
+                    <span class="font-headline-sm text-primary">Do you charge a call-out fee or for travel?</span>
+                    <span class="material-symbols-outlined arrow-icon">expand_more</span>
+                </button>
+                <div class="accordion-content">
+                    No. You pay for the time worked, and there is no travel charge within our standard service area. An emergency visit has no separate call-out fee either.
+                </div>
+            </div>
+            <div class="accordion-item glass-morphism rounded-xl overflow-hidden">
+                <button class="w-100 px-4 py-3 d-flex justify-content-between align-items-center text-start bg-transparent border-0 accordion-toggle-btn" data-accordion-toggle>
+                    <span class="font-headline-sm text-primary">Can I book several jobs in one visit?</span>
+                    <span class="material-symbols-outlined arrow-icon">expand_more</span>
+                </button>
+                <div class="accordion-content">
+                    Yes. Describe them all when you book, so the technician comes prepared. After the first hour, extra time is billed in 30-minute blocks at the same hourly rate.
                 </div>
             </div>
         </div>

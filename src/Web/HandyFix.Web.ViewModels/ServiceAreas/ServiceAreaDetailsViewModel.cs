@@ -17,6 +17,10 @@
 
         public int DriveTimeMinutes { get; set; }
 
+        // "KT5, KT6, KT7", as the admin typed them: the page shows them and its description for
+        // search engines names them.
+        public string PostcodeDistricts { get; set; }
+
         public string IntroCopy { get; set; }
 
         public string LocalNeighbourhoodsCopy { get; set; }

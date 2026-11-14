@@ -93,6 +93,22 @@
             return record;
         }
 
+        // Google reads the site's name from a WebSite record on the home page and shows it above
+        // every result, so a page's title does not have to carry the firm's name too (PageTitle).
+        // The publisher is the business record above, by its "@id".
+        public Dictionary<string, object> BuildSite()
+        {
+            return new Dictionary<string, object>
+            {
+                ["@context"] = "https://schema.org",
+                ["@type"] = "WebSite",
+                ["@id"] = GlobalConstants.SiteUrl + "/#website",
+                ["name"] = GlobalConstants.SystemName,
+                ["url"] = GlobalConstants.SiteUrl + "/",
+                ["publisher"] = new Dictionary<string, object> { ["@id"] = GlobalConstants.SiteUrl + "/#business" },
+            };
+        }
+
         // The towns of the profile's service area as search engines read them, the same on every page.
         public List<Dictionary<string, object>> AreaServed()
         {

@@ -466,6 +466,11 @@
 @Json.Serialize(Business.Build())
 </script>
 
+<!-- The site's own name, which Google shows above each result (the SEO master plan's step 43). -->
+<script type="application/ld+json">
+@Json.Serialize(Business.BuildSite())
+</script>
+
 @section Scripts {
     <script src="~/js/home.js" asp-append-version="true"></script>
 }

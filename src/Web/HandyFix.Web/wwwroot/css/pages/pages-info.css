@@ -427,6 +427,11 @@
   transform: scale(1.03);
 }
 
+/* The About page's job photo is four by three and is shown whole, not cut to a square. */
+.about-job-photo {
+  aspect-ratio: 4 / 3;
+}
+
 .narrative-badge {
   position: absolute;
   bottom: var(--spacing-4);
@@ -496,8 +501,8 @@
   border-color: var(--secondary);
 }
 
-/* Tint/accent are overridable per card (About page's "Who We Work With"); the fallbacks keep
-   the original cyan wherever no modifier is set, e.g. the Booking page sidebar. */
+/* Tint/accent are overridable per card; the fallbacks keep the original cyan wherever no
+   modifier is set: the About page's "What You Can Check", the Booking page sidebar. */
 .guarantee-icon-box {
   width: 56px;
   height: 56px;
@@ -518,21 +523,6 @@
 
 .guarantee-icon-box span {
   font-size: 28px;
-}
-
-.guarantee-icon-homeowner {
-  --guarantee-tint: rgba(2, 132, 199, 0.12);
-  --guarantee-accent: #0284c7;
-}
-
-.guarantee-icon-landlord {
-  --guarantee-tint: rgba(225, 29, 72, 0.1);
-  --guarantee-accent: #e11d48;
-}
-
-.guarantee-icon-manager {
-  --guarantee-tint: rgba(124, 58, 237, 0.1);
-  --guarantee-accent: #7c3aed;
 }
 
 .about-cta-card {
@@ -580,11 +570,6 @@
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
   border-color: var(--secondary);
-}
-
-.hub-pillar-card.featured-pillar {
-  border: 2px solid rgba(0, 101, 145, 0.35);
-  background: linear-gradient(180deg, var(--surface-container-lowest) 0%, rgba(201, 230, 255, 0.1) 100%);
 }
 
 .hub-pillar-icon {

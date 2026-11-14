@@ -20,11 +20,17 @@
         /// <param name="title">The page's title, or null when its view names it.</param>
         /// <param name="description">The description for search engines and link previews.</param>
         /// <param name="canonical">The page's address without whatever the link added to it.</param>
-        protected void SetPageMeta(string title, string description, string canonical)
+        /// <param name="titleEnding">What follows the title, one of <see cref="PageTitle"/>'s endings; null leaves the firm's name there.</param>
+        protected void SetPageMeta(string title, string description, string canonical, string titleEnding = null)
         {
             if (title != null)
             {
                 this.ViewData["Title"] = title;
+            }
+
+            if (titleEnding != null)
+            {
+                this.ViewData["TitleEnding"] = titleEnding;
             }
 
             this.ViewData["MetaDescription"] = description;

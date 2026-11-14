@@ -1,5 +1,6 @@
 @model HandyFix.Web.ViewModels.ServiceAreas.ServiceAreaDetailsPageViewModel
 @using HandyFix.Web.ViewModels.Services
+@using HandyFix.Web.ViewModels.Validation
 @inject HandyFix.Web.Services.IBusinessRecord Business
 @{
     this.Layout = "_Layout";
@@ -13,6 +14,11 @@
     var picture = Model.Picture ?? "/images/hero.webp";
     var phonePicture = Model.PhonePicture;
     var driveTimeText = area.DriveTimeMinutes == 0 ? "Home Base" : $"~{area.DriveTimeMinutes} min from Chessington";
+
+    // The town's postcode districts, from its own record. The Areas page and the About page
+    // send a visitor here "to see the postcodes we cover there", and the page's description
+    // for search engines names them, so the page shows them (the SEO master plan's item 7).
+    var postcodeDistricts = UkPostcode.ParseDistricts(area.PostcodeDistricts);
 
     var faqJsonEntries = area.Faqs != null && area.Faqs.Any()
         ? string.Join(",", area.Faqs.Select(f =>
@@ -51,6 +57,12 @@
                 <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
                     <span class="material-symbols-outlined">directions_car</span> @driveTimeText
                 </span>
+                @if (postcodeDistricts.Count > 0)
+                {
+                    <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined">location_on</span> Covering @string.Join(", ", postcodeDistricts)
+                    </span>
+                }
             </div>
         </div>
     </section>

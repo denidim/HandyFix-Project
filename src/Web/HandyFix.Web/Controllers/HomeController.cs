@@ -6,16 +6,19 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using HandyFix.Common;
     using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
+    using HandyFix.Services.Data.ServiceAreas;
     using HandyFix.Services.Data.Services;
     using HandyFix.Web.Services.Forms;
     using HandyFix.Web.Settings;
     using HandyFix.Web.ViewModels;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.Reviews;
+    using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
 
     using Microsoft.AspNetCore.Authorization;
@@ -46,6 +49,7 @@
         private readonly IInquiriesService inquiriesService;
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
+        private readonly IServiceAreasService serviceAreasService;
         private readonly IImageService imageService;
         private readonly IImageStorageService imageStorage;
         private readonly IFormGuard formGuard;
@@ -57,6 +61,7 @@
             IInquiriesService inquiriesService,
             IServicesService servicesService,
             ICategoriesService categoriesService,
+            IServiceAreasService serviceAreasService,
             IImageService imageService,
             IImageStorageService imageStorage,
             IFormGuard formGuard,
@@ -67,6 +72,7 @@
             this.inquiriesService = inquiriesService;
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
+            this.serviceAreasService = serviceAreasService;
             this.imageService = imageService;
             this.imageStorage = imageStorage;
             this.formGuard = formGuard;
@@ -100,10 +106,15 @@
                 .Distinct()
                 .ToDictionary(picture => picture, picture => this.imageStorage.GetMediumCopyPublicUrl(picture));
 
+            // The one title that carries the firm's name, at its start: for a search of the name
+            // Google puts the name in front of the home page's title itself and cuts whatever
+            // stood there (seen on 14 Nov 2026). The description no longer lists towns.
+            var rates = HourlyRates.Of(categories);
             this.SetPageMeta(
-                "Plumbers & Handymen in Surrey & South London",
-                "Plumbing Handyman Surrey provides reliable local plumbing and handyman services across Surrey and South London, including Chessington, Cobham, Esher, Guildford, Epsom, and Kingston. Book hourly slots online.",
-                this.Url.Action("Index", "Home", null, this.Request.Scheme));
+                $"{GlobalConstants.SystemName}: Book Online from £{rates.Lowest:F0} an Hour",
+                $"Local plumbers and handymen across Surrey and South London. Plumbing £{rates.Plumbing:F0} an hour, handyman £{rates.Handyman:F0}, no call-out fee. Pick a time that suits you and book online.",
+                this.Url.Action("Index", "Home", null, this.Request.Scheme),
+                PageTitle.NoEnding);
 
             return this.View(model);
         }
@@ -279,29 +290,43 @@
             };
 
             this.SetPageMeta(
-                "Customer Reviews",
-                "Read verified customer reviews of our plumbing and handyman services across Surrey and South London, or leave your own.",
-                this.Url.Action("Reviews", "Home", null, this.Request.Scheme));
+                "Customer Reviews of Our Plumbers & Handymen",
+                "Read what customers across Surrey and South London say about our plumbing and handyman work, and leave a review of your own on Google.",
+                this.Url.Action("Reviews", "Home", null, this.Request.Scheme),
+                PageTitle.BookOnline);
             return this.View(model);
         }
 
         [Route("About")]
-        public IActionResult About()
+        public async Task<IActionResult> About()
         {
+            // The two hourly rates and every town with a page, read from the database. The page
+            // used to carry both typed by hand, and neither followed a change in the admin.
+            IEnumerable<CategoryViewModel> categories = await this.categoriesService.GetAllAsync<CategoryViewModel>();
+            IEnumerable<ServiceAreaViewModel> towns = await this.serviceAreasService.GetAllAsync<ServiceAreaViewModel>(featuredFirst: false);
+
+            var model = new AboutViewModel
+            {
+                Rates = HourlyRates.Of(categories),
+                Towns = (towns ?? Enumerable.Empty<ServiceAreaViewModel>()).ToList(),
+            };
+
             this.SetPageMeta(
-                "About Us",
-                "Learn about Plumbing Handyman Surrey, the dedicated plumbing, handyman and refurbishment specialists serving Surrey and South London from Chessington.",
-                this.Url.Action("About", "Home", null, this.Request.Scheme));
-            return this.View();
+                "About Us: Chessington Plumbers & Handymen",
+                "A plumbing and handyman firm based in Chessington, working within 15 miles across Surrey and South London. Meet the owner and see what you can check about us.",
+                this.Url.Action("About", "Home", null, this.Request.Scheme),
+                PageTitle.BookOnline);
+            return this.View(model);
         }
 
         [Route("FAQ")]
         public async Task<IActionResult> FAQ()
         {
             this.SetPageMeta(
-                "Frequently Asked Questions",
-                "Answers to common questions about booking, pricing, and scheduling plumbing and handyman services with Plumbing Handyman Surrey.",
-                this.Url.Action("FAQ", "Home", null, this.Request.Scheme));
+                $"FAQ: Prices, Booking and the £{Deposit.Pounds} Deposit",
+                $"How booking works, what an hour costs, how the £{Deposit.Pounds} deposit and cancelling work, and what to do in an emergency. Plain answers before you book.",
+                this.Url.Action("FAQ", "Home", null, this.Request.Scheme),
+                PageTitle.BookOnline);
             this.ViewData["EmergencyRate"] = await this.EmergencyRateTextAsync();
             return this.View();
         }
@@ -369,9 +394,8 @@
                 : "our emergency hourly rate";
         }
 
-        // The form shown again keeps the page's description and address. It used to lose both, and
-        // set a title the view replaces with its own "Get a Custom Quote" (PROJECT_STATE.md
-        // Section 3dj).
+        // The form shown again keeps the page's title, description and address. It used to lose the
+        // last two (PROJECT_STATE.md Section 3dj).
         private async Task<IActionResult> RedisplayContactFormAsync(ContactInputModel model)
         {
             this.SetContactPageMeta();
@@ -379,13 +403,14 @@
             return this.View(model);
         }
 
-        // The title is the view's own.
+        // The title names the three things the page is for, so nothing follows it.
         private void SetContactPageMeta()
         {
             this.SetPageMeta(
-                null,
-                "Get in touch with Plumbing Handyman Surrey for a custom quote or emergency plumbing and handyman help across Surrey and South London, including Chessington, Cobham, and Epsom.",
-                this.Url.Action("Contact", "Home", null, this.Request.Scheme));
+                "Contact Us: Call, WhatsApp or Get a Quote in Surrey",
+                $"Call or WhatsApp {GlobalConstants.BusinessPhone} at any hour, or send us the details of a bigger job for a fixed quote after a free survey. We are based in Chessington.",
+                this.Url.Action("Contact", "Home", null, this.Request.Scheme),
+                PageTitle.NoEnding);
         }
 
         private void SetJoinTeamMetadata()

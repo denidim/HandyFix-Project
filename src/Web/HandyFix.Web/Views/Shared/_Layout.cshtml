@@ -12,6 +12,10 @@
     {
         sharePicture = $"{this.Context.Request.Scheme}://{this.Context.Request.Host}{this.FileVersions.AddFileVersionToPath(this.Context.Request.PathBase, "/images/share.jpg")}";
     }
+
+    // One title for the tab, for Google and for a share card. The page names its ending
+    // ("Book Online", "Call or WhatsApp", none); with none named it is the firm's name (PageTitle).
+    var pageTitle = PageTitle.Full(this.ViewData["Title"] as string, this.ViewData["TitleEnding"] as string);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -29,10 +33,10 @@
     {
         <link rel="canonical" href="@this.ViewData["Canonical"]" />
     }
-    <title>@EnvironmentMark.TitlePrefix(HostEnvironment)@this.ViewData["Title"] - @GlobalConstants.SystemName</title>
+    <title>@EnvironmentMark.TitlePrefix(HostEnvironment)@pageTitle</title>
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="@GlobalConstants.SystemName" />
-    <meta property="og:title" content="@this.ViewData["Title"] - @GlobalConstants.SystemName" />
+    <meta property="og:title" content="@pageTitle" />
     @if (this.ViewData["MetaDescription"] != null)
     {
         <meta property="og:description" content="@this.ViewData["MetaDescription"]" />

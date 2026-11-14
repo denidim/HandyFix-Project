@@ -15,5 +15,8 @@
 
         // The towns of the service area alone, for the "areaServed" of a service on another page.
         List<Dictionary<string, object>> AreaServed();
+
+        // The site itself, for the home page: Google takes the name it shows above a result from it.
+        Dictionary<string, object> BuildSite();
     }
 }

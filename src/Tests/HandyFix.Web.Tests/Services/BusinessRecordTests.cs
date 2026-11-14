@@ -81,6 +81,22 @@
             Assert.False(record.ContainsKey("sameAs"));
         }
 
+        // Google takes the name above a result from the home page's WebSite record, and the
+        // address it names has to be the home page's own (the SEO master plan's step 43).
+        [Fact]
+        public void TheSiteRecordNamesTheSiteByItsHomePageAndPointsAtTheBusiness()
+        {
+            var site = Create(GoogleProfile).BuildSite();
+
+            Assert.Equal("@context", site.Keys.First());
+            Assert.Equal("WebSite", site["@type"]);
+            Assert.Equal(GlobalConstants.SystemName, site["name"]);
+            Assert.Equal(GlobalConstants.SiteUrl + "/", site["url"]);
+
+            var publisher = (Dictionary<string, object>)site["publisher"];
+            Assert.Equal(Create(GoogleProfile).Build()["@id"], publisher["@id"]);
+        }
+
         private static BusinessRecord Create(string googleReviewsUrl)
         {
             return new BusinessRecord(Options.Create(new BusinessOptions { GoogleReviewsUrl = googleReviewsUrl }));
