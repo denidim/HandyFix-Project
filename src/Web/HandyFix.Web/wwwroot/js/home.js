@@ -21,8 +21,9 @@ document.addEventListener("DOMContentLoaded", function () {
         observer.observe(section);
     });
 
+    // A visitor whose phone or computer asks for less motion keeps the first six photos still.
     const galleryStrip = document.querySelector("[data-home-photos]");
-    if (!galleryStrip) return;
+    if (!galleryStrip || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let pool = [];
     try {
