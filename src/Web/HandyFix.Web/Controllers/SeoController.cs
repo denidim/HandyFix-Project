@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Controllers
+namespace HandyFix.Web.Controllers
 {
     using System.Collections.Generic;
     using System.Text;
@@ -42,6 +42,7 @@
                 this.Url.Action("Contact", "Home", null, protocol),
                 this.Url.Action("JoinTeam", "Home", null, protocol),
                 this.Url.Action("About", "Home", null, protocol),
+                this.Url.Action("Index", "Gallery", null, protocol),
                 this.Url.Action("FAQ", "Home", null, protocol),
                 this.Url.RouteUrl("Areas", null, protocol),
                 this.Url.Action("Reviews", "Home", null, protocol),

@@ -1207,3 +1207,22 @@
     padding: var(--spacing-4);
   }
 }
+
+.gallery-admin-thumb {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  background-color: var(--surface-container);
+}
+
+.gallery-admin-edit-preview {
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-variant);
+  background-color: var(--surface-container);
+}

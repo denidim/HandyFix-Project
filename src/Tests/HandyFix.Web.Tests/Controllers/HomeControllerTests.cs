@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Tests.Controllers
+namespace HandyFix.Web.Tests.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -8,6 +8,7 @@
     using HandyFix.Common;
     using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.Gallery;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.ServiceAreas;
@@ -15,6 +16,7 @@
     using HandyFix.Web.Controllers;
     using HandyFix.Web.Services.Forms;
     using HandyFix.Web.Settings;
+    using HandyFix.Web.ViewModels.Gallery;
     using HandyFix.Web.ViewModels.Home;
     using HandyFix.Web.ViewModels.ServiceAreas;
     using HandyFix.Web.ViewModels.Services;
@@ -554,9 +556,15 @@
             Mock<ICategoriesService> categoriesService = null,
             Mock<IImageService> imageService = null,
             Mock<IFormGuard> formGuard = null,
-            Mock<IServiceAreasService> serviceAreasService = null)
+            Mock<IServiceAreasService> serviceAreasService = null,
+            Mock<IGalleryService> galleryService = null)
         {
             var reviewsService = new Mock<IReviewsService>();
+            if (galleryService == null)
+            {
+                galleryService = new Mock<IGalleryService>();
+                galleryService.Setup(g => g.GetHomePhotosAsync()).ReturnsAsync(Array.Empty<GalleryPhotoViewModel>());
+            }
 
             var controller = new HomeController(
                 reviewsService.Object,
@@ -564,6 +572,7 @@
                 (servicesService ?? new Mock<IServicesService>()).Object,
                 (categoriesService ?? new Mock<ICategoriesService>()).Object,
                 (serviceAreasService ?? new Mock<IServiceAreasService>()).Object,
+                galleryService.Object,
                 (imageService ?? ImageServiceReturning()).Object,
                 new Mock<IImageStorageService>().Object,
                 (formGuard ?? new Mock<IFormGuard>()).Object,

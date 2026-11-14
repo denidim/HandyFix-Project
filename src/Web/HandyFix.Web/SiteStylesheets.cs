@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web
+namespace HandyFix.Web
 {
     /// <summary>
     /// The public site's stylesheets, in the order they are combined into one file.
@@ -46,6 +46,7 @@
             "/css/pages/payment.css",
             "/css/pages/auth.css",
             "/css/pages/pages-info.css",
+            "/css/pages/gallery.css",
 
             // Paper styles override everything above.
             "/css/print.css",

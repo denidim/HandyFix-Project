@@ -1,4 +1,4 @@
-﻿namespace HandyFix.Web.Controllers
+namespace HandyFix.Web.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -9,6 +9,7 @@
     using HandyFix.Common;
     using HandyFix.Services;
     using HandyFix.Services.Data.Categories;
+    using HandyFix.Services.Data.Gallery;
     using HandyFix.Services.Data.Inquiries;
     using HandyFix.Services.Data.Reviews;
     using HandyFix.Services.Data.ServiceAreas;
@@ -50,6 +51,7 @@
         private readonly IServicesService servicesService;
         private readonly ICategoriesService categoriesService;
         private readonly IServiceAreasService serviceAreasService;
+        private readonly IGalleryService galleryService;
         private readonly IImageService imageService;
         private readonly IImageStorageService imageStorage;
         private readonly IFormGuard formGuard;
@@ -62,6 +64,7 @@
             IServicesService servicesService,
             ICategoriesService categoriesService,
             IServiceAreasService serviceAreasService,
+            IGalleryService galleryService,
             IImageService imageService,
             IImageStorageService imageStorage,
             IFormGuard formGuard,
@@ -73,6 +76,7 @@
             this.servicesService = servicesService;
             this.categoriesService = categoriesService;
             this.serviceAreasService = serviceAreasService;
+            this.galleryService = galleryService;
             this.imageService = imageService;
             this.imageStorage = imageStorage;
             this.formGuard = formGuard;
@@ -96,6 +100,7 @@
                 Categories = categories,
                 SliderReviews = sliderReviews,
                 PopularServices = PickPopularServices(services),
+                HomeGalleryPhotos = await this.galleryService.GetHomePhotosAsync(),
             };
 
             // Each card picture's middle copy, looked up once here; the page used to look each one
