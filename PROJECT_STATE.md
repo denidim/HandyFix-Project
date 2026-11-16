@@ -4,7 +4,7 @@
 >
 > **How it is organised**: this file is kept short enough to be read whole at the start of a session. Section 1 is the architecture. Sections 2 and 3 are the index of every finished piece of work; the full text of each entry is in [`docs/history/`](docs/history/), one file per month, so "Section 3cp" in a code comment, a test or a document names an entry there. Section 4 lists what is still open. Section 5 holds the decisions worth remembering. Update it with every change, not at the close of a sprint (`AGENTS.md` Section 5).
 >
-> **Last updated**: 2026-11-14 — **the history moved out of this file** into `docs/history/`, and Section 4 cut down to what is open (Section 3fe). Before it, the same day, the admin's gallery page and the photo forms (Section 3fd).
+> **Last updated**: 2026-11-16 — **a laptop draws the page a wide monitor draws**: the public stylesheets' sizes are in rem and one rule shrinks them with the screen's width, and the home gallery strip is taller (Section 3ff). Before it, on 2026-11-14, the history moved out of this file into `docs/history/` (Section 3fe).
 
 ---
 
@@ -34,7 +34,7 @@
 - **The site's own WebP pictures** under `wwwroot/images/`, made outside the app and committed: among them the forty built-in service pictures in `images/services/` with their 320px copies, each service's default. **The code never writes to `wwwroot`** (Section 3cq): a deploy starts a new container from what git holds, so anything written there was lost at the next deploy. There is no startup sweep over the images directory (see Section 3k). Assets produced outside the app are expected to arrive already WebP-encoded and correctly named; nothing converts them on boot.
 
 ### Frontend
-- Razor views + Bootstrap 5 + vanilla JS. CSS is organized under `wwwroot/css/` as `base/`, `components/`, `pages/` files (not a single monolithic stylesheet), listed in load order in `SiteStylesheets.cs`. On the live site WebOptimizer combines and minifies them into one `/css/site.min.css` whose address carries a hash of its content; in Development each file is linked by itself (Section 3bs). A shared `page-container` class provides a consistent boxed hero/content width across every public page.
+- Razor views + Bootstrap 5 + vanilla JS. CSS is organized under `wwwroot/css/` as `base/`, `components/`, `pages/` files (not a single monolithic stylesheet), listed in load order in `SiteStylesheets.cs`. On the live site WebOptimizer combines and minifies them into one `/css/site.min.css` whose address carries a hash of its content; in Development each file is linked by itself (Section 3bs). A shared `page-container` class provides a consistent boxed hero/content width across every public page. Every size in the public stylesheets is in `rem`, and `base/scale.css` shrinks the whole page with the screen's width between 1920 and 1280 wide, down to 80%, so a laptop draws the page a wide monitor draws (Section 3ff); the admin panel does not scale.
 - Design language documented separately in `DESIGN.md` (color palette, typography, spacing, animation conventions).
 
 ### Public Forms & Abuse Protection (Section 3cb)
@@ -270,6 +270,7 @@ Every finished piece of work has an entry: what shipped, what was verified and h
 - **3fc.** The Gallery on a Phone: the Close Button and Caption Stay on Screen; More Room Around the Home Strip (2026-11-14)
 - **3fd.** The Admin's Gallery Page: Each Action Returns to It; a Photo Form Waits for Its Photos; New Photos First (2026-11-14)
 - **3fe.** The History Moved Out of `PROJECT_STATE.md` into `docs/history/` (2026-11-14)
+- **3ff.** A Laptop Draws the Page a Wide Monitor Draws; a Taller Gallery Strip on the Home Page (2026-11-16)
 
 ---
 

@@ -36,14 +36,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .font-headline-xl {
-  font-size: var(--fs-headline-xl-mobile, 32px);
-  line-height: var(--lh-headline-xl-mobile, 40px);
+  font-size: var(--fs-headline-xl-mobile, 2rem);
+  line-height: var(--lh-headline-xl-mobile, 2.5rem);
   font-weight: var(--fw-headline-xl-mobile, 700);
 }
 
 .font-headline-lg {
-  font-size: 30px;
-  line-height: 38px;
+  font-size: 1.875rem;
+  line-height: 2.375rem;
   font-weight: var(--fw-headline-lg);
 }
 

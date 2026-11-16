@@ -53,7 +53,7 @@
 .btn-outline-primary {
   background-color: transparent;
   color: var(--primary);
-  border: 2px solid var(--primary);
+  border: 0.125rem solid var(--primary);
 }
 
 .btn-outline-primary:hover {
@@ -64,7 +64,7 @@
 .btn-outline-secondary {
   background-color: transparent;
   color: var(--secondary);
-  border: 2px solid var(--secondary);
+  border: 0.125rem solid var(--secondary);
 }
 
 .btn-outline-secondary:hover {
@@ -99,7 +99,7 @@ button.is-submitting::after {
   height: 1em;
   margin-left: var(--spacing-2);
   vertical-align: -0.15em;
-  border: 2px solid currentColor;
+  border: 0.125rem solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   animation: submit-spin 0.7s linear infinite;

@@ -22,7 +22,7 @@
   font-size: var(--fs-body-lg);
   color: var(--on-surface-variant);
   margin-bottom: var(--spacing-8);
-  max-width: 768px;
+  max-width: 48rem;
   line-height: 1.625;
 }
 
@@ -83,8 +83,8 @@
 /* Horizontal Service Card */
 .service-horizontal-card {
   background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0.625rem);
+  -webkit-backdrop-filter: blur(0.625rem);
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-xl);
   padding: var(--spacing-6);
@@ -102,7 +102,7 @@
 }
 
 .service-horizontal-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-0.3125rem);
   box-shadow: var(--shadow-md);
 }
 
@@ -128,16 +128,16 @@
 .service-card-thumbnail-wrapper {
   position: relative;
   width: 100%;
-  height: 192px;
+  height: 12rem;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 0.125rem 0.25rem rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
 }
 
 @media (min-width: 768px) {
   .service-card-thumbnail-wrapper {
-    width: 256px;
+    width: 16rem;
   }
 }
 
@@ -224,7 +224,7 @@
 }
 
 .service-metadata-icon {
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .service-card-actions {
@@ -255,7 +255,7 @@
 @media (max-width: 767.98px) {
   .service-horizontal-card {
     display: grid;
-    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-columns: 5.5rem minmax(0, 1fr);
     column-gap: var(--spacing-4);
     row-gap: var(--spacing-2);
     align-items: start;
@@ -265,8 +265,8 @@
   .service-card-thumbnail-wrapper {
     grid-column: 1;
     grid-row: 1 / span 2;
-    width: 88px;
-    height: 88px;
+    width: 5.5rem;
+    height: 5.5rem;
   }
 
   .service-card-content {
@@ -324,7 +324,7 @@
   }
 
   .service-metadata-icon {
-    font-size: 16px;
+    font-size: 1rem;
   }
 
   .service-card-actions {
@@ -342,7 +342,7 @@
    is a row with the buttons on the left, so the logo goes to the card's free bottom-right
    corner. Only its height is set: the logo must never be stretched (Gas Safe's rule). */
 .service-card-gas-safe {
-  height: 36px;
+  height: 2.25rem;
   width: auto;
   margin-left: auto;
   flex: none;
@@ -357,7 +357,7 @@
     position: absolute;
     right: var(--spacing-6);
     bottom: var(--spacing-6);
-    height: 52px;
+    height: 3.25rem;
   }
 }
 
@@ -390,7 +390,7 @@
 
 .seo-local-areas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
   gap: var(--spacing-4);
 }
 
@@ -441,7 +441,7 @@
 }
 
 .sidebar-cta-desc {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--on-primary-container);
   margin: 0 0 var(--spacing-4) 0;
   line-height: 1.5;
@@ -461,7 +461,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .sidebar-cta-list-item {

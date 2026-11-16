@@ -22,7 +22,7 @@
 
 .form-control:focus {
   border-color: var(--secondary);
-  box-shadow: 0 0 0 2px var(--secondary-fixed);
+  box-shadow: 0 0 0 0.125rem var(--secondary-fixed);
 }
 
 /* A placeholder is an example, not an answer: lighter than typed text, which stays
@@ -35,12 +35,12 @@
 
 select.form-control {
   /* Room for the arrow, so a long option stops short of it. */
-  padding-right: calc(var(--spacing-3) * 2 + 16px);
+  padding-right: calc(var(--spacing-3) * 2 + 1rem);
   appearance: none;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2345464d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right var(--spacing-3) center;
-  background-size: 16px 12px;
+  background-size: 1rem 0.75rem;
   cursor: pointer;
 }
 
@@ -55,7 +55,7 @@ select.form-control {
 }
 
 .input-with-icon .form-control {
-  padding-left: 40px;
+  padding-left: 2.5rem;
 }
 
 .field-icon {
@@ -76,8 +76,8 @@ select.form-control {
 }
 
 .form-checkbox-field input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   cursor: pointer;
 }
 
@@ -115,7 +115,7 @@ select.form-control {
 .form-turnstile {
   margin-top: var(--spacing-2);
   width: 100%;
-  max-width: 400px;
+  max-width: 25rem;
 }
 
 .form-turnstile-hint {

@@ -33,11 +33,15 @@
   width: 100%;
   /* Cap the upscale: the viewBox is 780 wide, so an uncapped SVG on a 1440px
      screen renders the 15px labels at ~24px. */
-  max-width: 880px;
+  max-width: 55rem;
   height: auto;
   margin-inline: auto;
 }
 
+/* The sizes inside the drawing stay in px. Inside an SVG a px is one unit of the drawing
+   itself (its viewBox is 780 wide), and the drawing as a whole already shrinks with the page
+   through the max-width above. A rem here would shrink its labels a second time on a laptop
+   (css/base/scale.css). */
 .coverage-ring {
   fill: none;
   stroke: var(--outline-variant);
@@ -138,7 +142,7 @@
 }
 
 .coverage-caption {
-  max-width: 640px;
+  max-width: 40rem;
   margin: var(--spacing-6) auto 0;
   color: var(--on-surface-variant);
   font-size: 0.875rem;
@@ -227,7 +231,7 @@
 }
 
 .areas-section-subtitle {
-  max-width: 640px;
+  max-width: 40rem;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: var(--spacing-2);
@@ -235,7 +239,7 @@
 
 .area-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
   gap: var(--spacing-5);
 }
 
@@ -255,7 +259,7 @@
 .area-card:hover {
   box-shadow: var(--shadow-lg);
   border-color: var(--secondary);
-  transform: translateY(-2px);
+  transform: translateY(-0.125rem);
   text-decoration: none;
 }
 
@@ -316,6 +320,6 @@
 }
 
 .area-card-meta .material-symbols-outlined {
-  font-size: 18px;
+  font-size: 1.125rem;
   color: var(--secondary);
 }

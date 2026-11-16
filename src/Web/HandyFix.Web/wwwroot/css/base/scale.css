@@ -1,0 +1,31 @@
+/* One page for every computer screen (PROJECT_STATE Section 3ff).
+
+   The public site is drawn for a screen 1920 wide. On a narrower computer screen every size
+   shrinks with the width, so a laptop shows the page a wide monitor shows, smaller, and not a
+   page that looks zoomed in. A 15.6-inch laptop at Windows' usual 125% is 1536 wide: 80%.
+
+     1920 wide and over    100%, the sizes as they are written
+     1536 to 1920          in step with the width
+     1280 to 1536          80%, and never under it, so the smallest text still reads
+     under 1280            not touched: tablets and phones have layouts of their own
+
+   It works because every size in these stylesheets is in rem, and a rem is counted from the
+   font size of <html>: change that one number and the text, the spacing, the pictures and
+   the cards all follow. 100vw / 120 is 16px on a screen 1920 wide. The two ends are
+   percentages, not px, so a larger font size set in the visitor's browser still counts.
+
+   To change how small a laptop goes, change the 80% here and nothing else.
+
+   Only a page with class="site-scale" on <html> (_Layout.cshtml). The admin panel has a
+   layout of its own without the class, and keeps one size on every screen. */
+@media (min-width: 1280px) {
+  html.site-scale {
+    font-size: clamp(80%, calc(100vw / 120), 100%);
+  }
+
+  /* Bootstrap gives .container a width in px (1140px, and 1320px from 1400 wide), which would
+     stay as it is while everything inside it shrank. This is the same 1320px, in rem. */
+  .site-scale .container {
+    max-width: 82.5rem;
+  }
+}

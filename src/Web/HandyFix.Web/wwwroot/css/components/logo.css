@@ -15,28 +15,19 @@
 
 /* Header on wide screens: 70px (196px wide). */
 .navbar-container .site-logo {
-  height: 70px;
-}
-
-/* Small laptops, where the full link row has the least room: 60px (168px wide). With an
-   admin signed in the row has two more links, and at 70px they wrap; navbar.css closes the
-   link gaps over the same range. */
-@media (min-width: 1280px) and (max-width: 1365.98px) {
-  .navbar-container .site-logo {
-    height: 60px;
-  }
+  height: 4.375rem;
 }
 
 /* Phones: 48px (135px wide), so the header is 73px tall there; site.js re-measures it, so
    the page padding and the menu follow on their own. At 40px the name was about 7px tall. */
 @media (max-width: 767.98px) {
   .navbar-container .site-logo {
-    height: 48px;
+    height: 3rem;
   }
 }
 
 .footer-main .site-logo {
-  height: 84px;
+  height: 5.25rem;
 }
 
 /* Footer: navy lines and letters would vanish on the dark ground, so they turn white and the
@@ -65,9 +56,9 @@
 }
 
 .auth-header .site-logo {
-  height: 104px;
+  height: 6.5rem;
 }
 
 .admin-sidebar-header .site-logo {
-  height: 60px;
+  height: 3.75rem;
 }

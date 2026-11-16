@@ -4,16 +4,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 200px);
+  min-height: calc(100vh - 12.5rem);
   padding: var(--spacing-8) var(--spacing-4);
 }
 
 .auth-card {
   width: 100%;
-  max-width: 450px;
+  max-width: 28.125rem;
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(0.75rem);
+  -webkit-backdrop-filter: blur(0.75rem);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: var(--spacing-8);
@@ -21,7 +21,7 @@
 }
 
 .auth-card.wide {
-  max-width: 550px;
+  max-width: 34.375rem;
 }
 
 .auth-header {

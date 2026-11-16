@@ -18,7 +18,8 @@
     var pageTitle = PageTitle.Full(this.ViewData["Title"] as string, this.ViewData["TitleEnding"] as string);
 }
 <!DOCTYPE html>
-<html lang="en">
+@* site-scale: a laptop draws the page a wide monitor draws, smaller (css/base/scale.css). *@
+<html lang="en" class="site-scale">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

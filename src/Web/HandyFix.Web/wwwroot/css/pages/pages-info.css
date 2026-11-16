@@ -2,7 +2,7 @@
 
 /* Canvas & Card Layout */
 .info-canvas {
-  max-width: 800px;
+  max-width: 50rem;
   margin: var(--spacing-12) auto var(--spacing-12) auto;
   padding: 0 var(--spacing-4);
 }
@@ -80,7 +80,7 @@
 .map-container {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
-  height: 320px;
+  height: 20rem;
   overflow: hidden;
   background-color: var(--surface-container);
 }
@@ -118,8 +118,8 @@
 }
 
 .trust-card .icon-wrapper {
-  width: 48px;
-  height: 48px;
+  width: 3rem;
+  height: 3rem;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -136,7 +136,7 @@
 }
 
 .trust-card p {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--on-surface-variant);
   margin-bottom: 0;
 }
@@ -144,8 +144,8 @@
 /* Glass Morphisms */
 .glass-morphism {
   background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0.625rem);
+  -webkit-backdrop-filter: blur(0.625rem);
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
@@ -154,7 +154,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
-  max-width: 700px;
+  max-width: 43.75rem;
   margin: 0 auto;
 }
 
@@ -170,7 +170,7 @@
 }
 
 .accordion-item.active .accordion-content {
-  max-height: 500px;
+  max-height: 31.25rem;
   padding-top: 1rem;
   padding-bottom: 1.5rem;
 }
@@ -199,21 +199,21 @@
 }
 
 .stripe-card-label {
-  font-size: 14px;
+  font-size: 0.875rem;
   opacity: 0.8;
 }
 
 .stripe-card-text {
-  font-size: 14px;
+  font-size: 0.875rem;
   opacity: 0.9;
 }
 
 .stripe-badge {
-  font-size: 18px;
+  font-size: 1.125rem;
   opacity: 0.7;
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
-  padding: 8px 16px;
-  border-radius: 8px;
+  border: 0.09375rem solid rgba(255, 255, 255, 0.5);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
 }
 
 .contact-details-stack {
@@ -229,7 +229,7 @@
 }
 
 .terms-cancellation-box {
-  border-left: 4px solid var(--secondary);
+  border-left: 0.25rem solid var(--secondary);
   background-color: var(--surface-container-low);
 }
 
@@ -238,11 +238,11 @@
 }
 
 .reviews-sidebar-sticky {
-  top: 100px;
+  top: 6.25rem;
 }
 
 .reviews-empty-state {
-  border: 2px dashed var(--outline-variant);
+  border: 0.125rem dashed var(--outline-variant);
 }
 
 .contact-success-alert {
@@ -254,8 +254,8 @@
 }
 
 .contact-info-icon-box {
-  width: 48px;
-  height: 48px;
+  width: 3rem;
+  height: 3rem;
   flex-shrink: 0;
   background-color: var(--secondary);
 }
@@ -271,7 +271,7 @@
 }
 
 .faq-emergency-highlight {
-  border: 2px solid var(--secondary);
+  border: 0.125rem solid var(--secondary);
 }
 
 .faq-contact-cta {
@@ -289,7 +289,7 @@
 }
 
 .areas-search-btn {
-  padding: 12px 16px;
+  padding: 0.75rem 1rem;
 }
 
 .areas-final-cta {
@@ -299,7 +299,7 @@
 
 /* Contact Us */
 .border-dashed-upload {
-  border: 2px dashed var(--outline-variant);
+  border: 0.125rem dashed var(--outline-variant);
   border-radius: var(--radius-lg);
   padding: var(--spacing-6);
   text-align: center;
@@ -343,7 +343,7 @@
 
 .review-card:hover {
   border-color: var(--secondary);
-  transform: translateY(-4px);
+  transform: translateY(-0.25rem);
 }
 
 .review-author-row {
@@ -360,8 +360,8 @@
 }
 
 .review-avatar {
-  width: 48px;
-  height: 48px;
+  width: 3rem;
+  height: 3rem;
   border-radius: var(--radius-full);
   overflow: hidden;
   background-color: var(--surface-container);
@@ -370,7 +370,7 @@
   justify-content: center;
   font-weight: 700;
   color: var(--secondary);
-  border: 2px solid var(--secondary-fixed);
+  border: 0.125rem solid var(--secondary-fixed);
 }
 
 .review-avatar img {
@@ -437,13 +437,13 @@
   bottom: var(--spacing-4);
   right: var(--spacing-4);
   background: var(--glass-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0.625rem);
+  -webkit-backdrop-filter: blur(0.625rem);
   padding: var(--spacing-4);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-sm);
-  max-width: 250px;
+  max-width: 15.625rem;
 }
 
 .narrative-stats {
@@ -496,7 +496,7 @@
 }
 
 .guarantee-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-0.25rem);
   box-shadow: var(--shadow-md);
   border-color: var(--secondary);
 }
@@ -504,8 +504,8 @@
 /* Tint/accent are overridable per card; the fallbacks keep the original cyan wherever no
    modifier is set: the About page's "What You Can Check", the Booking page sidebar. */
 .guarantee-icon-box {
-  width: 56px;
-  height: 56px;
+  width: 3.5rem;
+  height: 3.5rem;
   background-color: var(--guarantee-tint, rgba(14, 165, 233, 0.1));
   border-radius: var(--radius-lg);
   display: flex;
@@ -522,13 +522,13 @@
 }
 
 .guarantee-icon-box span {
-  font-size: 28px;
+  font-size: 1.75rem;
 }
 
 .about-cta-card {
   position: relative;
   background: var(--glass-bg);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(0.625rem);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: var(--spacing-10) var(--spacing-6);
@@ -547,8 +547,8 @@
   inset: 0;
   opacity: 0.05;
   pointer-events: none;
-  background-image: radial-gradient(circle at 2px 2px, var(--secondary) 1px, transparent 0);
-  background-size: 24px 24px;
+  background-image: radial-gradient(circle at 0.125rem 0.125rem, var(--secondary) 1px, transparent 0);
+  background-size: 1.5rem 1.5rem;
 }
 
 /* ==========================================================================
@@ -567,14 +567,14 @@
 }
 
 .hub-pillar-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-0.25rem);
   box-shadow: var(--shadow-md);
   border-color: var(--secondary);
 }
 
 .hub-pillar-icon {
-  width: 56px;
-  height: 56px;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
@@ -582,7 +582,7 @@
 }
 
 .hub-pillar-icon span {
-  font-size: 28px;
+  font-size: 1.75rem;
 }
 
 .plumbing-icon {
@@ -602,7 +602,7 @@
 
 .hub-badge {
   display: inline-block;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -626,7 +626,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--on-surface-variant);
 }
 

@@ -26,6 +26,7 @@ namespace HandyFix.Web
             "/css/base/typography.css",
             "/css/base/layout.css",
             "/css/base/utilities.css",
+            "/css/base/scale.css",
 
             "/css/components/navbar.css",
             "/css/components/footer.css",
