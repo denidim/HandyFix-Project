@@ -10,9 +10,10 @@
   font-family: 'Material Symbols Outlined';
 }
 
-/* The WhatsApp mark (_WhatsAppIcon.cshtml) is a drawing, because Material Symbols has no brand
-   icons. It takes the text colour and scales with the text of the button or link that holds it. */
-.whatsapp-icon {
+/* The WhatsApp, Facebook and Instagram marks (_WhatsAppIcon.cshtml, _FacebookIcon.cshtml,
+   _InstagramIcon.cshtml) are drawings, because Material Symbols has no brand icons. Each takes the
+   text colour and scales with the text of the button or link that holds it. */
+.brand-icon {
   width: 1.25em;
   height: 1.25em;
   flex-shrink: 0;

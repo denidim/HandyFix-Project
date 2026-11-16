@@ -313,6 +313,10 @@ add it with a real, deliberate width at the point something uses it.
 `.footer-main`, `.footer-content`, `.footer-column`, `.footer-title`, `.footer-link`,
 `.footer-areas-grid`, `.footer-social` / `.footer-social-icon`, `.footer-copyright`.
 
+`.footer-social` is one row of five round buttons: email, phone and WhatsApp, then Facebook and
+Instagram, each of the last three opening in a new tab. The row is 264px wide, so it stays on one
+line on the narrowest phone.
+
 ### Buttons (`buttons.css`)
 `.btn` takes its text from the button tokens. Variants: `.btn-primary` (navy, a shade lighter and
 1px up on hover), `.btn-secondary`, `.btn-success`, `.btn-outline-primary`,
@@ -355,8 +359,9 @@ Defined elsewhere, despite the names:
 
 ### Icons (`icons.css`, last in the bundle)
 `.material-symbols-outlined` and `.material-symbols-filled` set the icon font's axes. An icon is
-1.5rem (24px) unless an `fs-*` class says otherwise. `.whatsapp-icon` is a drawing, because the
-icon font has no brand icons; it takes the text colour and scales with the text around it.
+1.5rem (24px) unless an `fs-*` class says otherwise. `.brand-icon` is a drawing (WhatsApp, Facebook,
+Instagram, one partial view each), because the icon font has no brand icons; it takes the text
+colour and scales with the text around it. In the footer's round buttons it has a fixed size.
 
 ---
 

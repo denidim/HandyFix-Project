@@ -23,6 +23,12 @@
 
         public const string BusinessEmail = "info@plumbing-handyman-surrey.co.uk";
 
+        // The business's two social profiles: a round button each in the footer, and "sameAs" in
+        // the record every page writes for search engines (BusinessRecord; Section 3fh).
+        public const string BusinessFacebookUrl = "https://www.facebook.com/plumbinghandymansurrey";
+
+        public const string BusinessInstagramUrl = "https://www.instagram.com/plumbinghandymansurrey";
+
         // The limited company the business trades under, as on the Companies House register.
         public const string CompanyLegalName = "ZAP80 LTD";
 

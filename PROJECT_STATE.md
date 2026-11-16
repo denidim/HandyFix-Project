@@ -4,7 +4,7 @@
 >
 > **How it is organised**: this file is kept short enough to be read whole at the start of a session. Section 1 is the architecture. Sections 2 and 3 are the index of every finished piece of work; the full text of each entry is in [`docs/history/`](docs/history/), one file per month, so "Section 3cp" in a code comment, a test or a document names an entry there. Section 4 lists what is still open. Section 5 holds the decisions worth remembering. Update it with every change, not at the close of a sprint (`AGENTS.md` Section 5).
 >
-> **Last updated**: 2026-11-16 — **"Proceed to Payment" says it is opening the payment page**: while the booking form is sent the button reads "Opening secure payment..." and a line under it asks for a few seconds (Section 3fg). Before it, the same day, the public stylesheets' sizes went to rem with one rule that shrinks them on a laptop, and the home gallery strip got taller (Section 3ff).
+> **Last updated**: 2026-11-16 — **Facebook and Instagram are on the site**: a round button for each in the footer, after email, phone and WhatsApp, and both profiles in `sameAs` beside the Google profile (Section 3fh). Before it, the same day, "Proceed to Payment" began to say it is opening the payment page (Section 3fg).
 
 ---
 
@@ -272,6 +272,7 @@ Every finished piece of work has an entry: what shipped, what was verified and h
 - **3fe.** The History Moved Out of `PROJECT_STATE.md` into `docs/history/` (2026-11-14)
 - **3ff.** A Laptop Draws the Page a Wide Monitor Draws; a Taller Gallery Strip on the Home Page (2026-11-16)
 - **3fg.** "Proceed to Payment" Says It Is Opening the Payment Page (2026-11-16)
+- **3fh.** Facebook and Instagram in the Footer and in `sameAs` (2026-11-16)
 
 ---
 
@@ -283,10 +284,9 @@ Every finished piece of work has an entry: what shipped, what was verified and h
 
 None of these blocks anything.
 
-1. **Facebook and Instagram on the site** (Launch Sprint L4 item 13). When the business has a page on each: their addresses go into `GlobalConstants` beside the other contact details, `sameAs` comes back in the home page JSON-LD with those two real addresses (and the test that forbids `sameAs` is changed to expect them), and the footer's round buttons get one for each.
-2. **Trustpilot** (Launch Sprint L4 item 11): after Google reviews are collecting.
-3. **Test leftovers in the staging and local databases** (Launch Sprint L4 item 10): the "Quality Check" jobs and the soft-deleted rows left by browser checks. Left for later by the developer's decision (Section 3cx), as one job with wiping both databases. A wiped database needs `ADMIN_SEED_EMAIL` to make its admin, and staging's `.env` has none yet. Production started empty and has none of them.
-4. **The phone's "Book Now" bar on a quote-only page** (Launch Sprint L2 item 10). On a bookable service's page the bar opens the booking with that service chosen (Section 3dx). On a quote-only service's page and on the Small Building category page it still reads "Book Now" and opens the plain booking page, though that work is quoted for, not booked.
+1. **Trustpilot** (Launch Sprint L4 item 11): after Google reviews are collecting.
+2. **Test leftovers in the staging and local databases** (Launch Sprint L4 item 10): the "Quality Check" jobs and the soft-deleted rows left by browser checks. Left for later by the developer's decision (Section 3cx), as one job with wiping both databases. A wiped database needs `ADMIN_SEED_EMAIL` to make its admin, and staging's `.env` has none yet. Production started empty and has none of them.
+3. **The phone's "Book Now" bar on a quote-only page** (Launch Sprint L2 item 10). On a bookable service's page the bar opens the booking with that service chosen (Section 3dx). On a quote-only service's page and on the Small Building category page it still reads "Book Now" and opens the plain booking page, though that work is quoted for, not booked.
 
 ### Decided, not to be raised again
 
@@ -315,7 +315,7 @@ A large piece of work is listed here in a few lines while it runs, with its step
 - **An answer the page has to react to is a result, not an exception.** `JobMoveResult`, `BookingCreateResult` and `JobCancelOutcome` say "taken", "not found" or "paid just now" as values the controller switches on, with its own words for each, so nothing string-matches an exception's message and no exception's text reaches a customer. Exceptions are left for what nobody can put right on the page (a status missing from the database, the database out of reach), which the controller logs and answers with its general message. `SlotUnavailableException` did this job, less well, until Section 3dh.
 - **`wwwroot/css/base/utilities.css`** (added in Sprint 2) holds the small, generic spacing/typography/opacity/radius classes shared across every page (`mb-*`, `fs-*`, `lh-*`, `opacity-*`, `rounded-*`, `icon-fill`, etc.) — check here before inventing a new one-off class or reaching for an inline `style=`. Anything page-specific still belongs in that page's own `pages/*.css` file.
 - **The sitemap is generated, not static** — `SeoController.Sitemap()` queries categories/services live via `ICategoriesService`/`IServicesService` rather than hardcoding URLs, specifically so it can't go stale as services are added or removed through the admin panel. Follow the same approach for any future sitemap-like listing.
-- **The business's contact and company details live once, in `GlobalConstants`** (phone in both its forms, the WhatsApp link, the email, the company's name, number and incorporation date; Section 3bu). A view never types them out. The line is a VoIP landline: offer "call" and "WhatsApp", never SMS. A value written inside a `<script>` block goes through `Json.Serialize`, because Razor's HTML encoding is the wrong one there (Section 3bv has what went wrong without it).
+- **The business's contact and company details live once, in `GlobalConstants`** (phone in both its forms, the WhatsApp link, the email, the Facebook and Instagram addresses, the company's name, number and incorporation date; Sections 3bu and 3fh). A view never types them out. The line is a VoIP landline: offer "call" and "WhatsApp", never SMS. A value written inside a `<script>` block goes through `Json.Serialize`, because Razor's HTML encoding is the wrong one there (Section 3bv has what went wrong without it).
 - **A seeder fills an empty table; it does not keep a table in step with its list** (Section 3cb). Once an admin can edit, rename or delete a row, a seeder that looks rows up and writes them again cannot tell "renamed" from "missing" or "deleted on purpose" from "never there", and soft delete makes it worse: the lookup cannot see the deleted row and the unique index can. "Empty" counts deleted rows (`IgnoreQueryFilters()`). A change to seeded data after the first start is a migration or an admin's edit.
 - **An email is never the reason a save looks failed** (Section 3cb). The save is the fact; the email reports it. Send after the save through `TrySendEmailAsync`, which logs `Email not sent` and carries on. And nothing a visitor typed goes into an email's HTML without `EmailText.Encode`; an acknowledgement to an address typed into a public form repeats nothing from the form at all.
 - **An email's words are in its own class; when it goes is the service's call** (Section 3di). `BookingEmails`, `EnquiryEmails` and `AccountEmails` hold every word, the sender and the addresses of their emails, and answer whether the email went. The service that sends one decides when, and writes the history line and the `EmailsNotSent` row in its own save. To change what an email says, change its email class; to change when it goes, change the service. This replaced Section 3cl's "the words stay in the service that sends them", once the services had grown too long to read.
