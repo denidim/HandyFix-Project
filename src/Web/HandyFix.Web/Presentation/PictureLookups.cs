@@ -67,6 +67,21 @@
                 : BuiltInAreaFile(environment, areaSlug, "-hero-phone.webp");
         }
 
+        /// <summary>
+        /// The picture a chat or social app shows beside a link to an area's page, or null when
+        /// the area has none and its page names the site's own (PROJECT_STATE.md Section 3fi).
+        /// These apps want a JPEG of 1200 x 630 under 300 KB; the page's picture is a WebP of
+        /// 1600 x 700, and Facebook drew the link with no picture at all. The pictures that came
+        /// with the site have their copy from tools/image-gen/make-share-picture.mjs. An upload
+        /// has none, so its area shares the site's picture.
+        /// </summary>
+        public static string AreaSharePictureOf(IWebHostEnvironment environment, string areaSlug, string uploadedUrl)
+        {
+            return string.IsNullOrWhiteSpace(uploadedUrl)
+                ? BuiltInAreaFile(environment, areaSlug, "-share.jpg")
+                : null;
+        }
+
         // For the area cards: each card's picture.
         public static List<ServiceAreaViewModel> WithPictures(this IEnumerable<ServiceAreaViewModel> areas, IWebHostEnvironment environment)
         {

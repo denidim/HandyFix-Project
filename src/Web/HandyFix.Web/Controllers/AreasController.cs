@@ -102,12 +102,9 @@
                 this.Url.RouteUrl("AreaDetails", new { areaSlug = area.Slug }, this.Request.Scheme),
                 PageTitle.BookOnline);
 
-            // An upload's address is already a full one; a picture that came with the site is
-            // named on this site; an area with neither shares the site's own picture.
-            if (picture != null)
-            {
-                this.ViewData["OgImage"] = picture.StartsWith('/') ? $"{this.Request.Scheme}://{this.Request.Host}{picture}" : picture;
-            }
+            // The town's own picture beside a shared link, in the form the apps draw (Section
+            // 3fi). An area without one shares the site's own picture: the layout names that.
+            this.ViewData["OgImage"] = PictureLookups.AreaSharePictureOf(this.environment, area.Slug, area.HeroImageUrl);
 
             return this.View(model);
         }
