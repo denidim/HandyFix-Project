@@ -103,48 +103,48 @@
   /* Typography - Font Sizes & Line Heights */
   /* Scaled up 2026-09-22 (roadmap L2 item 8): older customers must be able to read the
      site without effort, and nothing on a public page goes below 14px. */
-  --fs-label-sm: 16px;
-  --lh-label-sm: 24px;
+  --fs-label-sm: 1rem;
+  --lh-label-sm: 1.5rem;
   --fw-label-sm: 500;
 
-  --fs-body-md: 18px;
-  --lh-body-md: 28px;
+  --fs-body-md: 1.125rem;
+  --lh-body-md: 1.75rem;
   --fw-body-md: 400;
 
-  --fs-body-lg: 20px;
-  --lh-body-lg: 30px;
+  --fs-body-lg: 1.25rem;
+  --lh-body-lg: 1.875rem;
   --fw-body-lg: 400;
 
-  --fs-nav-link: 17px;
-  --lh-nav-link: 26px;
+  --fs-nav-link: 1.0625rem;
+  --lh-nav-link: 1.625rem;
   --fw-nav-link: 500;
 
-  --fs-button-text: 17px;
-  --lh-button-text: 26px;
+  --fs-button-text: 1.0625rem;
+  --lh-button-text: 1.625rem;
   --fw-button-text: 600;
 
-  --fs-headline-sm: 22px;
-  --lh-headline-sm: 30px;
+  --fs-headline-sm: 1.375rem;
+  --lh-headline-sm: 1.875rem;
   --fw-headline-sm: 600;
 
-  --fs-headline-md: 26px;
-  --lh-headline-md: 34px;
+  --fs-headline-md: 1.625rem;
+  --lh-headline-md: 2.125rem;
   --fw-headline-md: 700;
 
-  --fs-headline-lg: 36px;
-  --lh-headline-lg: 44px;
+  --fs-headline-lg: 2.25rem;
+  --lh-headline-lg: 2.75rem;
   --fw-headline-lg: 700;
 
-  --fs-headline-xl: 52px;
-  --lh-headline-xl: 60px;
+  --fs-headline-xl: 3.25rem;
+  --lh-headline-xl: 3.75rem;
   --fw-headline-xl: 700;
 
-  --fs-headline-xl-mobile: 34px;
-  --lh-headline-xl-mobile: 42px;
+  --fs-headline-xl-mobile: 2.125rem;
+  --lh-headline-xl-mobile: 2.625rem;
   --fw-headline-xl-mobile: 700;
 
-  --fs-display-brand: 24px;
-  --lh-display-brand: 32px;
+  --fs-display-brand: 1.5rem;
+  --lh-display-brand: 2rem;
   --fw-display-brand: 800;
   --ls-display-brand: -0.5px;
 
@@ -174,16 +174,16 @@
   --gap-mobile: var(--spacing-2);
   --gap-desktop: var(--spacing-6);
   --padding-section: var(--spacing-16);
-  --height-footer-mobile: 80px;
-  --height-footer-desktop: 70px;
+  --height-footer-mobile: 5rem;
+  --height-footer-desktop: 4.375rem;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  --shadow-ambient: 0 10px 20px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 1px 0.125rem 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 0.25rem 0.375rem -1px rgba(0, 0, 0, 0.1), 0 0.125rem 0.25rem -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1), 0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 1.25rem 1.5625rem -0.3125rem rgba(0, 0, 0, 0.1), 0 0.625rem 0.625rem -0.3125rem rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 1.5625rem 3.125rem -0.75rem rgba(0, 0, 0, 0.25);
+  --shadow-ambient: 0 0.625rem 1.25rem rgba(15, 23, 42, 0.08);
 
   /* Z-Index */
   --z-index-base: 1;

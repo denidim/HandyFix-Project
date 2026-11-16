@@ -31,7 +31,7 @@
 
   /* Scoped with :has() so only layouts that actually render the public header are padded. */
   body:has(> .header-docked) {
-    padding-top: var(--header-height, 57px);
+    padding-top: var(--header-height, 3.5625rem);
   }
 }
 
@@ -77,7 +77,7 @@
 .nav-link.active {
   color: var(--secondary);
   font-weight: 700;
-  border-bottom: 2px solid var(--secondary);
+  border-bottom: 0.125rem solid var(--secondary);
 }
 
 .navbar-actions {
@@ -89,13 +89,13 @@
 .navbar-mobile-call-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   background: var(--surface-container-lowest, #ffffff);
   color: var(--primary);
-  border: 1.5px solid var(--primary);
-  padding: 5px 12px;
+  border: 0.09375rem solid var(--primary);
+  padding: 0.3125rem 0.75rem;
   border-radius: var(--radius-full);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
@@ -103,7 +103,7 @@
 }
 
 .navbar-mobile-call-btn .material-symbols-outlined {
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--secondary);
 }
 
@@ -127,7 +127,7 @@
     display: none;
   }
   .navbar-mobile-call-btn {
-    padding: 6px 8px;
+    padding: 0.375rem 0.5rem;
   }
 }
 
@@ -149,13 +149,13 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
   flex-shrink: 0;
-  border: 1.5px solid var(--primary);
+  border: 0.09375rem solid var(--primary);
   border-radius: 50%;
   color: var(--primary);
-  font-size: 16px;
+  font-size: 1rem;
   transition: all var(--transition-fast);
 }
 
@@ -165,9 +165,9 @@
 }
 
 .navbar-whatsapp-btn-compact {
-  width: 34px;
-  height: 34px;
-  font-size: 14px;
+  width: 2.125rem;
+  height: 2.125rem;
+  font-size: 0.875rem;
   box-shadow: var(--shadow-sm);
 }
 
@@ -205,12 +205,12 @@
   position: absolute;
   top: calc(100% + var(--spacing-2));
   right: var(--spacing-4);
-  width: 290px;
+  width: 18.125rem;
   /* Clears the header's own height plus the spacing-2 gap above; the extra spacing-4
      keeps the dropdown from touching the very bottom edge of the viewport. Without
      a height cap the dropdown just grew past the viewport with no way to scroll
      it - only the page behind it could scroll, leaving the bottom links unreachable. */
-  max-height: calc(100dvh - var(--header-height, 57px) - var(--spacing-2) - var(--spacing-4));
+  max-height: calc(100dvh - var(--header-height, 3.5625rem) - var(--spacing-2) - var(--spacing-4));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -220,11 +220,11 @@
     rgba(255, 241, 242, 0.96) 50%,
     rgba(248, 250, 252, 0.98) 100%
   );
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(1.5rem);
+  -webkit-backdrop-filter: blur(1.5rem);
   border: 1px solid rgba(224, 242, 254, 0.9);
   border-radius: var(--radius-xl);
-  box-shadow: 0 16px 40px -4px rgba(15, 23, 42, 0.2), 0 6px 16px -2px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 1rem 2.5rem -0.25rem rgba(15, 23, 42, 0.2), 0 0.375rem 1rem -0.125rem rgba(15, 23, 42, 0.1);
   padding: var(--spacing-6);
   z-index: 100;
 }
@@ -260,14 +260,14 @@ body.mobile-nav-open {
 .mobile-nav-links .nav-link {
   color: var(--text-dark, #0f172a);
   font-weight: 600;
-  font-size: 15px;
-  padding: 4px 0;
+  font-size: 0.9375rem;
+  padding: 0.25rem 0;
   transition: color var(--transition-fast), transform var(--transition-fast);
 }
 
 .mobile-nav-links .nav-link:hover {
   color: var(--secondary);
-  transform: translateX(3px);
+  transform: translateX(0.1875rem);
 }
 
 .mobile-nav-links .nav-link.active {
@@ -280,20 +280,20 @@ body.mobile-nav-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
   background: var(--primary);
   color: #ffffff;
-  padding: 10px 16px;
+  padding: 0.625rem 1rem;
   border-radius: var(--radius-lg);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 0.875rem;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
 }
 
 .mobile-nav-call-item .material-symbols-outlined {
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .mobile-nav-call-item:hover {
@@ -305,7 +305,7 @@ body.mobile-nav-open {
 .mobile-nav-whatsapp-item {
   background: #ffffff;
   color: var(--primary);
-  border: 1.5px solid var(--primary);
+  border: 0.09375rem solid var(--primary);
   box-shadow: none;
 }
 

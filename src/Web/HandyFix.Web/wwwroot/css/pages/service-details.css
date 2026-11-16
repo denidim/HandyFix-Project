@@ -2,7 +2,7 @@
 
 .service-hero-section {
   position: relative;
-  min-height: 400px;
+  min-height: 25rem;
   width: 100%;
   overflow: hidden;
   border-radius: var(--radius-xl);
@@ -13,8 +13,8 @@
 
 @media (min-width: 768px) {
   .service-hero-section {
-    min-height: 500px;
-    height: 500px;
+    min-height: 31.25rem;
+    height: 31.25rem;
   }
 }
 
@@ -139,7 +139,7 @@
 
 .spec-bento-icon {
   color: var(--secondary-container);
-  font-size: 36px;
+  font-size: 2.25rem;
   margin-bottom: var(--spacing-2);
 }
 
@@ -186,17 +186,17 @@
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 14px;
+  gap: 0.875rem;
 }
 
 .service-points li {
   display: flex;
-  gap: 14px;
+  gap: 0.875rem;
   align-items: flex-start;
   background: var(--surface-container-lowest);
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-lg);
-  padding: 16px 18px;
+  padding: 1rem 1.125rem;
 }
 
 .service-points li .material-symbols-outlined {
@@ -214,21 +214,21 @@
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 14px;
+  gap: 0.875rem;
 }
 
 .service-steps li {
   counter-increment: step;
   display: flex;
-  gap: 16px;
+  gap: 1rem;
   align-items: flex-start;
 }
 
 .service-steps li::before {
   content: counter(step);
   flex: none;
-  width: 36px;
-  height: 36px;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: var(--radius-full);
   background: var(--primary);
   color: var(--on-primary);
@@ -239,13 +239,13 @@
 }
 
 .service-steps li > div {
-  padding-top: 6px;
+  padding-top: 0.375rem;
 }
 
 .service-scope {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
+  gap: 1.25rem;
 }
 
 @media (min-width: 701px) {
@@ -258,24 +258,24 @@
   background: var(--surface-container-lowest);
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
-  padding: 22px;
+  padding: 1.375rem;
 }
 
 .service-scope-box h3 {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--primary);
-  margin: 0 0 12px;
+  margin: 0 0 0.75rem;
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   align-items: center;
 }
 
 .service-scope-box ul {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 1.25rem;
   display: grid;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .service-scope-yes h3 .material-symbols-outlined {
@@ -299,7 +299,7 @@
 .service-same-visit {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 0.875rem;
 }
 
 @media (min-width: 701px) {
@@ -312,11 +312,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
   background: var(--surface-container-lowest);
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-lg);
-  padding: 16px 18px;
+  padding: 1rem 1.125rem;
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
@@ -335,14 +335,14 @@
 .service-towns {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 0.625rem;
 }
 
 .service-towns a {
   background: var(--secondary-fixed);
   color: var(--on-secondary-container);
   border-radius: var(--radius-full);
-  padding: 8px 16px;
+  padding: 0.5rem 1rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -357,7 +357,7 @@
 .gas-safe-logo-pill {
   display: inline-block;
   vertical-align: middle;
-  height: 28px;
+  height: 1.75rem;
   width: auto;
 }
 
@@ -432,11 +432,11 @@
 }
 
 .local-expert-avatar-wrapper {
-  width: 96px;
-  height: 96px;
+  width: 6rem;
+  height: 6rem;
   border-radius: var(--radius-full);
   overflow: hidden;
-  border: 4px solid #ffffff;
+  border: 0.25rem solid #ffffff;
   box-shadow: var(--shadow-md);
   flex-shrink: 0;
 }
@@ -471,7 +471,7 @@
 /* Sidebar Booking Box */
 .sidebar-sticky-wrapper {
   position: sticky;
-  top: 112px;
+  top: 7rem;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-6);
@@ -491,10 +491,10 @@
 .sidebar-booking-card::before {
   content: '';
   position: absolute;
-  top: -32px;
-  right: -32px;
-  width: 128px;
-  height: 128px;
+  top: -2rem;
+  right: -2rem;
+  width: 8rem;
+  height: 8rem;
   background-color: var(--secondary-container);
   opacity: 0.1;
   border-radius: var(--radius-full);
@@ -553,7 +553,7 @@
 }
 
 .sidebar-booking-btn:hover .material-symbols-outlined {
-  transform: translateX(4px);
+  transform: translateX(0.25rem);
 }
 
 /* Book a Slot (the one filled button) / Request / Call Us / WhatsApp, stacked full-width. */
@@ -566,7 +566,7 @@
 .sidebar-booking-btn-outline {
   background-color: transparent;
   color: #ffffff;
-  border: 1.5px solid var(--secondary-container);
+  border: 0.09375rem solid var(--secondary-container);
 }
 
 .sidebar-booking-btn-ghost {
@@ -644,7 +644,7 @@
 }
 
 .sidebar-trust-item-desc {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--on-surface-variant);
   margin: 0;
 }

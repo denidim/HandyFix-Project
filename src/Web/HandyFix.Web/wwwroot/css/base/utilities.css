@@ -35,7 +35,7 @@
 .lh-snug { line-height: 1.375; }
 .lh-normal { line-height: 1.5; }
 .lh-relaxed { line-height: 1.625; }
-.lh-24 { line-height: 24px; }
+.lh-24 { line-height: 1.5rem; }
 
 .z-1 { z-index: 1; }
 
@@ -70,16 +70,16 @@
 
 /* Fixed font-size utilities for the one-off pixel sizes used across
    marketing/info pages (icons, badges, fine print). */
-.fs-11 { font-size: 11px; }
-.fs-12 { font-size: 12px; }
-.fs-13 { font-size: 13px; }
-.fs-14 { font-size: 14px; }
-.fs-16 { font-size: 16px; }
-.fs-18 { font-size: 18px; }
-.fs-20 { font-size: 20px; }
-.fs-24 { font-size: 24px; }
-.fs-36 { font-size: 36px; }
-.fs-48 { font-size: 48px; }
+.fs-11 { font-size: 0.6875rem; }
+.fs-12 { font-size: 0.75rem; }
+.fs-13 { font-size: 0.8125rem; }
+.fs-14 { font-size: 0.875rem; }
+.fs-16 { font-size: 1rem; }
+.fs-18 { font-size: 1.125rem; }
+.fs-20 { font-size: 1.25rem; }
+.fs-24 { font-size: 1.5rem; }
+.fs-36 { font-size: 2.25rem; }
+.fs-48 { font-size: 3rem; }
 
 /* "Filled" Material Symbols variant applied via a class instead of an inline
    font-variation-settings override. */
@@ -117,9 +117,9 @@
 
 /* More fixed font-size utilities (admin area needs a wider range than the
    marketing pages did). */
-.fs-9 { font-size: 9px; }
-.fs-10 { font-size: 10px; }
-.fs-15 { font-size: 15px; }
+.fs-9 { font-size: 0.5625rem; }
+.fs-10 { font-size: 0.625rem; }
+.fs-15 { font-size: 0.9375rem; }
 .fs-headline-lg { font-size: var(--fs-headline-lg); }
 
 /* Several Tailwind-named classes were referenced across both public and
@@ -132,7 +132,7 @@
 .leading-relaxed { line-height: 1.625; }
 .select-all { user-select: all; }
 .block { display: block; }
-.text-xs { font-size: 12px; }
+.text-xs { font-size: 0.75rem; }
 .tracking-wide { letter-spacing: 0.025em; }
 .tracking-wider { letter-spacing: 0.05em; }
 
@@ -151,11 +151,11 @@
 /* Fixed circle/square dimensions for the repeated avatar-initials and
    icon-badge patterns (admin tables and stat cards size these consistently
    but previously did it via a one-off inline width/height every time). */
-.dim-32 { width: 32px; height: 32px; }
-.dim-40 { width: 40px; height: 40px; }
-.dim-48 { width: 48px; height: 48px; }
-.dim-56 { width: 56px; height: 56px; }
-.dim-36 { width: 36px; height: 36px; }
+.dim-32 { width: 2rem; height: 2rem; }
+.dim-40 { width: 2.5rem; height: 2.5rem; }
+.dim-48 { width: 3rem; height: 3rem; }
+.dim-56 { width: 3.5rem; height: 3.5rem; }
+.dim-36 { width: 2.25rem; height: 2.25rem; }
 
 /* Fixed-color "tint" backgrounds used for status pills, category badges, and
    stat-card icon wrappers throughout the admin area - each pairs with one of

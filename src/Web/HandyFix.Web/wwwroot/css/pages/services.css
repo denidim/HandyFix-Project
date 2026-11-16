@@ -24,7 +24,7 @@
 }
 
 .breadcrumb-separator {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .breadcrumb-current {
@@ -33,7 +33,7 @@
 }
 
 .services-header-content {
-  max-width: 800px;
+  max-width: 50rem;
 }
 
 /* Modifier for pages whose hero should stay centered (Contact, Terms, Privacy, FAQ) rather
@@ -82,9 +82,9 @@
 /* Glassmorphism Bento Card */
 .service-category-card {
   background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 2px solid transparent;
+  backdrop-filter: blur(0.625rem);
+  -webkit-backdrop-filter: blur(0.625rem);
+  border: 0.125rem solid transparent;
   border-radius: var(--radius-xl);
   padding: var(--spacing-8);
   display: flex;
@@ -94,8 +94,8 @@
 }
 
 .service-category-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+  transform: translateY(-0.3125rem);
+  box-shadow: 0 0.625rem 1.5625rem -0.3125rem rgba(15, 23, 42, 0.1);
   border-color: var(--secondary-container);
 }
 
@@ -107,13 +107,13 @@
 }
 
 .service-card-icon-wrapper {
-  width: 64px;
-  height: 64px;
+  width: 4rem;
+  height: 4rem;
   border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 0.125rem 0.25rem rgba(0, 0, 0, 0.06);
 }
 
 /* Dynamic color skins for division icon boxes */
@@ -133,7 +133,7 @@
 }
 
 .service-card-icon-wrapper .material-symbols-outlined {
-  font-size: 40px;
+  font-size: 2.5rem;
 }
 
 .service-badge {
@@ -260,7 +260,7 @@
 }
 
 .quality-proof-content {
-  max-width: 576px;
+  max-width: 36rem;
 }
 
 .quality-proof-title {
@@ -295,7 +295,7 @@
 
 .proof-badge-icon {
   color: var(--tertiary-fixed);
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .quality-proof-image-wrapper {
@@ -303,8 +303,8 @@
 }
 
 .quality-proof-image-container {
-  width: 256px;
-  height: 256px;
+  width: 16rem;
+  height: 16rem;
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
