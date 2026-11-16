@@ -4,7 +4,7 @@
 >
 > **How it is organised**: this file is kept short enough to be read whole at the start of a session. Section 1 is the architecture. Sections 2 and 3 are the index of every finished piece of work; the full text of each entry is in [`docs/history/`](docs/history/), one file per month, so "Section 3cp" in a code comment, a test or a document names an entry there. Section 4 lists what is still open. Section 5 holds the decisions worth remembering. Update it with every change, not at the close of a sprint (`AGENTS.md` Section 5).
 >
-> **Last updated**: 2026-11-16 — **a laptop draws the page a wide monitor draws**: the public stylesheets' sizes are in rem and one rule shrinks them with the screen's width, and the home gallery strip is taller (Section 3ff). Before it, on 2026-11-14, the history moved out of this file into `docs/history/` (Section 3fe).
+> **Last updated**: 2026-11-16 — **"Proceed to Payment" says it is opening the payment page**: while the booking form is sent the button reads "Opening secure payment..." and a line under it asks for a few seconds (Section 3fg). Before it, the same day, the public stylesheets' sizes went to rem with one rule that shrinks them on a laptop, and the home gallery strip got taller (Section 3ff).
 
 ---
 
@@ -271,6 +271,7 @@ Every finished piece of work has an entry: what shipped, what was verified and h
 - **3fd.** The Admin's Gallery Page: Each Action Returns to It; a Photo Form Waits for Its Photos; New Photos First (2026-11-14)
 - **3fe.** The History Moved Out of `PROJECT_STATE.md` into `docs/history/` (2026-11-14)
 - **3ff.** A Laptop Draws the Page a Wide Monitor Draws; a Taller Gallery Strip on the Home Page (2026-11-16)
+- **3fg.** "Proceed to Payment" Says It Is Opening the Payment Page (2026-11-16)
 
 ---
 
