@@ -309,6 +309,15 @@ document.addEventListener("DOMContentLoaded", function () {
         form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
             button.classList.add('is-submitting');
             button.setAttribute('aria-busy', 'true');
+
+            // A button whose next page is slow to arrive names what it is waiting for
+            // (data-busy-label). "Proceed to Payment" opens Stripe's page, which takes a few
+            // seconds, and the spinner alone left a customer unsure that anything was happening.
+            // The label it had is kept on the button, for the way back.
+            if (button.dataset.busyLabel) {
+                button.dataset.idleLabel = button.textContent;
+                button.textContent = button.dataset.busyLabel;
+            }
         });
     });
 
@@ -319,6 +328,10 @@ document.addEventListener("DOMContentLoaded", function () {
             form.querySelectorAll('.is-submitting').forEach(function (button) {
                 button.classList.remove('is-submitting');
                 button.removeAttribute('aria-busy');
+                if (button.dataset.idleLabel !== undefined) {
+                    button.textContent = button.dataset.idleLabel;
+                    delete button.dataset.idleLabel;
+                }
             });
         });
     });

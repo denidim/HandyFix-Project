@@ -317,7 +317,10 @@ add it with a real, deliberate width at the point something uses it.
 `.btn` takes its text from the button tokens. Variants: `.btn-primary` (navy, a shade lighter and
 1px up on hover), `.btn-secondary`, `.btn-success`, `.btn-outline-primary`,
 `.btn-outline-secondary`; sizes `.btn-lg` and `.btn-block`. `button.is-submitting` marks a button
-whose form is being sent; its animation runs slower under `prefers-reduced-motion`.
+whose form is being sent; its animation runs slower under `prefers-reduced-motion`. A button with
+`data-busy-label` reads that label while it is marked: the booking page's "Proceed to Payment"
+becomes "Opening secure payment...", on one line with its spinner, and `.submit-wait-note` under it
+is shown only while its form is being sent (`booking.css`).
 
 ### Forms (`forms.css`, `image-upload.css`)
 `.form-label`, `.form-control`, `.form-field`, `.input-with-icon` + `.field-icon`,

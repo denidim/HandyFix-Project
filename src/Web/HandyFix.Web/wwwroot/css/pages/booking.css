@@ -520,6 +520,31 @@
   opacity: 0.6;
 }
 
+/* While the form is being sent (site.js marks the button and the form). The button says what it
+   is waiting for and a line under it says the wait is normal: the payment page is Stripe's own
+   and takes a few seconds to open. The label and the spinner sit on one line, with less room at
+   the sides, so the longer label leaves the button about as wide as it was. There is no fade into
+   this look: the sides would narrow over 0.2s, and on a phone the label wrapped until they had. */
+.btn-proceed-payment.is-submitting {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--spacing-6);
+  transition: none;
+}
+
+.submit-wait-note {
+  display: none;
+  margin: var(--spacing-3) 0 0;
+  font-size: 0.875rem;
+  text-align: center;
+  color: var(--on-surface-variant);
+}
+
+form[data-submitting] .submit-wait-note {
+  display: block;
+}
+
 /* Drag & Drop Upload styling */
 .upload-dropzone {
   border: 0.125rem dashed var(--border-subtle);
