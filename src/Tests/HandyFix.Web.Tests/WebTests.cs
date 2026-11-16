@@ -1182,7 +1182,10 @@ namespace HandyFix.Web.Tests
                 var picture = Regex.Match(page, "<picture>.*?</picture>", RegexOptions.Singleline).Value;
                 Assert.Contains("<source media=\"(max-width: 575.98px)\" srcset=\"https://photos.example/areas/0123456789abcdef0123456789abcdef_cobham-phone.webp\"", picture);
                 Assert.Contains($"<img src=\"{upload}\"", picture);
-                Assert.Contains($"<meta property=\"og:image\" content=\"{upload}\" />", page);
+
+                // The apps that show a link's picture do not all draw a WebP, and an upload has no
+                // JPEG copy, so its area shares the site's picture (PROJECT_STATE.md Section 3fi).
+                Assert.Matches("<meta property=\"og:image\" content=\"https?://[^/\"]+/images/share\\.jpg\\?v=[\\w-]+\" />", page);
 
                 var areas = await client.GetStringAsync("/Areas");
                 Assert.Contains($"<img class=\"area-card-image\" src=\"{upload}\"", areas);
@@ -1193,6 +1196,9 @@ namespace HandyFix.Web.Tests
             }
         }
 
+        // An area page names its own town's picture as a JPEG of the shape the apps draw. It named
+        // the page's own WebP, with no size, and Facebook showed the link with no picture
+        // (PROJECT_STATE.md Section 3fi).
         [Fact]
         public async Task AnAreaPageKeepsItsOwnTownsSharePicture()
         {
@@ -1200,19 +1206,29 @@ namespace HandyFix.Web.Tests
             var page = await client.GetStringAsync("/Areas/cobham");
 
             var pictures = Regex.Matches(page, "<meta property=\"og:image\" content=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList();
-            Assert.EndsWith("/images/areas/cobham-hero.webp", Assert.Single(pictures));
-            Assert.DoesNotContain("og:image:width", page);
+            Assert.Matches("^https?://[^/]+/images/areas/cobham-share\\.jpg\\?v=[\\w-]+$", Assert.Single(pictures));
+            Assert.Contains("<meta property=\"og:image:width\" content=\"1200\" />", page);
+            Assert.Contains("<meta property=\"og:image:height\" content=\"630\" />", page);
         }
 
-        // WhatsApp shows no picture at all for one over about 300 KB.
+        // WhatsApp shows no picture at all for one over about 300 KB. Every town picture that
+        // comes with the site has a share picture beside it.
         [Fact]
-        public void TheSharePictureIsSmallEnoughForWhatsApp()
+        public void TheSharePicturesAreSmallEnoughForWhatsApp()
         {
             var webRoot = this.server.Services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
-            var picture = new FileInfo(Path.Combine(webRoot, "images", "share.jpg"));
+            var pictures = Directory.GetFiles(Path.Combine(webRoot, "images", "areas"), "*-hero.webp")
+                .Select(area => area[..^"-hero.webp".Length] + "-share.jpg")
+                .Append(Path.Combine(webRoot, "images", "share.jpg"))
+                .Select(path => new FileInfo(path))
+                .ToList();
 
-            Assert.True(picture.Exists);
-            Assert.True(picture.Length < 280 * 1024, $"share.jpg is {picture.Length / 1024} KB");
+            Assert.True(pictures.Count > 1);
+            Assert.All(pictures, picture =>
+            {
+                Assert.True(picture.Exists, $"{picture.Name} is missing");
+                Assert.True(picture.Length < 280 * 1024, $"{picture.Name} is {picture.Length / 1024} KB");
+            });
         }
 
         [Fact]

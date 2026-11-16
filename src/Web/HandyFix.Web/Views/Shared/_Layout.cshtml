@@ -2,16 +2,12 @@
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
 @inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
-    // The picture a chat or social app shows beside a link to this page. An area page names its
-    // own town's picture; every other page gets the site's, made by
-    // tools/image-gen/make-share-picture.mjs (PROJECT_STATE Section 3da). Its address carries a
-    // version, so an app that keeps link pictures fetches a changed one afresh.
-    var sharePicture = this.ViewData["OgImage"] as string;
-    var isSitePicture = sharePicture == null;
-    if (isSitePicture)
-    {
-        sharePicture = $"{this.Context.Request.Scheme}://{this.Context.Request.Host}{this.FileVersions.AddFileVersionToPath(this.Context.Request.PathBase, "/images/share.jpg")}";
-    }
+    // The picture a chat or social app shows beside a link to this page: a JPEG of 1200 x 630 on
+    // this site. An area page names its own town's (PROJECT_STATE Section 3fi); every other page
+    // gets the site's (Section 3da). Both are made by tools/image-gen/make-share-picture.mjs. The
+    // address carries a version, so an app that keeps link pictures fetches a changed one afresh.
+    var sharePicturePath = this.ViewData["OgImage"] as string ?? "/images/share.jpg";
+    var sharePicture = $"{this.Context.Request.Scheme}://{this.Context.Request.Host}{this.FileVersions.AddFileVersionToPath(this.Context.Request.PathBase, sharePicturePath)}";
 
     // One title for the tab, for Google and for a share card. The page names its ending
     // ("Book Online", "Call or WhatsApp", none); with none named it is the firm's name (PageTitle).
@@ -47,11 +43,8 @@
         <meta property="og:url" content="@this.ViewData["Canonical"]" />
     }
     <meta property="og:image" content="@sharePicture" />
-    @if (isSitePicture)
-    {
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-    }
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <partial name="_WebFonts" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
