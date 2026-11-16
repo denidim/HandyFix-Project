@@ -62,23 +62,29 @@
             Assert.Equal(ServiceAreaTowns.Names, towns.Select(town => (string)town["name"]));
         }
 
+        // The business's other profiles: Google's from the settings, then Facebook and Instagram
+        // from the contact details (PROJECT_STATE Section 3fh).
         [Fact]
-        public void TheGoogleProfileIsInSameAsWhenItIsSet()
+        public void SameAsNamesTheGoogleProfileThenFacebookAndInstagram()
         {
             var record = Create(GoogleProfile).BuildAsProvider();
 
-            Assert.Equal(new[] { GoogleProfile }, (List<string>)record["sameAs"]);
+            Assert.Equal(
+                new[] { GoogleProfile, GlobalConstants.BusinessFacebookUrl, GlobalConstants.BusinessInstagramUrl },
+                (List<string>)record["sameAs"]);
         }
 
         [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData("  ")]
-        public void SameAsIsLeftOutWhenThereIsNoGoogleProfile(string link)
+        public void SameAsKeepsFacebookAndInstagramWhenThereIsNoGoogleProfile(string link)
         {
             var record = Create(link).BuildAsProvider();
 
-            Assert.False(record.ContainsKey("sameAs"));
+            Assert.Equal(
+                new[] { GlobalConstants.BusinessFacebookUrl, GlobalConstants.BusinessInstagramUrl },
+                (List<string>)record["sameAs"]);
         }
 
         // Google takes the name above a result from the home page's WebSite record, and the

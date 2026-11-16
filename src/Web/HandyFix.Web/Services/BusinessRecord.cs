@@ -84,11 +84,18 @@
                 ["areaServed"] = this.AreaServed(),
             };
 
-            // The profile's link is a setting, so a profile that moves is an edit there.
+            // The business's other profiles, so a search engine ties them to this record. The
+            // Google profile's link is a setting, so a profile that moves is an edit there; the
+            // two social profiles are with the contact details in GlobalConstants.
+            var profiles = new List<string>();
             if (!string.IsNullOrWhiteSpace(this.business.GoogleReviewsUrl))
             {
-                record["sameAs"] = new List<string> { this.business.GoogleReviewsUrl };
+                profiles.Add(this.business.GoogleReviewsUrl);
             }
+
+            profiles.Add(GlobalConstants.BusinessFacebookUrl);
+            profiles.Add(GlobalConstants.BusinessInstagramUrl);
+            record["sameAs"] = profiles;
 
             return record;
         }

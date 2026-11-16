@@ -604,6 +604,11 @@ namespace HandyFix.Web.Tests
             Assert.Contains("href=\"" + GlobalConstants.BusinessWhatsAppUrl + "\"", content);
             Assert.Contains("mailto:" + GlobalConstants.BusinessEmail, content);
 
+            // The footer's two social buttons (Section 3fh). Each opens another site in a new
+            // tab, which must get no hold on this one (Section 3dw).
+            Assert.Contains("href=\"" + GlobalConstants.BusinessFacebookUrl + "\" target=\"_blank\" rel=\"noopener\"", content);
+            Assert.Contains("href=\"" + GlobalConstants.BusinessInstagramUrl + "\" target=\"_blank\" rel=\"noopener\"", content);
+
             Assert.DoesNotContain("tel:07123456789", content);
             Assert.DoesNotContain("07123 456", content);
 
@@ -644,11 +649,12 @@ namespace HandyFix.Web.Tests
         }
 
         [Fact]
-        public async Task HomePageStructuredDataNamesThePhoneAndTheCompanyAndTheGoogleProfile()
+        public async Task HomePageStructuredDataNamesThePhoneAndTheCompanyAndItsProfiles()
         {
             // The home page JSON-LD used to list two social profiles the business never had
-            // (PROJECT_STATE Section 3bu, roadmap L1 item 2). "sameAs" now holds the one real
-            // profile, the Google Business Profile, taken from the configuration (Section 3eg).
+            // (PROJECT_STATE Section 3bu, roadmap L1 item 2). "sameAs" now holds the real ones:
+            // the Google Business Profile, taken from the configuration (Section 3eg), then the
+            // Facebook Page and the Instagram profile the business opened (Section 3fh).
             var client = this.server.CreateClient();
             var response = await client.GetAsync("/");
             response.EnsureSuccessStatusCode();
@@ -666,7 +672,9 @@ namespace HandyFix.Web.Tests
 
             var googleProfile = this.server.Services.GetRequiredService<IOptions<BusinessOptions>>().Value.GoogleReviewsUrl;
             Assert.False(string.IsNullOrEmpty(googleProfile));
-            Assert.Equal(new[] { googleProfile }, business.GetProperty("sameAs").EnumerateArray().Select(link => link.GetString()));
+            Assert.Equal(
+                new[] { googleProfile, GlobalConstants.BusinessFacebookUrl, GlobalConstants.BusinessInstagramUrl },
+                business.GetProperty("sameAs").EnumerateArray().Select(link => link.GetString()));
         }
 
         // The home, service, category and area pages each used to write their own copy of the

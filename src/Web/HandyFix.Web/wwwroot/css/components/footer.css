@@ -65,9 +65,9 @@
   background-color: var(--secondary);
 }
 
-/* The WhatsApp mark scales with the text around it (icons.css). In these round buttons there is
-   no text, so it gets a fixed size that sits level with the two Material Symbols beside it. */
-.footer-social-icon .whatsapp-icon {
+/* A brand mark scales with the text around it (icons.css). In these round buttons there is no
+   text, so it gets a fixed size that sits level with the two Material Symbols beside it. */
+.footer-social-icon .brand-icon {
   width: 1.375rem;
   height: 1.375rem;
 }
