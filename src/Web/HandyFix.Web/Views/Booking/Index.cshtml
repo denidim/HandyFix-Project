@@ -273,9 +273,11 @@
                         <p class="text-danger small text-center mb-2 d-none" id="step1-incomplete-hint">
                             Please select a service and an available time slot above to continue.
                         </p>
-                        <button class="btn-proceed-payment" id="submit-btn" type="submit" disabled>
+                        <button class="btn-proceed-payment" id="submit-btn" type="submit" disabled data-busy-label="Opening secure payment...">
                             Proceed to Payment
                         </button>
+                        <!-- Shown only while the form is being sent (booking.css) -->
+                        <p class="submit-wait-note">Please wait, this can take a few seconds.</p>
                     </div>
                 </section>
             </form>
