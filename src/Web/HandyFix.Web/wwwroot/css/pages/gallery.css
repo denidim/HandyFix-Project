@@ -103,6 +103,21 @@
   color: var(--secondary);
 }
 
+/* On a computer the strip runs from one edge of the screen to the other and stands about half
+   as tall as the hero above it (PROJECT_STATE Section 3ff): the six photos are a little taller
+   than wide, where a phone and a tablet keep 4 to 3. The cap is for a screen wider than the
+   1920 the site is drawn for, where the photos grow wider and not taller. */
+@media (min-width: 992px) {
+  .home-gallery-strip .page-container {
+    width: calc(100% - 3rem);
+  }
+
+  .home-gallery-thumb-box {
+    aspect-ratio: 4 / 5;
+    max-height: 20.5rem;
+  }
+}
+
 @media (max-width: 991.98px) {
   .home-gallery-strip-layout {
     grid-template-columns: repeat(3, minmax(0, 1fr));
