@@ -4,7 +4,7 @@
 >
 > **How it is organised**: this file is kept short enough to be read whole at the start of a session. Section 1 is the architecture. Sections 2 and 3 are the index of every finished piece of work; the full text of each entry is in [`docs/history/`](docs/history/), one file per month, so "Section 3cp" in a code comment, a test or a document names an entry there. Section 4 lists what is still open. Section 5 holds the decisions worth remembering. Update it with every change, not at the close of a sprint (`AGENTS.md` Section 5).
 >
-> **Last updated**: 2026-11-17 — **The area form finds a town by its name only within 25 miles of the base**, so "Richmond" with no districts typed is the one on the Thames and not a namesake in Yorkshire (Section 3fj). The same day the packages that had turned 14 days old were taken (Section 3fk).
+> **Last updated**: 2026-11-17 — **On a quote-only page the phone's floating bar says "Request Free Estimate"** and opens the contact form for that work, in place of "Book Now" and the booking page (Section 3fl). Earlier the same day: the area form finds a town by its name only within 25 miles of the base (Section 3fj), and the packages that had turned 14 days old (Section 3fk).
 
 ---
 
@@ -276,6 +276,7 @@ Every finished piece of work has an entry: what shipped, what was verified and h
 - **3fi.** A Town's Link Shows Its Picture on Facebook (2026-11-16)
 - **3fj.** A Town Is Found by Its Name Only Near the Base (2026-11-17)
 - **3fk.** The Packages That Turned 14 Days Old (2026-11-17)
+- **3fl.** On a Quote-Only Page the Phone's Bar Says "Request Free Estimate" (2026-11-17)
 
 ---
 
@@ -289,7 +290,6 @@ None of these blocks anything.
 
 1. **Trustpilot** (Launch Sprint L4 item 11): after Google reviews are collecting.
 2. **Test leftovers in the staging and local databases** (Launch Sprint L4 item 10): the "Quality Check" jobs and the soft-deleted rows left by browser checks. Left for later by the developer's decision (Section 3cx), as one job with wiping both databases. A wiped database needs `ADMIN_SEED_EMAIL` to make its admin, and staging's `.env` has none yet. Production started empty and has none of them.
-3. **The phone's "Book Now" bar on a quote-only page** (Launch Sprint L2 item 10). On a bookable service's page the bar opens the booking with that service chosen (Section 3dx). On a quote-only service's page and on the Small Building category page it still reads "Book Now" and opens the plain booking page, though that work is quoted for, not booked.
 
 ### Decided, not to be raised again
 

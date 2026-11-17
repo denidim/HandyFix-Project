@@ -8,18 +8,26 @@
    A page can give the button its own address in ViewData["BookNowUrl"]: a service page sends it to
    the booking with that service already chosen. The emergency page sets ViewData["MobileCtaCalls"]:
    an emergency is not booked online, so there the button calls the business (PROJECT_STATE
-   Section 3eg). *@
+   Section 3eg).
+
+   A quote-only page (a quote-only service, the Small Building category) sets
+   ViewData["MobileCtaQuoteUrl"]: that work is quoted for, not booked, so the button reads like the
+   page's own "Request Free Estimate" and goes where it goes (PROJECT_STATE Section 3fl). *@
 @{
     var onBookingPages = string.Equals(this.ViewContext.RouteData.Values["controller"] as string, "Booking", StringComparison.OrdinalIgnoreCase);
     var onSignInPages = string.Equals(this.ViewContext.RouteData.Values["area"] as string, "Identity", StringComparison.OrdinalIgnoreCase);
     var calls = this.ViewData["MobileCtaCalls"] is true;
-    var bookNowUrl = calls ? $"tel:{GlobalConstants.BusinessPhoneInternational}" : this.ViewData["BookNowUrl"] as string ?? this.Url.Action("Index", "Booking");
+    var quoteUrl = calls ? null : this.ViewData["MobileCtaQuoteUrl"] as string;
+    var ctaUrl = calls
+        ? $"tel:{GlobalConstants.BusinessPhoneInternational}"
+        : quoteUrl ?? this.ViewData["BookNowUrl"] as string ?? this.Url.Action("Index", "Booking");
+    var ctaText = calls ? "Call Now" : quoteUrl != null ? "Request Free Estimate" : "Book Now";
 }
 @if (!onBookingPages && !onSignInPages)
 {
     <div class="mobile-cta-bar">
-        <a href="@bookNowUrl" class="btn btn-success btn-mobile-cta">
-            @(calls ? "Call Now" : "Book Now")
+        <a href="@ctaUrl" class="btn btn-success btn-mobile-cta">
+            @ctaText
         </a>
     </div>
 }
