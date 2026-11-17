@@ -36,6 +36,14 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# The base image comes with a user that has no rights of its own, "app", but
+# does not switch to it: a container runs as root unless told otherwise. /keys
+# is where the compose files mount the volume with the data protection keys. A
+# new, empty volume takes its owner from the folder it is mounted over, so the
+# folder is made here and handed to that user before the switch.
+RUN mkdir /keys && chown $APP_UID /keys
+USER $APP_UID
+
 # ASPNETCORE_HTTP_PORTS defaults to 8080 on this base image; kept explicit
 # here so the exposed port and the app's actual listening port can never
 # drift apart silently.
