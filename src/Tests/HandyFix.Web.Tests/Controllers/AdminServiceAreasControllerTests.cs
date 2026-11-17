@@ -69,13 +69,13 @@
             var controller = BuildController(out var serviceAreasService);
             serviceAreasService
                 .Setup(x => x.CreateAsync(It.IsAny<ServiceAreaAdminInputModel>()))
-                .ReturnsAsync(ServiceAreaSaveResult.Failed("Name", "We could not find a town called Molsey. Check the spelling."));
+                .ReturnsAsync(ServiceAreaSaveResult.Failed("Name", "We could not find a town called Molsey within 25 miles. Check the spelling, or type its postcode districts."));
 
             var result = await controller.Create(ValidArea());
 
             var returned = Assert.IsType<ServiceAreaAdminInputModel>(Assert.IsType<ViewResult>(result).Model);
             var error = Assert.Single(controller.ModelState["Name"].Errors);
-            Assert.Equal("We could not find a town called Molsey. Check the spelling.", error.ErrorMessage);
+            Assert.Equal("We could not find a town called Molsey within 25 miles. Check the spelling, or type its postcode districts.", error.ErrorMessage);
             Assert.Single(returned.Faqs);
             serviceAreasService.Verify(x => x.SetHeroImageAsync(It.IsAny<Guid>(), It.IsAny<IFormFile>()), Times.Never);
         }
@@ -92,7 +92,7 @@
                 .ReturnsAsync(new ServiceAreaAdminInputModel { Slug = "chessington", DriveTimeMinutes = 0 });
             serviceAreasService
                 .Setup(x => x.UpdateAsync(model.Id.Value, It.IsAny<ServiceAreaAdminInputModel>()))
-                .ReturnsAsync(ServiceAreaSaveResult.Failed("Name", "We could not find a town called Chesington. Check the spelling."));
+                .ReturnsAsync(ServiceAreaSaveResult.Failed("Name", "We could not find a town called Chesington within 25 miles. Check the spelling, or type its postcode districts."));
 
             var result = await controller.Edit(model);
 

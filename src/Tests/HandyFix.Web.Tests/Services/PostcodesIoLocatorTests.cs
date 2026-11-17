@@ -17,6 +17,9 @@
     // an answer or nothing, and never throw.
     public class PostcodesIoLocatorTests
     {
+        // The 25 miles ServiceAreasService asks with.
+        private const double WithinKm = 40;
+
         private static readonly GeoPoint Chessington = new GeoPoint(51.3638, -0.3033);
 
         [Fact]
@@ -64,7 +67,7 @@
                 + "{\"name_1\":\"Ham\",\"outcode\":\"tw10\",\"latitude\":51.433,\"longitude\":-0.311}]}";
             var postcodesIo = new FakePostcodesIo(HttpStatusCode.OK, answer);
 
-            string district = await Locator(postcodesIo).FindTownDistrictAsync(" Ham ", Chessington);
+            string district = await Locator(postcodesIo).FindTownDistrictAsync(" Ham ", Chessington, WithinKm);
 
             Assert.Equal("TW10", district);
             Assert.Equal("https://api.postcodes.io/places?q=Ham&limit=100", postcodesIo.AskedFor);
@@ -79,24 +82,42 @@
                 + "{\"name_1\":\"West Molesey\",\"outcode\":\"KT8\",\"latitude\":51.403,\"longitude\":-0.371}]}";
             var postcodesIo = new FakePostcodesIo(HttpStatusCode.OK, answer);
 
-            Assert.Equal("KT8", await Locator(postcodesIo).FindTownDistrictAsync("Molesey", Chessington));
+            Assert.Equal("KT8", await Locator(postcodesIo).FindTownDistrictAsync("Molesey", Chessington, WithinKm));
         }
 
+        // A place too far from the base does not count, whatever it is called (PROJECT_STATE.md
+        // Section 3fj). These are three of the places postcodes.io gives for "Richmond": the two
+        // with exactly that name are in Yorkshire, and until this check the nearer of them won
+        // over the one that was meant, 11 km from the base.
+        [Fact]
+        public async Task FindTownDistrictAsyncShouldPassOverAnExactNameThatIsTooFarAway()
+        {
+            string answer = "{\"status\":200,\"result\":["
+                + "{\"name_1\":\"Richmond\",\"outcode\":\"DL10\",\"latitude\":54.4041,\"longitude\":-1.7373},"
+                + "{\"name_1\":\"Richmond\",\"outcode\":\"S13\",\"latitude\":53.3643,\"longitude\":-1.4026},"
+                + "{\"name_1\":\"Richmond upon Thames\",\"outcode\":\"TW9\",\"latitude\":51.4596,\"longitude\":-0.3064}]}";
+            var postcodesIo = new FakePostcodesIo(HttpStatusCode.OK, answer);
+
+            Assert.Equal("TW9", await Locator(postcodesIo).FindTownDistrictAsync("Richmond", Chessington, WithinKm));
+        }
+
+        // The last answer is a place with the very name asked for, in Yorkshire: too far to count.
         [Theory]
         [InlineData(HttpStatusCode.OK, "{\"status\":200,\"result\":[]}")]
         [InlineData(HttpStatusCode.OK, "{\"status\":200,\"result\":null}")]
         [InlineData(HttpStatusCode.OK, "{\"status\":200,\"result\":[{\"name_1\":\"Nowhere\",\"outcode\":null,\"latitude\":51.4,\"longitude\":-0.3}]}")]
         [InlineData(HttpStatusCode.InternalServerError, "")]
         [InlineData(HttpStatusCode.OK, "not json")]
+        [InlineData(HttpStatusCode.OK, "{\"status\":200,\"result\":[{\"name_1\":\"Xqzzyton\",\"outcode\":\"S13\",\"latitude\":53.3643,\"longitude\":-1.4026}]}")]
         public async Task FindTownDistrictAsyncShouldGiveNothingWhenNoTownIsFound(HttpStatusCode status, string body)
         {
-            Assert.Null(await Locator(new FakePostcodesIo(status, body)).FindTownDistrictAsync("Xqzzyton", Chessington));
+            Assert.Null(await Locator(new FakePostcodesIo(status, body)).FindTownDistrictAsync("Xqzzyton", Chessington, WithinKm));
         }
 
         [Fact]
         public async Task FindTownDistrictAsyncShouldGiveNothingWhenPostcodesIoCannotBeReached()
         {
-            Assert.Null(await Locator(new FakePostcodesIo(null, null)).FindTownDistrictAsync("Molesey", Chessington));
+            Assert.Null(await Locator(new FakePostcodesIo(null, null)).FindTownDistrictAsync("Molesey", Chessington, WithinKm));
         }
 
         private static PostcodesIoLocator Locator(FakePostcodesIo postcodesIo) =>

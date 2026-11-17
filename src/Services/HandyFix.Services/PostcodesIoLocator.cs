@@ -67,7 +67,7 @@
             }
         }
 
-        public async Task<string> FindTownDistrictAsync(string townName, GeoPoint near)
+        public async Task<string> FindTownDistrictAsync(string townName, GeoPoint near, double withinKm)
         {
             if (string.IsNullOrWhiteSpace(townName))
             {
@@ -84,8 +84,12 @@
                 response.EnsureSuccessStatusCode();
                 PlacesAnswer answer = await response.Content.ReadFromJsonAsync<PlacesAnswer>();
 
+                // A place too far away is not the town that was meant, whatever it is called: the
+                // two places named exactly "Richmond" are in Yorkshire, and the one on the Thames
+                // is "Richmond upon Thames" (PROJECT_STATE.md Section 3fj).
                 List<Place> places = (answer?.Result ?? new List<Place>())
                     .Where(p => !string.IsNullOrWhiteSpace(p.Outcode) && p.Latitude.HasValue && p.Longitude.HasValue)
+                    .Where(p => near.DistanceKmTo(new GeoPoint(p.Latitude.Value, p.Longitude.Value)) <= withinKm)
                     .ToList();
 
                 // "Molesey" has no place of exactly that name, so West and East Molesey both count.
@@ -96,7 +100,7 @@
 
                 if (nearest == null)
                 {
-                    this.logger.LogWarning("postcodes.io knows no place called {TownName}", name);
+                    this.logger.LogWarning("postcodes.io knows no place called {TownName} within {WithinKm} km", name, withinKm);
                     return null;
                 }
 

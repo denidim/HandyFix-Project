@@ -4,7 +4,7 @@
 >
 > **How it is organised**: this file is kept short enough to be read whole at the start of a session. Section 1 is the architecture. Sections 2 and 3 are the index of every finished piece of work; the full text of each entry is in [`docs/history/`](docs/history/), one file per month, so "Section 3cp" in a code comment, a test or a document names an entry there. Section 4 lists what is still open. Section 5 holds the decisions worth remembering. Update it with every change, not at the close of a sprint (`AGENTS.md` Section 5).
 >
-> **Last updated**: 2026-11-16 — **A link to a town's page shows the town's picture on Facebook and WhatsApp**: every town picture has a JPEG share picture with the logo, and the town's page names it with its size (Section 3fi). Before it, the same day, Facebook and Instagram got a round button each in the footer and a place in `sameAs` (Section 3fh).
+> **Last updated**: 2026-11-17 — **The area form finds a town by its name only within 25 miles of the base**, so "Richmond" with no districts typed is the one on the Thames and not a namesake in Yorkshire (Section 3fj). The same day the packages that had turned 14 days old were taken (Section 3fk).
 
 ---
 
@@ -20,12 +20,12 @@
 - **Repository pattern**: `IRepository<T>` / `IDeletableEntityRepository<T>`, generic EF Core-backed implementations (`EfRepository<T>`, `EfDeletableEntityRepository<T>`). Soft-delete (`IsDeleted`/`DeletedOn`) and audit fields (`CreatedOn`/`ModifiedOn`) are applied globally via `ApplicationDbContext.OnModelCreating`/`SaveChanges` overrides, not per-entity boilerplate.
 - **Code style**: StyleCop analyzers run on every build (`src/Directory.Build.props`, `stylecop.json`). The build has no warnings, and in Release, which CI, staging and the live site build, a warning fails it (Section 3df).
 
-- **postcodes.io** (free, no key or account), asked through `PostcodesIoLocator` when an admin saves an area: for where its first postcode district is, to place it on the coverage diagram (Section 3dm), and for a town's district from its name when the districts box is left empty (Section 3dn). Five seconds, then the admin is told. Tests never ask it.
+- **postcodes.io** (free, no key or account), asked through `PostcodesIoLocator` when an admin saves an area: for where its first postcode district is, to place it on the coverage diagram (Section 3dm), and for a town's district from its name when the districts box is left empty (Section 3dn), among the places within 25 miles of the base (Section 3fj). Five seconds, then the admin is told. Tests never ask it.
 - **OSRM** (the public route service at router.project-osrm.org: free, no key or account, no traffic), asked through `OsrmDriveTimeCalculator` once when an admin adds an area, for the drive time from Chessington (Section 3dn). Five seconds, then the time is estimated from the distance. Tests never ask it.
 
 ### Database
 - **SQL Server**, run locally via a Docker container (`MSSQLServer`, port 1433) for development.
-- **Entity Framework Core 10.0.13**, code-first migrations under `src/Data/HandyFix.Data/Migrations/`.
+- **Entity Framework Core 10.0.14**, code-first migrations under `src/Data/HandyFix.Data/Migrations/`.
 - All entities use **`Guid` primary keys** (`BaseModel<Guid>` / `BaseDeletableModel<Guid>`), generated client-side in entity constructors.
 - **Centralized package management**: `src/Directory.Packages.props` (all NuGet package versions pinned in one place, `ManagePackageVersionsCentrally=true`) and `src/Directory.Build.props` (shared `TargetFramework=net10.0`, StyleCop analyzers, language version) — individual `.csproj` files only declare `<PackageReference Include="..." />` with no version.
 
@@ -274,6 +274,8 @@ Every finished piece of work has an entry: what shipped, what was verified and h
 - **3fg.** "Proceed to Payment" Says It Is Opening the Payment Page (2026-11-16)
 - **3fh.** Facebook and Instagram in the Footer and in `sameAs` (2026-11-16)
 - **3fi.** A Town's Link Shows Its Picture on Facebook (2026-11-16)
+- **3fj.** A Town Is Found by Its Name Only Near the Base (2026-11-17)
+- **3fk.** The Packages That Turned 14 Days Old (2026-11-17)
 
 ---
 

@@ -18,6 +18,11 @@
 
     public class ServiceAreasService : IServiceAreasService
     {
+        // How far from the base a town may be to be found by its name alone: 25 miles. A place
+        // with the name further away is a namesake, as the Richmonds in Yorkshire are
+        // (PROJECT_STATE.md Section 3fj). A town past it is added by typing its districts.
+        private const double TownSearchRangeKm = 40;
+
         // The centre of the coverage diagram, the Chessington base: the middle of the KT9 district
         // as postcodes.io gives it. Fixed here rather than looked up, since the base does not move.
         private static readonly GeoPoint DiagramCentre = new GeoPoint(51.3638, -0.3033);
@@ -328,7 +333,7 @@
 
         private static ServiceAreaSaveResult TownNotFound(string name)
         {
-            return ServiceAreaSaveResult.Failed(nameof(ServiceAreaAdminInputModel.Name), $"We could not find a town called {name}. Check the spelling.");
+            return ServiceAreaSaveResult.Failed(nameof(ServiceAreaAdminInputModel.Name), $"We could not find a town called {name} within 25 miles. Check the spelling, or type its postcode districts.");
         }
 
         // Whole degrees: the diagram cannot show finer, and the admin page reads better.
@@ -347,12 +352,12 @@
         /// <summary>
         /// The districts typed on the form, tidied; when the box is empty, the district of the town
         /// with this name (PROJECT_STATE.md Section 3dn). Null when the box is empty and no town
-        /// has the name.
+        /// within 25 miles of the base has the name.
         /// </summary>
         private async Task<string> DistrictsOrTownsAsync(string typed, string townName)
         {
             return NormalizeDistricts(typed)
-                ?? NormalizeDistricts(await this.postcodeLocator.FindTownDistrictAsync(townName, DiagramCentre));
+                ?? NormalizeDistricts(await this.postcodeLocator.FindTownDistrictAsync(townName, DiagramCentre, TownSearchRangeKm));
         }
 
         /// <summary>
