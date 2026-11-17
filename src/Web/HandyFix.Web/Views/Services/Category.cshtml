@@ -15,6 +15,14 @@
     // base/layout.css's body.page-bg-services-category.
     this.ViewData["BodyClass"] = "page-bg-services-category";
 
+    // Small building work is quoted for, not booked: the phone's floating button and the sidebar's
+    // "Request Free Estimate" open the contact form with this category chosen (Section 3fl).
+    var quoteUrl = isBuilding ? this.Url.Action("Contact", "Home", new { categorySlug = Model.Slug }) : null;
+    if (isBuilding)
+    {
+        this.ViewData["MobileCtaQuoteUrl"] = quoteUrl;
+    }
+
     var specBadgeText = isBuilding ? "Survey & Fixed Quote" : (isPlumbing ? "Fully Insured" : "Multi-Skill Pros");
     var specBadgeClass = isBuilding ? "category-hero-badge-building" : (isPlumbing ? "category-hero-badge-primary" : "category-hero-badge-tertiary");
     var specBadgeIcon = isBuilding ? "foundation" : (isPlumbing ? "verified" : "handyman");
@@ -188,7 +196,7 @@
                             <li class="sidebar-cta-list-item">✓ Upfront transparent pricing</li>
                             <li class="sidebar-cta-list-item">✓ Fully insured multi-trade team</li>
                         </ul>
-                        <a asp-controller="Home" asp-action="Contact" class="btn btn-primary sidebar-cta-btn">Request Free Estimate</a>
+                        <a href="@quoteUrl" class="btn btn-primary sidebar-cta-btn">Request Free Estimate</a>
                     </div>
                 }
                 else

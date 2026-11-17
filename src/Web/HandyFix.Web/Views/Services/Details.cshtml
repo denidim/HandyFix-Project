@@ -18,13 +18,18 @@
     var durationHours = isQuoteOnly ? "Day Rate / Survey" : Durations.HoursOrMinutes(Model.EstimatedDurationMinutes);
 
     // The phone's floating "Book Now" opens the booking with this service already chosen
-    // (_MobileStickyCta). A quote-only service cannot be booked, so its button stays the plain one;
-    // on the emergency page it calls the business instead.
+    // (_MobileStickyCta). A quote-only service cannot be booked: there the button is "Request Free
+    // Estimate" with the same address as the sidebar's (Section 3fl). On the emergency page it
+    // calls the business instead.
     if (isEmergency)
     {
         this.ViewData["MobileCtaCalls"] = true;
     }
-    else if (!isQuoteOnly)
+    else if (isQuoteOnly)
+    {
+        this.ViewData["MobileCtaQuoteUrl"] = this.Url.Action("Contact", "Home", new { service = Model.Name });
+    }
+    else
     {
         this.ViewData["BookNowUrl"] = this.Url.Action("Index", "Booking", new { selectedServiceId = Model.Id, categorySlug = Model.CategorySlug });
     }

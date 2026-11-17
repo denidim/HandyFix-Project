@@ -45,15 +45,33 @@ namespace HandyFix.Web.Tests
             Assert.Equal(bookASlotHref, bookNowHref);
         }
 
-        // A quote-only service cannot be booked, so its floating button stays the plain one.
         [Theory]
-        [InlineData("/Services/plumbing/boiler-installation-servicing")]
         [InlineData("/")]
+        [InlineData("/Services/plumbing")]
         public async Task ElsewhereTheFloatingBookNowOpensThePlainBookingPage(string url)
         {
             string html = await this.GetAsync(url);
 
-            Assert.Contains("<a href=\"/Booking\" class=\"btn btn-success btn-mobile-cta\">", html);
+            Assert.Matches("<a href=\"/Booking\" class=\"btn btn-success btn-mobile-cta\">\\s*Book Now\\s*</a>", html);
+        }
+
+        // Quote-only work is quoted for, not booked: on its pages the floating button is the page's
+        // own "Request Free Estimate", with the same address as the sidebar's (Section 3fl). It used
+        // to read "Book Now" and open the plain booking page.
+        [Theory]
+        [InlineData("/Services/plumbing/boiler-installation-servicing", "class=\"sidebar-booking-btn\" href=\"([^\"]+)\"", "/Contact?service=")]
+        [InlineData("/Services/small-building-works/kitchen-fitting-alterations", "class=\"sidebar-booking-btn\" href=\"([^\"]+)\"", "/Contact?service=")]
+        [InlineData("/Services/small-building-works", "href=\"([^\"]+)\" class=\"btn btn-primary sidebar-cta-btn\"", "/Contact?categorySlug=small-building-works")]
+        public async Task OnAQuoteOnlyPageTheFloatingButtonRequestsAFreeEstimate(string url, string sidebarPattern, string expectedStart)
+        {
+            string html = await this.GetAsync(url);
+
+            string sidebarHref = Regex.Match(html, sidebarPattern).Groups[1].Value;
+            Match floating = Regex.Match(html, "<a href=\"([^\"]+)\" class=\"btn btn-success btn-mobile-cta\">\\s*([^<]+?)\\s*</a>");
+
+            Assert.StartsWith(expectedStart, sidebarHref);
+            Assert.Equal(sidebarHref, floating.Groups[1].Value);
+            Assert.Equal("Request Free Estimate", floating.Groups[2].Value);
         }
 
         private async Task<string> GetAsync(string url)
