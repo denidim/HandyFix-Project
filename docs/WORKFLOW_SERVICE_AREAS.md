@@ -21,10 +21,10 @@ the Featured flag, and a dynamic list of FAQs. Everything else the site works ou
   gives `walton-on-thames-and-weybridge`). It never changes after; the Edit page shows it as a link.
   A name already taken is refused under the name box.
 - **The postcode districts**, when the box is left empty, come from the town's name: postcodes.io's
-  place search (`PostcodesIoLocator.FindTownDistrictAsync`) finds it; a place called exactly that
-  wins, else the nearest to Chessington, so "Molesey" gives `KT8` and "Ashford" the one in Surrey.
-  A name it cannot find saves nothing and says so under the name box. More districts can be typed
-  in at any time.
+  place search (`PostcodesIoLocator.FindTownDistrictAsync`) finds it among the places within 25
+  miles of Chessington; a place called exactly that wins, else the nearest, so "Molesey" gives
+  `KT8` and "Richmond" `TW9`. A name it cannot find that near saves nothing and says so under the
+  name box. More districts can be typed in at any time.
 - **The drive time** from Chessington is worked out once, when the town is added, by the public
   OSRM route service (`OsrmDriveTimeCalculator`: free, no key, no traffic), from the middle of its
   first district. With no answer in 5 seconds it is estimated from the straight-line distance
@@ -113,9 +113,13 @@ Saving auto-propagates to every consumer, because they all query `IServiceAreasS
   pay online" with the deposit. The rates are worked out as the Pricing page does (the lowest
   price among the category's active services) and the deposit comes from `Deposit`, so the line
   follows a price changed in the admin panel.
-- **A town that shares its name with a place elsewhere needs its districts typed.** With the
-  Postcode Districts box left empty the town is looked up by name, and "Richmond" alone finds a
-  Richmond in Yorkshire. Type `TW9, TW10` and the drive time and the diagram come out right.
+- **A town is found by its name only within 25 miles of the base.** With the Postcode Districts
+  box left empty the town is looked up by name among the places no further than 25 miles from
+  Chessington (`ServiceAreasService.TownSearchRangeKm`), so "Richmond" is Richmond upon Thames
+  (TW9) and not either of the two places called exactly Richmond, both in Yorkshire. A name with
+  no place that near is refused, with a sentence asking for the districts; a town past the 25
+  miles is added by typing them. The lookup gives one district: when a town has more, type them
+  (`TW9, TW10`). Until `PROJECT_STATE.md` Section 3fj a namesake far away could win.
 - **The business record's towns are not the area pages.** Every page writes one record of the
   business for Google (`IBusinessRecord`: type `Plumber`, open 24 hours, a link to the Google
   profile), and its `areaServed` is the fixed list in `HandyFix.Common/ServiceAreaTowns.cs`: the

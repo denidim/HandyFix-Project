@@ -248,7 +248,10 @@
         {
             using var dbContext = NewContext();
             var locator = new Mock<IPostcodeLocator>();
-            locator.Setup(x => x.FindTownDistrictAsync("Molesey", It.IsAny<GeoPoint>())).ReturnsAsync("kt8");
+
+            // 40 km is the 25 miles a town may be from the base to be found by its name
+            // (PROJECT_STATE.md Section 3fj).
+            locator.Setup(x => x.FindTownDistrictAsync("Molesey", It.IsAny<GeoPoint>(), 40)).ReturnsAsync("kt8");
             locator.Setup(x => x.LocateDistrictAsync("KT8")).ReturnsAsync(new GeoPoint(51.4002, -0.3550));
             var service = ServiceWith(dbContext, locator.Object);
 
@@ -273,7 +276,7 @@
 
             Assert.False(result.Succeeded);
             Assert.Equal(nameof(ServiceAreaAdminInputModel.Name), result.ErrorKey);
-            Assert.Equal("We could not find a town called Molsey. Check the spelling.", result.ErrorMessage);
+            Assert.Equal("We could not find a town called Molsey within 25 miles. Check the spelling, or type its postcode districts.", result.ErrorMessage);
             Assert.Empty(dbContext.ServiceAreas);
             Assert.Empty(dbContext.ServiceAreaFaqs);
         }
@@ -383,7 +386,7 @@
             ServiceAreaSaveResult result = await service.UpdateAsync(area.Id, input);
 
             Assert.False(result.Succeeded);
-            Assert.Equal("We could not find a town called Surbitn. Check the spelling.", result.ErrorMessage);
+            Assert.Equal("We could not find a town called Surbitn within 25 miles. Check the spelling, or type its postcode districts.", result.ErrorMessage);
             ServiceArea saved = dbContext.ServiceAreas.Single();
             Assert.Equal("Surbiton", saved.Name);
             Assert.Equal("KT5", saved.PostcodeDistricts);
@@ -648,7 +651,7 @@
         private static IPostcodeLocator KnowsEveryPlace()
         {
             var locator = new Mock<IPostcodeLocator>();
-            locator.Setup(x => x.FindTownDistrictAsync(It.IsAny<string>(), It.IsAny<GeoPoint>())).ReturnsAsync("TW9");
+            locator.Setup(x => x.FindTownDistrictAsync(It.IsAny<string>(), It.IsAny<GeoPoint>(), It.IsAny<double>())).ReturnsAsync("TW9");
             locator.Setup(x => x.LocateDistrictAsync(It.IsAny<string>())).ReturnsAsync(new GeoPoint(51.4613, -0.3037));
             return locator.Object;
         }
