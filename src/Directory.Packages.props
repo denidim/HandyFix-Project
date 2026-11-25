@@ -42,7 +42,7 @@
          there (PROJECT_STATE.md Section 3cn). NoDependencies: it needs no fontconfig in the image. -->
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.3" />
     <!-- Code analyzers -->
-    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.3.180" />
     <!-- Overrides to patch the NuGet.Packaging vulnerability -->
     <PackageVersion Include="NuGet.Packaging" Version="7.9.0" />
     <PackageVersion Include="NuGet.Protocol" Version="7.9.0" />

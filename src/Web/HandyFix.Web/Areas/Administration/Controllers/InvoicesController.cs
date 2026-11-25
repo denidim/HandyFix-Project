@@ -73,9 +73,9 @@
         private DateTime MonthOrThisOne(string month)
         {
             return DateTime.TryParseExact(month, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime firstDay)
-                    && firstDay.Year >= 2020 && firstDay.Year <= 2100
-                ? firstDay
-                : new DateTime(this.TodayUk().Year, this.TodayUk().Month, 1);
+                && firstDay.Year >= 2020 && firstDay.Year <= 2100
+                    ? firstDay
+                    : new DateTime(this.TodayUk().Year, this.TodayUk().Month, 1);
         }
 
         private DateTime TodayUk()
