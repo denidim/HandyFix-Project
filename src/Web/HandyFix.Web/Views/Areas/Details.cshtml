@@ -52,9 +52,6 @@
             <h1 class="service-hero-title">Plumber &amp; Handyman in @area.Name</h1>
             <div class="service-hero-badges">
                 <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
-                    <span class="material-symbols-outlined">verified</span> Professional Service
-                </span>
-                <span class="glass-card px-4 py-2 rounded-full text-white text-label-sm font-label-sm flex items-center gap-2">
                     <span class="material-symbols-outlined">directions_car</span> @driveTimeText
                 </span>
                 @if (postcodeDistricts.Count > 0)
@@ -67,23 +64,35 @@
         </div>
     </section>
 
-        <!-- Quick Specs Bento -->
-    <div class="specs-bento-grid">
-        <div class="spec-bento-card">
+    <!-- Quick Specs Bento -->
+    @* The first card is the page's booking button; "Professional Service" was a badge on the
+       picture before. Each of the other three opens the page that says more about it: the booking,
+       the About page (which has the insurance) and the Pricing page (PROJECT_STATE Section 3fn). *@
+    <div class="specs-bento-grid specs-bento-grid-4">
+        <div class="spec-bento-card spec-bento-card-cta">
+            <span class="material-symbols-outlined spec-bento-icon">verified</span>
+            <span class="spec-bento-label">Professional Service</span>
+            <span class="spec-bento-value">Pick a time that suits you and book online</span>
+            <a asp-controller="Booking" asp-action="Index" class="btn btn-success spec-bento-cta-button">Book Now</a>
+        </div>
+        <a asp-controller="Booking" asp-action="Index" class="spec-bento-card spec-bento-card-link">
+            <span class="material-symbols-outlined spec-bento-arrow" aria-hidden="true">chevron_right</span>
             <span class="material-symbols-outlined spec-bento-icon">event_available</span>
             <span class="spec-bento-label">Availability</span>
             <span class="spec-bento-value">Same-day &amp; next-day slots available</span>
-        </div>
-        <div class="spec-bento-card">
+        </a>
+        <a asp-controller="Home" asp-action="About" class="spec-bento-card spec-bento-card-link">
+            <span class="material-symbols-outlined spec-bento-arrow" aria-hidden="true">chevron_right</span>
             <span class="material-symbols-outlined spec-bento-icon">security</span>
             <span class="spec-bento-label">Peace of Mind</span>
             <span class="spec-bento-value">Fully insured &amp; vetted local technicians</span>
-        </div>
-        <div class="spec-bento-card col-span-2">
+        </a>
+        <a asp-route="Pricing" class="spec-bento-card spec-bento-card-link spec-bento-card-wide">
+            <span class="material-symbols-outlined spec-bento-arrow" aria-hidden="true">chevron_right</span>
             <span class="material-symbols-outlined spec-bento-icon">payments</span>
             <span class="spec-bento-label">Pricing</span>
             <span class="spec-bento-value">Transparent hourly rates, no travel charge in-radius</span>
-        </div>
+        </a>
     </div>
 
     <!-- Description -->

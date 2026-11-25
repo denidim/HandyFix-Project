@@ -161,6 +161,68 @@
   font-weight: 700;
 }
 
+/* The town page's four cards (PROJECT_STATE Section 3fn): the first is the page's booking button,
+   the other three are links. A phone shows the booking card and the Pricing card full width, a
+   tablet draws two by two, a computer four in a row. */
+.specs-bento-grid.specs-bento-grid-4 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 992px) {
+  .specs-bento-grid.specs-bento-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .spec-bento-card-cta,
+  .spec-bento-card-wide {
+    grid-column: span 2;
+  }
+}
+
+.spec-bento-card-cta {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.spec-bento-card-cta .spec-bento-label {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.spec-bento-card-cta .spec-bento-value {
+  color: #ffffff;
+}
+
+.spec-bento-cta-button {
+  align-self: stretch;
+  margin-top: var(--spacing-4);
+}
+
+.spec-bento-card-link {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.spec-bento-card-link:hover,
+.spec-bento-card-link:focus-visible {
+  color: inherit;
+  text-decoration: none;
+  border-color: var(--secondary-container);
+  box-shadow: var(--shadow-md);
+}
+
+/* A phone has no hover: the small arrow is what says the card can be pressed. */
+.spec-bento-arrow {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  color: var(--on-surface-variant);
+  font-size: 1.25rem;
+}
+
 /* Overview Section */
 .details-section-title {
   font-size: var(--fs-headline-lg);
