@@ -6,8 +6,9 @@
 this project — context initialization, the public-repo secret rules, plan-before-code, commit
 format, StyleCop, package security, testing layers, and documentation conventions.
 
-**Everything in it applies to Claude Code.** Read it at the start of every session, together with
-`PROJECT_STATE.md`, `git log -n 5`, and `docs/private/VISION_AND_CONTEXT.md` if present.
+**Everything in it applies to Claude Code.** Read it at the start of every session. Its Section 1
+says what else to read, by the kind of task: `git log -n 5`, `PROJECT_STATE.md` and
+`docs/private/VISION_AND_CONTEXT.md`.
 
 Rules are deliberately **not** duplicated here. This project previously had two agent rule files
 that disagreed — one asked for prose commit bodies while the other forbade them — and each agent

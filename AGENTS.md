@@ -12,22 +12,39 @@ commit formats.
 
 ## 1. Before you do anything
 
-Read these, every session, before answering the first question:
+Read what the task needs, before answering the first question. A session that drafts a reply to
+a customer does not need the architecture; a session that changes a service does.
 
-1. **`PROJECT_STATE.md`** — what the system is, the index of what has been built, what is left.
-   Read it whole; it is kept short for that. The full text of each finished piece of work is in
-   `docs/history/`, one file per month: open an entry there when the task touches what it covers,
-   not the whole folder.
-2. **`git log -n 5`** — what changed most recently and why.
-3. **`docs/private/VISION_AND_CONTEXT.md`** — the business reasoning behind the technical
+**Every session:**
+
+1. **`git log -n 5`** — what changed most recently and why.
+2. **`PROJECT_STATE.md`, Section 4** — where things stand, what is open, and what has been decided
+   and is not to be raised again.
+
+**When the task touches code, data, configuration or a deploy:**
+
+3. **`PROJECT_STATE.md`, whole** — what the system is, the index of what has been built, the
+   decisions worth remembering. It is kept short for that. The full text of each finished piece of
+   work is in `docs/history/`, one file per month: open an entry there when the task touches what
+   it covers, not the whole folder.
+
+**When the task is about product direction, priorities or the roadmap:**
+
+4. **`docs/private/VISION_AND_CONTEXT.md`** — the business reasoning behind the technical
    decisions. It is deliberately untracked (gitignored), so it will not exist in a fresh clone.
-   Read it before proposing anything about product direction, priorities, or the roadmap.
-   **If it is missing, say so** rather than inferring direction from the code.
+   Read it before proposing anything of that kind. **If it is missing, say so** rather than
+   inferring direction from the code.
+
+If it is not clear which kind of task this is, read the state file whole.
 
 *Why:* this codebase carries a lot of deliberate decisions that look like mistakes without their
 reasoning — hard deletes in one service and soft deletes in another, tests on Sqlite instead of
 InMemory, a slug that is not regenerated from its name. Reading the state file first is what stops
-an agent "fixing" something that is correct on purpose.
+an agent "fixing" something that is correct on purpose. And everything read at the start is
+carried through the whole session, so a task that touches no code should not pay for the
+architecture: until 2026-11-25 this section asked for every file in every session, and in practice
+half the sessions did not follow it. A rule that is followed is worth more than a wider one that
+is not.
 
 ---
 
