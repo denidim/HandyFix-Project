@@ -46,13 +46,19 @@
   z-index: 2;
 }
 
+/* The trail sits at the top of the picture while the title and the badges stay at the bottom: the
+   content is stacked from the bottom, and the automatic margin under the trail takes all the room
+   between them. The top of a picture is its lightest part, so the words carry a soft shadow
+   (PROJECT_STATE Section 3fn). */
 .service-hero-breadcrumbs {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
   color: var(--secondary-fixed);
   font-size: var(--fs-label-sm);
-  margin-bottom: var(--spacing-4);
+  margin-bottom: auto;
+  padding-bottom: var(--spacing-4);
+  text-shadow: 0 1px 0.1875rem rgba(0, 0, 0, 0.6);
 }
 
 .service-hero-breadcrumbs a {
