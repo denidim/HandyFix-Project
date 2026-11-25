@@ -4,7 +4,7 @@
 >
 > **How it is organised**: this file is kept short enough to be read whole at the start of a session. Section 1 is the architecture. Sections 2 and 3 are the index of every finished piece of work; the full text of each entry is in [`docs/history/`](docs/history/), one file per month, so "Section 3cp" in a code comment, a test or a document names an entry there. Section 4 lists what is still open. Section 5 holds the decisions worth remembering. Update it with every change, not at the close of a sprint (`AGENTS.md` Section 5).
 >
-> **Last updated**: 2026-11-17 — **The site's image is published for Linux only and names the user the site runs as** (Section 3fm); the published folder went from 766 MB to 212 MB. Earlier the same day: on a quote-only page the phone's floating bar says "Request Free Estimate" (Section 3fl), the area form finds a town by its name only within 25 miles of the base (Section 3fj), and the packages that had turned 14 days old (Section 3fk).
+> **Last updated**: 2026-11-25 — **The breadcrumb trail sits at the top of the picture on the town and service pages, and a town's page has a booking card and three cards that are links** (Section 3fn). Before it, on 2026-11-17: the site's image is published for Linux only and names the user the site runs as (Section 3fm).
 
 ---
 
@@ -278,6 +278,7 @@ Every finished piece of work has an entry: what shipped, what was verified and h
 - **3fk.** The Packages That Turned 14 Days Old (2026-11-17)
 - **3fl.** On a Quote-Only Page the Phone's Bar Says "Request Free Estimate" (2026-11-17)
 - **3fm.** The Image Is Published for Linux Only and Names Its User (2026-11-17)
+- **3fn.** The Trail at the Top of the Picture, and a Town Page's Booking Card (2026-11-25)
 
 ---
 
