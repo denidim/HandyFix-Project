@@ -4,6 +4,6 @@
 
     public interface IHaveCustomMappings
     {
-        void CreateMappings(TypeAdapterConfig configuration);
+        void CreateMappings(TypeAdapterConfig config);
     }
 }

@@ -126,9 +126,10 @@
         /// <summary>
         /// The "Still owed" line of the job's money list.
         /// </summary>
-        public string StillOwedText => !this.OwesMoney ? "Nothing: the job is " + this.JobLabel.ToLowerInvariant()
-            : this.Price > 0 ? Pounds(this.StillOwed)
-            : "Not known until the final price is typed in";
+        public string StillOwedText =>
+            !this.OwesMoney ? "Nothing: the job is " + this.JobLabel.ToLowerInvariant() :
+            this.Price > 0 ? Pounds(this.StillOwed) :
+            "Not known until the final price is typed in";
 
         /// <summary>
         /// The same in the few words the summary card has room for.

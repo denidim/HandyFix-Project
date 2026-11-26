@@ -45,8 +45,9 @@
         public static string MonthOf(DateTime day) => day.ToString("yyyy-MM", CultureInfo.InvariantCulture);
 
         // "Paid", "Overdue" or "Due 10 Nov" in the colour the job pages use for money.
-        public string BadgeFor(InvoiceViewModel invoice) => invoice.IsPaid ? "tint-success"
-            : invoice.IsOverdueOn(this.TodayUk) ? "tint-error"
-            : "tint-secondary";
+        public string BadgeFor(InvoiceViewModel invoice) =>
+            invoice.IsPaid ? "tint-success" :
+            invoice.IsOverdueOn(this.TodayUk) ? "tint-error" :
+            "tint-secondary";
     }
 }

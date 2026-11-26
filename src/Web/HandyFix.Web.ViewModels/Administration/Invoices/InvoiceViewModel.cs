@@ -79,9 +79,10 @@
         public bool IsOverdueOn(DateTime todayUk) => !this.IsPaid && todayUk.Date > this.DueOn;
 
         // "Paid", "Overdue" or "Due 10 Nov", as the list of invoices and the job's page show it.
-        public string StatusOn(DateTime todayUk) => this.IsPaid ? "Paid"
-            : this.IsOverdueOn(todayUk) ? "Overdue"
-            : "Due " + this.DueOn.ToString("d MMM", CultureInfo.InvariantCulture);
+        public string StatusOn(DateTime todayUk) =>
+            this.IsPaid ? "Paid" :
+            this.IsOverdueOn(todayUk) ? "Overdue" :
+            "Due " + this.DueOn.ToString("d MMM", CultureInfo.InvariantCulture);
 
         private decimal PaidBy(string method) => this.Payments.Where(x => x.Method == method).Sum(x => x.Amount);
     }
