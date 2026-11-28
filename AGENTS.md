@@ -35,6 +35,12 @@ a customer does not need the architecture; a session that changes a service does
    Read it before proposing anything of that kind. **If it is missing, say so** rather than
    inferring direction from the code.
 
+**In a session with no `docs/private/`** (a cloud session, for example one started from the
+phone): a copy of the private documents is in the Google Drive folder `HandyFix-private`, reached
+through the Drive connector. Download a file from there; reading it returns empty text for
+Markdown. The copy is read-only: it is overwritten from the developer's machine, and
+`_LAST_COPY.txt` in it says when. Files that hold credentials are not in the copy.
+
 If it is not clear which kind of task this is, read the state file whole.
 
 *Why:* this codebase carries a lot of deliberate decisions that look like mistakes without their
